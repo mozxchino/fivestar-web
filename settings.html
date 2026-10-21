@@ -1,0 +1,105 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ตั้งค่า</title><link rel="stylesheet" href="lib/ui.css">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script>
+<style>
+.tabs{display:flex;gap:8px;margin:0 0 8px}
+.tabs button{flex:1;padding:12px 4px;font-size:17px;font-weight:600;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg)}
+.tabs button.on{background:var(--red);color:#fff;border-color:var(--red)}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin-top:8px}
+.g label{font-size:13px;color:var(--muted)}
+.g input,input[type=time],input[type=date]{font-size:17px;padding:10px;border:1px solid var(--line);border-radius:10px;width:100%;background:#fff}
+.sm{width:auto;padding:10px 16px;margin:6px 6px 0 0;font-size:16px;display:inline-flex}
+.flash{color:var(--green);font-size:14px;visibility:hidden}.flash.on{visibility:visible}
+.chk{display:flex;align-items:center;gap:6px;font-size:15px}.chk input{width:22px;height:22px}
+</style></head><body>
+<div class="topbar"><div class="logo">5</div><div><h1>ตั้งค่า</h1><div class="sub">เจ้าของร้านเท่านั้น</div></div></div>
+<p id="blocked" class="err" hidden></p>
+<div id="app" hidden>
+  <div class="tabs"><button data-t="staff" class="on">พนักงาน</button><button data-t="prod">สินค้า</button><button data-t="sys">ระบบ</button></div>
+  <section id="staff"></section><section id="prod" hidden></section><section id="sys" hidden></section>
+</div>
+<script>
+(async () => {
+  const $ = (i) => document.getElementById(i);
+  const E = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const { supabase, me } = await App.ready();
+  if (me.role !== "owner") { $("blocked").hidden = false; $("blocked").textContent = "เฉพาะเจ้าของ"; return; }
+  $("app").hidden = false;
+  const tabs = document.querySelectorAll(".tabs button");
+  tabs.forEach((b) => b.onclick = () => { tabs.forEach((x) => { x.classList.toggle("on", x === b); $(x.dataset.t).hidden = x !== b; }); });
+  const fail = (e) => alert("ไม่สำเร็จ: " + (e.message || e));
+
+  // generic save-on-blur for any input with data-t/data-id/data-f
+  document.addEventListener("change", async (ev) => {
+    const el = ev.target, { t, id, f } = el.dataset;
+    if (!t) return;
+    const v = el.type === "checkbox" ? el.checked : el.value === "" ? null : el.type === "number" || el.inputMode === "decimal" ? Number(el.value) : el.value;
+    const { error } = await supabase.from(t).update({ [f]: v }).eq("id", id);
+    if (error) return fail(error);
+    const fl = el.closest(".card").querySelector(".flash"); fl.classList.add("on"); setTimeout(() => fl.classList.remove("on"), 1500);
+  });
+  const inp = (t, id, f, val, label, type = "number") => `<div><label>${label}</label><input type="${type}" ${type === "number" ? 'inputmode="decimal" step="any"' : ""} value="${E(val)}" data-t="${t}" data-id="${id}" data-f="${f}"></div>`;
+
+  // ---- พนักงาน
+  async function staff() {
+    const { data: pend } = await supabase.from("pending_users").select("*").order("first_seen");
+    const { data: us } = await supabase.from("users").select("*").order("name");
+    const u = (x) => `<div class="card"><b>${E(x.name)}</b> <span class="pill">${x.role === "owner" ? "เจ้าของ" : "พนักงาน"}</span> <span class="flash">บันทึกแล้ว ✓</span>
+      <div class="g">${inp("users", x.id, "salary_month", x.salary_month, "เงินเดือน (บาท)")}${inp("users", x.id, "off_days_per_month", x.off_days_per_month, "วันหยุด/เดือน")}
+      ${inp("users", x.id, "std_hours_per_day", x.std_hours_per_day, "ชม./วัน")}${inp("users", x.id, "ot_rate_hour", x.ot_rate_hour, "OT บาท/ชม.")}
+      ${inp("users", x.id, "started_at", x.started_at, "เริ่มงาน", "date")}</div>
+      ${x.active ? `<button class="btn sm" data-off="${x.id}" data-n="${E(x.name)}">ปิดสิทธิ์</button>` : ""}</div>`;
+    $("staff").innerHTML = `<h2>รออนุมัติ</h2>` + ((pend || []).map((p) => `<div class="card" data-src="${E(p.source_id)}"><input type="text" value="${E(p.display_name)}" placeholder="ชื่อ">
+      <select><option value="staff">พนักงาน</option><option value="owner">เจ้าของ</option></select><button class="btn sm primary" data-ok>อนุมัติ</button></div>`).join("") || `<p class="muted">ไม่มี</p>`)
+      + `<h2>พนักงานที่ใช้งานอยู่</h2>` + (us || []).filter((x) => x.active).map(u).join("")
+      + `<details><summary class="muted">ปิดสิทธิ์แล้ว (${(us || []).filter((x) => !x.active).length})</summary>${(us || []).filter((x) => !x.active).map(u).join("")}</details>`;
+  }
+  $("staff").onclick = async (ev) => {
+    const b = ev.target.closest("button"); if (!b) return;
+    let r;
+    if (b.dataset.ok !== undefined) {
+      const c = b.closest(".card"), name = c.querySelector("input").value.trim();
+      if (!name) return fail("ใส่ชื่อก่อน");
+      r = await supabase.rpc("approve_user", { p_line_user_id: c.dataset.src, p_name: name, p_role: c.querySelector("select").value });
+    } else if (b.dataset.off) {
+      if (!confirm("ปิดสิทธิ์ " + b.dataset.n + " ?")) return;
+      r = await supabase.rpc("deactivate_user", { p_user_id: b.dataset.off });
+    } else return;
+    if (r.error) return fail(r.error);
+    staff();
+  };
+
+  // ---- สินค้า
+  const { data: ps } = await supabase.from("products").select("*").order("sort");
+  $("prod").innerHTML = (ps || []).map((p) => `<div class="card"><b>${E(p.name)}</b> <span class="pill">${E(p.kind)}</span> ${p.supplier ? `<span class="pill">${E(p.supplier)}</span>` : ""} <span class="flash">บันทึกแล้ว ✓</span>
+    <div class="g">${inp("products", p.id, "par_weekday", p.par_weekday, "เป้า วันธรรมดา")}${inp("products", p.id, "par_weekend", p.par_weekend, "เป้า เสาร์-อาทิตย์")}
+    ${inp("products", p.id, "cost_price", p.cost_price, "ราคาทุน")}${inp("products", p.id, "store_price", p.store_price, "ราคาหน้าร้าน")}
+    ${inp("products", p.id, "delivery_price", p.delivery_price, "ราคาเดลิเวอรี่")}
+    <label class="chk"><input type="checkbox" ${p.active ? "checked" : ""} data-t="products" data-id="${p.id}" data-f="active">ใช้งาน</label></div></div>`).join("");
+
+  // ---- ระบบ
+  const { data: st } = await supabase.from("settings").select("key,value");
+  const S = Object.fromEntries((st || []).map((s) => [s.key, s.value]));
+  const { data: gs } = await supabase.from("line_sources").select("source_id,display_name").eq("source_type", "group");
+  let hol = [...(S.holidays || [])].sort();
+  const sel = (id, cur) => `<select id="${id}"><option value="">ไม่ตั้ง</option>${(gs || []).map((g) => `<option value="${E(g.source_id)}" ${g.source_id === cur ? "selected" : ""}>${E(g.display_name || g.source_id)}</option>`).join("")}</select>`;
+  const drawHol = () => { $("hl").innerHTML = hol.map((d, i) => `<div class="row"><span style="flex:1">${d}</span><button class="btn sm" data-del="${i}">ลบ</button></div>`).join("") || `<p class="muted">ไม่มี</p>`; };
+  $("sys").innerHTML = `<div class="card"><label class="muted">ชื่อร้าน</label><input type="text" id="shop" value="${E(S.shop_name)}">
+    <div class="g"><div><label>เตือนสั่งของ</label><input type="time" id="rem" value="${E(S.remind_at)}"></div><div><label>ส่งอัตโนมัติ</label><input type="time" id="auto" value="${E(S.auto_send_at)}"></div></div>
+    <p class="muted">กลุ่มเซลล์</p>${sel("sg", S.sales_group_id)}<p class="muted">กลุ่มพนักงาน</p>${sel("fg", S.staff_group_id)}</div>
+    <h2>วันหยุดร้าน</h2><div class="card"><div id="hl"></div><div class="row" style="border:0"><input type="date" id="hd"><button class="btn sm" id="ha">เพิ่ม</button></div></div>
+    <button class="btn primary" id="save">บันทึก</button><p id="smsg" class="muted"></p>`;
+  drawHol();
+  $("ha").onclick = () => { const d = $("hd").value; if (d && !hol.includes(d)) { hol.push(d); hol.sort(); drawHol(); } $("hd").value = ""; };
+  $("hl").onclick = (ev) => { const i = ev.target.dataset.del; if (i !== undefined) { hol.splice(i, 1); drawHol(); } };
+  $("save").onclick = async () => {
+    const rows = [["shop_name", $("shop").value.trim()], ["remind_at", $("rem").value], ["auto_send_at", $("auto").value],
+      ["sales_group_id", $("sg").value || null], ["staff_group_id", $("fg").value || null], ["holidays", hol]].map(([key, value]) => ({ key, value }));
+    const { error } = await supabase.from("settings").upsert(rows);
+    $("smsg").className = error ? "err" : "ok"; $("smsg").textContent = error ? "ไม่สำเร็จ: " + error.message : "บันทึกแล้ว ✓";
+  };
+  staff();
+})().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เกิดข้อผิดพลาด: " + e.message; } });
+</script></body></html>

@@ -1,0 +1,33 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>แจ้งปัญหา</title><link rel="stylesheet" href="lib/ui.css">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script>
+</head><body>
+<div class="topbar"><div class="logo">5</div><div><h1>แจ้งปัญหา</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></div>
+<div id="form" hidden>
+  <h2 style="font-size:17px">เรื่องอะไร</h2>
+  <select id="type"><option value="waste">ของเสีย/หมดอายุ</option><option value="equipment">เครื่องพัง</option><option value="customer">ลูกค้าร้องเรียน</option><option value="cpf">ของ CPF ผิด</option><option value="edit_request">ขอแก้ข้อมูล</option><option value="other">อื่นๆ</option></select>
+  <h2 style="font-size:17px;margin-top:16px">รายละเอียด</h2>
+  <textarea id="text" rows="4" placeholder="เล่าสั้นๆ ว่าเกิดอะไร"></textarea>
+  <label class="btn">ถ่ายรูป (ไม่เกิน 3 รูป) <input id="ph" type="file" accept="image/*" capture="environment" multiple hidden></label>
+  <p id="phS" class="muted"></p>
+  <button id="send" class="btn primary">ส่งให้เจ้าของ</button>
+  <p id="msg" class="muted"></p>
+</div>
+<script>
+(async () => {
+  const { supabase, me } = await App.ready();
+  const photos = [];
+  ph.onchange = async () => { for (const f of ph.files) { if (photos.length >= 3) break; phS.textContent = "กำลังอัปโหลด…"; try { photos.push(await Photo.upload(supabase, "issue", f)); } catch (e) { phS.textContent = "อัปโหลดไม่สำเร็จ: " + e.message; return; } } phS.textContent = "รูป " + photos.length + " รูป"; };
+  send.onclick = async () => {
+    if (!text.value.trim()) { msg.textContent = "ใส่รายละเอียดก่อน"; msg.className = "err"; return; }
+    send.disabled = true; msg.textContent = "กำลังส่ง…"; msg.className = "muted";
+    const { data, error } = await supabase.from("issues").insert({ type: type.value, text: text.value.trim(), photos, created_by: me.userId }).select("id").single();
+    if (error) { msg.textContent = "ส่งไม่สำเร็จ: " + error.message; msg.className = "err"; send.disabled = false; return; }
+    await App.fn("issue-notify", { issue_id: data.id }).catch(() => {});
+    msg.textContent = "ส่งแล้ว ขอบคุณ"; msg.className = "ok"; text.disabled = ph.disabled = true;
+  };
+  form.hidden = false;
+})();
+</script></body></html>
