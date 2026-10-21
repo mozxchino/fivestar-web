@@ -1,0 +1,10 @@
+:root { --bg:#fff; --fg:#111; --muted:#666; --line:#e5e5e5; --red:#c62828; --green:#2e7d32; --brand:#d32f2f; }
+* { box-sizing: border-box; }
+body { margin:0; font: 17px/1.5 -apple-system, "Noto Sans Thai", sans-serif; color:var(--fg); background:var(--bg); padding:16px; }
+h1 { font-size:20px; margin:0 0 12px; }
+.btn { display:block; width:100%; padding:16px; margin:10px 0; font-size:18px; border:1px solid var(--line); border-radius:12px; background:#fafafa; color:var(--fg); text-align:left; text-decoration:none; }
+.btn.primary { background:var(--brand); color:#fff; border-color:var(--brand); }
+.muted { color:var(--muted); font-size:14px; }
+.row { display:flex; gap:8px; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); }
+input[type=number], input[type=text], textarea { font-size:18px; padding:10px; border:1px solid var(--line); border-radius:8px; width:100%; }
+.err { color:var(--red); } .ok { color:var(--green); }

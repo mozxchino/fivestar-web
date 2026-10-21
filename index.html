@@ -1,0 +1,26 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ห้าดาว อ่อนนุช 44</title>
+<link rel="stylesheet" href="lib/ui.css">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script>
+</head><body>
+<h1 id="title">กำลังเข้าระบบ…</h1>
+<div id="menu"></div>
+<p class="muted" id="who"></p>
+<script>
+(async () => {
+  try {
+    const { me } = await App.ready();
+    document.getElementById("who").textContent = `${me.name} · ${me.role === "owner" ? "เจ้าของ" : "พนักงาน"}`;
+    document.getElementById("title").textContent = "ห้าดาว อ่อนนุช 44 จุด 3";
+    const staff = [["open.html","เปิดร้าน"],["receive.html","รับของ"],["close.html","ปิดร้าน"],["issue.html","แจ้งปัญหา"],["history.html","ประวัติ"]];
+    const owner = [["owner.html","วันนี้"],["approve.html","อนุมัติใบสั่ง"],["settings.html","ตั้งค่า"]];
+    document.getElementById("menu").innerHTML = (me.role === "owner" ? owner : staff)
+      .map(([h,t],i) => `<a class="btn ${i===0?'primary':''}" href="${h}">${t}</a>`).join("");
+  } catch (e) {
+    if (e.message !== "denied") document.getElementById("title").textContent = "เข้าระบบไม่ได้: " + e.message;
+  }
+})();
+</script></body></html>
