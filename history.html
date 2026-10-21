@@ -1,0 +1,29 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ประวัติ</title><link rel="stylesheet" href="lib/ui.css">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script>
+</head><body>
+<div class="topbar"><div class="logo">5</div><div><h1>ประวัติ</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3 · 30 วันล่าสุด</div></div></div>
+<p id="msg" class="muted">กำลังโหลด…</p>
+<div id="list"></div>
+<script>
+(async () => {
+  try {
+    const { supabase } = await App.ready();
+    const { data, error } = await supabase.from("shop_days").select("*").order("date", { ascending: false }).limit(30);
+    if (error) throw error;
+    const ST = { open: "เปิดอยู่", closed: "ปิดแล้ว", sent: "ส่งแล้ว", holiday: "วันหยุด" };
+    const hm = (t) => t ? new Date(t).toLocaleTimeString("th-TH", { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit", hour12: false }) : "-";
+    document.getElementById("msg").hidden = !!data.length;
+    if (!data.length) document.getElementById("msg").textContent = "ยังไม่มีประวัติ";
+    document.getElementById("list").innerHTML = data.map((d) => {
+      const diff = d.cash_counted != null && d.cash_expected != null ? d.cash_counted - d.cash_expected : null;
+      const cash = diff == null ? "-" : `<span class="${diff < 0 ? "err" : ""}">${diff > 0 ? "+" : ""}${diff}</span>`;
+      return `<div class="card"><div class="row" style="border:0;padding:0"><b style="flex:1">${d.date.slice(8)}/${d.date.slice(5, 7)}</b><span class="pill">${ST[d.status] || d.status}</span></div>
+        <div class="muted">เปิด ${hm(d.opened_at)} · ปิด ${hm(d.closed_at)}</div>
+        <div class="muted">OT ${d.ot_hours ?? 0} ชม. · เงินสดต่าง ${cash}</div></div>`;
+    }).join("");
+  } catch (e) { if (e.message !== "denied") document.getElementById("msg").textContent = "โหลดไม่ได้: " + e.message; }
+})();
+</script></body></html>
