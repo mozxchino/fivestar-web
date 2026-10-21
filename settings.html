@@ -95,8 +95,8 @@
   $("ha").onclick = () => { const d = $("hd").value; if (d && !hol.includes(d)) { hol.push(d); hol.sort(); drawHol(); } $("hd").value = ""; };
   $("hl").onclick = (ev) => { const i = ev.target.dataset.del; if (i !== undefined) { hol.splice(i, 1); drawHol(); } };
   $("save").onclick = async () => {
-    const rows = [["shop_name", $("shop").value.trim()], ["remind_at", $("rem").value], ["auto_send_at", $("auto").value],
-      ["sales_group_id", $("sg").value || null], ["staff_group_id", $("fg").value || null], ["holidays", hol]].map(([key, value]) => ({ key, value }));
+    const rows = [["shop_name", $("shop").value.trim()], ["remind_at", $("rem").value || "20:30"], ["auto_send_at", $("auto").value || "21:00"],
+      ["sales_group_id", $("sg").value || ""], ["staff_group_id", $("fg").value || ""], ["holidays", hol]].map(([key, value]) => ({ key, value }));
     const { error } = await supabase.from("settings").upsert(rows);
     $("smsg").className = error ? "err" : "ok"; $("smsg").textContent = error ? "ไม่สำเร็จ: " + error.message : "บันทึกแล้ว ✓";
   };

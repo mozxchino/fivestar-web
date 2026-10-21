@@ -39,7 +39,7 @@
   await supabase.rpc("ensure_day", { d: today });
   const { data: day } = await supabase.from("shop_days").select("status").eq("date", today).maybeSingle();
   if (day?.status === "sent") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "วันนี้ส่งปิดร้านแล้ว แก้ไม่ได้ · ถ้าผิดกด แจ้งปัญหา"; return; }
-  const { data: pend } = await supabase.from("orders").select("id, order_items(qty_received, received_at)").eq("for_date", today).eq("status", "sent").maybeSingle();
+  const { data: pend } = await supabase.from("orders").select("id, order_items(qty_received, received_at)").eq("for_date", today).in("status", ["sent", "failed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (pend && pend.order_items.some((i) => i.qty_received == null && i.received_at == null)) {
     const b = document.getElementById("blocked"); b.hidden = false; b.innerHTML = 'ยังไม่กดรับของวันนี้<br><a class="btn primary" href="receive.html">ไปหน้ารับของ</a>'; return;
   }

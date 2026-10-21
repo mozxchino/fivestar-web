@@ -13,7 +13,7 @@
     const { supabase } = await App.ready();
     const { data, error } = await supabase.from("shop_days").select("*").order("date", { ascending: false }).limit(30);
     if (error) throw error;
-    const ST = { open: "เปิดอยู่", closed: "ปิดแล้ว", sent: "ส่งแล้ว", holiday: "วันหยุด" };
+    const ST = { open: "เปิดอยู่", closed: "ปิดแล้ว", sent: "ส่งแล้ว", holiday: "วันหยุด", backfill: "ข้อมูลย้อนหลัง" };
     const hm = (t) => t ? new Date(t).toLocaleTimeString("th-TH", { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit", hour12: false }) : "-";
     document.getElementById("msg").hidden = !!data.length;
     if (!data.length) document.getElementById("msg").textContent = "ยังไม่มีประวัติ";

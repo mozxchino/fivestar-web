@@ -74,7 +74,7 @@ table{width:100%;border-collapse:collapse}td{padding:8px 0;border-bottom:1px sol
     if ($("sv")) $("sv").onclick = async () => {
       const num = (v) => v === "" ? null : +v; let err = null;
       for (const r of document.querySelectorAll("[data-p]")) {
-        const u = {}; r.querySelectorAll("input").forEach((i) => u[i.dataset.f] = num(i.value));
+        const u = {}; r.querySelectorAll("input").forEach((i) => u[i.dataset.f] = i.dataset.f === "waste" ? +i.value || 0 : num(i.value));
         const { error } = await supabase.from("stock_lines").update(u).eq("date", d).eq("product_id", r.dataset.p); err = err || error;
       }
       const { error } = await supabase.from("shop_days").update({ cash_expected: num($("ce").value), cash_counted: num($("cn").value), note: $("nt").value || null }).eq("date", d);
