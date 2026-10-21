@@ -1,0 +1,96 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>อนุมัติใบสั่ง</title><link rel="stylesheet" href="lib/ui.css">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script>
+<style>
+.it{display:grid;grid-template-columns:1fr 96px 44px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.it input{text-align:center;padding:8px 4px}
+pre{white-space:pre-wrap;font:16px/1.5 inherit;margin:0}
+.sticky{position:sticky;bottom:0;background:var(--bg);padding:12px 0}
+</style></head><body>
+<div class="topbar"><div class="logo">5</div><div><h1>อนุมัติใบสั่ง</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></div>
+<p id="blocked" class="err" hidden></p>
+<div id="repeat" hidden>
+  <p>วันนี้ยังไม่มีใบสั่ง (ร้านยังไม่ปิด)</p>
+  <button id="rep" class="btn primary">ส่งซ้ำของเมื่อวาน</button>
+  <button id="skip" class="btn">ข้ามวันนี้</button>
+</div>
+<div id="form" hidden>
+  <p><span id="pill" class="pill"></span> <span class="muted">สั่งสำหรับ <span id="d"></span> · ส่งอัตโนมัติ <span id="cd"></span></span></p>
+  <div id="items"></div>
+  <h2>ข้อความที่จะส่ง</h2>
+  <div class="card"><pre id="prev"></pre></div>
+  <h2>ต้องซื้อเอง</h2>
+  <div id="self" class="muted"></div>
+  <div class="sticky"><button id="send" class="btn primary">ส่งเข้ากลุ่มเซลล์</button>
+    <p id="msg" class="muted"></p><button id="copy" class="btn" hidden>คัดลอกข้อความ</button></div>
+</div>
+<script>
+(async () => {
+  const $ = (i) => document.getElementById(i);
+  const show = (id, t) => { $(id).hidden = false; if (t) $(id).textContent = t; };
+  const { supabase, me } = await App.ready();
+  if (me.role !== "owner") return show("blocked", "เฉพาะเจ้าของ");
+  const bkk = (add = 0) => { const d = new Date(Date.now() + 7 * 3600e3 + add * 864e5); return d.toISOString().slice(0, 10); };
+  const tomorrow = bkk(1), q = new URLSearchParams(location.search);
+  const ST = { proposed: "เสนอ", approved: "เสนอ", sent: "ส่งแล้ว", failed: "ส่งไม่สำเร็จ" };
+  let orderId = q.get("order"), order = null, rows = [], step = {}, shop = "", autoAt = "21:00";
+
+  async function findOrder() {
+    let r = supabase.from("orders").select("id,status,for_date");
+    r = orderId ? r.eq("id", orderId) : r.eq("for_date", tomorrow).in("status", ["proposed", "approved", "failed"]).order("created_at", { ascending: false });
+    return (await r.limit(1).maybeSingle()).data;
+  }
+  order = await findOrder();
+  if (!order) {
+    if (q.get("repeat") !== "1") return show("blocked", "ยังไม่มีใบสั่งสำหรับพรุ่งนี้");
+    show("repeat");
+    $("skip").onclick = () => { $("repeat").innerHTML = "<p>ข้ามวันนี้แล้ว</p>"; };
+    $("rep").onclick = async () => {
+      $("rep").disabled = true;
+      try {
+        const { data: prev } = await supabase.from("orders").select("id").eq("status", "sent").lte("for_date", bkk()).order("for_date", { ascending: false }).limit(1).maybeSingle();
+        if (!prev) throw new Error("ไม่พบใบสั่งที่ส่งไปแล้ว");
+        const { data: old } = await supabase.from("order_items").select("product_id,qty_final,qty_proposed").eq("order_id", prev.id);
+        const { data: nid, error } = await supabase.rpc("propose_order", { for_date: tomorrow });
+        if (error || !nid) throw new Error(error?.message || "สร้างใบสั่งไม่ได้ (วันหยุด?)");
+        await supabase.from("order_items").delete().eq("order_id", nid);
+        const { error: e2 } = await supabase.from("order_items").insert(old.map((o) => ({ order_id: nid, product_id: o.product_id, qty_proposed: o.qty_final ?? o.qty_proposed, qty_final: o.qty_final ?? o.qty_proposed })));
+        if (e2) throw new Error(e2.message);
+        location.replace("approve.html?order=" + nid);
+      } catch (e) { $("rep").disabled = false; $("rep").insertAdjacentHTML("afterend", `<p class="err">${e.message}</p>`); }
+    };
+    return;
+  }
+  orderId = order.id;
+  const { data: st } = await supabase.from("settings").select("key,value").in("key", ["shop_name", "auto_send_at"]);
+  for (const s of st || []) { if (s.key === "shop_name") shop = s.value; else autoAt = s.value; }
+  const { data: prods } = await supabase.from("products").select("id,pack_size");
+  step = Object.fromEntries((prods || []).map((p) => [p.id, p.pack_size || 1]));
+  const { data: disp } = await supabase.rpc("order_display", { oid: orderId });
+  rows = (disp || []).sort((a, b) => a.sort - b.sort);
+  const { data: sb } = await supabase.from("self_buy_today").select("name,status");
+  $("self").innerHTML = (sb || []).map((s) => `${s.name} <span class="pill">${s.status === "out" ? "หมด" : "ใกล้หมด"}</span>`).join("<br>") || "ไม่มี";
+  $("d").textContent = order.for_date.slice(8) + "/" + order.for_date.slice(5, 7);
+  $("pill").textContent = ST[order.status] || order.status;
+  $("items").innerHTML = rows.map((r, i) => `<div class="it"><div>${r.label}</div><input type="number" inputmode="decimal" min="0" step="${step[r.product_id]}" value="${r.qty}" data-i="${i}"><div class="muted">${r.unit_th}</div></div>`).join("");
+  if (order.status === "sent") $("send").textContent = "ส่งแก้ไข";
+  const cur = () => rows.map((r, i) => ({ product_id: r.product_id, qty_final: Math.max(0, Number(document.querySelector(`[data-i="${i}"]`).value) || 0), r }));
+  const text = (head) => { const d = $("d").textContent; return `${head} ${d} · ${shop}\n` + cur().filter((x) => x.qty_final > 0).map(({ r, qty_final: n }) => `${r.label} ${n} ${r.unit_th}` + (r.sets != null ? ` (${Math.round(n / step[r.product_id])} เซ็ต)` : "")).join("\n"); };
+  const prev = () => { $("prev").textContent = text(order.status === "sent" ? "แก้ไขใบสั่ง" : "สั่งของ"); };
+  $("items").oninput = prev; prev();
+  const tick = () => { const [h, m] = String(autoAt).split(":").map(Number); const t = new Date(Date.now() + 7 * 3600e3); let s = (h * 60 + m) * 60 - (t.getUTCHours() * 3600 + t.getUTCMinutes() * 60 + t.getUTCSeconds()); if (s < 0) s += 86400; $("cd").textContent = `${autoAt} (อีก ${Math.floor(s / 3600)} ชม. ${Math.floor(s % 3600 / 60)} น.)`; };
+  tick(); setInterval(tick, 30000);
+  show("form");
+  $("send").onclick = async () => {
+    $("send").disabled = true; $("copy").hidden = true; $("msg").className = "muted"; $("msg").textContent = "กำลังส่ง…";
+    try {
+      const r = await App.fn("send-order", { order_id: orderId, mode: "manual", items: cur().map(({ product_id, qty_final }) => ({ product_id, qty_final })) });
+      if (r.ok) { $("msg").className = "ok"; $("msg").textContent = "ส่งแล้ว\n" + r.message; $("pill").textContent = "ส่งแล้ว"; order.status = "sent"; $("send").textContent = "ส่งแก้ไข"; }
+      else { $("msg").className = "err"; $("msg").textContent = "ส่งไม่สำเร็จ"; $("pill").textContent = "ส่งไม่สำเร็จ"; $("copy").hidden = false; $("copy").onclick = async () => { await navigator.clipboard.writeText(r.message || text("สั่งของ")); $("copy").textContent = "คัดลอกแล้ว"; }; }
+    } catch (e) { $("msg").className = "err"; $("msg").textContent = "ส่งไม่สำเร็จ: " + e.message; }
+    $("send").disabled = false;
+  };
+})().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เกิดข้อผิดพลาด: " + e.message; } });
+</script></body></html>
