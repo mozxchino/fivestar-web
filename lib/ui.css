@@ -1,10 +1,25 @@
-:root { --bg:#fff; --fg:#111; --muted:#666; --line:#e5e5e5; --red:#c62828; --green:#2e7d32; --brand:#d32f2f; }
+/* Five Star brand: red + yellow · mobile-first 375px · big tap targets for staff */
+:root { --bg:#fff7f0; --card:#fff; --fg:#1a1a1a; --muted:#6b6b6b; --line:#eadfd6; --red:#c8102e; --red-dark:#9e0b23; --yellow:#ffc425; --green:#2e7d32; --err:#c62828; --brand:var(--red); }
 * { box-sizing: border-box; }
-body { margin:0; font: 17px/1.5 -apple-system, "Noto Sans Thai", sans-serif; color:var(--fg); background:var(--bg); padding:16px; }
-h1 { font-size:20px; margin:0 0 12px; }
-.btn { display:block; width:100%; padding:16px; margin:10px 0; font-size:18px; border:1px solid var(--line); border-radius:12px; background:#fafafa; color:var(--fg); text-align:left; text-decoration:none; }
-.btn.primary { background:var(--brand); color:#fff; border-color:var(--brand); }
+html { -webkit-text-size-adjust: 100%; }
+body { margin:0; font: 18px/1.5 -apple-system, "Noto Sans Thai", "Sukhumvit Set", sans-serif; color:var(--fg); background:var(--bg); padding:0 16px 24px; }
+.topbar { margin:0 -16px 16px; padding:14px 16px 12px; background:var(--red); color:#fff; display:flex; align-items:center; gap:12px; box-shadow:0 2px 6px rgba(0,0,0,.12); }
+.topbar .logo { width:40px; height:40px; border-radius:50%; background:var(--yellow); color:var(--red); font-weight:800; font-size:22px; display:flex; align-items:center; justify-content:center; flex:none; }
+.topbar h1 { font-size:19px; margin:0; line-height:1.2; }
+.topbar .sub { font-size:13px; opacity:.9; }
+h1 { font-size:22px; margin:0 0 12px; }
+h2 { font-size:17px; margin:20px 0 8px; color:var(--red-dark); }
+.btn { display:flex; align-items:center; gap:12px; width:100%; padding:18px 16px; margin:10px 0; font-size:19px; font-weight:600; border:1px solid var(--line); border-radius:14px; background:var(--card); color:var(--fg); text-align:left; text-decoration:none; box-shadow:0 1px 2px rgba(0,0,0,.05); cursor:pointer; }
+.btn:active { transform:scale(.99); }
+.btn.primary { background:var(--red); color:#fff; border-color:var(--red); }
+.btn.primary:active { background:var(--red-dark); }
+.btn .ico { width:36px; height:36px; border-radius:10px; background:#fdecec; color:var(--red); display:flex; align-items:center; justify-content:center; font-size:20px; flex:none; }
+.btn.primary .ico { background:rgba(255,255,255,.2); color:#fff; }
+.btn:disabled { opacity:.55; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin:10px 0; }
 .muted { color:var(--muted); font-size:14px; }
-.row { display:flex; gap:8px; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); }
-input[type=number], input[type=text], textarea { font-size:18px; padding:10px; border:1px solid var(--line); border-radius:8px; width:100%; }
-.err { color:var(--red); } .ok { color:var(--green); }
+.row { display:flex; gap:10px; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); }
+input[type=number], input[type=text], textarea, select { font-size:19px; padding:12px; border:1px solid var(--line); border-radius:10px; width:100%; background:#fff; color:var(--fg); }
+input:focus, textarea:focus { outline:2px solid var(--yellow); border-color:var(--red); }
+.err { color:var(--err); } .ok { color:var(--green); }
+.pill { display:inline-block; padding:2px 10px; border-radius:999px; font-size:13px; background:var(--yellow); color:#5a3d00; }
