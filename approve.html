@@ -3,18 +3,17 @@
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="lib/ui.css">
+<link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-data.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/config.js"></script><script src="lib/session.js"></script>
 <style>
-#items .it{display:grid;grid-template-columns:1fr 96px 44px;gap:10px;align-items:center;min-height:64px;padding:8px 0;border-bottom:1px solid var(--color-border)}
-#items .it:last-child{border-bottom:0}
-#items .it input{text-align:center;font-weight:500;font-size:18px}
-#items .it > .muted{font-size:16px;color:var(--color-ink-soft)}
+#items{margin-top:0}
+#pill{flex:none;align-self:center;font-size:15px;padding:6px 12px 6px 10px}
+#self{display:contents}
 pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-numeric:tabular-nums}
 </style></head><body ontouchstart="">
-<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>อนุมัติใบสั่ง</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>อนุมัติใบสั่ง</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div><div id="when" hidden><div class="sub">ของมา <span id="d"></span></div><div class="sub">ถ้าไม่กด แอปส่งตอน <span id="cd"></span></div></div></div></header>
 <p id="blocked" class="err" hidden></p>
 <div id="repeat" hidden>
   <div class="empty"><p>ยังไม่มีใบสั่งพรุ่งนี้</p><p class="muted">พนักงานยังไม่กดปิดร้าน</p></div>
@@ -22,21 +21,17 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   <button id="skip" class="btn">ไม่สั่งของพรุ่งนี้</button>
 </div>
 <div id="form" hidden>
-  <div class="card order-head"><span id="pill" class="pill"></span>
-    <div class="kv"><span>ของมาวันที่</span><b id="d" class="num"></b></div>
-    <div class="kv"><span>ถ้าไม่กด แอปส่งตอน</span><b id="cd" class="num"></b></div></div>
-  <h2>จำนวนที่จะสั่ง (แก้ได้)</h2>
+  <div class="chips"><span id="pill" class="pill"></span><span id="self" hidden></span></div>
   <div id="items" class="card list"></div>
-  <h2>ข้อความที่เซลล์จะเห็น</h2>
-  <div class="card preview"><pre id="prev"></pre></div>
-  <h2>ของต้องซื้อเอง</h2>
-  <div id="self" class="card list"></div>
+  <details class="fold"><summary>ข้อความที่เซลล์จะเห็น<span class="chip">เปิดดู</span></summary>
+    <div class="card preview"><pre id="prev"></pre></div></details>
   <div class="sticky"><button id="send" class="btn primary">ส่งใบสั่งให้เซลล์</button>
     <p id="msg" class="muted"></p><button id="copy" class="btn" hidden>คัดลอกไปส่งเอง</button></div>
 </div>
 <script>
 (async () => {
   const $ = (i) => document.getElementById(i);
+  const E = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const show = (id, t) => { $(id).hidden = false; if (t) $(id).textContent = t; };
   const { supabase, me } = await App.ready();
   if (me.role !== "owner") return show("blocked", "หน้านี้สำหรับเจ้าของ");
@@ -74,31 +69,44 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   orderId = order.id;
   const { data: st } = await supabase.from("settings").select("key,value").in("key", ["shop_name", "auto_send_at"]);
   for (const s of st || []) { if (s.key === "shop_name") shop = s.value; else autoAt = s.value; }
-  const { data: prods } = await supabase.from("products").select("id,pack_size");
-  step = Object.fromEntries((prods || []).map((p) => [p.id, p.pack_size || 1]));
-  const { data: disp } = await supabase.rpc("order_display", { oid: orderId });
+  // order_review = order_display + เหลือ (latest closed sheet) · ควรมี · proposed qty · pack size
+  const { data: disp, error: dErr } = await supabase.rpc("order_review", { oid: orderId });
+  if (dErr) throw dErr;
   rows = (disp || []).sort((a, b) => a.sort - b.sort);
+  step = Object.fromEntries(rows.map((r) => [r.product_id, r.pack_size || 1]));
   const { data: sb } = await supabase.from("self_buy_today").select("name,status");
-  $("self").innerHTML = (sb || []).map((s) => `<div class="row"><span class="grow">${s.name}</span><span class="pill" data-tone="${s.status === "out" ? "bad" : "wait"}">${s.status === "out" ? "หมด" : "ใกล้หมด"}</span></div>`).join("") || '<p class="muted">ไม่มีของต้องซื้อเอง</p>';
+  if (sb && sb.length) { $("self").hidden = false; $("self").innerHTML = `<span class="lbl">ต้องซื้อเอง</span>` + sb.map((s) => `<span class="chip ${s.status === "out" ? "bad" : "wait"}">${E(s.name)} · ${s.status === "out" ? "หมด" : "ใกล้หมด"}</span>`).join(""); }
   $("d").textContent = new Date(order.for_date + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
   $("pill").textContent = ST[order.status] || order.status; $("pill").dataset.tone = { sent: "ok", failed: "bad" }[order.status] || "wait";
-  $("items").innerHTML = rows.map((r, i) => `<div class="it"><div class="nm">${r.label}</div><input type="number" inputmode="decimal" min="0" step="${step[r.product_id]}" value="${r.qty}" data-i="${i}" aria-label="${r.label} จำนวนสั่ง"><div class="muted">${r.unit_th}</div></div>`).join("");
-  if (order.status === "sent") $("send").textContent = "ส่งใบสั่งให้เซลล์อีกครั้ง";
-  const cur = () => rows.map((r, i) => ({ product_id: r.product_id, qty_final: Math.max(0, Number(document.querySelector(`[data-i="${i}"]`).value) || 0), r }));
+  const n = (v) => Number(v).toLocaleString("th-TH", { maximumFractionDigits: 1 });
+  const base = (r) => r.kind === "consumable" ? "ของใช้ในร้าน" : `เหลือ ${r.remaining == null ? "-" : n(r.remaining)} · ควรมี ${r.par == null ? "-" : n(r.par)}`;
+  const meta = (r, q) => `${base(r)} ${E(r.unit_th)}` + (r.sets != null ? ` (${Math.round(q / r.pack_size)} เซ็ต)` : "") + (q !== Number(r.qty_proposed) ? `<br><b>แก้จาก ${n(r.qty_proposed)}</b>` : "");
+  $("items").innerHTML = rows.map((r, i) => `<div class="orow" id="r${i}"><div class="grow"><div class="nm">${E(r.label)}</div><div class="meta"></div></div>
+    <div class="step"><button type="button" data-d="-1" data-s="${i}" aria-label="ลด ${E(r.label)}">−</button><input type="number" inputmode="decimal" min="0" step="${step[r.product_id]}" value="${Number(r.qty)}" data-i="${i}" aria-label="${E(r.label)} จำนวนสั่ง (${E(r.unit_th)})"><button type="button" data-d="1" data-s="${i}" aria-label="เพิ่ม ${E(r.label)}">+</button></div></div>`).join("") || '<p class="muted">ใบนี้ไม่มีของต้องสั่ง</p>';
+  const qv = (i) => Math.max(0, Number(document.querySelector(`[data-i="${i}"]`).value) || 0);
+  const cur = () => rows.map((r, i) => ({ product_id: r.product_id, qty_final: qv(i), r }));
+  const label = () => { const k = cur().filter((x) => x.qty_final > 0).length; $("send").disabled = k === 0; $("send").textContent = k === 0 ? "ไม่มีของที่จะสั่ง" : `ส่งใบสั่งให้เซลล์${order.status === "sent" ? "อีกครั้ง" : ""} · ${k} รายการ`; };
+  const mark = (i) => { const q = qv(i), r = rows[i], row = $("r" + i); row.classList.toggle("chg", q !== Number(r.qty_proposed)); row.querySelector(".meta").innerHTML = meta(r, q); };
+  rows.forEach((_, i) => mark(i));
+  $("items").onclick = (ev) => {
+    const b = ev.target.closest("button[data-d]"); if (!b) return;
+    const i = +b.dataset.s, s = step[rows[i].product_id], inp = document.querySelector(`[data-i="${i}"]`);
+    inp.value = Math.max(0, Math.round((qv(i) + s * +b.dataset.d) / s) * s); inp.dispatchEvent(new Event("input", { bubbles: true }));
+  };
   const text = (head) => { const d = order.for_date.slice(8) + "/" + order.for_date.slice(5, 7); return `${head} ${d} · ${shop}\n` + cur().filter((x) => x.qty_final > 0).map(({ r, qty_final: n }) => `${r.order_as ? r.label.replace(/^เซ็ต/, "") : r.label} ${n} ${r.unit_th}` + (r.sets != null ? ` (${Math.round(n / step[r.product_id])} เซ็ต)` : "")).join("\n"); };
   const prev = () => { $("prev").textContent = text(order.sent_at ? "แก้ไขใบสั่ง" : "สั่งของ"); };
-  $("items").oninput = prev; prev();
+  $("items").oninput = (ev) => { if (ev.target.dataset.i !== undefined) mark(+ev.target.dataset.i); prev(); label(); }; prev(); label();
   const tick = () => { const [h, m] = String(autoAt).split(":").map(Number); const t = new Date(Date.now() + 7 * 3600e3); let s = (h * 60 + m) * 60 - (t.getUTCHours() * 3600 + t.getUTCMinutes() * 60 + t.getUTCSeconds()); if (s < 0) s += 86400; $("cd").textContent = `${autoAt} น. (อีก ${Math.floor(s / 3600)}:${String(Math.floor(s % 3600 / 60)).padStart(2, "0")} ชม.)`; };
   tick(); setInterval(tick, 30000);
-  show("form");
+  show("form"); show("when"); document.querySelector(".topbar .sub").hidden = true;
   $("send").onclick = async () => {
     $("send").disabled = true; $("copy").hidden = true; $("msg").className = "muted"; $("msg").textContent = "กำลังส่ง…";
     try {
       const r = await App.fn("send-order", { order_id: orderId, mode: "manual", items: cur().map(({ product_id, qty_final }) => ({ product_id, qty_final })) });
-      if (r.ok) { $("msg").className = "ok"; $("msg").textContent = "ส่งใบสั่งให้เซลล์แล้ว"; $("pill").textContent = "ส่งแล้ว"; $("pill").dataset.tone = "ok"; order.status = "sent"; order.sent_at = order.sent_at || new Date().toISOString(); prev(); $("send").textContent = "ส่งใบสั่งให้เซลล์อีกครั้ง"; }
+      if (r.ok) { $("msg").className = "ok"; $("msg").textContent = "ส่งใบสั่งให้เซลล์แล้ว"; $("pill").textContent = "ส่งแล้ว"; $("pill").dataset.tone = "ok"; order.status = "sent"; order.sent_at = order.sent_at || new Date().toISOString(); prev(); label(); }
       else { $("msg").className = "err"; $("msg").textContent = "ส่งไม่ออก\nกดคัดลอก แล้วไปวางในกลุ่มสั่งของเอง"; $("pill").textContent = "ส่งไม่ออก"; $("pill").dataset.tone = "bad"; $("copy").hidden = false; $("copy").onclick = async () => { await navigator.clipboard.writeText(r.message || text("สั่งของ")); $("copy").textContent = "คัดลอกแล้ว"; }; }
     } catch (e) { $("msg").className = "err"; $("msg").textContent = "ส่งไม่ออก ลองกดอีกครั้ง\n" + App.errText(e); }
-    $("send").disabled = false;
+    label();
   };
 })().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น: " + App.errText(e); } });
 </script></body></html>

@@ -3,14 +3,12 @@
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="lib/ui.css">
+<link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-data.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/config.js"></script><script src="lib/session.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-data.js"></script>
 <style>
 .g{align-items:end}
-#prod .g{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-@media (max-width:359px){#prod .g{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
 .g label.chk{display:flex;align-items:center;gap:10px;min-height:var(--field);margin:0;align-self:end;font-size:16px;color:var(--fg)}
 .card[data-src] > * + *{margin-top:10px}
 .card[data-src] .btn{width:100%;margin-right:0}
@@ -20,8 +18,18 @@
 <p id="blocked" class="err" hidden></p>
 <div id="app" hidden>
   <div class="tabs"><button data-t="staff" class="on">พนักงาน</button><button data-t="prod">สินค้า</button><button data-t="sys">ร้าน</button></div>
-  <section id="staff"></section><section id="prod" hidden></section><section id="sys" hidden></section>
+  <section id="staff"></section>
+  <section id="prod" hidden>
+    <div class="search"><input type="text" id="q" placeholder="ค้นหาสินค้า เช่น จ๊อ" aria-label="ค้นหาสินค้า" enterkeyhint="search"><button class="btn sm" id="add">+ เพิ่มสินค้า</button></div>
+    <div id="pf" class="chips" style="margin-top:10px"></div>
+    <p id="pmsg" class="ok"></p>
+    <div id="plist" class="card list"></div>
+  </section>
+  <section id="sys" hidden></section>
 </div>
+<dialog id="ps" class="bsheet" aria-labelledby="psh"><div class="body"><div class="grab"></div>
+  <div class="hd"><b id="psh"></b><button class="x" type="button" aria-label="ปิด" autofocus>✕</button></div><div id="psb"></div></div>
+  <div class="foot"><button class="btn primary" id="pss"></button><p id="psm" class="err"></p></div></dialog>
 <script>
 (async () => {
   const $ = (i) => document.getElementById(i);
@@ -31,6 +39,7 @@
   $("app").hidden = false;
   const tabs = document.querySelectorAll(".tabs button");
   tabs.forEach((b) => b.onclick = () => { tabs.forEach((x) => { x.classList.toggle("on", x === b); $(x.dataset.t).hidden = x !== b; }); });
+  const qs = new URLSearchParams(location.search);
   const fail = (e) => alert("บันทึกไม่ได้\n" + App.errText(e));
 
   // generic save-on-blur for any input with data-t/data-id/data-f
@@ -73,13 +82,86 @@
     staff();
   };
 
-  // ---- สินค้า
-  const { data: ps } = await supabase.from("products").select("*").order("sort");
-  $("prod").innerHTML = (ps || []).map((p) => `<div class="card"><b>${E(p.name)}</b> <span class="pill">${E({ stock: "ของขาย", consumable: "ของใช้ในร้าน" }[p.kind] || p.kind)}</span> ${p.supplier ? `<span class="pill">${E(p.supplier)}</span>` : ""} <span class="flash">บันทึกแล้ว ✓</span>
-    <div class="g">${inp("products", p.id, "par_weekday", p.par_weekday, "ควรมี จ.–ศ.")}${inp("products", p.id, "par_weekend", p.par_weekend, "ควรมี ส.–อา.")}
-    ${inp("products", p.id, "cost_price", p.cost_price, "ทุน (บาท)")}${inp("products", p.id, "store_price", p.store_price, "ขายหน้าร้าน (บาท)")}
-    ${inp("products", p.id, "delivery_price", p.delivery_price, "ขายเดลิเวอรี่ (บาท)")}
-    <label class="chk"><input type="checkbox" ${p.active ? "checked" : ""} data-t="products" data-id="${p.id}" data-f="active">ยังใช้อยู่</label></div></div>`).join("");
+  // ---- สินค้า: ค้นหา + ชิปกรอง + แถวสั้น → แผงล่างแก้ · + เพิ่มสินค้า
+  const KIND = { cpf: "ของขาย (CPF)", self: "ซื้อเอง", consumable: "ของใช้ในร้าน" };
+  // เพิ่มสินค้า: one choice sets kind + supplier together (the DB needs both)
+  const ADDK = [["cpf|cpf", "ของขาย (CPF)"], ["self|self", "ของขาย · ซื้อเอง"], ["consumable|cpf", "ของใช้ในร้าน · สั่ง CPF"], ["consumable|self", "ของใช้ในร้าน · ซื้อเอง"]];
+  const money = (n) => Number(n).toLocaleString("th-TH", { maximumFractionDigits: 2 });
+  const { data: ps0 } = await supabase.from("products").select("*").order("sort");
+  let ps = ps0 || [], cur = null;
+  const isCons = (p) => p.kind === "consumable";
+  const noCost = (p) => p.active && !isCons(p) && p.cost_price == null;
+  const FIL = { sell: ["ของขาย", (p) => p.active && !isCons(p)], cons: ["ของใช้ในร้าน", (p) => p.active && isCons(p)], nocost: ["ยังไม่ใส่ทุน", noCost], off: ["ปิดใช้แล้ว", (p) => !p.active] };
+  let pf = FIL[qs.get("f")] ? qs.get("f") : "sell";
+  const pmeta = (p) => isCons(p) ? `${KIND.consumable} · ${p.supplier === "cpf" ? "สั่ง CPF" : "ซื้อเอง"} · แพ็คละ ${p.pack_size}`
+    : `${(p.par_weekday || 0) + (p.par_weekend || 0) === 0 ? "ไม่สั่ง (ควรมี 0)" : `ควรมี ${p.par_weekday} / ${p.par_weekend}`} · ${p.cost_price == null ? '<b class="err">ยังไม่ใส่ทุน</b>' : `ทุน ${money(p.cost_price)} บาท`}${p.kind === "self" ? " · ซื้อเอง" : ""}`;
+  function drawProd() {
+    const q = $("q").value.trim().toLowerCase();
+    $("pf").innerHTML = Object.entries(FIL).map(([k, [t, f]]) => { const c = ps.filter(f).length; return k === "off" && !c ? "" : `<button type="button" class="chip${k === "nocost" ? " bad" : ""}${!q && k === pf ? " on" : ""}" data-f="${k}" aria-pressed="${!q && k === pf}">${t} <b>${c}</b></button>`; }).join("");
+    // ponytail: search looks through every product (ignores the chip) so a hit is never hidden by the wrong filter
+    const list = q ? ps.filter((p) => p.name.toLowerCase().includes(q)) : ps.filter(FIL[pf][1]);
+    $("plist").innerHTML = list.map((p) => `<button type="button" class="prow${p.active ? "" : " off"}" data-id="${p.id}"><div class="grow"><div class="nm">${E(p.name)}</div><div class="meta">${pmeta(p)}</div></div><span class="go" aria-hidden="true">›</span></button>`).join("")
+      || `<p class="muted">${q ? "ไม่เจอสินค้าชื่อนี้" : pf === "nocost" ? "ใส่ราคาทุนครบแล้ว ✓" : "ไม่มีสินค้า"}</p>`;
+  }
+  $("q").oninput = () => { $("pmsg").textContent = ""; drawProd(); };
+  $("pf").onclick = (ev) => { const b = ev.target.closest("[data-f]"); if (!b) return; pf = b.dataset.f; $("q").value = ""; drawProd(); };
+  const sheet = UXD.sheet($("ps"));
+  const num = (f, label, v, int) => `<label>${label}<input type="number" inputmode="${int ? "numeric" : "decimal"}" min="0" step="${int ? 1 : "any"}" name="${f}" value="${v ?? ""}"></label>`;
+  const chk = (p) => `<label class="chk"><input type="checkbox" name="active" ${p.active ? "checked" : ""}>ยังใช้อยู่ (เอาติ๊กออก = ปิดใช้)</label>`;
+  function openEdit(p) {
+    cur = p; $("psm").textContent = "";
+    $("psh").textContent = p.name;
+    $("psb").innerHTML = `<p class="meta" style="margin:2px 0 0">${KIND[p.kind] || E(p.kind)}${isCons(p) ? ` · ${p.supplier === "cpf" ? "สั่ง CPF" : "ซื้อเอง"}` : ""}</p>` + (isCons(p)
+      ? `<div class="g">${num("pack_size", "แพ็คละ (ชิ้น)", p.pack_size, 1)}</div>${chk(p)}`
+      : `<div class="g">${num("par_weekday", "ควรมี จ.–พฤ.", p.par_weekday, 1)}${num("par_weekend", "ควรมี ศ.–อา.", p.par_weekend, 1)}
+         ${num("cost_price", "ราคาทุน (บาท)", p.cost_price)}${num("store_price", "ขายหน้าร้าน (บาท)", p.store_price)}</div>
+         <details class="fold"><summary>แพ็คละ · ราคาเดลิเวอรี · ปิดใช้<span class="chip">เปิดดู</span></summary>
+         <div class="g">${num("pack_size", "แพ็คละ (ชิ้น)", p.pack_size, 1)}${num("delivery_price", "ขายเดลิเวอรี (บาท)", p.delivery_price)}</div>${chk(p)}</details>`);
+    $("pss").textContent = "บันทึก " + p.name;
+    sheet.open();
+  }
+  function openAdd() {
+    cur = null; $("psm").textContent = "";
+    $("psh").textContent = "เพิ่มสินค้า";
+    $("psb").innerHTML = `<label class="field" for="an">ชื่อสินค้า</label><input type="text" id="an" name="name" required>
+      <label class="field" for="ak">เป็นของแบบไหน</label><select id="ak" name="kk">${ADDK.map(([v, t]) => `<option value="${v}">${t}</option>`).join("")}</select>
+      <div class="g"><label>หน่วย<input type="text" name="unit" list="units" placeholder="ชิ้น" required></label>${num("pack_size", "แพ็คละ (ชิ้น)", 1, 1)}</div>
+      <datalist id="units"><option value="ตัว"><option value="ชิ้น"><option value="แพ็ค"><option value="ขวด"><option value="กก."><option value="ม้วน"><option value="ซอง"></datalist>
+      <p class="muted">ควรมี กับ ราคาทุน ใส่ต่อได้หลังเพิ่ม</p>`;
+    $("pss").textContent = "เพิ่มสินค้า";
+    sheet.open();
+  }
+  $("plist").onclick = (ev) => { const b = ev.target.closest(".prow"); if (b) openEdit(ps.find((p) => p.id === b.dataset.id)); };
+  $("add").onclick = openAdd;
+  $("pss").onclick = async () => {
+    const f = Object.fromEntries([...$("psb").querySelectorAll("[name]")].map((el) => [el.name, el.type === "checkbox" ? el.checked : el.value.trim()]));
+    const bad = (t) => { $("psm").textContent = t; };
+    const n = (k, int) => { if (f[k] === "" || f[k] == null) return null; const v = Number(f[k]); return Number.isFinite(v) && v >= 0 && (!int || Number.isInteger(v)) ? v : NaN; };
+    let row;
+    if (cur) {
+      row = { active: f.active };
+      for (const [k, int] of [["par_weekday", 1], ["par_weekend", 1], ["pack_size", 1], ["cost_price"], ["store_price"], ["delivery_price"]]) if (k in f) row[k] = n(k, int);
+      if (Object.values(row).some(Number.isNaN)) return bad("ตัวเลขไม่ถูก\nใส่เลข 0 ขึ้นไป (ควรมี กับ แพ็ค ใช้เลขเต็ม)");
+      for (const k of ["par_weekday", "par_weekend"]) if (k in row && row[k] == null) row[k] = 0;   // not null in the DB
+      if ("pack_size" in row && !(row.pack_size >= 1)) return bad("แพ็คละ ต้องเป็น 1 ขึ้นไป");
+    } else {
+      const [kind, supplier] = f.kk.split("|"), pk = n("pack_size", 1);
+      if (!f.name) return bad("ใส่ชื่อสินค้าก่อน");
+      if (ps.some((p) => p.name === f.name)) return bad("มีสินค้าชื่อนี้แล้ว");
+      if (!f.unit) return bad("ใส่หน่วยก่อน เช่น ชิ้น");
+      if (!(pk >= 1)) return bad("แพ็คละ ต้องเป็นเลขเต็ม 1 ขึ้นไป");
+      row = { name: f.name, kind, supplier, unit: f.unit, pack_size: pk, sort: Math.max(0, ...ps.map((p) => p.sort)) + 1, par_weekday: 0, par_weekend: 0, active: true };
+    }
+    $("pss").disabled = true;
+    const r = cur ? await supabase.from("products").update(row).eq("id", cur.id).select().single() : await supabase.from("products").insert(row).select().single();
+    $("pss").disabled = false;
+    if (r.error) return bad("บันทึกไม่ได้\n" + App.errText(r.error));
+    const saved = r.data || { ...cur, ...row };
+    ps = cur ? ps.map((p) => p.id === cur.id ? saved : p) : [...ps, saved];
+    if (!cur) { pf = isCons(saved) ? "cons" : "sell"; $("q").value = ""; }
+    sheet.close(); drawProd(); $("pmsg").textContent = (cur ? "บันทึก " : "เพิ่ม ") + saved.name + " แล้ว";
+  };
+  drawProd();
 
   // ---- ระบบ
   const { data: st } = await supabase.from("settings").select("key,value");
@@ -91,6 +173,9 @@
   $("sys").innerHTML = `<div class="card"><label class="field" for="shop">ชื่อร้าน (ขึ้นหัวใบสั่ง)</label><input type="text" id="shop" value="${E(S.shop_name)}">
     <div class="g"><div><label for="rem">เตือนปิดร้านตอน</label><input type="time" id="rem" value="${E(S.remind_at)}"></div><div><label for="auto">แอปส่งใบสั่งตอน</label><input type="time" id="auto" value="${E(S.auto_send_at)}"></div></div>
     <label class="field" for="sg">กลุ่มสั่งของ (มีเซลล์)</label>${sel("sg", S.sales_group_id)}<label class="field" for="fg">กลุ่มพนักงาน</label>${sel("fg", S.staff_group_id)}</div>
+    <h2>ค่า GP แอปส่งอาหาร (%)</h2><div class="card"><div class="g" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      <label>LINE MAN<input type="number" inputmode="decimal" step="any" min="0" id="lineman_gp" value="${E(S.lineman_gp)}"></label><label>Grab<input type="number" inputmode="decimal" step="any" min="0" id="grab_gp" value="${E(S.grab_gp)}"></label><label>Shopee<input type="number" inputmode="decimal" step="any" min="0" id="shopee_gp" value="${E(S.shopee_gp)}"></label></div>
+      <p class="muted">หน้าต้นทุน/กำไรใช้ตัวเลขนี้คิดค่า GP</p></div>
     <h2>วันหยุดร้าน</h2><p class="muted">เพิ่มหรือลบแล้ว กด บันทึกตั้งค่าร้าน ด้านล่าง</p><div class="card"><div id="hl"></div><div class="row hd-add"><input type="date" id="hd" aria-label="วันหยุดที่จะเพิ่ม"><button class="btn sm" id="ha">เพิ่มวัน</button></div></div>
     <button class="btn primary" id="save">บันทึกตั้งค่าร้าน</button><p id="smsg" class="muted"></p>`;
   drawHol();
@@ -98,10 +183,13 @@
   $("hl").onclick = (ev) => { const i = ev.target.dataset.del; if (i !== undefined) { hol.splice(i, 1); drawHol(); } };
   $("save").onclick = async () => {
     const rows = [["shop_name", $("shop").value.trim()], ["remind_at", $("rem").value || "20:30"], ["auto_send_at", $("auto").value || "21:00"],
-      ["sales_group_id", $("sg").value || ""], ["staff_group_id", $("fg").value || ""], ["holidays", hol]].map(([key, value]) => ({ key, value }));
+      ["sales_group_id", $("sg").value || ""], ["staff_group_id", $("fg").value || ""], ["holidays", hol],
+      // GP: blank = keep what is saved (never write 0 by accident)
+      ...["lineman_gp", "grab_gp", "shopee_gp"].filter((k) => $(k).value !== "").map((k) => [k, Number($(k).value)])].map(([key, value]) => ({ key, value }));
     const { error } = await supabase.from("settings").upsert(rows);
     $("smsg").className = error ? "err" : "ok"; $("smsg").textContent = error ? "บันทึกไม่ได้: " + App.errText(error) : "บันทึกแล้ว ✓";
   };
   staff();
+  const t0 = document.querySelector(`.tabs [data-t="${qs.get("tab")}"]`); if (t0) t0.click();
 })().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น: " + App.errText(e); } });
 </script></body></html>
