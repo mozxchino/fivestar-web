@@ -1,10 +1,17 @@
-<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>รอเจ้าของอนุมัติ</title><link rel="stylesheet" href="lib/ui.css"></head><body>
-<div class="topbar"><div class="logo">5</div><div><h1>ไก่ย่างห้าดาว</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></div>
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>รอเจ้าของอนุมัติ</title><meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="lib/ui.css"></head><body ontouchstart="">
+<header class="topbar"><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ไก่ย่างห้าดาว</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
+<main class="hero-msg">
+<img src="img/logo-512.png" alt="" width="120" height="120">
 <h1>รอเจ้าของอนุมัติ</h1>
 <p>ส่งคำขอแล้ว</p>
 <p>เจ้าของจะเปิดสิทธิ์ให้</p>
 <p>เปิดแอปอีกครั้งหลังได้รับแจ้ง</p>
-<p class="muted" style="font-size:12px">ชื่อ LINE: <span id="n"></span><br>รหัส: <code id="u"></code></p>
+<div class="card id-card"><div class="row"><span class="muted">ชื่อ LINE</span><b id="n"></b></div><div class="row"><span class="muted">รหัส</span><code id="u"></code></div></div>
+</main>
 <script>const q=new URLSearchParams(location.search);document.getElementById("n").textContent=q.get("n")||"";document.getElementById("u").textContent=q.get("u")||"";</script>
 </body></html>

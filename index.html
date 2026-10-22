@@ -1,25 +1,43 @@
 <!doctype html><html lang="th"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ห้าดาว อ่อนนุช 44</title>
+<meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="lib/ui.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/config.js"></script><script src="lib/session.js"></script>
-</head><body>
-<div class="topbar"><div class="logo">5</div><div><h1>ไก่ย่างห้าดาว</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></div>
-<h1 id="title" style="font-size:18px">กำลังเข้าระบบ…</h1>
-<div id="menu"></div>
-<p class="muted" id="who"></p>
+</head><body ontouchstart="">
+<header class="topbar home"><img class="logo" src="img/logo-96.png" alt="" width="64" height="64"><div><img class="wordmark" src="img/wordmark.svg" alt="FIVE STAR" width="146" height="25"><h1>ไก่ย่างห้าดาว</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
+<h1 id="title">กำลังเข้าระบบ…</h1>
+<nav id="menu" aria-label="เมนู"></nav>
+<p class="muted who" id="who"></p>
 <script>
 (async () => {
   try {
     const { me } = await App.ready();
     document.getElementById("who").textContent = `${me.name} · ${me.role === "owner" ? "เจ้าของ" : "พนักงาน"}`;
     document.getElementById("title").textContent = "เลือกเมนู";
-    const staff = [["open.html","เปิดร้าน","🌅"],["receive.html","รับของ","📦"],["close.html","ปิดร้าน","🌙"],["issue.html","แจ้งปัญหา","⚠️"],["holiday.html","ขอหยุด/ลา","🏖️"],["history.html","ประวัติ","📅"]];
-    const owner = [["owner.html","วันนี้","📊"],["approve.html","อนุมัติใบสั่ง","✅"],["settings.html","ตั้งค่า","⚙️"],["costs.html","ต้นทุน/กำไร","💰"],["holiday.html","ขอหยุด/ลา","🏖️"]];
+    // Lucide icons, stroke 2
+    const I = {
+      open: '<path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/>',
+      receive: '<path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"/><path d="m7.5 4.27 9 5.15"/>',
+      close: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+      issue: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+      holiday: '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/><path d="m14 14-4 4"/><path d="m10 14 4 4"/>',
+      history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+      today: '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+      approve: '<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
+      settings: '<path d="M21 4h-7"/><path d="M10 4H3"/><path d="M21 12h-9"/><path d="M8 12H3"/><path d="M21 20h-5"/><path d="M12 20H3"/><path d="M14 2v4"/><path d="M8 10v4"/><path d="M16 18v4"/>',
+      costs: '<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+    };
+    const svg = (p) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+    const staff = [["open.html","เปิดร้าน","open"],["receive.html","รับของ","receive"],["close.html","ปิดร้าน","close"],["issue.html","แจ้งปัญหา","issue"],["holiday.html","ขอหยุด/ลา","holiday"],["history.html","ประวัติ","history"]];
+    const owner = [["owner.html","วันนี้","today"],["approve.html","อนุมัติใบสั่ง","approve"],["settings.html","ตั้งค่า","settings"],["costs.html","ต้นทุน/กำไร","costs"],["holiday.html","ขอหยุด/ลา","holiday"]];
     document.getElementById("menu").innerHTML = (me.role === "owner" ? owner : staff)
-      .map(([h,t,ic],i) => `<a class="btn ${i===0?'primary':''}" href="${h}"><span class="ico">${ic}</span>${t}</a>`).join("");
+      .map(([h,t,ic],i) => `<a class="btn tile ${i===0?'primary':''}" href="${h}"><span class="ico">${svg(I[ic])}</span><span class="t">${t}</span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></a>`).join("");
   } catch (e) {
     if (e.message !== "denied") document.getElementById("title").textContent = "เข้าระบบไม่ได้: " + e.message;
   }

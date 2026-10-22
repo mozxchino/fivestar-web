@@ -1,31 +1,36 @@
-<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ต้นทุน/กำไร (เจ้าของ)</title><link rel="stylesheet" href="lib/ui.css">
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ต้นทุน/กำไร (เจ้าของ)</title><meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="lib/ui.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/config.js"></script><script src="lib/session.js"></script>
 <style>
-table{width:100%;border-collapse:collapse}td,th{padding:8px 2px;border-bottom:1px solid var(--line);text-align:left}td+td,th+th{text-align:right}
-td.n{font-weight:600}tr.net td{font-size:20px;font-weight:700}
-.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}.g label{display:block;font-size:14px;color:var(--muted)}
-.sm{display:inline-block;width:auto;padding:10px 16px;font-size:17px;margin:8px 8px 0 0}
-#pm{width:100%;padding:12px;font-size:19px}
-</style></head><body>
-<div class="topbar"><div class="logo">5</div><div><h1>ต้นทุน/กำไร</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></div>
+td.n{font-weight:600}
+tr.net td{font:600 20px/1.3 var(--font-head);padding:14px 2px;border-top:2px solid var(--color-foreground)}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:12px}.g label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:4px}
+#prod{overflow-x:auto;padding:8px 12px}
+#prod table{font-size:14px}#prod th{font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap}
+#prod td:first-child{min-width:96px}
+</style></head><body ontouchstart="">
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ต้นทุน/กำไร</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
 <p id="blocked" class="err" hidden></p>
 <div id="app" hidden>
   <input id="pm" type="month">
   <h2>สรุป</h2><div id="sum" class="card muted">กำลังโหลด…</div>
-  <h2>กรอกยอดเดือนนี้</h2><div class="card">
+  <h2>กรอกยอดเดือนนี้</h2><div class="card form">
     <div class="g"><div><label>ยอดหน้าร้าน (POS)</label><input type="number" id="store_sales"></div><div><label>ยอด LINE MAN</label><input type="number" id="lineman_sales"></div>
     <div><label>ยอด Grab</label><input type="number" id="grab_sales"></div><div><label>ยอด Shopee</label><input type="number" id="shopee_sales"></div>
     <div><label>ค่าเช่า</label><input type="number" id="rent"></div><div><label>ค่าแรง</label><input type="number" id="wages"></div>
     <div><label>น้ำไฟ</label><input type="number" id="utilities"></div><div><label>แก๊ส</label><input type="number" id="gas"></div>
     <div><label>จิปาถะ</label><input type="number" id="misc"></div></div>
-    <label class="muted">โน้ต</label><textarea id="note" rows="2"></textarea>
+    <label class="field" for="note">โน้ต</label><textarea id="note" rows="2"></textarea>
     <button class="btn primary sm" id="save">บันทึก</button> <span id="smsg" class="muted"></span></div>
   <h2>อัตรา GP (%)</h2><div class="card">
     <div class="g"><div><label>LINE MAN</label><input type="number" id="lineman_gp"></div><div><label>Grab</label><input type="number" id="grab_gp"></div><div><label>Shopee</label><input type="number" id="shopee_gp"></div></div>
-    <button class="btn primary sm" id="gsave">บันทึก</button> <span id="gmsg" class="muted"></span></div>
+    <button class="btn sm" id="gsave">บันทึก</button> <span id="gmsg" class="muted"></span></div>
   <h2>รายสินค้า</h2><div id="prod" class="card muted">กำลังโหลด…</div>
 </div>
 <script>

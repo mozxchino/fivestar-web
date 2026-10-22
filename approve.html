@@ -1,28 +1,35 @@
-<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>อนุมัติใบสั่ง</title><link rel="stylesheet" href="lib/ui.css">
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>อนุมัติใบสั่ง</title><meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="lib/ui.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/config.js"></script><script src="lib/session.js"></script>
 <style>
-.it{display:grid;grid-template-columns:1fr 96px 44px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
-.it input{text-align:center;padding:8px 4px}
-pre{white-space:pre-wrap;font:16px/1.5 inherit;margin:0}
-.sticky{position:sticky;bottom:0;background:var(--bg);padding:12px 0}
-</style></head><body>
-<div class="topbar"><div class="logo">5</div><div><h1>อนุมัติใบสั่ง</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></div>
+#items .it{display:grid;grid-template-columns:1fr 96px 44px;gap:10px;align-items:center;min-height:64px;padding:8px 0;border-bottom:1px solid var(--color-border)}
+#items .it:last-child{border-bottom:0}
+#items .it input{text-align:center;font-weight:500;font-size:18px}
+pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-numeric:tabular-nums}
+</style></head><body ontouchstart="">
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>อนุมัติใบสั่ง</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
 <p id="blocked" class="err" hidden></p>
 <div id="repeat" hidden>
-  <p>วันนี้ยังไม่มีใบสั่ง (ร้านยังไม่ปิด)</p>
+  <div class="empty"><p>วันนี้ยังไม่มีใบสั่ง</p><p class="muted">ร้านยังไม่ปิด</p></div>
   <button id="rep" class="btn primary">ส่งซ้ำของเมื่อวาน</button>
   <button id="skip" class="btn">ข้ามวันนี้</button>
 </div>
 <div id="form" hidden>
-  <p><span id="pill" class="pill"></span> <span class="muted">สั่งสำหรับ <span id="d"></span> · ส่งอัตโนมัติ <span id="cd"></span></span></p>
-  <div id="items"></div>
+  <div class="card order-head"><span id="pill" class="pill"></span>
+    <div class="kv"><span>สั่งสำหรับ</span><b id="d" class="num"></b></div>
+    <div class="kv"><span>ส่งอัตโนมัติ</span><b id="cd" class="num"></b></div></div>
+  <h2>รายการสั่ง</h2>
+  <div id="items" class="card list"></div>
   <h2>ข้อความที่จะส่ง</h2>
-  <div class="card"><pre id="prev"></pre></div>
+  <div class="card preview"><pre id="prev"></pre></div>
   <h2>ต้องซื้อเอง</h2>
-  <div id="self" class="muted"></div>
+  <div id="self" class="card list"></div>
   <div class="sticky"><button id="send" class="btn primary">ส่งเข้ากลุ่มเซลล์</button>
     <p id="msg" class="muted"></p><button id="copy" class="btn" hidden>คัดลอกข้อความ</button></div>
 </div>
@@ -71,10 +78,10 @@ pre{white-space:pre-wrap;font:16px/1.5 inherit;margin:0}
   const { data: disp } = await supabase.rpc("order_display", { oid: orderId });
   rows = (disp || []).sort((a, b) => a.sort - b.sort);
   const { data: sb } = await supabase.from("self_buy_today").select("name,status");
-  $("self").innerHTML = (sb || []).map((s) => `${s.name} <span class="pill">${s.status === "out" ? "หมด" : "ใกล้หมด"}</span>`).join("<br>") || "ไม่มี";
+  $("self").innerHTML = (sb || []).map((s) => `<div class="row"><span class="grow">${s.name}</span><span class="pill" data-tone="${s.status === "out" ? "bad" : "wait"}">${s.status === "out" ? "หมด" : "ใกล้หมด"}</span></div>`).join("") || '<p class="muted">ไม่มี</p>';
   $("d").textContent = order.for_date.slice(8) + "/" + order.for_date.slice(5, 7);
-  $("pill").textContent = ST[order.status] || order.status;
-  $("items").innerHTML = rows.map((r, i) => `<div class="it"><div>${r.label}</div><input type="number" inputmode="decimal" min="0" step="${step[r.product_id]}" value="${r.qty}" data-i="${i}"><div class="muted">${r.unit_th}</div></div>`).join("");
+  $("pill").textContent = ST[order.status] || order.status; $("pill").dataset.tone = { sent: "ok", failed: "bad" }[order.status] || "wait";
+  $("items").innerHTML = rows.map((r, i) => `<div class="it"><div class="nm">${r.label}</div><input type="number" inputmode="decimal" min="0" step="${step[r.product_id]}" value="${r.qty}" data-i="${i}"><div class="muted">${r.unit_th}</div></div>`).join("");
   if (order.status === "sent") $("send").textContent = "ส่งแก้ไข";
   const cur = () => rows.map((r, i) => ({ product_id: r.product_id, qty_final: Math.max(0, Number(document.querySelector(`[data-i="${i}"]`).value) || 0), r }));
   const text = (head) => { const d = $("d").textContent; return `${head} ${d} · ${shop}\n` + cur().filter((x) => x.qty_final > 0).map(({ r, qty_final: n }) => `${r.order_as ? r.label.replace(/^เซ็ต/, "") : r.label} ${n} ${r.unit_th}` + (r.sets != null ? ` (${Math.round(n / step[r.product_id])} เซ็ต)` : "")).join("\n"); };
@@ -87,8 +94,8 @@ pre{white-space:pre-wrap;font:16px/1.5 inherit;margin:0}
     $("send").disabled = true; $("copy").hidden = true; $("msg").className = "muted"; $("msg").textContent = "กำลังส่ง…";
     try {
       const r = await App.fn("send-order", { order_id: orderId, mode: "manual", items: cur().map(({ product_id, qty_final }) => ({ product_id, qty_final })) });
-      if (r.ok) { $("msg").className = "ok"; $("msg").textContent = "ส่งแล้ว\n" + r.message; $("pill").textContent = "ส่งแล้ว"; order.status = "sent"; order.sent_at = order.sent_at || new Date().toISOString(); prev(); $("send").textContent = "ส่งแก้ไข"; }
-      else { $("msg").className = "err"; $("msg").textContent = "ส่งไม่สำเร็จ"; $("pill").textContent = "ส่งไม่สำเร็จ"; $("copy").hidden = false; $("copy").onclick = async () => { await navigator.clipboard.writeText(r.message || text("สั่งของ")); $("copy").textContent = "คัดลอกแล้ว"; }; }
+      if (r.ok) { $("msg").className = "ok"; $("msg").textContent = "ส่งแล้ว\n" + r.message; $("pill").textContent = "ส่งแล้ว"; $("pill").dataset.tone = "ok"; order.status = "sent"; order.sent_at = order.sent_at || new Date().toISOString(); prev(); $("send").textContent = "ส่งแก้ไข"; }
+      else { $("msg").className = "err"; $("msg").textContent = "ส่งไม่สำเร็จ"; $("pill").textContent = "ส่งไม่สำเร็จ"; $("pill").dataset.tone = "bad"; $("copy").hidden = false; $("copy").onclick = async () => { await navigator.clipboard.writeText(r.message || text("สั่งของ")); $("copy").textContent = "คัดลอกแล้ว"; }; }
     } catch (e) { $("msg").className = "err"; $("msg").textContent = "ส่งไม่สำเร็จ: " + e.message; }
     $("send").disabled = false;
   };

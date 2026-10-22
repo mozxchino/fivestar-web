@@ -1,20 +1,21 @@
-<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ตั้งค่า</title><link rel="stylesheet" href="lib/ui.css">
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ตั้งค่า</title><meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="lib/ui.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/config.js"></script><script src="lib/session.js"></script>
 <style>
-.tabs{display:flex;gap:8px;margin:0 0 8px}
-.tabs button{flex:1;padding:12px 4px;font-size:17px;font-weight:600;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg)}
-.tabs button.on{background:var(--red);color:#fff;border-color:var(--red)}
-.g{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin-top:8px}
-.g label{font-size:13px;color:var(--muted)}
-.g input,input[type=time],input[type=date]{font-size:17px;padding:10px;border:1px solid var(--line);border-radius:10px;width:100%;background:#fff}
-.sm{width:auto;padding:10px 16px;margin:6px 6px 0 0;font-size:16px;display:inline-flex}
-.flash{color:var(--green);font-size:14px;visibility:hidden}.flash.on{visibility:visible}
-.chk{display:flex;align-items:center;gap:6px;font-size:15px}.chk input{width:22px;height:22px}
-</style></head><body>
-<div class="topbar"><div class="logo">5</div><div><h1>ตั้งค่า</h1><div class="sub">เจ้าของร้านเท่านั้น</div></div></div>
+.g{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.g label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:4px}
+.g label.chk{display:flex;align-items:center;gap:10px;min-height:var(--field);margin:0;align-self:end;font-size:16px;color:var(--fg)}
+.card[data-src] > * + *{margin-top:10px}
+.card[data-src] .btn{width:100%;margin-right:0}
+.hd-add input{flex:1}
+</style></head><body ontouchstart="">
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ตั้งค่า</h1><div class="sub">เจ้าของร้านเท่านั้น</div></div></header>
 <p id="blocked" class="err" hidden></p>
 <div id="app" hidden>
   <div class="tabs"><button data-t="staff" class="on">พนักงาน</button><button data-t="prod">สินค้า</button><button data-t="sys">ระบบ</button></div>
@@ -85,11 +86,11 @@
   const { data: gs } = await supabase.from("line_sources").select("source_id,display_name").eq("source_type", "group");
   let hol = [...(S.holidays || [])].sort();
   const sel = (id, cur) => `<select id="${id}"><option value="">ไม่ตั้ง</option>${(gs || []).map((g) => `<option value="${E(g.source_id)}" ${g.source_id === cur ? "selected" : ""}>${E(g.display_name || g.source_id)}</option>`).join("")}</select>`;
-  const drawHol = () => { $("hl").innerHTML = hol.map((d, i) => `<div class="row"><span style="flex:1">${d}</span><button class="btn sm" data-del="${i}">ลบ</button></div>`).join("") || `<p class="muted">ไม่มี</p>`; };
-  $("sys").innerHTML = `<div class="card"><label class="muted">ชื่อร้าน</label><input type="text" id="shop" value="${E(S.shop_name)}">
+  const drawHol = () => { $("hl").innerHTML = hol.map((d, i) => `<div class="row"><span class="grow num">${d}</span><button class="btn sm" data-del="${i}">ลบ</button></div>`).join("") || `<p class="muted">ไม่มี</p>`; };
+  $("sys").innerHTML = `<div class="card"><label class="field" for="shop">ชื่อร้าน</label><input type="text" id="shop" value="${E(S.shop_name)}">
     <div class="g"><div><label>เตือนสั่งของ</label><input type="time" id="rem" value="${E(S.remind_at)}"></div><div><label>ส่งอัตโนมัติ</label><input type="time" id="auto" value="${E(S.auto_send_at)}"></div></div>
-    <p class="muted">กลุ่มเซลล์</p>${sel("sg", S.sales_group_id)}<p class="muted">กลุ่มพนักงาน</p>${sel("fg", S.staff_group_id)}</div>
-    <h2>วันหยุดร้าน</h2><div class="card"><div id="hl"></div><div class="row" style="border:0"><input type="date" id="hd"><button class="btn sm" id="ha">เพิ่ม</button></div></div>
+    <label class="field" for="sg">กลุ่มเซลล์</label>${sel("sg", S.sales_group_id)}<label class="field" for="fg">กลุ่มพนักงาน</label>${sel("fg", S.staff_group_id)}</div>
+    <h2>วันหยุดร้าน</h2><div class="card"><div id="hl"></div><div class="row hd-add" style="border:0"><input type="date" id="hd"><button class="btn sm" id="ha">เพิ่ม</button></div></div>
     <button class="btn primary" id="save">บันทึก</button><p id="smsg" class="muted"></p>`;
   drawHol();
   $("ha").onclick = () => { const d = $("hd").value; if (d && !hol.includes(d)) { hol.push(d); hol.sort(); drawHol(); } $("hd").value = ""; };
