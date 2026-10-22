@@ -1,31 +1,54 @@
 /* ux-audit-2 · stream staff · loaded after ui.css on index · close · receive · history (ui.css stays untouched) */
 
-/* ---------- close: sticky progress + section chips ---------- */
-.ux-top {
-  position: sticky; top: 0; z-index: 6; margin: 0 calc(-1 * var(--space-md)); padding: 10px var(--space-md) 8px;
-  background: var(--color-background); border-bottom: 1px solid var(--color-border);
-}
-.ux-top-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font: 500 16px/1.3 var(--font-head); font-variant-numeric: tabular-nums; }
+/* ---------- close: 4-step wizard · step bar on top, one step on screen, back + red next at the bottom ---------- */
+/* the step bar scrolls away (the red button at the bottom is the way on) · only the sheet's column header sticks */
+.ux-top { margin: 0 calc(-1 * var(--space-md)); padding: 10px var(--space-md) 6px; border-bottom: 1px solid var(--color-border); }
+.ux-top-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ux-top-row h2 { margin: 0; font: 500 18px/1.3 var(--font-head); outline: none; }
 .ux-top-row .muted { font: 400 13px/1.3 var(--font-body); white-space: nowrap; }
-.ux-prog { height: 6px; border-radius: 99px; background: var(--color-muted); overflow: hidden; margin: 6px 0 8px; }
+.ux-prog { height: 6px; border-radius: 99px; background: var(--color-muted); overflow: hidden; margin: 8px 0 4px; }
 .ux-prog i { display: block; height: 100%; background: var(--color-success); border-radius: 99px; transform: scaleX(0); transform-origin: left; transition: transform 200ms var(--ease-out); }
-.ux-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--space-md)); padding: 0 var(--space-md); }
-.ux-chips::-webkit-scrollbar { display: none; }
-.ux-chip {
-  flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 6px 14px; border-radius: 999px;
-  border: 1px solid var(--color-border-strong); background: var(--color-card); font: 500 15px/1.2 var(--font-body);
-  color: var(--color-foreground); white-space: nowrap; cursor: pointer; touch-action: manipulation;
-  transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out), border-color 160ms var(--ease-out), transform 120ms var(--ease-out);
+.ux-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+.ux-steps button {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 48px; padding: 4px 2px;
+  border: 0; border-radius: var(--radius-sm); background: none; font: 500 13px/1.2 var(--font-body); color: var(--color-ink-soft);
+  white-space: nowrap; cursor: pointer; touch-action: manipulation; transition: transform 120ms var(--ease-out);
 }
-.ux-chip:active { transform: scale(.96); }
-.ux-chip b { font-variant-numeric: tabular-nums; }
-.ux-chip.ok { background: var(--tint-success); color: var(--color-success); border-color: var(--border-ok); }
-.ux-chip.warn { background: var(--tint-wait); color: var(--on-wait); border-color: var(--border-wait); }
-.ux-chip.on { background: var(--color-foreground); color: #fff; border-color: var(--color-foreground); }
-/* section titles land under the sticky bar, and the sheet's own column header sticks below it */
-#form h2[id] { scroll-margin-top: calc(var(--ux-top, 0px) + 8px); }
-.ux-top ~ .sheet .sheet-head { top: var(--ux-top, 0px); }
-.grid { scroll-margin-top: calc(var(--ux-top, 0px) + 56px); scroll-margin-bottom: 96px; }
+.ux-steps i {
+  display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font: 600 13px/1 var(--font-head); font-style: normal;
+  border: 1.5px solid var(--color-border-input); background: var(--color-card); font-variant-numeric: tabular-nums;
+  transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), color 160ms var(--ease-out);
+}
+.ux-steps button:active { transform: scale(.96); }
+.ux-steps .on { color: var(--color-foreground); }
+.ux-steps .on i { background: var(--color-foreground); border-color: var(--color-foreground); color: #fff; }
+.ux-steps .ok i { background: var(--tint-success); border-color: var(--border-ok); color: var(--color-success); }
+.ux-steps [aria-disabled=true] { cursor: default; color: var(--color-muted-foreground); }
+.ux-steps button:focus-visible, .ux-opt:focus-visible, .ux-cchip:focus-visible { outline: 3px solid rgba(200, 33, 40, .35); outline-offset: 2px; }
+.ux-steps [aria-disabled=true]:active { transform: none; }
+.ux-steps [aria-disabled=true] i { border-color: var(--color-border-strong); }
+.grid { scroll-margin-top: 56px; scroll-margin-bottom: 120px; }
+#progT { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ux-step { padding-top: 10px; }
+.ux-hint { margin: 0 0 8px; font-size: 15px; line-height: 1.4; color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
+.ux-step > .card:first-child { margin-top: 0; }
+.ux-step > label.btn:first-child { margin-top: 0; }
+/* a short step still puts the buttons at the bottom of the phone, where the thumb is */
+body:has(> #form:not([hidden])) { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; padding-bottom: 0; }
+#form:not([hidden]) { flex: 1; display: flex; flex-direction: column; }
+.ux-foot { margin-top: auto; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; }
+.ux-foot > p { grid-column: 1 / -1; }
+.ux-foot > .btn:not(.primary) { width: auto; padding: 0 18px; }
+.ux-foot > .btn.primary, .ux-foot > .ux-next { grid-column: 2; }
+.ux-foot > .btn[hidden] + .btn.primary { grid-column: 1 / -1; }
+.ux-foot > .ux-next { grid-column: 1 / -1; margin-top: 8px; }
+/* WebKit draws number spinners that squeeze "ใส่" in a 54px box */
+#form input[type=number]::-webkit-inner-spin-button, #form input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+/* a new step / the opened chips arrive instead of blinking in (4–5 times a day · short, no bounce) */
+.ux-step, #consBox { transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out); }
+@starting-style { .ux-step, #consBox { opacity: 0; transform: translateY(6px); } }
+/* a live row left empty when the red button was pressed */
+.grid.ux-miss .rf { border-color: var(--color-destructive); background: var(--tint-destructive); }
 
 .sheet .grid .meta span { white-space: nowrap; }
 
@@ -34,6 +57,28 @@
 .ux-fold b { display: block; font-weight: 500; }
 .ux-fold small { display: block; font-size: 13px; line-height: 1.35; color: var(--color-ink-soft); }
 .ux-fold .btn { margin: 0; flex: none; }
+
+/* consumables: one big "ครบทุกอย่าง" or "มีของใกล้หมด" · only the second opens the chips */
+.ux-pick { display: grid; gap: 10px; margin: 0 0 12px; }
+.ux-opt {
+  position: relative; display: block; width: 100%; min-height: 72px; padding: 12px 16px 12px 56px; text-align: left; cursor: pointer;
+  background: var(--color-card); border: 1.5px solid var(--color-border-strong); border-radius: var(--radius); color: var(--color-foreground);
+  touch-action: manipulation; transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), transform 120ms var(--ease-out);
+}
+.ux-opt b { display: block; font: 500 18px/1.35 var(--font-head); }
+.ux-opt small { display: block; font-size: 14px; line-height: 1.4; color: var(--color-ink-soft); }
+.ux-opt::before {
+  content: ""; position: absolute; left: 16px; top: 50%; width: 26px; height: 26px; margin-top: -13px; border-radius: 50%; box-sizing: border-box;
+  border: 2px solid var(--color-border-input); background: var(--color-card) center / 16px no-repeat;
+  transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out);
+}
+.ux-opt:active { transform: scale(.98); }
+#consAll[aria-checked=true] { background: var(--tint-success); border-color: var(--border-ok); }
+#consAll[aria-checked=true]::before { border-color: var(--color-success); background-color: var(--color-success);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E"); }
+#consLow[aria-checked=true] { background: var(--tint-wait); border-color: var(--border-wait); }
+#consLow[aria-checked=true]::before { border: 8px solid var(--on-wait); }
+#consBox { padding-bottom: 4px; }
 
 /* consumables: 2-column chips, tap cycles มี → ใกล้หมด → หมด */
 .ux-cgrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
@@ -109,7 +154,7 @@ details.ux-day[open] summary::after { transform: rotate(90deg); }
 @starting-style { .ux-next { opacity: 0; transform: translateY(4px); } }
 
 @media (prefers-reduced-motion: reduce) {
-  @starting-style { .ux-next { transform: none; } }
-  .ux-chip:active, .ux-cchip:active, .ux-tl a:active { transform: none; }
+  @starting-style { .ux-next, .ux-step, #consBox { transform: none; } }
+  .ux-steps button:active, .ux-opt:active, .ux-cchip:active, .ux-tl a:active { transform: none; }
   .ux-prog i, details.ux-day summary::after { transition: none; }
 }
