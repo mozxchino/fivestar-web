@@ -13,6 +13,7 @@
   <div id="lines"></div>
   <h2 style="font-size:17px;margin-top:20px">รูปใบส่งของ</h2>
   <label class="btn">ถ่ายรูป (1–3 รูป) <input id="ph" type="file" accept="image/*" capture="environment" multiple hidden></label>
+  <p class="muted">ได้ไม่ครบ ต้องถ่ายใบส่งของ</p>
   <p id="phS" class="muted"></p>
   <button id="save" class="btn primary">บันทึกรับของ</button>
   <button id="none2" class="btn">วันนี้ไม่มีของมา</button>
@@ -34,14 +35,15 @@
     return `<div class="it" data-id="${i.product_id}"><div>${i.products?.name ?? ""}<div class="meta">${i.products?.unit ?? ""}</div></div><div>${+ord}</div><input type="number" inputmode="decimal" step="any" min="0" value="${+v}"></div>`; }).join("");
   const photos = [];
   ph.onchange = async () => { for (const f of ph.files) { if (photos.length >= 3) break; phS.textContent = "กำลังอัปโหลด…"; try { photos.push(await Photo.upload(supabase, "receipt", f)); } catch (e) { phS.textContent = "อัปโหลดไม่สำเร็จ: " + e.message; return; } } phS.textContent = "รูป " + photos.length + " รูป"; };
-  const run = async (p) => { save.disabled = none2.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
-    const { error } = await p; if (error) { msg.textContent = "ไม่สำเร็จ: " + error.message; msg.className = "err"; save.disabled = none2.disabled = false; return; }
-    msg.textContent = "บันทึกแล้ว"; msg.className = "ok"; };
+  const run = async (p, notify) => { save.disabled = none2.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
+    const { error } = await p; if (error) { msg.textContent = error.message; msg.className = "err"; save.disabled = none2.disabled = false; return; }
+    msg.textContent = "บันทึกแล้ว"; msg.className = "ok";
+    await App.fn("receive-notify", notify).catch(() => {}); };
   save.onclick = () => {
     const arr = [...lines.querySelectorAll(".it")].map((r) => ({ product_id: r.dataset.id, qty_received: +r.querySelector("input").value || 0 }));
-    run(supabase.rpc("receive_order", { oid: o.id, items: arr, photos }));
+    run(supabase.rpc("receive_order", { oid: o.id, items: arr, photos }), { order_id: o.id });
   };
-  none2.onclick = () => { if (confirm("วันนี้ไม่มีของมา?")) run(supabase.rpc("no_delivery_today")); };
+  none2.onclick = () => { if (confirm("วันนี้ไม่มีของมา?")) run(supabase.rpc("no_delivery_today"), { no_delivery: true }); };
   form.hidden = false;
 })();
 </script></body></html>
