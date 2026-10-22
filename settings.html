@@ -190,7 +190,7 @@
     $("cmsg").className = "muted"; $("cmsg").textContent = "กำลังส่ง…";
     const r = await App.fn("notify", { card: "claim" }).catch((e) => ({ error: e }));
     $("cmsg").className = r.ok ? "ok" : "err";
-    $("cmsg").textContent = r.ok ? "ส่งการ์ดเข้ากลุ่มแล้ว ✓" : r.error === "staff_group_id not set" ? "ยังไม่ได้ตั้งกลุ่มพนักงาน" : "ส่งไม่ได้: " + App.errText(r.error);
+    $("cmsg").textContent = r.ok ? "ส่งการ์ดเข้ากลุ่มแล้ว" : r.error === "staff_group_id not set" ? "ยังไม่ได้ตั้งกลุ่มพนักงาน" : "ส่งไม่ได้: " + App.errText(r.error);
   };
   $("save").onclick = async () => {
     const rows = [["shop_name", $("shop").value.trim()], ["remind_at", $("rem").value || "20:30"], ["auto_send_at", $("auto").value || "21:00"],
