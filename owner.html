@@ -82,7 +82,7 @@ td+td{font-weight:600}
       <textarea id="nt" rows="2" aria-label="พนักงานฝากบอก">${esc(sd.note)}</textarea><button class="btn primary sm" id="sv">บันทึกที่แก้</button> <span id="sm" class="muted"></span></div>` : "");
   }
   function wire(d, redraw) {
-    if ($("ot")) $("ot").onclick = async () => { const { error } = await supabase.rpc("approve_ot", { d }); if (error) return alert("ทำไม่ได้\n" + error.message); redraw(); };
+    if ($("ot")) $("ot").onclick = async () => { const { error } = await supabase.rpc("approve_ot", { d }); if (error) return alert("ทำไม่ได้\n" + App.errText(error)); redraw(); };
     if ($("sv")) $("sv").onclick = async () => {
       const num = (v) => v === "" ? null : +v; let err = null;
       for (const r of document.querySelectorAll("[data-p]")) {
@@ -90,7 +90,7 @@ td+td{font-weight:600}
         const { error } = await supabase.from("stock_lines").update(u).eq("date", d).eq("product_id", r.dataset.p); err = err || error;
       }
       const { error } = await supabase.from("shop_days").update({ cash_expected: num($("ce").value), cash_counted: num($("cn").value), note: $("nt").value || null }).eq("date", d);
-      $("sm").textContent = (err || error) ? "บันทึกไม่ได้: " + (err || error).message : "บันทึกแล้ว"; $("sm").className = (err || error) ? "err" : "ok";
+      $("sm").textContent = (err || error) ? "บันทึกไม่ได้: " + App.errText(err || error) : "บันทึกแล้ว"; $("sm").className = (err || error) ? "err" : "ok";
     };
   }
   const V = {
@@ -109,7 +109,7 @@ td+td{font-weight:600}
       $("out").onclick = async (e) => {
         const b = e.target.closest("button[data-i]"); if (!b) return;
         const u = b.dataset.s === "ack" ? { status: "ack", ack_by: me.userId, ack_at: new Date().toISOString() } : { status: "closed" };
-        const { error } = await supabase.from("issues").update(u).eq("id", b.dataset.i); if (error) return alert("ทำไม่ได้\n" + error.message); V.iss();
+        const { error } = await supabase.from("issues").update(u).eq("id", b.dataset.i); if (error) return alert("ทำไม่ได้\n" + App.errText(error)); V.iss();
       };
     },
     async mon() {
@@ -119,7 +119,7 @@ td+td{font-weight:600}
         const next = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, "0")}-01`;
         const [{ data: s, error }, { data: days }] = await Promise.all([supabase.rpc("month_summary", { y, m }),
           supabase.from("shop_days").select("opened_by").gte("date", $("pm").value + "-01").lt("date", next)]);
-        if (error) { $("out").innerHTML = `<p class="err">เปิดไม่ขึ้น: ${esc(error.message)}</p>`; return; }
+        if (error) { $("out").innerHTML = `<p class="err">เปิดไม่ขึ้น: ${esc(App.errText(error))}</p>`; return; }
         const r = (Array.isArray(s) ? s[0] : s) || {};
         const L = [["เปิดร้าน", r.days_worked, "วัน"], ["ปิดร้านในแอป", r.days_closed_sent, "วัน"], ["ร้านหยุด", r.days_holiday, "วัน"], ["โอที", r.ot_hours, "ชม."], ["โอทีที่อนุมัติแล้ว", r.ot_approved_hours, "ชม."], ["ของเสียรวม", r.waste_total, "หน่วย"], ["เงินสดขาดรวม", r.cash_short_total, "บาท"], ["วันที่ของมาไม่ครบ", r.cpf_short_days, "วัน"]];
         const cnt = {}; (days || []).forEach((x) => { if (x.opened_by) cnt[x.opened_by] = (cnt[x.opened_by] || 0) + 1; });
@@ -131,5 +131,5 @@ td+td{font-weight:600}
   };
   $("tabs").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; document.querySelectorAll("#tabs button").forEach((x) => x.classList.toggle("on", x === b)); $("out").innerHTML = ""; V[b.dataset.t](); };
   V.today();
-})().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น: " + e.message; } });
+})().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น: " + App.errText(e); } });
 </script></body></html>

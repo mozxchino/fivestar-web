@@ -50,7 +50,7 @@ tr.net td+td{white-space:nowrap}
   async function load() {
     const [y, m] = ym().split("-").map(Number); if (!y) return;
     const { data: r, error } = await supabase.rpc("month_costs", { y, m });
-    if (error) { $("sum").innerHTML = `<p class="err">เปิดไม่ขึ้น: ${esc(error.message)}</p>`; return; }
+    if (error) { $("sum").innerHTML = `<p class="err">เปิดไม่ขึ้น: ${esc(App.errText(error))}</p>`; return; }
     IN.forEach((k) => $(k).value = r.inputs[k] ?? "");
     $("note").value = r.inputs.note || "";
     GP.forEach((k) => $(k).value = r.gp[k] ?? "");
@@ -68,7 +68,7 @@ tr.net td+td{white-space:nowrap}
     $("prod").innerHTML = r.per_product.length ? r.per_product.map((p) => `<div class="row"><div class="grow"><div class="nm">${esc(p.name)}</div><div class="meta">รับ ${money(p.received)} · ขาย ${money(p.sold)} · เสีย ${money(p.waste)}<br>${p.cost_price == null ? '<b class="err">ยังไม่ใส่ราคาทุน</b>' : "ทุนต่อหน่วย " + money(p.cost_price) + " บาท"}</div></div><b>${money(p.cost)} บาท</b></div>`).join("")
       : '<p class="muted">เดือนนี้ยังไม่มีการนับของ</p>';
   }
-  const msg = (id, error) => { $(id).className = error ? "err" : "ok"; $(id).textContent = error ? "บันทึกไม่ได้: " + error.message : "บันทึกแล้ว ✓"; };
+  const msg = (id, error) => { $(id).className = error ? "err" : "ok"; $(id).textContent = error ? "บันทึกไม่ได้: " + App.errText(error) : "บันทึกแล้ว ✓"; };
   $("save").onclick = async () => {
     const row = { ym: ym(), note: $("note").value.trim() || null, updated_at: new Date().toISOString() };
     IN.forEach((k) => row[k] = +$(k).value || 0);
@@ -78,5 +78,5 @@ tr.net td+td{white-space:nowrap}
     const { error } = await supabase.from("settings").upsert(GP.map((key) => ({ key, value: +$(key).value || 0 }))); msg("gmsg", error); if (!error) load();
   };
   $("pm").onchange = load; await load();
-})().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น: " + e.message; } });
+})().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น: " + App.errText(e); } });
 </script></body></html>

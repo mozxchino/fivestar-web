@@ -17,7 +17,7 @@
   <div id="lines"></div>
   </div>
   <h2>รูปใบส่งของ</h2>
-  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปใบส่งของ <input id="ph" type="file" accept="image/*" capture="environment" multiple hidden></label>
+  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปใบส่งของ <input id="ph" type="file" accept="image/*" capture="environment" hidden></label>
   <p class="muted">ของมาไม่ครบ ต้องถ่าย · ได้ถึง 3 รูป</p>
   <p id="phS" class="muted"></p>
   <button id="none2" class="btn">วันนี้ไม่มีของมา</button>
@@ -32,16 +32,16 @@
   const { data: o } = await supabase.from("orders").select("id").eq("for_date", today).in("status", ["sent", "failed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (!o) { none.hidden = false; return; }
   const { data: items, error } = await supabase.from("order_items").select("product_id,qty_proposed,qty_final,qty_received,received_at,products(name,unit,pack_size,sort)").eq("order_id", o.id);
-  if (error) { none.hidden = false; none.querySelector("p").textContent = "เปิดใบสั่งไม่ขึ้น: " + error.message; return; }
+  if (error) { none.hidden = false; none.querySelector("p").textContent = "เปิดใบสั่งไม่ขึ้น: " + App.errText(error); return; }
   items.sort((a, b) => (a.products?.sort ?? 0) - (b.products?.sort ?? 0));
   const got = items.some((i) => i.received_at);
   if (got) { st.textContent = "รับของแล้ว\nแก้ตัวเลขได้จนกว่าจะกดปิดร้าน"; }
   lines.innerHTML = items.map((i) => { const ord = i.qty_final ?? i.qty_proposed; const v = got ? (i.qty_received ?? 0) : ord;
     return `<div class="it" data-id="${i.product_id}"><div class="nm">${i.products?.name ?? ""}<div class="meta">นับเป็น${i.products?.unit ?? ""}</div></div><div class="ord">${+ord}</div><input type="number" inputmode="decimal" step="any" min="0" value="${+v}"></div>`; }).join("");
   const photos = [];
-  ph.onchange = async () => { for (const f of ph.files) { if (photos.length >= 3) break; phS.textContent = "กำลังส่งรูป…"; try { photos.push(await Photo.upload(supabase, "receipt", f)); } catch (e) { phS.textContent = "ส่งรูปไม่ขึ้น ลองถ่ายใหม่: " + e.message; return; } } phS.textContent = "ได้รูปแล้ว " + photos.length + " รูป"; };
+  Photo.picker(supabase, ph, { paths: photos, type: "receipt", name: "รูปใบส่งของ", max: 3, status: phS });
   const run = async (p, notify) => { save.disabled = none2.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
-    const { error } = await p; if (error) { msg.textContent = "ยังบันทึกไม่ได้\n" + error.message; msg.className = "err"; save.disabled = none2.disabled = false; return; }
+    const { error } = await p; if (error) { msg.textContent = "ยังบันทึกไม่ได้\n" + App.errText(error); msg.className = "err"; save.disabled = none2.disabled = false; return; }
     msg.textContent = "บันทึกแล้ว ขอบคุณ"; msg.className = "ok";
     await App.fn("receive-notify", notify).catch(() => {}); };
   save.onclick = () => {

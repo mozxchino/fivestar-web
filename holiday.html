@@ -40,7 +40,7 @@
       if (!confirm(`ยกเลิกที่ขอไว้วันที่ ${b.dataset.d} ใช่ไหม?`)) return;
       b.disabled = true;
       const { error } = await supabase.rpc("cancel_leave", { p_id: b.dataset.cancel });
-      msg.textContent = error ? "ยกเลิกไม่ได้\n" + error.message : `ยกเลิกวันที่ ${b.dataset.d} แล้ว`;
+      msg.textContent = error ? "ยกเลิกไม่ได้\n" + App.errText(error) : `ยกเลิกวันที่ ${b.dataset.d} แล้ว`;
       msg.className = error ? "err" : "ok";
       await load();
     };
@@ -49,7 +49,7 @@
       cnt.innerHTML = `เดือนนี้หยุดไปแล้ว <b class="num">${+(c?.month_days ?? 0)} วัน</b><br><span class="muted">หยุดประจำสัปดาห์นี้ ใช้แล้ว ${+(c?.week_used ?? 0)} จาก 1 วัน</span>`;
       const { data, error } = await supabase.from("leave_requests").select("id, user_id, date, type, status, users(name)")
         .gte("date", today.slice(0, 8) + "01").lte("date", plus(31)).order("date");
-      if (error) { list.innerHTML = `<p class="err">เปิดไม่ขึ้น: ${error.message}</p>`; return; }
+      if (error) { list.innerHTML = `<p class="err">เปิดไม่ขึ้น: ${App.errText(error)}</p>`; return; }
       const rows = data; // this month + upcoming (≤ 30 days)
       list.innerHTML = rows.length ? rows.map((r) => `<div class="row" style="flex-wrap:wrap;row-gap:8px"><b class="grow"><span class="num">${thd(r.date)}</span> · ${TYPE[r.type] || r.type}${me.role === "owner" && r.users ? " · " + r.users.name : ""}</b><span class="pill" data-tone="${{ pending: "wait", approved: "ok", rejected: "bad" }[r.status] || ""}">${ST[r.status] || r.status}</span>${canCancel(r) ? `<span style="flex-basis:100%;height:0"></span><button class="btn sm" style="margin:0 0 0 auto" data-cancel="${r.id}" data-d="${thd(r.date)}">ยกเลิกคำขอ</button>` : ""}</div>`).join("")
         : `<p class="muted">ยังไม่มีใครขอหยุด</p>`;
@@ -58,7 +58,7 @@
       if (!date.value) { msg.textContent = "เลือกวันก่อน"; msg.className = "err"; return; }
       send.disabled = true; msg.textContent = "กำลังส่ง…"; msg.className = "muted";
       const { data, error } = await supabase.rpc("request_leave", { d: date.value, p_type: type.value, note: note.value.trim() || null });
-      if (error) { msg.textContent = "ส่งไม่ได้\n" + error.message; msg.className = "err"; send.disabled = false; return; }
+      if (error) { msg.textContent = "ส่งไม่ได้\n" + App.errText(error); msg.className = "err"; send.disabled = false; return; }
       const n = await App.fn("leave-notify", { leave_id: data.id }).catch(() => null);
       msg.textContent = data.status === "approved" ? "หยุดได้เลย (หยุดประจำสัปดาห์)" : "ส่งแล้ว รอเจ้าของกดอนุมัติในกลุ่ม LINE";
       if (!n || !n.ok) msg.textContent += "\nLINE แจ้งเจ้าของไม่ได้ ช่วยบอกเจ้าของเองด้วย";
@@ -67,6 +67,6 @@
     };
     form.hidden = false;
     await load();
-  } catch (e) { if (e.message !== "denied") cnt.textContent = "เปิดไม่ขึ้น: " + e.message; }
+  } catch (e) { if (e.message !== "denied") cnt.textContent = "เปิดไม่ขึ้น: " + App.errText(e); }
 })();
 </script></body></html>

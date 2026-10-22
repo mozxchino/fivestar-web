@@ -26,13 +26,13 @@
   const { data: day } = await supabase.from("shop_days").select("opened_at").eq("date", today).maybeSingle();
   if (day?.opened_at) { doneT.textContent = "เปิดร้านแล้ว · " + hm(day.opened_at) + " น."; done.hidden = false; return; }
   form.hidden = false;
-  let photo = null, noPhoto = false;
-  ph.onchange = async () => { phS.textContent = "กำลังส่งรูป…"; try { photo = await Photo.upload(supabase, "open", ph.files[0]); noPhoto = false; phS.textContent = "ได้รูปแล้ว"; } catch (e) { photo = null; noPhoto = true; phS.textContent = "ส่งรูปไม่ขึ้น · กดเปิดร้านต่อได้เลย"; } };
+  const shot = []; // 0 or 1 path
+  Photo.picker(supabase, ph, { paths: shot, type: "open", name: "รูปหน้าร้าน", max: 1, status: phS, failText: "ส่งรูปไม่ขึ้น · กดเปิดร้านต่อได้เลย" });
   go.onclick = async () => {
     go.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
-    const { error } = await supabase.rpc("open_shop", { photo });
-    if (error) { msg.textContent = "เปิดร้านไม่ได้ ลองกดอีกครั้ง\n" + error.message; msg.className = "err"; go.disabled = false; return; }
-    form.hidden = true; doneT.textContent = "เปิดร้านแล้ว · " + hm(Date.now()) + " น." + (photo ? "" : "\nไม่มีรูปหน้าร้าน"); done.hidden = false;
+    const { error } = await supabase.rpc("open_shop", { photo: shot[0] ?? null });
+    if (error) { msg.textContent = "เปิดร้านไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error); msg.className = "err"; go.disabled = false; return; }
+    form.hidden = true; doneT.textContent = "เปิดร้านแล้ว · " + hm(Date.now()) + " น." + (shot[0] ? "" : "\nไม่มีรูปหน้าร้าน"); done.hidden = false;
   };
 })();
 </script></body></html>

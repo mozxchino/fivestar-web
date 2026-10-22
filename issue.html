@@ -14,7 +14,7 @@
   <select id="type"><option value="waste">ของเสีย/หมดอายุ</option><option value="equipment">เครื่องพัง</option><option value="customer">ลูกค้าร้องเรียน</option><option value="cpf">ของ CPF มาผิด</option><option value="edit_request">กรอกผิด ขอแก้</option><option value="other">เรื่องอื่น</option></select>
   <label class="field" for="text">เกิดอะไรขึ้น</label>
   <textarea id="text" rows="4" placeholder="เช่น เตาย่างหัวซ้ายไฟไม่ติด"></textarea>
-  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูป (ไม่เกิน 3 รูป) <input id="ph" type="file" accept="image/*" capture="environment" multiple hidden></label>
+  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูป (ไม่เกิน 3 รูป) <input id="ph" type="file" accept="image/*" capture="environment" hidden></label>
   <p id="phS" class="muted"></p>
   <div class="sticky"><button id="send" class="btn primary">ส่งให้เจ้าของ</button>
   <p id="msg" class="muted"></p></div>
@@ -23,12 +23,12 @@
 (async () => {
   const { supabase, me } = await App.ready();
   const photos = [];
-  ph.onchange = async () => { for (const f of ph.files) { if (photos.length >= 3) break; phS.textContent = "กำลังส่งรูป…"; try { photos.push(await Photo.upload(supabase, "issue", f)); } catch (e) { phS.textContent = "ส่งรูปไม่ขึ้น ลองถ่ายใหม่: " + e.message; return; } } phS.textContent = "ได้รูปแล้ว " + photos.length + " รูป"; };
+  Photo.picker(supabase, ph, { paths: photos, type: "issue", name: "รูป", max: 3, status: phS });
   send.onclick = async () => {
     if (!text.value.trim()) { msg.textContent = "เขียนก่อนว่าเกิดอะไรขึ้น"; msg.className = "err"; return; }
     send.disabled = true; msg.textContent = "กำลังส่ง…"; msg.className = "muted";
     const { data, error } = await supabase.from("issues").insert({ type: type.value, text: text.value.trim(), photos, created_by: me.userId }).select("id").single();
-    if (error) { msg.textContent = "ส่งไม่ได้ ลองกดอีกครั้ง\n" + error.message; msg.className = "err"; send.disabled = false; return; }
+    if (error) { msg.textContent = "ส่งไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error); msg.className = "err"; send.disabled = false; return; }
     await App.fn("issue-notify", { issue_id: data.id }).catch(() => {});
     msg.textContent = "ส่งให้เจ้าของแล้ว ขอบคุณ"; msg.className = "ok"; text.disabled = ph.disabled = true;
   };

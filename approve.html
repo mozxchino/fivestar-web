@@ -62,12 +62,12 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
         if (!prev) throw new Error("ยังไม่เคยส่งใบสั่ง ไม่มีครั้งก่อนให้ใช้");
         const { data: old } = await supabase.from("order_items").select("product_id,qty_final,qty_proposed").eq("order_id", prev.id);
         const { data: nid, error } = await supabase.rpc("propose_order", { for_date: tomorrow });
-        if (error || !nid) throw new Error(error?.message || "ทำใบสั่งไม่ได้ (พรุ่งนี้ร้านหยุดหรือเปล่า)");
+        if (error || !nid) throw error || new Error("ทำใบสั่งไม่ได้ (พรุ่งนี้ร้านหยุดหรือเปล่า)");
         await supabase.from("order_items").delete().eq("order_id", nid);
         const { error: e2 } = await supabase.from("order_items").insert(old.map((o) => ({ order_id: nid, product_id: o.product_id, qty_proposed: o.qty_final ?? o.qty_proposed, qty_final: o.qty_final ?? o.qty_proposed })));
-        if (e2) throw new Error(e2.message);
+        if (e2) throw e2;
         location.replace("approve.html?order=" + nid);
-      } catch (e) { $("rep").disabled = false; $("rep").insertAdjacentHTML("afterend", `<p class="err">${e.message}</p>`); }
+      } catch (e) { $("rep").disabled = false; $("rep").insertAdjacentHTML("afterend", `<p class="err">${App.errText(e)}</p>`); }
     };
     return;
   }
@@ -97,8 +97,8 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
       const r = await App.fn("send-order", { order_id: orderId, mode: "manual", items: cur().map(({ product_id, qty_final }) => ({ product_id, qty_final })) });
       if (r.ok) { $("msg").className = "ok"; $("msg").textContent = "ส่งใบสั่งให้เซลล์แล้ว"; $("pill").textContent = "ส่งแล้ว"; $("pill").dataset.tone = "ok"; order.status = "sent"; order.sent_at = order.sent_at || new Date().toISOString(); prev(); $("send").textContent = "ส่งใบสั่งให้เซลล์อีกครั้ง"; }
       else { $("msg").className = "err"; $("msg").textContent = "ส่งไม่ออก\nกดคัดลอก แล้วไปวางในกลุ่มสั่งของเอง"; $("pill").textContent = "ส่งไม่ออก"; $("pill").dataset.tone = "bad"; $("copy").hidden = false; $("copy").onclick = async () => { await navigator.clipboard.writeText(r.message || text("สั่งของ")); $("copy").textContent = "คัดลอกแล้ว"; }; }
-    } catch (e) { $("msg").className = "err"; $("msg").textContent = "ส่งไม่ออก ลองกดอีกครั้ง\n" + e.message; }
+    } catch (e) { $("msg").className = "err"; $("msg").textContent = "ส่งไม่ออก ลองกดอีกครั้ง\n" + App.errText(e); }
     $("send").disabled = false;
   };
-})().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น: " + e.message; } });
+})().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น: " + App.errText(e); } });
 </script></body></html>

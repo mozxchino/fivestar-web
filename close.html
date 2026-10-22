@@ -26,7 +26,7 @@
   </div>
   <p id="cashDiff" class="muted"></p>
   <h2>4. ถ่ายรูป</h2>
-  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปตู้และถาด <input id="phFridge" type="file" accept="image/*" capture="environment" multiple hidden></label>
+  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปตู้และถาด <input id="phFridge" type="file" accept="image/*" capture="environment" hidden></label>
   <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปจอ POS ยอดวันนี้ <input id="phPos" type="file" accept="image/*" capture="environment" hidden></label>
   <p id="phStatus" class="muted"></p>
   <h2>5. ฝากบอกเจ้าของ</h2>
@@ -60,17 +60,17 @@
     seg.querySelectorAll("button").forEach((x) => x.className = ""); b.className = "on-" + b.dataset.v; });
   const diff = () => { const a = +cashExp.value, b = +cashCnt.value; cashDiff.textContent = (cashExp.value && cashCnt.value) ? (b - a === 0 ? "เงินสดครบ" : (b - a < 0 ? `เงินสดขาด ${(a - b).toLocaleString("th-TH")} บาท` : `เงินสดเกิน ${(b - a).toLocaleString("th-TH")} บาท`)) : ""; cashDiff.className = b - a < 0 ? "err" : "ok"; };
   cashExp.oninput = cashCnt.oninput = diff;
-  const photos = []; let posPhoto = null;
-  phFridge.onchange = async () => { for (const f of phFridge.files) { phStatus.textContent = "กำลังส่งรูป…"; try { photos.push(await Photo.upload(supabase, "fridge", f)); } catch (e) { phStatus.textContent = "ส่งรูปไม่ขึ้น ลองถ่ายใหม่: " + e.message; return; } } phStatus.textContent = `ได้รูปตู้ ${photos.length} รูป${posPhoto ? " · รูปจอ POS 1 รูป" : ""}`; };
-  phPos.onchange = async () => { phStatus.textContent = "กำลังส่งรูป…"; try { posPhoto = await Photo.upload(supabase, "pos", phPos.files[0]); } catch (e) { phStatus.textContent = "ส่งรูปไม่ขึ้น ลองถ่ายใหม่: " + e.message; return; } phStatus.textContent = `ได้รูปตู้ ${photos.length} รูป · รูปจอ POS 1 รูป`; };
+  const photos = [], pos = []; // pos: 0 or 1 path
+  Photo.picker(supabase, phFridge, { paths: photos, type: "fridge", name: "รูปตู้", status: phStatus });
+  Photo.picker(supabase, phPos, { paths: pos, type: "pos", name: "รูปจอ POS", max: 1 });
   send.onclick = async () => {
     const rows = [...document.querySelectorAll("#lines .grid")].map((g) => ({ product_id: g.dataset.id, remain_fresh: g.querySelector(".rf").value === "" ? null : +g.querySelector(".rf").value, remain_cooked: +g.querySelector(".rc").value || 0, waste: +g.querySelector(".w").value || 0 })).filter((r) => r.remain_fresh !== null);
     if (!rows.length) { msg.textContent = "กรอกช่อง เหลือสด อย่างน้อย 1 อย่าง"; msg.className = "err"; return; }
     if (!confirm(`ปิดร้านเลยไหม?\nนับของแล้ว ${rows.length} จาก ${stock.length} อย่าง${cashDiff.textContent ? "\n" + cashDiff.textContent : ""}\nกดแล้วแก้ตัวเลขไม่ได้`)) return;
     send.disabled = true; msg.textContent = "กำลังปิดร้าน…";
-    const payload = { lines: rows, consumables: Object.entries(state).filter(([, v]) => v !== "ok").map(([product_id, status]) => ({ product_id, status })), cash_expected: cashExp.value === "" ? null : +cashExp.value, cash_counted: cashCnt.value === "" ? null : +cashCnt.value, note: note.value || null, pos_photo: posPhoto, photos };
+    const payload = { lines: rows, consumables: Object.entries(state).filter(([, v]) => v !== "ok").map(([product_id, status]) => ({ product_id, status })), cash_expected: cashExp.value === "" ? null : +cashExp.value, cash_counted: cashCnt.value === "" ? null : +cashCnt.value, note: note.value || null, pos_photo: pos[0] ?? null, photos };
     const { error } = await supabase.rpc("close_day", { p: payload });
-    if (error) { msg.textContent = "ยังปิดร้านไม่ได้\n" + error.message; msg.className = "err"; send.disabled = false; return; }
+    if (error) { msg.textContent = "ยังปิดร้านไม่ได้\n" + App.errText(error); msg.className = "err"; send.disabled = false; return; }
     await App.fn("close-notify", { date: today }).catch(() => {});
     msg.textContent = "ปิดร้านแล้ว ขอบคุณ"; msg.className = "ok big"; document.querySelectorAll("input,textarea,button").forEach((x) => x.disabled = true);
   };

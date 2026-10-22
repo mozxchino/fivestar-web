@@ -28,6 +28,6 @@
         <div class="kv"><span>เปิด <b class="num">${hm(d.opened_at)}</b></span><span>ปิด <b class="num">${hm(d.closed_at)}</b></span></div>
         <div class="kv"><span>โอที <b class="num">${d.ot_hours ?? 0} ชม.</b></span><span>เงินสด <b class="num">${cash}</b></span></div></div>`;
     }).join("");
-  } catch (e) { if (e.message !== "denied") document.getElementById("msg").textContent = "เปิดไม่ขึ้น: " + e.message; }
+  } catch (e) { if (e.message !== "denied") document.getElementById("msg").textContent = "เปิดไม่ขึ้น: " + App.errText(e); }
 })();
 </script></body></html>

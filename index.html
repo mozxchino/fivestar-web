@@ -39,7 +39,7 @@
     document.getElementById("menu").innerHTML = (me.role === "owner" ? owner : staff)
       .map(([h,t,ic,s],i) => `<a class="btn tile ${i===0?'primary':''}" href="${h}"><span class="ico">${svg(I[ic])}</span><span class="t">${t}<small>${s}</small></span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></a>`).join("");
   } catch (e) {
-    if (e.message !== "denied") { document.getElementById("title").textContent = "เปิดแอปไม่ได้"; document.getElementById("who").textContent = "ปิดแล้วเปิดใหม่ใน LINE · " + e.message; }
+    if (e.message !== "denied") { document.getElementById("title").textContent = "เปิดแอปไม่ได้"; document.getElementById("who").textContent = "ปิดแล้วเปิดใหม่ใน LINE · " + App.errText(e); }
   }
 })();
 </script></body></html>
