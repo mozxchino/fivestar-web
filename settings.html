@@ -57,13 +57,14 @@
   async function staff() {
     const { data: pend } = await supabase.from("pending_users").select("*").order("first_seen");
     const { data: us } = await supabase.from("users").select("*").order("name");
-    const u = (x) => `<div class="card"><b>${E(x.name)}</b> <span class="pill">${x.role === "owner" ? "เจ้าของ" : "พนักงาน"}</span> <span class="flash">บันทึกแล้ว ✓</span>
+    // owner row: name + เจ้าของ only (no pay fields, can't be switched off · DB guard 0024)
+    const u = (x) => x.role === "owner" ? `<div class="card"><b>${E(x.name)}</b> <span class="pill">เจ้าของ</span></div>` : `<div class="card"><b>${E(x.name)}</b> <span class="pill">พนักงาน</span> <span class="flash">บันทึกแล้ว ✓</span>
       <div class="g">${inp("users", x.id, "salary_month", x.salary_month, "เงินเดือน (บาท)")}${inp("users", x.id, "off_days_per_month", x.off_days_per_month, "หยุดได้ (วัน/เดือน)")}
       ${inp("users", x.id, "std_hours_per_day", x.std_hours_per_day, "ทำงาน (ชม./วัน)")}${inp("users", x.id, "ot_rate_hour", x.ot_rate_hour, "โอที (บาท/ชม.)")}
       ${inp("users", x.id, "started_at", x.started_at, "เริ่มงานวันที่", "date")}</div>
-      ${x.active ? `<button class="btn sm" data-off="${x.id}" data-n="${E(x.name)}">ปิดสิทธิ์ใช้แอป</button>` : ""}</div>`;
+      ${x.active ? `<button class="btn sm" data-off="${x.id}" data-n="${E(x.name)}">ปิดสิทธิ์ใช้แอป</button>` : `<button class="btn sm" data-on="${x.id}">เปิดสิทธิ์คืน</button>`}</div>`;
     $("staff").innerHTML = `<h2>คนขอใช้แอป</h2>` + ((pend || []).map((p) => `<div class="card" data-src="${E(p.source_id)}"><input type="text" value="${E(p.display_name)}" placeholder="ชื่อที่เรียกในร้าน">
-      <select><option value="staff">พนักงาน</option><option value="owner">เจ้าของ</option></select><button class="btn sm" data-ok>อนุมัติให้ใช้แอป</button></div>`).join("") || `<p class="muted">ไม่มีคนขอ</p>`)
+      <button class="btn sm" data-ok>อนุมัติเป็นพนักงาน</button></div>`).join("") || `<p class="muted">ไม่มีคนขอ</p>`)
       + `<h2>คนที่ใช้แอปอยู่</h2>` + (us || []).filter((x) => x.active).map(u).join("")
       + `<details><summary class="muted">ปิดสิทธิ์แล้ว (${(us || []).filter((x) => !x.active).length} คน)</summary>${(us || []).filter((x) => !x.active).map(u).join("")}</details>`;
   }
@@ -73,10 +74,12 @@
     if (b.dataset.ok !== undefined) {
       const c = b.closest(".card"), name = c.querySelector("input").value.trim();
       if (!name) return fail("ใส่ชื่อก่อน");
-      r = await supabase.rpc("approve_user", { p_line_user_id: c.dataset.src, p_name: name, p_role: c.querySelector("select").value });
+      r = await supabase.rpc("approve_user", { p_line_user_id: c.dataset.src, p_name: name, p_role: "staff" });
     } else if (b.dataset.off) {
       if (!confirm("ปิดสิทธิ์ใช้แอปของ " + b.dataset.n + " ใช่ไหม?\nเขาจะเปิดแอปไม่ได้อีก")) return;
       r = await supabase.rpc("deactivate_user", { p_user_id: b.dataset.off });
+    } else if (b.dataset.on) {
+      r = await supabase.from("users").update({ active: true }).eq("id", b.dataset.on);
     } else return;
     if (r.error) return fail(r.error);
     staff();
@@ -172,7 +175,9 @@
   const drawHol = () => { $("hl").innerHTML = hol.map((d, i) => `<div class="row"><span class="grow num">${new Date(d + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })}</span><button class="btn sm" data-del="${i}">ลบ</button></div>`).join("") || `<p class="muted">ยังไม่มีวันหยุด</p>`; };
   $("sys").innerHTML = `<div class="card"><label class="field" for="shop">ชื่อร้าน (ขึ้นหัวใบสั่ง)</label><input type="text" id="shop" value="${E(S.shop_name)}">
     <div class="g"><div><label for="rem">เตือนปิดร้านตอน</label><input type="time" id="rem" value="${E(S.remind_at)}"></div><div><label for="auto">แอปส่งใบสั่งตอน</label><input type="time" id="auto" value="${E(S.auto_send_at)}"></div></div>
-    <label class="field" for="sg">กลุ่มสั่งของ (มีเซลล์)</label>${sel("sg", S.sales_group_id)}<label class="field" for="fg">กลุ่มพนักงาน</label>${sel("fg", S.staff_group_id)}</div>
+    <label class="field" for="sg">กลุ่มสั่งของ (มีเซลล์)</label>${sel("sg", S.sales_group_id)}<label class="field" for="fg">กลุ่มพนักงาน</label>${sel("fg", S.staff_group_id)}
+    <button class="btn sm" id="claim">ส่งการ์ดยืนยันตัวตนเข้ากลุ่มพนักงาน</button>
+    <p class="muted">ใช้เมื่อ: น้องยังไม่ได้กด หรือการ์ดจมไปแล้ว<br>กดปุ่มนี้ → การ์ดเด้งในกลุ่มพนักงาน<br>น้องกด 'ฉันเป็นพนักงาน' ในกลุ่ม → ใช้แอปได้เลย</p><p id="cmsg" class="muted" aria-live="polite"></p></div>
     <h2>ค่า GP แอปส่งอาหาร (%)</h2><div class="card"><div class="g" style="grid-template-columns:repeat(3,minmax(0,1fr))">
       <label>LINE MAN<input type="number" inputmode="decimal" step="any" min="0" id="lineman_gp" value="${E(S.lineman_gp)}"></label><label>Grab<input type="number" inputmode="decimal" step="any" min="0" id="grab_gp" value="${E(S.grab_gp)}"></label><label>Shopee<input type="number" inputmode="decimal" step="any" min="0" id="shopee_gp" value="${E(S.shopee_gp)}"></label></div>
       <p class="muted">หน้าต้นทุน/กำไรใช้ตัวเลขนี้คิดค่า GP</p></div>
@@ -181,6 +186,12 @@
   drawHol();
   $("ha").onclick = () => { const d = $("hd").value; if (d && !hol.includes(d)) { hol.push(d); hol.sort(); drawHol(); } $("hd").value = ""; };
   $("hl").onclick = (ev) => { const i = ev.target.dataset.del; if (i !== undefined) { hol.splice(i, 1); drawHol(); } };
+  $("claim").onclick = async () => {
+    $("cmsg").className = "muted"; $("cmsg").textContent = "กำลังส่ง…";
+    const r = await App.fn("notify", { card: "claim" }).catch((e) => ({ error: e }));
+    $("cmsg").className = r.ok ? "ok" : "err";
+    $("cmsg").textContent = r.ok ? "ส่งการ์ดเข้ากลุ่มแล้ว ✓" : r.error === "staff_group_id not set" ? "ยังไม่ได้ตั้งกลุ่มพนักงาน" : "ส่งไม่ได้: " + App.errText(r.error);
+  };
   $("save").onclick = async () => {
     const rows = [["shop_name", $("shop").value.trim()], ["remind_at", $("rem").value || "20:30"], ["auto_send_at", $("auto").value || "21:00"],
       ["sales_group_id", $("sg").value || ""], ["staff_group_id", $("fg").value || ""], ["holidays", hol],
