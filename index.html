@@ -52,7 +52,7 @@
     const title = document.getElementById("title");
     title.className = "ux-hello"; title.innerHTML = `สวัสดี ${esc(me.name)}<small>${thd(today, { weekday: "long" }).replace(/^วัน(\S+?)ที่ /, "$1 ")} · งานวันนี้</small>`;
     const n = st.next, d = st.day || {}, rest = n.key === "done" || n.key === "holiday";
-    const cell = (href, name, cls, sub) => `<a class="${cls}" href="${href}"><b>${name}</b>${sub}</a>`;
+    const cell = (href, name, cls, sub) => `<a class="bt ${cls}" href="${href}"><span class="k"><i class="dot" aria-hidden="true"></i>${name}</span><span class="v">${sub}</span></a>`;
     const c1 = d.opened_at ? cell("open.html", "เปิดร้าน ✓", "ok", hm(d.opened_at) + " น.") : n.key === "open" ? cell("open.html", "เปิดร้าน", "now", "งานถัดไป") : cell("open.html", "เปิดร้าน", "", rest ? "ร้านหยุด" : "ยังไม่เปิด");
     const c2 = st.receive === "ok" ? cell("receive.html", "รับของ ✓", "ok", hm(st.recvAt) + " น.") : st.receive === "short" ? cell("receive.html", "รับของ ✓", "wait", `ขาด ${st.short} อย่าง`)
       : n.key === "receive" ? cell("receive.html", "รับของ", "now", "งานถัดไป") : cell("receive.html", "รับของ", "", st.receive === "none" ? "ไม่มีของมา" : "ยังไม่รับ");
@@ -68,9 +68,11 @@
     if (!(lv.data || []).length) rows.push(line("holiday.html", "ขอหยุด/ลา", "ไม่มีวันที่ขอไว้ · หยุดประจำ ลาป่วย ลากิจ"));
     const L = last.data, gap = L && L.cash_counted != null && L.cash_expected != null ? L.cash_counted - L.cash_expected : null;
     rows.push(line("history.html", "ประวัติ 30 วัน", L ? [thd(L.date, { weekday: "short" }), L.closed_at ? `ปิด ${hm(L.closed_at)} น.` : "", gap == null ? "" : gap === 0 ? "เงินสดครบ" : `เงินสด${gap < 0 ? "ขาด" : "เกิน"} ${Math.abs(gap).toLocaleString("th-TH")} บาท`].filter(Boolean).join(" · ") : "ยังไม่มีประวัติ"));
-    document.getElementById("menu").innerHTML = `<div class="ux-tl">${c1}${c2}${c3}</div>
-      <a class="btn tile primary" href="${n.href}"><span class="ico">${svg(I[icon])}</span><span class="t">${n.label}<small>${n.sub}</small></span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></a>
-      <h2 class="ux-sec">เรื่องของฉัน</h2><div class="card list">${rows.join("")}</div>`;
+    // bento: tall "งานถัดไป" tile left · เปิด / รับของ / ปิด stacked right · เรื่องของฉัน across the bottom
+    document.getElementById("menu").innerHTML = `<div class="bento">
+      <a class="bt tall hero${rest ? " calm" : ""}" href="${n.href}"><span class="ico">${svg(I[icon])}</span><span class="k">${rest ? "วันนี้" : "งานถัดไป"}</span><span class="v">${n.label}</span><span class="m">${n.sub}</span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></a>
+      ${c1}${c2}${c3}
+      <section class="bt wide list" aria-labelledby="mine"><h2 class="k" id="mine">เรื่องของฉัน</h2><div>${rows.join("")}</div></section></div>`;
     }
   } catch (e) {
     if (e.message !== "denied") { document.getElementById("title").textContent = "เปิดแอปไม่ได้"; document.getElementById("who").textContent = "ปิดแล้วเปิดใหม่ใน LINE · " + App.errText(e); }

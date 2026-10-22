@@ -36,9 +36,9 @@
   </div>
   </section>
   <section id="s3" class="ux-step" hidden>
-  <div class="card list">
-  <div class="row"><label class="grow" for="cashExp">ควรมี (ดูจอ POS) · บาท</label><input id="cashExp" class="money" type="number" inputmode="decimal" enterkeyhint="next" placeholder="บาท"></div>
-  <div class="row"><label class="grow" for="cashCnt">นับได้ · บาท</label><input id="cashCnt" class="money" type="number" inputmode="decimal" enterkeyhint="done" placeholder="บาท"></div>
+  <div class="card">
+  <label class="field" for="cashExp">ควรมี <small>(ดูจอ POS)</small></label><div class="in"><input id="cashExp" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0"><span class="sfx">บาท</span></div>
+  <label class="field" for="cashCnt">นับได้</label><div class="in"><input id="cashCnt" type="number" inputmode="decimal" enterkeyhint="done" placeholder="0"><span class="sfx">บาท</span></div>
   </div>
   <p id="cashDiff" class="muted"></p>
   </section>

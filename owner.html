@@ -19,11 +19,11 @@ td+td{font-weight:600}
 #out .row .grow,.panel .row .grow{text-wrap:balance}
 .iss .day-head{margin-bottom:2px}
 .iss .who{font-size:14px;color:var(--color-ink-soft);display:flex;flex-wrap:wrap;align-items:center;gap:0 6px}
-</style></head><body ontouchstart="">
-<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>วันนี้</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
+</style></head><body class="grouped" ontouchstart="">
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>วันนี้</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div>
+  <div class="tabs" id="tabs" hidden><button data-t="day" class="on">วัน</button><button data-t="iss">ปัญหา</button><button data-t="mon">สรุปเดือน</button></div></header>
 <p id="blocked" class="err" hidden></p>
 <div id="app" hidden>
-  <div class="tabs" id="tabs"><button data-t="day" class="on">วัน</button><button data-t="iss">ปัญหา</button><button data-t="mon">สรุปเดือน</button></div>
   <div id="bar"></div><div id="out"></div>
 </div>
 <div id="panel" class="panel" role="dialog" aria-modal="true" aria-labelledby="ph" hidden></div>
@@ -33,7 +33,7 @@ td+td{font-weight:600}
   const U = window.UxOwner, esc = U.esc;
   const { supabase, me } = await App.ready();
   if (me.role !== "owner") { $("blocked").hidden = false; $("blocked").textContent = "หน้านี้สำหรับเจ้าของ"; return; }
-  $("app").hidden = false;
+  $("app").hidden = false; $("tabs").hidden = false;
   const TODAY = U.today();
   const hm = (t) => t ? new Date(t).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" }) : "-";
   const when = (d) => d === TODAY ? "วันนี้" : d === U.plus(TODAY, -1) ? "เมื่อวาน" : U.dayName(d);
@@ -112,19 +112,28 @@ td+td{font-weight:600}
     return T.sort((a, b) => a.r - b.r || String(a.at || "").localeCompare(String(b.at || "")));
   }
 
-  function strip(c) {
+  // bento (Mos 23 ต.ค.): tall "ต้องจัดการ N เรื่อง" left · เงินสด / ของขาด / สถานะร้าน stacked right · one clear value per tile
+  const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>';
+  function bento(c, T) {
     const { sd, items, isToday } = c;
-    if (sd?.status === "holiday") return `<div class="tl"><div><b>ร้านหยุด</b>&nbsp;</div><div><b>-</b>รับของ</div><div><b>-</b>ปิดร้าน</div></div>`;
+    const tile = (cls, k, v, m, a) => `<${a ? `button type="button" data-a="${a}"` : "div"} class="bt ${cls}"><span class="k"><i class="dot" aria-hidden="true"></i>${k}</span><span class="v">${v}</span>${m ? `<span class="m">${m}</span>` : ""}</${a ? "button" : "div"}>`;
+    const hero = T.length
+      ? `<a class="bt tall hero" href="#todoh"><span class="ico">${ICON}</span><span class="k">ต้องจัดการ</span><span class="v"><span class="big" id="todoN">${T.length}</span> <small>เรื่อง</small></span><span class="m">${T.slice(0, 2).map((x) => x.t.split(" · ")[0]).join(" · ")}</span></a>`
+      : `<div class="bt tall hero calm"><span class="ico">${ICON}</span><span class="k">ต้องจัดการ</span><span class="v">เรียบร้อย</span><span class="m">ไม่มีเรื่องต้องจัดการ</span></div>`;
+    const x = cashOf(sd);
+    const cash = !sd ? tile("", "เงินสด", "-", "ไม่มีบันทึก") : x == null ? tile("", "เงินสด", "ยังไม่นับ", "")
+      : tile(x < 0 ? "bad" : "ok", "เงินสด", x < 0 ? `ขาด ${money(-x)} <small>บาท</small>` : x > 0 ? `เกิน ${money(x)} <small>บาท</small>` : "ครบ", `นับได้ ${baht(sd.cash_counted)}`);
     const recvd = items.filter((i) => i.received_at != null), short = recvd.filter((i) => (+i.qty_received || 0) < (+(i.qty_final ?? i.qty_proposed) || 0));
-    const rAt = recvd.length ? hm(recvd.map((i) => i.received_at).sort()[0]) : "";
-    const cells = [
-      sd?.opened_at ? ["ok", `เปิด ${hm(sd.opened_at)}`, esc(names[sd.opened_by] || "-")] : ["", "ยังไม่เปิด", isToday ? "รอเปิดร้าน" : "ไม่ได้เปิดในแอป"],
-      !items.length ? ["", "ไม่มีใบสั่ง", "รับของ"] : !recvd.length ? ["", "ยังไม่รับของ", `ใบสั่ง ${items.length} รายการ`]
-        : short.length ? ["bad", `ของขาด ${short.length}`, `รับของ ${rAt}`] : ["ok", `ครบ ${items.length} รายการ`, `รับของ ${rAt}`],
-      sd?.closed_at ? ["ok", `ปิด ${hm(sd.closed_at)}`, esc(names[sd.closed_by] || "-")] : isToday ? ["", "ยังไม่ปิด", `เตือน ${esc(remindAt)}`] : ["bad", "ไม่ได้ปิด", "ในแอป"],
-    ];
-    if (isToday) { const n = cells.findIndex((x) => !x[0] && !/ไม่มีใบสั่ง/.test(x[1])); if (n >= 0) cells[n][0] = "now"; }
-    return `<div class="tl">${cells.map(([k, b, s]) => `<div class="${k}"><b>${b}</b>${s}</div>`).join("")}</div>`;
+    const rAt = recvd.length ? hm(recvd.map((i) => i.received_at).sort()[0]) : "", fold = sd && items.length ? "recv" : "";
+    const recv = !items.length ? tile("", "ของขาด", "ไม่มีใบสั่ง", "")
+      : !recvd.length ? tile(isToday ? "wait" : "", "ของขาด", "ยังไม่รับของ", `ใบสั่ง ${items.length} รายการ`, fold)
+      : short.length ? tile("bad", "ของขาด", `ขาด ${short.length} <small>รายการ</small>`, `รับของ ${rAt} น.`, fold) : tile("ok", "ของขาด", "ครบ", `${items.length} รายการ · ${rAt} น.`, fold);
+    const ot = sd && +sd.ot_hours ? ` · โอที ${+sd.ot_hours} ชม.` : "";
+    const shop = sd?.status === "holiday" ? tile("", "สถานะร้าน", "ร้านหยุด", "")
+      : sd?.closed_at ? tile("ok", "สถานะร้าน", `ปิด ${hm(sd.closed_at)}`, esc(names[sd.closed_by] || "-") + ot)
+      : sd?.opened_at ? tile(isToday ? "wait" : "bad", "สถานะร้าน", isToday ? "เปิดอยู่" : "ไม่ได้ปิดในแอป", `เปิด ${hm(sd.opened_at)} · ${esc(names[sd.opened_by] || "-")}${ot}`)
+      : tile(isToday ? "" : "bad", "สถานะร้าน", "ยังไม่เปิด", isToday ? `เตือนปิด ${esc(remindAt)}` : "ไม่ได้เปิดในแอป");
+    return `<div class="bento">${hero}${cash}${recv}${shop}</div>`;
   }
 
   async function dayView() {
@@ -145,11 +154,9 @@ td+td{font-weight:600}
       ? T.map((x) => `<div class="card todo${x.bad ? " bad" : ""}" data-k="${x.key}"><div class="t">${x.t}</div><div class="s">${x.s}</div>${x.a ? `<div class="acts">${x.a}</div>` : ""}</div>`).join("")
       : `<p class="alldone">ไม่มีเรื่องต้องจัดการ</p>`);
     if (!sd) {
-      $("out").innerHTML = strip(c) + todo + `<div class="card muted">ไม่มีบันทึกของ${when(d)}</div>` + (c.isToday ? `<a class="btn sm" href="approve.html">ดูใบสั่งพรุ่งนี้</a>` : "");
+      $("out").innerHTML = bento(c, T) + todo + `<div class="card muted">ไม่มีบันทึกของ${when(d)}</div>` + (c.isToday ? `<a class="btn sm" href="approve.html">ดูใบสั่งพรุ่งนี้</a>` : "");
       return;
     }
-    const x = cashOf(sd);
-    const cash = x == null ? `<div class="v">ยังไม่นับ</div>` : x < 0 ? `<div class="v err">ขาด ${baht(-x)}</div>` : x > 0 ? `<div class="v">เกิน ${baht(x)}</div>` : `<div class="v ok">ครบ</div>`;
     const waste = sl.filter((l) => +l.waste > 0);
     const recv = items.map((i) => {
       const o = +(i.qty_final ?? i.qty_proposed) || 0;
@@ -161,9 +168,7 @@ td+td{font-weight:600}
     const nLow = cc.filter((x) => x.status === "low").length, nOut = cc.filter((x) => x.status === "out").length;
     const photos = [sd.open_photo, ...(sd.photos || []), sd.pos_photo].filter(Boolean);
     const fold = (id, head, body) => `<button class="fold" aria-expanded="false" data-f="${id}">${head}</button><div class="fold-body"><div id="f-${id}">${body}</div></div>`;
-    $("out").innerHTML = strip(c) + todo
-      + `<div class="two"><div class="card"><div class="k">เงินสด${when(d) === "วันนี้" ? "วันนี้" : ""}</div>${cash}<div class="m">${x == null ? "" : `นับได้ ${baht(sd.cash_counted)}`}</div></div>
-         <div class="card"><div class="k">ของเสีย</div><div class="v">${waste.length ? `${waste.length} รายการ` : "ไม่มี"}</div><div class="m">${+sd.ot_hours ? `โอที ${+sd.ot_hours} ชม.${sd.ot_approved_at ? " · อนุมัติแล้ว" : ""}` : "ไม่มีโอที"}</div></div></div>`
+    $("out").innerHTML = bento(c, T) + todo
       + (sd.note ? `<div class="card"><div class="k muted">พนักงานฝากบอก</div>${esc(sd.note)}</div>` : "")
       + `<div class="card folds">`
       + fold("recv", items.length ? `<b>รับของ ${items.length} รายการ${nShort ? ` · ขาด ${nShort}` : ""}</b>` : `<b>ไม่มีใบสั่ง</b>`, recv || `<p class="muted">ไม่มีใบสั่ง</p>`)
@@ -186,6 +191,7 @@ td+td{font-weight:600}
   const gone = (card) => {
     card.classList.add("gone");
     setTimeout(() => { card.remove(); const n = document.querySelectorAll("#out .todo").length; $("todoh").textContent = n ? `ต้องจัดการ ${n} เรื่อง` : "ต้องจัดการ";
+      if ($("todoN")) { $("todoN").textContent = n; if (!n) $("todoN").closest(".bt").classList.add("calm"); }
       if (!n) $("todoh").insertAdjacentHTML("afterend", `<p class="alldone">ไม่มีเรื่องต้องจัดการ</p>`); }, 200);
   };
   const say = (card, text, ok) => { let p = card.querySelector(".say"); if (!p) { p = document.createElement("p"); card.appendChild(p); } p.className = "say " + (ok ? "ok" : "err"); p.textContent = text; };

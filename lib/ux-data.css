@@ -1,11 +1,11 @@
 /* ux-audit-2 stream "data" (approve · settings · costs) · loads after ui.css · don't put other pages' styles here */
 
 /* chip row: one line, scrolls sideways */
-.chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px 12px; padding: 0 16px; }
+.chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: -2px -16px 8px; padding: 2px 16px 6px; }
 .chips::-webkit-scrollbar { display: none; }
 .chip {
   flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 6px 14px; border-radius: 999px;
-  border: 1px solid var(--color-border-strong); background: var(--color-card); color: var(--color-foreground);
+  border: 1px solid transparent; background: var(--color-card); color: var(--color-foreground); box-shadow: var(--shadow-raised);
   font: 500 15px/1.2 var(--font-body); white-space: nowrap; text-decoration: none; cursor: pointer; touch-action: manipulation;
   transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out), transform 160ms var(--ease-out);
 }
@@ -19,17 +19,17 @@ button.chip { appearance: none; -webkit-appearance: none; }
 .chips .lbl { flex: none; align-self: center; font-size: 14px; color: var(--color-ink-soft); }
 
 /* approve: order row = name + meta | − qty + */
-.orow { display: flex; align-items: center; gap: 10px; min-height: 68px; padding: 8px 0; border-bottom: 1px solid var(--color-border); transition: background-color 200ms var(--ease-out); }
+.orow { display: flex; align-items: center; gap: 10px; min-height: 68px; padding: 8px 0; border-bottom: .5px solid var(--color-separator); transition: background-color 200ms var(--ease-out); }
 .orow:last-child { border-bottom: 0; }
 .orow.chg { background: var(--tint-wait); margin: 0 -16px; padding: 8px 16px; }
 .orow.chg .meta b { color: var(--on-wait); }
 .step { display: flex; align-items: center; gap: 4px; flex: none; }
 .step button {
-  width: 44px; height: 48px; border-radius: 12px; border: 1px solid var(--color-border-strong); background: var(--color-card);
+  width: 44px; height: 48px; border-radius: 12px; border: 0; background: var(--color-fill);
   font: 600 22px/1 var(--font-head); color: var(--color-foreground); cursor: pointer; touch-action: manipulation;
   transition: transform 120ms var(--ease-out), background-color 120ms var(--ease-out);
 }
-.step button:active { transform: scale(.94); background: var(--color-muted); }
+.step button:active { transform: scale(.94); background: var(--color-fill-pressed); }
 .step input[type=number] { width: 60px; padding: 8px 4px; text-align: center; font-weight: 600; font-size: 18px; }
 @media (max-width: 359px) { .step button { width: 40px; } .step input[type=number] { width: 52px; } }
 
@@ -37,7 +37,7 @@ button.chip { appearance: none; -webkit-appearance: none; }
 details.fold > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; color: var(--color-foreground); font-weight: 500; }
 details.fold > summary::-webkit-details-marker { display: none; }
 details.fold > summary .chip { min-height: 36px; padding: 4px 12px; font-size: 14px; }
-details.fold[open] > summary .chip { background: var(--color-muted); }
+details.fold[open] > summary .chip { background: var(--color-fill); box-shadow: none; }
 details.fold[open] > :not(summary) { animation: fold-in 200ms var(--ease-out); }
 @keyframes fold-in { from { opacity: 0; transform: translateY(-4px); } }
 
@@ -47,11 +47,11 @@ details.fold[open] > :not(summary) { animation: fold-in 200ms var(--ease-out); }
 .search .btn { margin: 0; flex: none; white-space: nowrap; }
 .prow {
   display: flex; align-items: center; gap: 10px; width: 100%; min-height: 64px; padding: 8px 0; text-align: left;
-  background: none; border: 0; border-bottom: 1px solid var(--color-border); font: inherit; color: inherit; cursor: pointer;
+  background: none; border: 0; border-bottom: .5px solid var(--color-separator); font: inherit; color: inherit; cursor: pointer;
   touch-action: manipulation; transition: background-color 120ms ease-out;
 }
 .prow:last-child { border-bottom: 0; }
-.prow:active { background: var(--color-muted); }
+.prow:active { background: var(--color-fill-pressed); }
 .prow .go { color: var(--color-chevron); font-size: 22px; line-height: 1; }
 .prow.off .nm { color: var(--color-muted-foreground); text-decoration: line-through; }
 
@@ -67,12 +67,12 @@ dialog.bsheet[open]::backdrop { animation: dim-in 200ms ease-out; }
 @keyframes dim-in { from { opacity: 0; } }
 @keyframes sheet-up { from { transform: translateY(100%); } }
 .bsheet .body { overflow-y: auto; padding: 10px 16px 8px; -webkit-overflow-scrolling: touch; }
-.bsheet .grab { width: 40px; height: 5px; border-radius: 9px; background: var(--color-border-strong); margin: 0 auto 10px; }
+.bsheet .grab { width: 40px; height: 5px; border-radius: 9px; background: var(--color-fill-pressed); margin: 0 auto 10px; }
 .bsheet .hd { display: flex; align-items: center; gap: 10px; }
 .bsheet .hd b { flex: 1; font: 600 19px/1.3 var(--font-head); }
-.bsheet .x { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--color-muted); font-size: 20px; color: var(--color-foreground); cursor: pointer; transition: transform 120ms ease-out; }
+.bsheet .x { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--color-fill); font-size: 20px; color: var(--color-foreground); cursor: pointer; transition: transform 120ms ease-out; }
 .bsheet .x:active { transform: scale(.94); }
-.bsheet .foot { padding: 10px 16px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid var(--color-border); background: var(--color-card); }
+.bsheet .foot { padding: 10px 16px calc(14px + env(safe-area-inset-bottom)); border-top: .5px solid var(--color-separator); background: var(--color-card); }
 .bsheet .foot .btn { margin: 0; }
 .bsheet .foot p { margin: 8px 0 0; }
 .bsheet .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
@@ -80,20 +80,11 @@ dialog.bsheet[open]::backdrop { animation: dim-in 200ms ease-out; }
 .bsheet .chk { display: flex; align-items: center; gap: 10px; min-height: 48px; font-size: 16px; }
 @media (prefers-reduced-motion: reduce) { dialog.bsheet[open], details.fold[open] > :not(summary) { animation: dim-in 150ms ease-out; } }
 
-/* costs: month picker · big profit · 2×2 numbers */
+/* costs: month picker (the summary is a bento in ui.css) */
 .monthnav { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; }
 .monthnav button {
-  flex: none; width: 48px; height: 48px; border-radius: 14px; border: 1px solid var(--color-border-strong); background: var(--color-card);
+  flex: none; width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--color-card); box-shadow: var(--shadow-raised);
   font: 600 22px/1 var(--font-head); color: var(--color-foreground); cursor: pointer;
 }
 .monthnav button:disabled { opacity: .35; cursor: default; }
 .monthnav .m { flex: 1; text-align: center; font: 600 20px/1.2 var(--font-head); }
-.profit { text-align: center; padding: 18px 16px; }
-.profit .k { font-size: 15px; color: var(--color-ink-soft); }
-.profit .v { font: 600 34px/1.2 var(--font-head); font-variant-numeric: tabular-nums; margin-top: 2px; }
-.profit .v small { font-size: 18px; font-weight: 500; }
-.profit .note { font-size: 13px; color: var(--color-ink-soft); margin-top: 6px; }
-.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.two > div { background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 10px 12px; }
-.two .k { font-size: 13px; color: var(--color-ink-soft); }
-.two .v { font: 600 19px/1.3 var(--font-head); font-variant-numeric: tabular-nums; }

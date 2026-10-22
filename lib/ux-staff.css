@@ -2,7 +2,7 @@
 
 /* ---------- close: 4-step wizard · step bar on top, one step on screen, back + red next at the bottom ---------- */
 /* the step bar scrolls away (the red button at the bottom is the way on) · only the sheet's column header sticks */
-.ux-top { margin: 0 calc(-1 * var(--space-md)); padding: 10px var(--space-md) 6px; border-bottom: 1px solid var(--color-border); }
+.ux-top { margin: -4px 0 0; padding: 0 0 6px; }
 .ux-top-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .ux-top-row h2 { margin: 0; font: 500 18px/1.3 var(--font-head); outline: none; }
 .ux-top-row .muted { font: 400 13px/1.3 var(--font-body); white-space: nowrap; }
@@ -27,7 +27,7 @@
 .ux-steps button:focus-visible, .ux-opt:focus-visible, .ux-cchip:focus-visible { outline: 3px solid rgba(200, 33, 40, .35); outline-offset: 2px; }
 .ux-steps [aria-disabled=true]:active { transform: none; }
 .ux-steps [aria-disabled=true] i { border-color: var(--color-border-strong); }
-.grid { scroll-margin-top: 56px; scroll-margin-bottom: 120px; }
+.grid { scroll-margin-top: calc(var(--chrome-h) + 48px); scroll-margin-bottom: 120px; }
 #progT { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ux-step { padding-top: 10px; }
 .ux-hint { margin: 0 0 8px; font-size: 15px; line-height: 1.4; color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
@@ -42,13 +42,11 @@ body:has(> #form:not([hidden])) { display: flex; flex-direction: column; min-hei
 .ux-foot > .btn.primary, .ux-foot > .ux-next { grid-column: 2; }
 .ux-foot > .btn[hidden] + .btn.primary { grid-column: 1 / -1; }
 .ux-foot > .ux-next { grid-column: 1 / -1; margin-top: 8px; }
-/* WebKit draws number spinners that squeeze "ใส่" in a 54px box */
-#form input[type=number]::-webkit-inner-spin-button, #form input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 /* a new step / the opened chips arrive instead of blinking in (4–5 times a day · short, no bounce) */
 .ux-step, #consBox { transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out); }
 @starting-style { .ux-step, #consBox { opacity: 0; transform: translateY(6px); } }
 /* a live row left empty when the red button was pressed */
-.grid.ux-miss .rf { border-color: var(--color-destructive); background: var(--tint-destructive); }
+.grid.ux-miss .rf { background-color: var(--tint-destructive); box-shadow: inset 0 0 0 1.5px var(--color-destructive); }
 
 .sheet .grid .meta span { white-space: nowrap; }
 
@@ -62,7 +60,7 @@ body:has(> #form:not([hidden])) { display: flex; flex-direction: column; min-hei
 .ux-pick { display: grid; gap: 10px; margin: 0 0 12px; }
 .ux-opt {
   position: relative; display: block; width: 100%; min-height: 72px; padding: 12px 16px 12px 56px; text-align: left; cursor: pointer;
-  background: var(--color-card); border: 1.5px solid var(--color-border-strong); border-radius: var(--radius); color: var(--color-foreground);
+  background: var(--color-card); border: 1.5px solid transparent; border-radius: var(--radius-card); color: var(--color-foreground); box-shadow: var(--shadow-card);
   touch-action: manipulation; transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), transform 120ms var(--ease-out);
 }
 .ux-opt b { display: block; font: 500 18px/1.35 var(--font-head); }
@@ -85,7 +83,7 @@ body:has(> #form:not([hidden])) { display: flex; flex-direction: column; min-hei
 .ux-cchip {
   display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 1px; min-height: 52px; padding: 8px 12px;
   text-align: left; font: 500 15px/1.3 var(--font-body); color: var(--color-foreground); background: var(--color-card);
-  border: 1.5px solid var(--color-border-strong); border-radius: 12px; cursor: pointer; touch-action: manipulation;
+  border: 1.5px solid transparent; border-radius: var(--radius-field); box-shadow: var(--shadow-raised); cursor: pointer; touch-action: manipulation;
   transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), color 160ms, transform 120ms var(--ease-out);
 }
 .ux-cchip:active { transform: scale(.97); }
@@ -103,26 +101,11 @@ p.ok.big:not(:empty)::before { top: 22px; }
 /* ---------- receive: shortage on the row ---------- */
 .ux-short { display: block; font-size: 14px; font-weight: 700; color: var(--color-destructive); }
 .ux-short:empty { display: none; }
-.it:has(.ux-short:not(:empty)) input { border-color: var(--color-destructive); background: var(--tint-destructive); }
+.it:has(.ux-short:not(:empty)) input { background-color: var(--tint-destructive); box-shadow: inset 0 0 0 1.5px var(--color-destructive); }
 
 /* ---------- staff home ---------- */
 .ux-hello { margin: 0 0 12px; font: 600 22px/1.3 var(--font-head); }
 .ux-hello small { display: block; font: 400 14px/1.4 var(--font-body); color: var(--color-ink-soft); }
-.ux-tl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 0 0 4px; }
-.ux-tl a {
-  border-radius: var(--radius); padding: 10px 6px; text-align: center; text-decoration: none; min-height: 64px;
-  border: 1px solid var(--color-border); background: var(--color-card); font-size: 13px; line-height: 1.35; color: var(--color-ink-soft);
-  font-variant-numeric: tabular-nums; transition: transform 120ms var(--ease-out);
-}
-.ux-tl a:active { transform: scale(.97); }
-.ux-tl b { display: block; font: 600 16px/1.3 var(--font-head); color: var(--color-foreground); }
-.ux-tl .ok { background: var(--tint-success); border-color: var(--border-ok); }
-.ux-tl .ok b { color: var(--color-success); }
-.ux-tl .wait { background: var(--tint-wait); border-color: var(--border-wait); }
-.ux-tl .wait b, .ux-tl .wait { color: var(--on-wait); }
-.ux-tl .now { background: var(--tint-primary); border: 1.5px solid var(--color-primary); }
-.ux-tl .now b { color: var(--color-primary); }
-.ux-sec { font: 500 15px/1.3 var(--font-head); color: var(--color-ink-soft); margin: 20px 0 4px; }
 a.row { color: inherit; text-decoration: none; }
 a.row { transition: background-color 160ms var(--ease-out); }
 a.row:active { background: var(--color-muted); }
@@ -136,7 +119,7 @@ a.row:active { background: var(--color-muted); }
 .ux-3 b { font: 600 20px/1.3 var(--font-head); font-variant-numeric: tabular-nums; }
 .ux-3 .err { color: var(--color-destructive); }
 .ux-week { font: 500 15px/1.3 var(--font-head); color: var(--color-ink-soft); margin: 18px 0 4px; }
-details.ux-day { border-bottom: 1px solid var(--color-border); }
+details.ux-day { border-bottom: .5px solid var(--color-separator); }
 details.ux-day:last-child { border-bottom: 0; }
 details.ux-day summary { list-style: none; gap: 10px; min-height: 52px; padding: 6px 0; font-variant-numeric: tabular-nums; }
 details.ux-day summary::-webkit-details-marker { display: none; }
@@ -155,6 +138,6 @@ details.ux-day[open] summary::after { transform: rotate(90deg); }
 
 @media (prefers-reduced-motion: reduce) {
   @starting-style { .ux-next, .ux-step, #consBox { transform: none; } }
-  .ux-steps button:active, .ux-opt:active, .ux-cchip:active, .ux-tl a:active { transform: none; }
+  .ux-steps button:active, .ux-opt:active, .ux-cchip:active { transform: none; }
   .ux-prog i, details.ux-day summary::after { transition: none; }
 }
