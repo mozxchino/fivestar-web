@@ -3,31 +3,71 @@
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="lib/ui.css">
+<link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-staff.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/config.js"></script><script src="lib/session.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-staff.js"></script>
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ประวัติ</h1><div class="sub">ย้อนหลัง 30 วัน</div></div></header>
 <p id="msg" class="muted">กำลังโหลด…</p>
+<div id="sum"></div>
 <div id="list"></div>
 <script>
 (async () => {
   try {
     const { supabase } = await App.ready();
-    const { data, error } = await supabase.from("shop_days").select("*").order("date", { ascending: false }).limit(30);
+    const { esc, thd, hm } = UXS, today = UXS.today();
+    const back = (n) => { const d = new Date(today + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() - n); return d.toISOString().slice(0, 10); };
+    const { data, error } = await supabase.from("shop_days").select("date,status,opened_at,closed_at,cash_expected,cash_counted,ot_hours,note")
+      .gte("date", back(30)).order("date", { ascending: false }).limit(31);
     if (error) throw error;
     const ST = { open: "ยังไม่ปิดร้าน", closed: "ปิดร้านแล้ว", sent: "ปิดร้านแล้ว", holiday: "ร้านหยุด", backfill: "กรอกย้อนหลัง" };
-    const hm = (t) => t ? new Date(t).toLocaleTimeString("th-TH", { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit", hour12: false }) : "-";
-    document.getElementById("msg").hidden = !!data.length;
-    if (!data.length) document.getElementById("msg").textContent = "ยังไม่มีประวัติ";
-    document.getElementById("list").innerHTML = data.map((d) => {
-      const diff = d.cash_counted != null && d.cash_expected != null ? d.cash_counted - d.cash_expected : null;
-      const cash = diff == null ? "-" : diff === 0 ? "ครบ" : `<span class="${diff < 0 ? "err" : ""}">${diff < 0 ? "ขาด" : "เกิน"} ${Math.abs(diff).toLocaleString("th-TH")} บาท</span>`;
-      return `<div class="card day"><div class="day-head"><b class="date num">${new Date(d.date + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })}</b><span class="pill" data-tone="${{ open: "wait", closed: "ok", sent: "ok" }[d.status] || ""}">${ST[d.status] || d.status}</span></div>
-        <div class="kv"><span>เปิด <b class="num">${hm(d.opened_at)}</b></span><span>ปิด <b class="num">${hm(d.closed_at)}</b></span></div>
-        <div class="kv"><span>โอที <b class="num">${d.ot_hours ?? 0} ชม.</b></span><span>เงินสด <b class="num">${cash}</b></span></div></div>`;
-    }).join("");
+    const TONE = { open: "wait", holiday: "", backfill: "" };
+    const baht = (n) => Math.abs(n).toLocaleString("th-TH") + " บาท";
+    const gapOf = (d) => d.cash_counted != null && d.cash_expected != null ? d.cash_counted - d.cash_expected : null;
+    msg.hidden = !!data.length;
+    if (!data.length) { msg.textContent = "ยังไม่มีประวัติ"; return; }
+    // month summary (this month, inside the 30 days staff can see)
+    const mon = data.filter((d) => d.date.slice(0, 7) === today.slice(0, 7));
+    const worked = mon.filter((d) => d.status !== "holiday" && (d.opened_at || d.closed_at || d.status === "backfill")).length;
+    const ot = mon.reduce((a, d) => a + (+d.ot_hours || 0), 0), short = mon.reduce((a, d) => a + Math.max(0, -(gapOf(d) ?? 0)), 0);
+    sum.innerHTML = `<div class="card"><p class="muted" style="margin:0 0 8px">${thd(today, { day: undefined, month: "long", year: "numeric" })}</p><div class="ux-3">
+      <div><b>${worked}</b> วัน<small>วันทำงาน</small></div><div><b>${+ot.toFixed(1)}</b> ชม.<small>โอทีรวม</small></div><div><b class="${short ? "err" : ""}">${short.toLocaleString("th-TH")}</b> บาท<small>เงินสดขาดรวม</small></div></div></div>`;
+    // one line per day, grouped by week (จันทร์–อาทิตย์)
+    const monday = (ds) => { const d = new Date(ds + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7); return d.toISOString().slice(0, 10); };
+    const plus = (ds, n) => { const d = new Date(ds + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+    const weeks = new Map(); data.forEach((d) => { const k = monday(d.date); if (!weeks.has(k)) weeks.set(k, []); weeks.get(k).push(d); });
+    const lineOf = (d) => {
+      if (d.status === "holiday") return "";
+      // most important first: one line, the tail may be cut (cash · โอที · time)
+      const g = gapOf(d), bits = [];
+      if (g != null) bits.push(g === 0 ? "เงินสดครบ" : `<span class="${g < 0 ? "err" : ""}">เงินสด${g < 0 ? "ขาด" : "เกิน"} ${baht(g)}</span>`);
+      if (+d.ot_hours) bits.push(`โอที ${+d.ot_hours} ชม.`);
+      bits.push(d.closed_at ? `ปิด ${hm(d.closed_at)}` : d.opened_at ? `เปิด ${hm(d.opened_at)}` : "");
+      return bits.filter(Boolean).join(" · ");
+    };
+    list.innerHTML = [...weeks].map(([k, days]) => `<h2 class="ux-week">สัปดาห์ ${thd(k, { month: undefined })}–${thd(plus(k, 6))}</h2><div class="card list">${days.map((d) => `
+      <details class="ux-day" data-d="${d.date}"><summary><span class="d">${thd(d.date, { weekday: "short", month: undefined })}</span><span class="m">${lineOf(d)}</span>${d.status in TONE ? `<span class="pill" data-tone="${TONE[d.status]}">${ST[d.status]}</span>` : ""}</summary><div class="ux-body"></div></details>`).join("")}</div>`).join("");
+    // tap a day → read-only details (opened/closed · cash · what was counted and received)
+    let P = null;
+    list.addEventListener("toggle", async (e) => {
+      const det = e.target; if (!det.open || det.dataset.loaded) return; det.dataset.loaded = 1;
+      const body = det.querySelector(".ux-body"), d = data.find((x) => x.date === det.dataset.d), g = gapOf(d);
+      const kv = (k, v) => `<div class="kv"><span>${k}</span><b class="num">${v}</b></div>`;
+      let h = kv("เปิด · ปิด", `${hm(d.opened_at) || "-"} · ${hm(d.closed_at) || "-"} น.`) + kv("โอที", `${+d.ot_hours || 0} ชม.`)
+        + (d.cash_expected != null || d.cash_counted != null ? kv("เงินสด ควรมี · นับได้", `${d.cash_expected?.toLocaleString("th-TH") ?? "-"} · ${d.cash_counted?.toLocaleString("th-TH") ?? "-"} บาท`) : "")
+        + (g ? kv("", `<span class="${g < 0 ? "err" : ""}">เงินสด${g < 0 ? "ขาด" : "เกิน"} ${baht(g)}</span>`) : "")
+        + (d.note ? `<p class="muted">ฝากบอกเจ้าของ: ${esc(d.note)}</p>` : "");
+      body.innerHTML = h + '<p class="muted">กำลังโหลดของ…</p>';
+      try {
+        if (!P) { const r = await supabase.from("products").select("id,name,unit,sort"); if (r.error) throw r.error; P = Object.fromEntries(r.data.map((p) => [p.id, p])); }
+        const { data: ls, error: e2 } = await supabase.from("stock_lines").select("product_id,received,remain_fresh,remain_cooked,waste").eq("date", d.date);
+        if (e2) throw e2;
+        const rows = (ls || []).filter((l) => +l.received || +l.remain_fresh || +l.remain_cooked || +l.waste).sort((a, b) => (P[a.product_id]?.sort ?? 0) - (P[b.product_id]?.sort ?? 0));
+        h += rows.length ? `<table><tr><th>สินค้า</th><th>รับเข้า</th><th>เหลือ</th><th>เสีย</th></tr>${rows.map((l) => `<tr><td>${esc(P[l.product_id]?.name ?? "")}</td><td>${+l.received}</td><td>${l.remain_fresh == null ? "-" : +l.remain_fresh + +(l.remain_cooked || 0)}</td><td>${+l.waste}</td></tr>`).join("")}</table>` : '<p class="muted">ไม่มีของที่นับวันนั้น</p>';
+      } catch (err) { h += `<p class="err">เปิดไม่ขึ้น: ${App.errText(err)}</p>`; }
+      body.innerHTML = h;
+    }, true);
   } catch (e) { if (e.message !== "denied") document.getElementById("msg").textContent = "เปิดไม่ขึ้น: " + App.errText(e); }
 })();
 </script></body></html>

@@ -3,10 +3,10 @@
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="lib/ui.css">
+<link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-staff.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script>
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>รับของ</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3 · <span id="d"></span></div></div></header>
 <div id="none" hidden><div class="empty"><p>วันนี้ไม่มีของต้องรับ</p></div><a class="btn" href="close.html">ไปปิดร้าน</a></div>
@@ -21,7 +21,7 @@
   <p class="muted">ของมาไม่ครบ ต้องถ่าย · ได้ถึง 3 รูป</p>
   <p id="phS" class="muted"></p>
   <button id="none2" class="btn">วันนี้ไม่มีของมา</button>
-  <div class="sticky"><button id="save" class="btn primary">บันทึกรับของ</button>
+  <div class="sticky"><label id="shot" class="btn primary" for="ph" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><span id="shotT">ถ่ายรูปใบส่งของก่อนบันทึก</span></label><button id="save" class="btn primary">บันทึกรับของ</button>
   <p id="msg" class="muted"></p></div>
 </div>
 <script>
@@ -37,18 +37,28 @@
   const got = items.some((i) => i.received_at);
   if (got) { st.textContent = "รับของแล้ว\nแก้ตัวเลขได้จนกว่าจะกดปิดร้าน"; }
   lines.innerHTML = items.map((i) => { const ord = i.qty_final ?? i.qty_proposed; const v = got ? (i.qty_received ?? 0) : ord;
-    return `<div class="it" data-id="${i.product_id}"><div class="nm">${i.products?.name ?? ""}<div class="meta">นับเป็น${i.products?.unit ?? ""}</div></div><div class="ord">${+ord}</div><input type="number" inputmode="decimal" step="any" min="0" value="${+v}"></div>`; }).join("");
+    return `<div class="it" data-id="${i.product_id}"><div class="nm">${i.products?.name ?? ""}<div class="meta">นับเป็น${i.products?.unit ?? ""}</div><span class="ux-short" data-u="${i.products?.unit ?? ""}"></span></div><div class="ord">${+ord}</div><input type="number" inputmode="decimal" step="any" min="0" value="${+v}"></div>`; }).join("");
   const photos = [];
-  Photo.picker(supabase, ph, { paths: photos, type: "receipt", name: "รูปใบส่งของ", max: 3, status: phS });
+  Photo.picker(supabase, ph, { paths: photos, type: "receipt", name: "รูปใบส่งของ", max: 3, status: phS, onChange: () => short() });
+  // P2-8: less than ordered → "ขาด N" on the row now · any short + no photo → the red button becomes "ถ่ายรูปใบส่งของ" (server also refuses)
+  const short = () => {
+    let n = 0;
+    lines.querySelectorAll(".it").forEach((r) => { const ord = +r.querySelector(".ord").textContent, inp = r.querySelector("input"), gap = inp.value === "" ? 0 : ord - +inp.value, sp = r.querySelector(".ux-short");
+      sp.textContent = gap > 0 ? `ขาด ${+gap.toFixed(1)} ${sp.dataset.u}` : ""; if (gap > 0) n++; });
+    const need = n > 0 && !photos.length && !save.disabled;
+    shot.hidden = !need; save.hidden = need; shotT.textContent = `ถ่ายรูปใบส่งของ · ขาด ${n} อย่าง`;
+  };
+  lines.addEventListener("input", short);
   const run = async (p, notify) => { save.disabled = none2.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
     const { error } = await p; if (error) { msg.textContent = "ยังบันทึกไม่ได้\n" + App.errText(error); msg.className = "err"; save.disabled = none2.disabled = false; return; }
-    msg.textContent = "บันทึกแล้ว ขอบคุณ"; msg.className = "ok";
-    await App.fn("receive-notify", notify).catch(() => {}); };
+    msg.textContent = "บันทึกแล้ว ขอบคุณ"; msg.className = "ok big";
+    await App.fn("receive-notify", notify).catch(() => {});
+    save.hidden = shot.hidden = none2.hidden = true; await UXS.showNext(supabase, msg, true, "afterend"); };
   save.onclick = () => {
     const arr = [...lines.querySelectorAll(".it")].map((r) => ({ product_id: r.dataset.id, qty_received: +r.querySelector("input").value || 0 }));
     run(supabase.rpc("receive_order", { oid: o.id, items: arr, photos }), { order_id: o.id });
   };
   none2.onclick = () => { if (confirm("วันนี้ CPF ไม่มาส่งของเลย ใช่ไหม?")) run(supabase.rpc("no_delivery_today"), { no_delivery: true }); };
-  form.hidden = false;
+  form.hidden = false; short();
 })();
 </script></body></html>

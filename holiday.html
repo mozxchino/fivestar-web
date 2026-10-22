@@ -7,6 +7,7 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/config.js"></script><script src="lib/session.js"></script>
+<script src="lib/ux-staff.js"></script>
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ขอหยุด/ลา</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
 <p id="cnt" class="card stat">กำลังโหลด…</p>
@@ -63,6 +64,8 @@
       msg.textContent = data.status === "approved" ? "หยุดได้เลย (หยุดประจำสัปดาห์)" : "ส่งแล้ว รอเจ้าของกดอนุมัติในกลุ่ม LINE";
       if (!n || !n.ok) msg.textContent += "\nLINE แจ้งเจ้าของไม่ได้ ช่วยบอกเจ้าของเองด้วย";
       msg.className = "ok"; msg.style.whiteSpace = "pre-line"; note.value = ""; send.disabled = false;
+      // ux(staff): done state → next task · staff only (owner view is another stream's)
+      if (me.role !== "owner" && !document.querySelector(".ux-next")) await UXS.showNext(supabase, msg, false, "afterend");
       await load();
     };
     form.hidden = false;
