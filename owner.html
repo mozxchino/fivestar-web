@@ -10,7 +10,10 @@
 <style>
 @media (min-width:360px){.tabs button{font-size:15px}}
 .th{width:72px;height:72px;object-fit:cover;border-radius:10px;margin:8px 8px 0 0;background:var(--color-muted);border:1px solid var(--color-border)}
-.ed{width:68px!important;min-height:44px!important;padding:6px 2px!important;font-size:16px!important;text-align:center;flex:none}
+input.ed{width:58px;min-height:44px;padding:6px 2px;font-size:18px;font-weight:500;text-align:center;flex:none}
+input.ed.cash{width:120px;text-align:right;padding-right:10px}
+#out .card h2{margin-top:14px;padding-top:12px;border-top:1px solid var(--color-border)}
+#out .card .day-head + h2{border-top:0;padding-top:0;margin-top:6px}
 td+td{font-weight:600}
 #bar input{margin-bottom:12px}
 #out .card > div{margin:2px 0}
@@ -32,7 +35,7 @@ td+td{font-weight:600}
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const hm = (t) => t ? new Date(t).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" }) : "-";
   const dt = (t) => t ? new Date(t).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Bangkok" }) : "-";
-  const thumbs = async (ps) => (await Promise.all((ps || []).filter(Boolean).map(async (p) => { try { return `<img class="th" src="${await Photo.url(supabase, p)}">`; } catch { return ""; } }))).join("");
+  const thumbs = async (ps) => (await Promise.all((ps || []).filter(Boolean).map(async (p) => { try { return `<img class="th" alt="รูปจากร้าน" src="${await Photo.url(supabase, p)}">`; } catch { return ""; } }))).join("");
   const names = Object.fromEntries(((await supabase.from("users").select("id,name")).data || []).map((u) => [u.id, u.name]));
   const prods = Object.fromEntries(((await supabase.from("products").select("id,name")).data || []).map((p) => [p.id, p.name]));
   const TYPE = { waste: "ของเสีย/หมดอายุ", equipment: "เครื่องพัง", customer: "ลูกค้าร้องเรียน", cpf: "ของ CPF ผิด", edit_request: "ขอแก้ข้อมูล", other: "อื่นๆ" };
@@ -56,10 +59,10 @@ td+td{font-weight:600}
     const diff = sd.cash_expected != null && sd.cash_counted != null ? sd.cash_counted - sd.cash_expected : null;
     const stockRows = (sl || []).filter((l) => l.remain_fresh != null || +l.waste || edit);
     const waste = stockRows.filter((l) => +l.waste > 0).map((l) => `<div>${esc(prods[l.product_id])} ${l.waste}</div>`).join("") || "ไม่มี";
-    const lines = edit ? stockRows.map((l) => `<div class="row" data-p="${l.product_id}"><div style="flex:1">${esc(prods[l.product_id])}</div>
-      <input class="ed" type="number" data-f="remain_fresh" value="${l.remain_fresh ?? ""}"><input class="ed" type="number" data-f="remain_cooked" value="${l.remain_cooked ?? ""}"><input class="ed" type="number" data-f="waste" value="${l.waste ?? ""}"></div>`).join("") : "";
+    const lines = edit ? stockRows.map((l) => `<div class="row" data-p="${l.product_id}"><div class="grow">${esc(prods[l.product_id])}</div>
+      <input class="ed" type="number" aria-label="${esc(prods[l.product_id])} เหลือสด" data-f="remain_fresh" value="${l.remain_fresh ?? ""}"><input class="ed" type="number" aria-label="${esc(prods[l.product_id])} เหลือสุก" data-f="remain_cooked" value="${l.remain_cooked ?? ""}"><input class="ed" type="number" aria-label="${esc(prods[l.product_id])} เสีย" data-f="waste" value="${l.waste ?? ""}"></div>`).join("") : "";
     const ot = +sd.ot_hours || 0;
-    return `<div class="card"><div class="day-head"><b class="date num">${d}</b><span class="pill" data-tone="${{ open: "wait", closed: "ok", sent: "ok" }[sd.status] || ""}">${esc(sd.status)}</span></div>
+    return `<div class="card"><div class="day-head"><b class="date num">${d.slice(8)}/${d.slice(5, 7)}</b><span class="pill" data-tone="${{ open: "wait", closed: "ok", sent: "ok" }[sd.status] || ""}">${esc({ open: "เปิดอยู่", closed: "ปิดแล้ว", sent: "ส่งแล้ว", holiday: "วันหยุด", backfill: "ข้อมูลย้อนหลัง" }[sd.status] || sd.status)}</span></div>
       <h2>เปิดร้าน</h2>${hm(sd.opened_at)} · ${esc(names[sd.opened_by] || "-")}<div>${await thumbs([sd.open_photo])}</div>
       <h2>รับของ</h2>${recv}
       <h2>ปิดร้าน</h2>${sd.closed_at ? `ส่งตอน ${hm(sd.closed_at)} · ${esc(names[sd.closed_by] || "-")}` : '<span class="muted">ยังไม่ส่ง</span>'}
@@ -70,9 +73,9 @@ td+td{font-weight:600}
       <h2>OT</h2>${ot} ชม. ${sd.ot_approved_at ? '<span class="ok">รับรองแล้ว</span>' : ot > 0 ? `<button class="btn sm" id="ot">รับรอง OT</button>` : ""}
       <a class="btn sm" href="approve.html">อนุมัติใบสั่ง</a></div>`
       + (edit ? `<div class="card"><h2>แก้ไข (เหลือสด / เหลือสุก / เสีย)</h2>${lines}
-      <div class="row"><div style="flex:1">เงินควรมี</div><input id="ce" class="ed" style="width:110px!important" type="number" value="${sd.cash_expected ?? ""}"></div>
-      <div class="row"><div style="flex:1">นับได้</div><input id="cn" class="ed" style="width:110px!important" type="number" value="${sd.cash_counted ?? ""}"></div>
-      <textarea id="nt" rows="2">${esc(sd.note)}</textarea><button class="btn primary sm" id="sv">บันทึก</button> <span id="sm" class="muted"></span></div>` : "");
+      <div class="row"><label class="grow" for="ce">เงินควรมี</label><input id="ce" class="ed cash" type="number" value="${sd.cash_expected ?? ""}"></div>
+      <div class="row"><label class="grow" for="cn">นับได้</label><input id="cn" class="ed cash" type="number" value="${sd.cash_counted ?? ""}"></div>
+      <textarea id="nt" rows="2" aria-label="โน้ต">${esc(sd.note)}</textarea><button class="btn primary sm" id="sv">บันทึก</button> <span id="sm" class="muted"></span></div>` : "");
   }
   function wire(d, redraw) {
     if ($("ot")) $("ot").onclick = async () => { const { error } = await supabase.rpc("approve_ot", { d }); if (error) return alert(error.message); redraw(); };

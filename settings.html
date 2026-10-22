@@ -8,12 +8,13 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/config.js"></script><script src="lib/session.js"></script>
 <style>
-.g{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-.g label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:4px}
+.g{align-items:end}
+#prod .g{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:359px){#prod .g{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
 .g label.chk{display:flex;align-items:center;gap:10px;min-height:var(--field);margin:0;align-self:end;font-size:16px;color:var(--fg)}
 .card[data-src] > * + *{margin-top:10px}
 .card[data-src] .btn{width:100%;margin-right:0}
-.hd-add input{flex:1}
+.hd-add{border:0}.hd-add input{flex:1}
 </style></head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ตั้งค่า</h1><div class="sub">เจ้าของร้านเท่านั้น</div></div></header>
 <p id="blocked" class="err" hidden></p>
@@ -41,7 +42,7 @@
     if (error) return fail(error);
     const fl = el.closest(".card").querySelector(".flash"); fl.classList.add("on"); setTimeout(() => fl.classList.remove("on"), 1500);
   });
-  const inp = (t, id, f, val, label, type = "number") => `<div><label>${label}</label><input type="${type}" ${type === "number" ? 'inputmode="decimal" step="any"' : ""} value="${E(val)}" data-t="${t}" data-id="${id}" data-f="${f}"></div>`;
+  const inp = (t, id, f, val, label, type = "number") => `<label>${label}<input type="${type}" ${type === "number" ? 'inputmode="decimal" step="any"' : ""} value="${E(val)}" data-t="${t}" data-id="${id}" data-f="${f}"></label>`;
 
   // ---- พนักงาน
   async function staff() {
@@ -74,7 +75,7 @@
 
   // ---- สินค้า
   const { data: ps } = await supabase.from("products").select("*").order("sort");
-  $("prod").innerHTML = (ps || []).map((p) => `<div class="card"><b>${E(p.name)}</b> <span class="pill">${E(p.kind)}</span> ${p.supplier ? `<span class="pill">${E(p.supplier)}</span>` : ""} <span class="flash">บันทึกแล้ว ✓</span>
+  $("prod").innerHTML = (ps || []).map((p) => `<div class="card"><b>${E(p.name)}</b> <span class="pill">${E({ stock: "สินค้า", consumable: "ของสิ้นเปลือง" }[p.kind] || p.kind)}</span> ${p.supplier ? `<span class="pill">${E(p.supplier)}</span>` : ""} <span class="flash">บันทึกแล้ว ✓</span>
     <div class="g">${inp("products", p.id, "par_weekday", p.par_weekday, "เป้า วันธรรมดา")}${inp("products", p.id, "par_weekend", p.par_weekend, "เป้า เสาร์-อาทิตย์")}
     ${inp("products", p.id, "cost_price", p.cost_price, "ราคาทุน")}${inp("products", p.id, "store_price", p.store_price, "ราคาหน้าร้าน")}
     ${inp("products", p.id, "delivery_price", p.delivery_price, "ราคาเดลิเวอรี่")}
@@ -86,11 +87,11 @@
   const { data: gs } = await supabase.from("line_sources").select("source_id,display_name").eq("source_type", "group");
   let hol = [...(S.holidays || [])].sort();
   const sel = (id, cur) => `<select id="${id}"><option value="">ไม่ตั้ง</option>${(gs || []).map((g) => `<option value="${E(g.source_id)}" ${g.source_id === cur ? "selected" : ""}>${E(g.display_name || g.source_id)}</option>`).join("")}</select>`;
-  const drawHol = () => { $("hl").innerHTML = hol.map((d, i) => `<div class="row"><span class="grow num">${d}</span><button class="btn sm" data-del="${i}">ลบ</button></div>`).join("") || `<p class="muted">ไม่มี</p>`; };
+  const drawHol = () => { $("hl").innerHTML = hol.map((d, i) => `<div class="row"><span class="grow num">${d.split("-").reverse().join("/")}</span><button class="btn sm" data-del="${i}">ลบ</button></div>`).join("") || `<p class="muted">ไม่มี</p>`; };
   $("sys").innerHTML = `<div class="card"><label class="field" for="shop">ชื่อร้าน</label><input type="text" id="shop" value="${E(S.shop_name)}">
-    <div class="g"><div><label>เตือนสั่งของ</label><input type="time" id="rem" value="${E(S.remind_at)}"></div><div><label>ส่งอัตโนมัติ</label><input type="time" id="auto" value="${E(S.auto_send_at)}"></div></div>
+    <div class="g"><div><label for="rem">เตือนสั่งของ</label><input type="time" id="rem" value="${E(S.remind_at)}"></div><div><label for="auto">ส่งอัตโนมัติ</label><input type="time" id="auto" value="${E(S.auto_send_at)}"></div></div>
     <label class="field" for="sg">กลุ่มเซลล์</label>${sel("sg", S.sales_group_id)}<label class="field" for="fg">กลุ่มพนักงาน</label>${sel("fg", S.staff_group_id)}</div>
-    <h2>วันหยุดร้าน</h2><div class="card"><div id="hl"></div><div class="row hd-add" style="border:0"><input type="date" id="hd"><button class="btn sm" id="ha">เพิ่ม</button></div></div>
+    <h2>วันหยุดร้าน</h2><div class="card"><div id="hl"></div><div class="row hd-add"><input type="date" id="hd"><button class="btn sm" id="ha">เพิ่ม</button></div></div>
     <button class="btn primary" id="save">บันทึก</button><p id="smsg" class="muted"></p>`;
   drawHol();
   $("ha").onclick = () => { const d = $("hd").value; if (d && !hol.includes(d)) { hol.push(d); hol.sort(); drawHol(); } $("hd").value = ""; };
