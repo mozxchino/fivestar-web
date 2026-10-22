@@ -9,16 +9,16 @@
 <script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script>
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>รับของ</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3 · <span id="d"></span></div></div></header>
-<div id="none" hidden><div class="empty"><p>ไม่มีใบสั่งของวันนี้</p></div><a class="btn" href="close.html">ไปหน้าปิดร้าน</a></div>
+<div id="none" hidden><div class="empty"><p>วันนี้ไม่มีของต้องรับ</p></div><a class="btn" href="close.html">ไปปิดร้าน</a></div>
 <div id="form" hidden>
   <p id="st" class="ok"></p>
   <div class="sheet">
-  <div class="it meta sheet-head"><div>รายการ</div><div>สั่ง</div><div>ได้รับจริง</div></div>
+  <div class="it meta sheet-head"><div>สินค้า</div><div>สั่ง</div><div>ได้รับจริง</div></div>
   <div id="lines"></div>
   </div>
   <h2>รูปใบส่งของ</h2>
-  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูป (1–3 รูป) <input id="ph" type="file" accept="image/*" capture="environment" multiple hidden></label>
-  <p class="muted">ได้ไม่ครบ ต้องถ่ายใบส่งของ</p>
+  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปใบส่งของ <input id="ph" type="file" accept="image/*" capture="environment" multiple hidden></label>
+  <p class="muted">ของมาไม่ครบ ต้องถ่าย · ได้ถึง 3 รูป</p>
   <p id="phS" class="muted"></p>
   <button id="none2" class="btn">วันนี้ไม่มีของมา</button>
   <div class="sticky"><button id="save" class="btn primary">บันทึกรับของ</button>
@@ -28,27 +28,27 @@
 (async () => {
   const { supabase } = await App.ready();
   const today = Photo.todayPrefix().slice(0, 10).replaceAll("/", "-");
-  d.textContent = today.slice(8) + "/" + today.slice(5, 7);
+  d.textContent = new Date(today + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
   const { data: o } = await supabase.from("orders").select("id").eq("for_date", today).in("status", ["sent", "failed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (!o) { none.hidden = false; return; }
   const { data: items, error } = await supabase.from("order_items").select("product_id,qty_proposed,qty_final,qty_received,received_at,products(name,unit,pack_size,sort)").eq("order_id", o.id);
-  if (error) { none.hidden = false; none.querySelector("p").textContent = "โหลดไม่สำเร็จ: " + error.message; return; }
+  if (error) { none.hidden = false; none.querySelector("p").textContent = "เปิดใบสั่งไม่ขึ้น: " + error.message; return; }
   items.sort((a, b) => (a.products?.sort ?? 0) - (b.products?.sort ?? 0));
   const got = items.some((i) => i.received_at);
-  if (got) { st.textContent = "รับของแล้ว · แก้ไขได้จนกว่าจะส่งปิดร้าน"; }
+  if (got) { st.textContent = "รับของแล้ว\nแก้ตัวเลขได้จนกว่าจะกดปิดร้าน"; }
   lines.innerHTML = items.map((i) => { const ord = i.qty_final ?? i.qty_proposed; const v = got ? (i.qty_received ?? 0) : ord;
-    return `<div class="it" data-id="${i.product_id}"><div class="nm">${i.products?.name ?? ""}<div class="meta">${i.products?.unit ?? ""}</div></div><div class="ord">${+ord}</div><input type="number" inputmode="decimal" step="any" min="0" value="${+v}"></div>`; }).join("");
+    return `<div class="it" data-id="${i.product_id}"><div class="nm">${i.products?.name ?? ""}<div class="meta">นับเป็น${i.products?.unit ?? ""}</div></div><div class="ord">${+ord}</div><input type="number" inputmode="decimal" step="any" min="0" value="${+v}"></div>`; }).join("");
   const photos = [];
-  ph.onchange = async () => { for (const f of ph.files) { if (photos.length >= 3) break; phS.textContent = "กำลังอัปโหลด…"; try { photos.push(await Photo.upload(supabase, "receipt", f)); } catch (e) { phS.textContent = "อัปโหลดไม่สำเร็จ: " + e.message; return; } } phS.textContent = "รูป " + photos.length + " รูป"; };
+  ph.onchange = async () => { for (const f of ph.files) { if (photos.length >= 3) break; phS.textContent = "กำลังส่งรูป…"; try { photos.push(await Photo.upload(supabase, "receipt", f)); } catch (e) { phS.textContent = "ส่งรูปไม่ขึ้น ลองถ่ายใหม่: " + e.message; return; } } phS.textContent = "ได้รูปแล้ว " + photos.length + " รูป"; };
   const run = async (p, notify) => { save.disabled = none2.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
-    const { error } = await p; if (error) { msg.textContent = error.message; msg.className = "err"; save.disabled = none2.disabled = false; return; }
-    msg.textContent = "บันทึกแล้ว"; msg.className = "ok";
+    const { error } = await p; if (error) { msg.textContent = "ยังบันทึกไม่ได้\n" + error.message; msg.className = "err"; save.disabled = none2.disabled = false; return; }
+    msg.textContent = "บันทึกแล้ว ขอบคุณ"; msg.className = "ok";
     await App.fn("receive-notify", notify).catch(() => {}); };
   save.onclick = () => {
     const arr = [...lines.querySelectorAll(".it")].map((r) => ({ product_id: r.dataset.id, qty_received: +r.querySelector("input").value || 0 }));
     run(supabase.rpc("receive_order", { oid: o.id, items: arr, photos }), { order_id: o.id });
   };
-  none2.onclick = () => { if (confirm("วันนี้ไม่มีของมา?")) run(supabase.rpc("no_delivery_today"), { no_delivery: true }); };
+  none2.onclick = () => { if (confirm("วันนี้ CPF ไม่มาส่งของเลย ใช่ไหม?")) run(supabase.rpc("no_delivery_today"), { no_delivery: true }); };
   form.hidden = false;
 })();
 </script></body></html>

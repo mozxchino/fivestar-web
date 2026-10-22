@@ -11,24 +11,25 @@
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ขอหยุด/ลา</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
 <p id="cnt" class="card stat">กำลังโหลด…</p>
 <div id="form" hidden>
-  <label class="field" for="type">ประเภท</label>
-  <select id="type"><option value="off">หยุดประจำสัปดาห์</option><option value="sick">ลาป่วย</option><option value="personal">ลากิจ</option><option value="special">พิเศษ/อื่นๆ</option></select>
-  <label class="field" for="date">วันที่</label>
+  <label class="field" for="type">ขออะไร</label>
+  <select id="type"><option value="off">หยุดประจำสัปดาห์</option><option value="sick">ลาป่วย</option><option value="personal">ลากิจ</option><option value="special">หยุดพิเศษ</option></select>
+  <label class="field" for="date">วันไหน</label>
   <input id="date" type="date">
-  <label class="field" for="note">เหตุผล</label>
-  <textarea id="note" rows="3" placeholder="เล่าสั้นๆ (ไม่บังคับ)"></textarea>
-  <button id="send" class="btn primary">ส่งคำขอ</button>
+  <p class="muted">ลาป่วยเลือกวันนี้ได้ · อย่างอื่นขอล่วงหน้า 1 วัน</p>
+  <label class="field" for="note">เหตุผล (ไม่ใส่ก็ได้)</label>
+  <textarea id="note" rows="3" placeholder="เช่น ไปหาหมอ"></textarea>
+  <button id="send" class="btn primary">ส่งคำขอหยุด/ลา</button>
   <p id="msg" class="muted"></p>
 </div>
-<h2>เดือนนี้</h2>
+<h2>วันที่ขอไว้</h2>
 <div id="list" class="card list"></div>
 <script>
 (async () => {
-  const TYPE = { off: "หยุดประจำสัปดาห์", sick: "ลาป่วย", personal: "ลากิจ", special: "พิเศษ/อื่นๆ" };
-  const ST = { pending: "รออนุมัติ", approved: "อนุมัติแล้ว", rejected: "ไม่อนุมัติ", cancelled: "ยกเลิก" };
+  const TYPE = { off: "หยุดประจำสัปดาห์", sick: "ลาป่วย", personal: "ลากิจ", special: "หยุดพิเศษ" };
+  const ST = { pending: "รออนุมัติ", approved: "อนุมัติแล้ว", rejected: "ไม่อนุมัติ", cancelled: "ยกเลิกแล้ว" };
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
   const plus = (n) => { const d = new Date(today + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
-  const ddmm = (d) => `${d.slice(8, 10)}/${d.slice(5, 7)}`;
+  const thd = (d) => new Date(d + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
   try {
     const { supabase, me } = await App.ready();
     const setMin = () => { date.min = type.value === "sick" ? today : plus(1); date.max = plus(30); if (!date.value || date.value < date.min) date.value = date.min; };
@@ -36,36 +37,36 @@
     const canCancel = (r) => r.user_id === me.userId && (r.status === "pending" || r.status === "approved") && r.date >= today;
     list.onclick = async (ev) => {
       const b = ev.target.closest("button[data-cancel]"); if (!b) return;
-      if (!confirm(`ยกเลิกคำขอวันที่ ${b.dataset.d}?`)) return;
+      if (!confirm(`ยกเลิกที่ขอไว้วันที่ ${b.dataset.d} ใช่ไหม?`)) return;
       b.disabled = true;
       const { error } = await supabase.rpc("cancel_leave", { p_id: b.dataset.cancel });
-      msg.textContent = error ? "ยกเลิกไม่สำเร็จ: " + error.message : `ยกเลิกคำขอวันที่ ${b.dataset.d} แล้ว`;
+      msg.textContent = error ? "ยกเลิกไม่ได้\n" + error.message : `ยกเลิกวันที่ ${b.dataset.d} แล้ว`;
       msg.className = error ? "err" : "ok";
       await load();
     };
     async function load() {
       const { data: c } = await supabase.rpc("leave_counters");
-      cnt.textContent = `เดือนนี้หยุดแล้ว ${c?.month_days ?? 0} วัน · สัปดาห์นี้ใช้โควตา ${c?.week_used ?? 0}/1`;
+      cnt.innerHTML = `เดือนนี้หยุดไปแล้ว <b class="num">${+(c?.month_days ?? 0)} วัน</b><br><span class="muted">หยุดประจำสัปดาห์นี้ ใช้แล้ว ${+(c?.week_used ?? 0)} จาก 1 วัน</span>`;
       const { data, error } = await supabase.from("leave_requests").select("id, user_id, date, type, status, users(name)")
         .gte("date", today.slice(0, 8) + "01").lte("date", plus(31)).order("date");
-      if (error) { list.innerHTML = `<p class="err">โหลดไม่ได้: ${error.message}</p>`; return; }
+      if (error) { list.innerHTML = `<p class="err">เปิดไม่ขึ้น: ${error.message}</p>`; return; }
       const rows = data; // this month + upcoming (≤ 30 days)
-      list.innerHTML = rows.length ? rows.map((r) => `<div class="row" style="flex-wrap:wrap;row-gap:8px"><b class="grow"><span class="num">${ddmm(r.date)}</span> · ${TYPE[r.type] || r.type}${me.role === "owner" && r.users ? " · " + r.users.name : ""}</b><span class="pill" data-tone="${{ pending: "wait", approved: "ok", rejected: "bad" }[r.status] || ""}">${ST[r.status] || r.status}</span>${canCancel(r) ? `<span style="flex-basis:100%;height:0"></span><button class="btn sm" style="margin:0 0 0 auto" data-cancel="${r.id}" data-d="${ddmm(r.date)}">ยกเลิกคำขอ</button>` : ""}</div>`).join("")
-        : `<p class="muted">ยังไม่มีคำขอ</p>`;
+      list.innerHTML = rows.length ? rows.map((r) => `<div class="row" style="flex-wrap:wrap;row-gap:8px"><b class="grow"><span class="num">${thd(r.date)}</span> · ${TYPE[r.type] || r.type}${me.role === "owner" && r.users ? " · " + r.users.name : ""}</b><span class="pill" data-tone="${{ pending: "wait", approved: "ok", rejected: "bad" }[r.status] || ""}">${ST[r.status] || r.status}</span>${canCancel(r) ? `<span style="flex-basis:100%;height:0"></span><button class="btn sm" style="margin:0 0 0 auto" data-cancel="${r.id}" data-d="${thd(r.date)}">ยกเลิกคำขอ</button>` : ""}</div>`).join("")
+        : `<p class="muted">ยังไม่มีใครขอหยุด</p>`;
     }
     send.onclick = async () => {
       if (!date.value) { msg.textContent = "เลือกวันก่อน"; msg.className = "err"; return; }
       send.disabled = true; msg.textContent = "กำลังส่ง…"; msg.className = "muted";
       const { data, error } = await supabase.rpc("request_leave", { d: date.value, p_type: type.value, note: note.value.trim() || null });
-      if (error) { msg.textContent = "ส่งไม่สำเร็จ: " + error.message; msg.className = "err"; send.disabled = false; return; }
+      if (error) { msg.textContent = "ส่งไม่ได้\n" + error.message; msg.className = "err"; send.disabled = false; return; }
       const n = await App.fn("leave-notify", { leave_id: data.id }).catch(() => null);
-      msg.textContent = data.status === "approved" ? "อนุมัติแล้ว (โควตาประจำสัปดาห์)" : "ส่งคำขอแล้ว รอเจ้าของอนุมัติในกลุ่ม";
-      if (!n || !n.ok) msg.textContent += "\nแจ้งเตือน LINE ไม่สำเร็จ บอกเจ้าของเองด้วย";
+      msg.textContent = data.status === "approved" ? "หยุดได้เลย (หยุดประจำสัปดาห์)" : "ส่งแล้ว รอเจ้าของกดอนุมัติในกลุ่ม LINE";
+      if (!n || !n.ok) msg.textContent += "\nLINE แจ้งเจ้าของไม่ได้ ช่วยบอกเจ้าของเองด้วย";
       msg.className = "ok"; msg.style.whiteSpace = "pre-line"; note.value = ""; send.disabled = false;
       await load();
     };
     form.hidden = false;
     await load();
-  } catch (e) { if (e.message !== "denied") cnt.textContent = "โหลดไม่ได้: " + e.message; }
+  } catch (e) { if (e.message !== "denied") cnt.textContent = "เปิดไม่ขึ้น: " + e.message; }
 })();
 </script></body></html>

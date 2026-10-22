@@ -255,6 +255,8 @@ p.ok.big:not(:empty) { font: 500 20px/1.4 var(--font-head); padding: 18px 16px; 
 .meta { font-size: 13px; line-height: 1.35; color: var(--color-ink-soft); font-weight: 500; font-variant-numeric: tabular-nums; }
 .nm { font-size: 17px; font-weight: 500; line-height: 1.35; min-width: 0; }
 .nm .meta { font-weight: 400; margin-top: 2px; }
+/* long names ("น่องสะโพกทอดน้ำปลา") split into two even lines instead of leaving one word alone */
+.sheet .nm { text-wrap: balance; }
 .it, .grid { display: grid; gap: 6px; align-items: center; min-height: 68px; padding: 8px 0; border-bottom: 1px solid var(--color-border); }
 .sheet .it:last-child, .sheet .grid:last-child { border-bottom: 0; }
 .sheet .it { grid-template-columns: 1fr 52px 92px; gap: 8px; }

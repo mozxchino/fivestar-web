@@ -11,67 +11,68 @@
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ปิดร้าน</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3 · <span id="d"></span></div></div></header>
 <p id="blocked" class="err" hidden></p>
 <div id="form" hidden>
-  <h2>สินค้า</h2>
+  <h2>1. นับของเหลือ</h2>
   <div class="sheet">
-  <div class="grid meta sheet-head"><div>รายการ<br>ยกมา/รับเข้า</div><div>เหลือสด</div><div>เหลือสุก</div><div>เสีย</div></div>
+  <div class="grid meta sheet-head"><div>สินค้า</div><div>เหลือสด</div><div>เหลือสุก</div><div>เสีย</div></div>
   <div id="lines"></div>
   </div>
-  <h2>ของสิ้นเปลือง</h2>
+  <h2>2. ของใช้ในร้าน</h2>
+  <p class="muted">กดเฉพาะอันที่ใกล้หมดหรือหมด</p>
   <div id="cons" class="card list"></div>
-  <h2>เงินสด</h2>
+  <h2>3. นับเงินสด</h2>
   <div class="card list">
-  <div class="row"><label class="grow" for="cashExp">ควรมี (จากจอ POS)</label><input id="cashExp" class="money" type="number" inputmode="decimal"></div>
-  <div class="row"><label class="grow" for="cashCnt">นับได้จริง</label><input id="cashCnt" class="money" type="number" inputmode="decimal"></div>
+  <div class="row"><label class="grow" for="cashExp">ควรมี (ดูจอ POS)</label><input id="cashExp" class="money" type="number" inputmode="decimal" placeholder="บาท"></div>
+  <div class="row"><label class="grow" for="cashCnt">นับได้</label><input id="cashCnt" class="money" type="number" inputmode="decimal" placeholder="บาท"></div>
   </div>
   <p id="cashDiff" class="muted"></p>
-  <h2>รูป</h2>
-  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>รูปตู้/ถาด (1–2 รูป) <input id="phFridge" type="file" accept="image/*" capture="environment" multiple hidden></label>
-  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>รูปจอ POS สรุปยอด <input id="phPos" type="file" accept="image/*" capture="environment" hidden></label>
+  <h2>4. ถ่ายรูป</h2>
+  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปตู้และถาด <input id="phFridge" type="file" accept="image/*" capture="environment" multiple hidden></label>
+  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปจอ POS ยอดวันนี้ <input id="phPos" type="file" accept="image/*" capture="environment" hidden></label>
   <p id="phStatus" class="muted"></p>
-  <h2>โน้ต</h2>
-  <textarea id="note" rows="3" placeholder="เช่น ลูกค้าสั่งไก่ต้นตำรับ ของหมด เสนอทรงเครื่องแทน"></textarea>
-  <div class="sticky"><button id="send" class="btn primary">ส่ง</button><p id="msg" class="muted"></p></div>
+  <h2>5. ฝากบอกเจ้าของ</h2>
+  <textarea id="note" rows="3" placeholder="ไม่มีก็ข้ามได้ · เช่น ไก่ต้นตำรับหมด ลูกค้าเอาทรงเครื่องแทน"></textarea>
+  <div class="sticky"><button id="send" class="btn primary">ปิดร้าน</button><p id="msg" class="muted"></p></div>
 </div>
 <script>
 (async () => {
   const { supabase, me } = await App.ready();
   const today = Photo.todayPrefix().slice(0, 10).replaceAll("/", "-");
-  document.getElementById("d").textContent = today.slice(8) + "/" + today.slice(5, 7);
+  document.getElementById("d").textContent = new Date(today + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
   await supabase.rpc("ensure_day", { d: today });
   const { data: day } = await supabase.from("shop_days").select("status").eq("date", today).maybeSingle();
-  if (day?.status === "sent") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "วันนี้ส่งปิดร้านแล้ว แก้ไม่ได้ · ถ้าผิดกด แจ้งปัญหา"; return; }
+  if (day?.status === "sent") { const b = document.getElementById("blocked"); b.hidden = false; b.className = "ok big"; b.innerHTML = 'วันนี้ปิดร้านแล้ว<br><small>กรอกผิด บอกเจ้าของที่ <a href="issue.html">แจ้งปัญหา</a></small>'; return; }
   const { data: pend } = await supabase.from("orders").select("id, order_items(qty_received, received_at)").eq("for_date", today).in("status", ["sent", "failed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (pend && pend.order_items.some((i) => i.qty_received == null && i.received_at == null)) {
-    const b = document.getElementById("blocked"); b.hidden = false; b.innerHTML = 'ยังไม่กดรับของวันนี้<br><a class="btn primary" href="receive.html">ไปหน้ารับของ</a>'; return;
+    const b = document.getElementById("blocked"); b.hidden = false; b.innerHTML = 'ต้องกดรับของก่อน ถึงจะปิดร้านได้<br><a class="btn primary" href="receive.html">ไปรับของ</a>'; return;
   }
   const { data: prods } = await supabase.from("products").select("id,sort,name,unit,kind").eq("active", true).order("sort");
   const { data: lines } = await supabase.from("stock_lines").select("product_id,open_fresh,open_cooked,received").eq("date", today);
   const L = Object.fromEntries((lines || []).map((l) => [l.product_id, l]));
   const stock = prods.filter((p) => p.kind !== "consumable"), cons = prods.filter((p) => p.kind === "consumable");
   document.getElementById("lines").innerHTML = stock.map((p) => { const l = L[p.id] || {}; return `
-    <div class="grid" data-id="${p.id}"><div class="nm">${p.name}<div class="meta">ยกมา ${+l.open_fresh || 0}/${+l.open_cooked || 0} · รับ ${+l.received || 0}</div></div>
-    <input type="number" inputmode="decimal" class="rf" placeholder="-" aria-label="${p.name} เหลือสด"><input type="number" inputmode="decimal" class="rc" placeholder="0" aria-label="${p.name} เหลือสุก"><input type="number" inputmode="decimal" class="w" placeholder="0" aria-label="${p.name} เสีย"></div>`; }).join("");
+    <div class="grid" data-id="${p.id}"><div class="nm">${p.name}<div class="meta">ยกมา สด ${+l.open_fresh || 0} · สุก ${+l.open_cooked || 0}<br>รับเข้า ${+l.received || 0} ${p.unit || ""}</div></div>
+    <input type="number" inputmode="decimal" class="rf" placeholder="ใส่" aria-label="${p.name} เหลือสด"><input type="number" inputmode="decimal" class="rc" placeholder="0" aria-label="${p.name} เหลือสุก"><input type="number" inputmode="decimal" class="w" placeholder="0" aria-label="${p.name} เสีย"></div>`; }).join("");
   const state = {};
   document.getElementById("cons").innerHTML = cons.map((p) => { state[p.id] = "ok"; return `
     <div class="row cons"><div class="grow">${p.name}</div><div class="seg" data-id="${p.id}">
       <button data-v="ok" class="on-ok">มี</button><button data-v="low">ใกล้หมด</button><button data-v="out">หมด</button></div></div>`; }).join("");
   document.getElementById("cons").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; const seg = b.parentElement; state[seg.dataset.id] = b.dataset.v;
     seg.querySelectorAll("button").forEach((x) => x.className = ""); b.className = "on-" + b.dataset.v; });
-  const diff = () => { const a = +cashExp.value, b = +cashCnt.value; cashDiff.textContent = (cashExp.value && cashCnt.value) ? (b - a === 0 ? "ครบ" : (b - a < 0 ? `ขาด ${a - b}` : `เกิน ${b - a}`)) : ""; cashDiff.className = b - a < 0 ? "err" : "ok"; };
+  const diff = () => { const a = +cashExp.value, b = +cashCnt.value; cashDiff.textContent = (cashExp.value && cashCnt.value) ? (b - a === 0 ? "เงินสดครบ" : (b - a < 0 ? `เงินสดขาด ${(a - b).toLocaleString("th-TH")} บาท` : `เงินสดเกิน ${(b - a).toLocaleString("th-TH")} บาท`)) : ""; cashDiff.className = b - a < 0 ? "err" : "ok"; };
   cashExp.oninput = cashCnt.oninput = diff;
   const photos = []; let posPhoto = null;
-  phFridge.onchange = async () => { for (const f of phFridge.files) { phStatus.textContent = "กำลังอัปโหลด…"; try { photos.push(await Photo.upload(supabase, "fridge", f)); } catch (e) { phStatus.textContent = "อัปโหลดไม่สำเร็จ: " + e.message; return; } } phStatus.textContent = `รูปตู้ ${photos.length} รูป${posPhoto ? " · รูป POS 1 รูป" : ""}`; };
-  phPos.onchange = async () => { phStatus.textContent = "กำลังอัปโหลด…"; try { posPhoto = await Photo.upload(supabase, "pos", phPos.files[0]); } catch (e) { phStatus.textContent = "อัปโหลดไม่สำเร็จ: " + e.message; return; } phStatus.textContent = `รูปตู้ ${photos.length} รูป · รูป POS 1 รูป`; };
+  phFridge.onchange = async () => { for (const f of phFridge.files) { phStatus.textContent = "กำลังส่งรูป…"; try { photos.push(await Photo.upload(supabase, "fridge", f)); } catch (e) { phStatus.textContent = "ส่งรูปไม่ขึ้น ลองถ่ายใหม่: " + e.message; return; } } phStatus.textContent = `ได้รูปตู้ ${photos.length} รูป${posPhoto ? " · รูปจอ POS 1 รูป" : ""}`; };
+  phPos.onchange = async () => { phStatus.textContent = "กำลังส่งรูป…"; try { posPhoto = await Photo.upload(supabase, "pos", phPos.files[0]); } catch (e) { phStatus.textContent = "ส่งรูปไม่ขึ้น ลองถ่ายใหม่: " + e.message; return; } phStatus.textContent = `ได้รูปตู้ ${photos.length} รูป · รูปจอ POS 1 รูป`; };
   send.onclick = async () => {
     const rows = [...document.querySelectorAll("#lines .grid")].map((g) => ({ product_id: g.dataset.id, remain_fresh: g.querySelector(".rf").value === "" ? null : +g.querySelector(".rf").value, remain_cooked: +g.querySelector(".rc").value || 0, waste: +g.querySelector(".w").value || 0 })).filter((r) => r.remain_fresh !== null);
-    if (!rows.length) { msg.textContent = "กรอกเหลือสดอย่างน้อย 1 รายการ"; msg.className = "err"; return; }
-    if (!confirm("ส่งปิดร้าน? ส่งแล้วแก้ไม่ได้")) return;
-    send.disabled = true; msg.textContent = "กำลังส่ง…";
+    if (!rows.length) { msg.textContent = "กรอกช่อง เหลือสด อย่างน้อย 1 อย่าง"; msg.className = "err"; return; }
+    if (!confirm(`ปิดร้านเลยไหม?\nนับของแล้ว ${rows.length} จาก ${stock.length} อย่าง${cashDiff.textContent ? "\n" + cashDiff.textContent : ""}\nกดแล้วแก้ตัวเลขไม่ได้`)) return;
+    send.disabled = true; msg.textContent = "กำลังปิดร้าน…";
     const payload = { lines: rows, consumables: Object.entries(state).filter(([, v]) => v !== "ok").map(([product_id, status]) => ({ product_id, status })), cash_expected: cashExp.value === "" ? null : +cashExp.value, cash_counted: cashCnt.value === "" ? null : +cashCnt.value, note: note.value || null, pos_photo: posPhoto, photos };
     const { error } = await supabase.rpc("close_day", { p: payload });
-    if (error) { msg.textContent = "ส่งไม่สำเร็จ: " + error.message; msg.className = "err"; send.disabled = false; return; }
+    if (error) { msg.textContent = "ยังปิดร้านไม่ได้\n" + error.message; msg.className = "err"; send.disabled = false; return; }
     await App.fn("close-notify", { date: today }).catch(() => {});
-    msg.textContent = "ส่งแล้ว ขอบคุณ"; msg.className = "ok"; document.querySelectorAll("input,textarea,button").forEach((x) => x.disabled = true);
+    msg.textContent = "ปิดร้านแล้ว ขอบคุณ"; msg.className = "ok big"; document.querySelectorAll("input,textarea,button").forEach((x) => x.disabled = true);
   };
   document.getElementById("form").hidden = false;
 })();

@@ -18,6 +18,7 @@ td+td{font-weight:600}
 #bar input{margin-bottom:12px}
 #out .card > div{margin:2px 0}
 #out{font-variant-numeric:tabular-nums}
+#out .row .grow{text-wrap:balance}
 </style></head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>วันนี้</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
 <p id="blocked" class="err" hidden></p>
@@ -29,18 +30,21 @@ td+td{font-weight:600}
 (async () => {
   const $ = (i) => document.getElementById(i);
   const { supabase, me } = await App.ready();
-  if (me.role !== "owner") { $("blocked").hidden = false; $("blocked").textContent = "เฉพาะเจ้าของ"; return; }
+  if (me.role !== "owner") { $("blocked").hidden = false; $("blocked").textContent = "หน้านี้สำหรับเจ้าของ"; return; }
   $("app").hidden = false;
   const bkk = (add = 0) => new Date(Date.now() + 7 * 3600e3 + add * 864e5).toISOString().slice(0, 10);
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const hm = (t) => t ? new Date(t).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" }) : "-";
-  const dt = (t) => t ? new Date(t).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Bangkok" }) : "-";
+  const dt = (t) => t ? new Date(t).toLocaleString("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" }) + " น." : "-";
+  const thd = (s) => new Date(s + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
   const thumbs = async (ps) => (await Promise.all((ps || []).filter(Boolean).map(async (p) => { try { return `<img class="th" alt="รูปจากร้าน" src="${await Photo.url(supabase, p)}">`; } catch { return ""; } }))).join("");
   const names = Object.fromEntries(((await supabase.from("users").select("id,name")).data || []).map((u) => [u.id, u.name]));
-  const prods = Object.fromEntries(((await supabase.from("products").select("id,name")).data || []).map((p) => [p.id, p.name]));
-  const TYPE = { waste: "ของเสีย/หมดอายุ", equipment: "เครื่องพัง", customer: "ลูกค้าร้องเรียน", cpf: "ของ CPF ผิด", edit_request: "ขอแก้ข้อมูล", other: "อื่นๆ" };
+  const P = (await supabase.from("products").select("id,name,unit")).data || [];
+  const prods = Object.fromEntries(P.map((p) => [p.id, p.name])), unit = Object.fromEntries(P.map((p) => [p.id, p.unit || ""]));
+  const TYPE = { waste: "ของเสีย/หมดอายุ", equipment: "เครื่องพัง", customer: "ลูกค้าร้องเรียน", cpf: "ของ CPF มาผิด", edit_request: "กรอกผิด ขอแก้", other: "เรื่องอื่น" };
   const CS = { low: "ใกล้หมด", out: "หมด" };
   const money = (n) => n == null ? "-" : Number(n).toLocaleString("th-TH");
+  const baht = (n) => n == null ? "-" : money(n) + " บาท";
 
   async function dayCard(d, edit) {
     const [{ data: sd }, { data: sl }, { data: cc }, { data: od }] = await Promise.all([
@@ -48,37 +52,37 @@ td+td{font-weight:600}
       supabase.from("stock_lines").select("*").eq("date", d),
       supabase.from("consumable_checks").select("product_id,status").eq("date", d).neq("status", "ok"),
       supabase.from("orders").select("order_items(product_id,qty_proposed,qty_final,qty_received,received_at)").eq("for_date", d).eq("status", "sent").maybeSingle()]);
-    if (!sd) return `<div class="card muted">ไม่มีข้อมูลวันที่ ${d}</div>`;
+    if (!sd) return `<div class="card muted">ไม่มีบันทึกของวันที่ ${thd(d)}</div>`;
     const items = od?.order_items || [];
     const recv = !items.length ? "ไม่มีใบสั่ง" : items.map((i) => {
       const o = +(i.qty_final ?? i.qty_proposed) || 0;
-      if (i.received_at == null) return `<div>${esc(prods[i.product_id])} สั่ง ${o} <span class="muted">ยังไม่รับของ</span></div>`;
+      if (i.received_at == null) return `<div>${esc(prods[i.product_id])} สั่ง ${o} ${esc(unit[i.product_id])} <span class="muted">ยังไม่รับของ</span></div>`;
       const r = +i.qty_received || 0;
-      return `<div>${esc(prods[i.product_id])} สั่ง ${o} · รับ ${r}${r < o ? ` <b class="err">ขาด ${o - r}</b>` : ""}</div>`;
+      return `<div>${esc(prods[i.product_id])} สั่ง ${o} · ได้ ${r} ${esc(unit[i.product_id])}${r < o ? ` <b class="err">ขาด ${o - r} ${esc(unit[i.product_id])}</b>` : ""}</div>`;
     }).join("");
     const diff = sd.cash_expected != null && sd.cash_counted != null ? sd.cash_counted - sd.cash_expected : null;
     const stockRows = (sl || []).filter((l) => l.remain_fresh != null || +l.waste || edit);
-    const waste = stockRows.filter((l) => +l.waste > 0).map((l) => `<div>${esc(prods[l.product_id])} ${l.waste}</div>`).join("") || "ไม่มี";
+    const waste = stockRows.filter((l) => +l.waste > 0).map((l) => `<div>${esc(prods[l.product_id])} ${l.waste} ${esc(unit[l.product_id])}</div>`).join("") || "ไม่มีของเสีย";
     const lines = edit ? stockRows.map((l) => `<div class="row" data-p="${l.product_id}"><div class="grow">${esc(prods[l.product_id])}</div>
       <input class="ed" type="number" aria-label="${esc(prods[l.product_id])} เหลือสด" data-f="remain_fresh" value="${l.remain_fresh ?? ""}"><input class="ed" type="number" aria-label="${esc(prods[l.product_id])} เหลือสุก" data-f="remain_cooked" value="${l.remain_cooked ?? ""}"><input class="ed" type="number" aria-label="${esc(prods[l.product_id])} เสีย" data-f="waste" value="${l.waste ?? ""}"></div>`).join("") : "";
     const ot = +sd.ot_hours || 0;
-    return `<div class="card"><div class="day-head"><b class="date num">${d.slice(8)}/${d.slice(5, 7)}</b><span class="pill" data-tone="${{ open: "wait", closed: "ok", sent: "ok" }[sd.status] || ""}">${esc({ open: "เปิดอยู่", closed: "ปิดแล้ว", sent: "ส่งแล้ว", holiday: "วันหยุด", backfill: "ข้อมูลย้อนหลัง" }[sd.status] || sd.status)}</span></div>
-      <h2>เปิดร้าน</h2>${hm(sd.opened_at)} · ${esc(names[sd.opened_by] || "-")}<div>${await thumbs([sd.open_photo])}</div>
+    return `<div class="card"><div class="day-head"><b class="date num">${thd(d)}</b><span class="pill" data-tone="${{ open: "wait", closed: "ok", sent: "ok" }[sd.status] || ""}">${esc({ open: "ยังไม่ปิดร้าน", closed: "ปิดร้านแล้ว", sent: "ปิดร้านแล้ว", holiday: "ร้านหยุด", backfill: "กรอกย้อนหลัง" }[sd.status] || sd.status)}</span></div>
+      <h2>เปิดร้าน</h2>${hm(sd.opened_at)} น. · ${esc(names[sd.opened_by] || "-")}<div>${await thumbs([sd.open_photo])}</div>
       <h2>รับของ</h2>${recv}
-      <h2>ปิดร้าน</h2>${sd.closed_at ? `ส่งตอน ${hm(sd.closed_at)} · ${esc(names[sd.closed_by] || "-")}` : '<span class="muted">ยังไม่ส่ง</span>'}
-      <div>เงินควรมี ${money(sd.cash_expected)} · นับได้ ${money(sd.cash_counted)}${diff == null ? "" : diff < 0 ? ` <b class="err">ขาด ${-diff}</b>` : diff > 0 ? ` เกิน ${diff}` : " ครบ"}</div>
+      <h2>ปิดร้าน</h2>${sd.closed_at ? `${hm(sd.closed_at)} น. · ${esc(names[sd.closed_by] || "-")}` : '<span class="muted">ยังไม่ปิดร้าน</span>'}
+      <h2>เงินสด</h2>${diff == null ? "" : diff < 0 ? `<div><b class="err">เงินสดขาด ${baht(-diff)}</b></div>` : diff > 0 ? `<div><b>เงินสดเกิน ${baht(diff)}</b></div>` : `<div><b class="ok">เงินสดครบ</b></div>`}<div class="muted">ควรมี ${baht(sd.cash_expected)} · นับได้ ${baht(sd.cash_counted)}</div>
       <h2>ของเสีย</h2>${waste}
-      <h2>ของสิ้นเปลือง</h2>${(cc || []).map((c) => `<div>${esc(prods[c.product_id])} <span class="pill" data-tone="${c.status === "out" ? "bad" : "wait"}">${CS[c.status] || c.status}</span></div>`).join("") || "มีครบ"}
-      ${sd.note ? `<h2>โน้ต</h2>${esc(sd.note)}` : ""}<div>${await thumbs([...(sd.photos || []), sd.pos_photo])}</div>
-      <h2>OT</h2>${ot} ชม. ${sd.ot_approved_at ? '<span class="ok">รับรองแล้ว</span>' : ot > 0 ? `<button class="btn sm" id="ot">รับรอง OT</button>` : ""}
-      <a class="btn sm" href="approve.html">อนุมัติใบสั่ง</a></div>`
-      + (edit ? `<div class="card"><h2>แก้ไข (เหลือสด / เหลือสุก / เสีย)</h2>${lines}
-      <div class="row"><label class="grow" for="ce">เงินควรมี</label><input id="ce" class="ed cash" type="number" value="${sd.cash_expected ?? ""}"></div>
-      <div class="row"><label class="grow" for="cn">นับได้</label><input id="cn" class="ed cash" type="number" value="${sd.cash_counted ?? ""}"></div>
-      <textarea id="nt" rows="2" aria-label="โน้ต">${esc(sd.note)}</textarea><button class="btn primary sm" id="sv">บันทึก</button> <span id="sm" class="muted"></span></div>` : "");
+      <h2>ของใช้ในร้าน</h2>${(cc || []).map((c) => `<div>${esc(prods[c.product_id])} <span class="pill" data-tone="${c.status === "out" ? "bad" : "wait"}">${CS[c.status] || c.status}</span></div>`).join("") || "มีครบ"}
+      ${sd.note ? `<h2>พนักงานฝากบอก</h2>${esc(sd.note)}` : ""}<div>${await thumbs([...(sd.photos || []), sd.pos_photo])}</div>
+      <h2>โอที</h2>${ot} ชม. ${sd.ot_approved_at ? '<span class="ok">อนุมัติแล้ว</span>' : ot > 0 ? `<button class="btn sm" id="ot">อนุมัติโอที</button>` : ""}
+      <a class="btn sm" href="approve.html">ดูใบสั่งพรุ่งนี้</a></div>`
+      + (edit ? `<div class="card"><h2>แก้ตัวเลข: เหลือสด · เหลือสุก · เสีย</h2>${lines}
+      <div class="row"><label class="grow" for="ce">เงินสดควรมี (บาท)</label><input id="ce" class="ed cash" type="number" value="${sd.cash_expected ?? ""}"></div>
+      <div class="row"><label class="grow" for="cn">เงินสดนับได้ (บาท)</label><input id="cn" class="ed cash" type="number" value="${sd.cash_counted ?? ""}"></div>
+      <textarea id="nt" rows="2" aria-label="พนักงานฝากบอก">${esc(sd.note)}</textarea><button class="btn primary sm" id="sv">บันทึกที่แก้</button> <span id="sm" class="muted"></span></div>` : "");
   }
   function wire(d, redraw) {
-    if ($("ot")) $("ot").onclick = async () => { const { error } = await supabase.rpc("approve_ot", { d }); if (error) return alert(error.message); redraw(); };
+    if ($("ot")) $("ot").onclick = async () => { const { error } = await supabase.rpc("approve_ot", { d }); if (error) return alert("ทำไม่ได้\n" + error.message); redraw(); };
     if ($("sv")) $("sv").onclick = async () => {
       const num = (v) => v === "" ? null : +v; let err = null;
       for (const r of document.querySelectorAll("[data-p]")) {
@@ -86,7 +90,7 @@ td+td{font-weight:600}
         const { error } = await supabase.from("stock_lines").update(u).eq("date", d).eq("product_id", r.dataset.p); err = err || error;
       }
       const { error } = await supabase.from("shop_days").update({ cash_expected: num($("ce").value), cash_counted: num($("cn").value), note: $("nt").value || null }).eq("date", d);
-      $("sm").textContent = (err || error) ? "ไม่สำเร็จ: " + (err || error).message : "บันทึกแล้ว"; $("sm").className = (err || error) ? "err" : "ok";
+      $("sm").textContent = (err || error) ? "บันทึกไม่ได้: " + (err || error).message : "บันทึกแล้ว"; $("sm").className = (err || error) ? "err" : "ok";
     };
   }
   const V = {
@@ -105,7 +109,7 @@ td+td{font-weight:600}
       $("out").onclick = async (e) => {
         const b = e.target.closest("button[data-i]"); if (!b) return;
         const u = b.dataset.s === "ack" ? { status: "ack", ack_by: me.userId, ack_at: new Date().toISOString() } : { status: "closed" };
-        const { error } = await supabase.from("issues").update(u).eq("id", b.dataset.i); if (error) return alert(error.message); V.iss();
+        const { error } = await supabase.from("issues").update(u).eq("id", b.dataset.i); if (error) return alert("ทำไม่ได้\n" + error.message); V.iss();
       };
     },
     async mon() {
@@ -115,17 +119,17 @@ td+td{font-weight:600}
         const next = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, "0")}-01`;
         const [{ data: s, error }, { data: days }] = await Promise.all([supabase.rpc("month_summary", { y, m }),
           supabase.from("shop_days").select("opened_by").gte("date", $("pm").value + "-01").lt("date", next)]);
-        if (error) { $("out").innerHTML = `<p class="err">${esc(error.message)}</p>`; return; }
+        if (error) { $("out").innerHTML = `<p class="err">เปิดไม่ขึ้น: ${esc(error.message)}</p>`; return; }
         const r = (Array.isArray(s) ? s[0] : s) || {};
-        const L = [["วันที่เปิดร้าน", r.days_worked], ["วันที่ส่งปิดร้าน", r.days_closed_sent], ["วันหยุด", r.days_holiday], ["OT (ชม.)", r.ot_hours], ["OT ที่รับรองแล้ว (ชม.)", r.ot_approved_hours], ["ของเสียรวม", r.waste_total], ["เงินขาดรวม", r.cash_short_total], ["วันที่ CPF ส่งขาด", r.cpf_short_days]];
+        const L = [["เปิดร้าน", r.days_worked, "วัน"], ["ปิดร้านในแอป", r.days_closed_sent, "วัน"], ["ร้านหยุด", r.days_holiday, "วัน"], ["โอที", r.ot_hours, "ชม."], ["โอทีที่อนุมัติแล้ว", r.ot_approved_hours, "ชม."], ["ของเสียรวม", r.waste_total, "หน่วย"], ["เงินสดขาดรวม", r.cash_short_total, "บาท"], ["วันที่ของมาไม่ครบ", r.cpf_short_days, "วัน"]];
         const cnt = {}; (days || []).forEach((x) => { if (x.opened_by) cnt[x.opened_by] = (cnt[x.opened_by] || 0) + 1; });
-        $("out").innerHTML = `<div class="card"><table>${L.map(([k, v]) => `<tr><td>${k}</td><td>${v ?? 0}</td></tr>`).join("")}</table></div>
-          <h2>วันทำงานรายคน</h2><div class="card"><table>${Object.entries(cnt).map(([u, n]) => `<tr><td>${esc(names[u] || u)}</td><td>${n} วัน</td></tr>`).join("") || '<tr><td class="muted">ไม่มีข้อมูล</td></tr>'}</table></div>`;
+        $("out").innerHTML = `<div class="card"><table>${L.map(([k, v, u]) => `<tr><td>${k}</td><td>${money(v ?? 0)} ${u}</td></tr>`).join("")}</table></div>
+          <h2>ใครเปิดร้านกี่วัน</h2><div class="card"><table>${Object.entries(cnt).map(([u, n]) => `<tr><td>${esc(names[u] || u)}</td><td>${n} วัน</td></tr>`).join("") || '<tr><td class="muted">ยังไม่มีใครเปิดร้าน</td></tr>'}</table></div>`;
       };
       $("pm").onchange = go; await go();
     },
   };
   $("tabs").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; document.querySelectorAll("#tabs button").forEach((x) => x.classList.toggle("on", x === b)); $("out").innerHTML = ""; V[b.dataset.t](); };
   V.today();
-})().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เกิดข้อผิดพลาด: " + e.message; } });
+})().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น: " + e.message; } });
 </script></body></html>

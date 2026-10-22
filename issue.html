@@ -11,9 +11,9 @@
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>แจ้งปัญหา</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
 <div id="form" hidden>
   <label class="field" for="type">เรื่องอะไร</label>
-  <select id="type"><option value="waste">ของเสีย/หมดอายุ</option><option value="equipment">เครื่องพัง</option><option value="customer">ลูกค้าร้องเรียน</option><option value="cpf">ของ CPF ผิด</option><option value="edit_request">ขอแก้ข้อมูล</option><option value="other">อื่นๆ</option></select>
-  <label class="field" for="text">รายละเอียด</label>
-  <textarea id="text" rows="4" placeholder="เล่าสั้นๆ ว่าเกิดอะไร"></textarea>
+  <select id="type"><option value="waste">ของเสีย/หมดอายุ</option><option value="equipment">เครื่องพัง</option><option value="customer">ลูกค้าร้องเรียน</option><option value="cpf">ของ CPF มาผิด</option><option value="edit_request">กรอกผิด ขอแก้</option><option value="other">เรื่องอื่น</option></select>
+  <label class="field" for="text">เกิดอะไรขึ้น</label>
+  <textarea id="text" rows="4" placeholder="เช่น เตาย่างหัวซ้ายไฟไม่ติด"></textarea>
   <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูป (ไม่เกิน 3 รูป) <input id="ph" type="file" accept="image/*" capture="environment" multiple hidden></label>
   <p id="phS" class="muted"></p>
   <div class="sticky"><button id="send" class="btn primary">ส่งให้เจ้าของ</button>
@@ -23,14 +23,14 @@
 (async () => {
   const { supabase, me } = await App.ready();
   const photos = [];
-  ph.onchange = async () => { for (const f of ph.files) { if (photos.length >= 3) break; phS.textContent = "กำลังอัปโหลด…"; try { photos.push(await Photo.upload(supabase, "issue", f)); } catch (e) { phS.textContent = "อัปโหลดไม่สำเร็จ: " + e.message; return; } } phS.textContent = "รูป " + photos.length + " รูป"; };
+  ph.onchange = async () => { for (const f of ph.files) { if (photos.length >= 3) break; phS.textContent = "กำลังส่งรูป…"; try { photos.push(await Photo.upload(supabase, "issue", f)); } catch (e) { phS.textContent = "ส่งรูปไม่ขึ้น ลองถ่ายใหม่: " + e.message; return; } } phS.textContent = "ได้รูปแล้ว " + photos.length + " รูป"; };
   send.onclick = async () => {
-    if (!text.value.trim()) { msg.textContent = "ใส่รายละเอียดก่อน"; msg.className = "err"; return; }
+    if (!text.value.trim()) { msg.textContent = "เขียนก่อนว่าเกิดอะไรขึ้น"; msg.className = "err"; return; }
     send.disabled = true; msg.textContent = "กำลังส่ง…"; msg.className = "muted";
     const { data, error } = await supabase.from("issues").insert({ type: type.value, text: text.value.trim(), photos, created_by: me.userId }).select("id").single();
-    if (error) { msg.textContent = "ส่งไม่สำเร็จ: " + error.message; msg.className = "err"; send.disabled = false; return; }
+    if (error) { msg.textContent = "ส่งไม่ได้ ลองกดอีกครั้ง\n" + error.message; msg.className = "err"; send.disabled = false; return; }
     await App.fn("issue-notify", { issue_id: data.id }).catch(() => {});
-    msg.textContent = "ส่งแล้ว ขอบคุณ"; msg.className = "ok"; text.disabled = ph.disabled = true;
+    msg.textContent = "ส่งให้เจ้าของแล้ว ขอบคุณ"; msg.className = "ok"; text.disabled = ph.disabled = true;
   };
   form.hidden = false;
 })();
