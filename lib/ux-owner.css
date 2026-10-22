@@ -1,0 +1,100 @@
+/* ux-audit-2 · owner stream (owner.html · holiday.html owner view) · loaded after ui.css · tokens from ui.css only */
+
+/* day navigator ‹ ศุกร์ 23 ต.ค. › · the date itself is a native date picker */
+.daynav { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; }
+.daynav > button { flex: none; width: 48px; height: 48px; border-radius: var(--radius); border: 1px solid var(--color-border-strong); background: var(--color-card); color: var(--color-foreground); display: grid; place-items: center; cursor: pointer; touch-action: manipulation; transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out); }
+.daynav > button svg { width: 22px; height: 22px; }
+.daynav > button:active { transform: scale(.94); background: var(--color-muted); }
+.daynav > button:disabled { opacity: .35; transform: none; cursor: default; }
+.daynav .d { position: relative; flex: 1; min-height: 48px; text-align: center; font: 600 20px/1.2 var(--font-head); border-radius: var(--radius); }
+.daynav .d small { display: block; margin-top: 2px; font: 400 13px/1.3 var(--font-body); color: var(--color-ink-soft); }
+.daynav .d input { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; margin: 0; padding: 0; opacity: 0; border: 0; cursor: pointer; }
+.daynav .d:has(input:focus-visible) { outline: 2px solid var(--color-ring); outline-offset: 2px; }
+
+/* status strip เปิด · รับของ · ปิด */
+.tl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 0 0 4px; }
+.tl > div { border-radius: var(--radius); padding: 10px 6px; text-align: center; border: 1px solid var(--color-border); background: var(--color-card); font-size: 13px; line-height: 1.35; color: var(--color-ink-soft); }
+.tl b { display: block; font: 600 16px/1.3 var(--font-head); color: var(--color-foreground); }
+.tl .ok { background: var(--tint-success); border-color: var(--border-ok); } .tl .ok b { color: var(--color-success); }
+.tl .wait { background: var(--tint-wait); border-color: var(--border-wait); } .tl .wait b { color: var(--on-wait); }
+.tl .bad { background: var(--tint-destructive); border-color: var(--border-bad); } .tl .bad b { color: var(--color-destructive); }
+.tl .now { background: var(--tint-primary); border: 1.5px solid var(--color-primary); } .tl .now b { color: var(--color-primary); }
+
+/* section heading + to-do cards (urgent = red edge) */
+h3.sec { font: 500 15px/1.3 var(--font-head); color: var(--color-ink-soft); margin: 18px 0 4px; }
+.todo { border-left: 4px solid var(--border-wait); padding: 12px 14px; margin: 8px 0; transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out); }
+.todo.bad { border-left-color: var(--color-destructive); }
+.todo .t { font: 500 16px/1.35 var(--font-head); }
+.todo .s { font-size: 14px; color: var(--color-ink-soft); }
+.todo .acts { display: flex; gap: 8px; margin-top: 8px; }
+.todo .acts .btn { margin: 0; flex: 1; }
+.todo .acts .btn.go { color: var(--color-primary-dark); }
+.todo.gone { opacity: 0; transform: translateX(16px); }
+.todo .say { margin: 8px 0 0; font-size: 14px; white-space: pre-line; }
+.alldone { color: var(--color-success); font-weight: 500; margin: 6px 0 0; }
+
+/* two number tiles */
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.two .card { margin: 0; padding: 12px 14px; }
+.two .k { font-size: 13px; color: var(--color-ink-soft); }
+.two .v { font: 600 19px/1.3 var(--font-head); font-variant-numeric: tabular-nums; }
+.two .m { font-size: 13px; color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
+
+/* folds (details collapsed, 200ms) */
+.folds { padding-top: 2px; padding-bottom: 2px; }
+.fold { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; padding: 10px 0; margin: 0; background: none; border: 0; border-top: 1px solid var(--color-border); color: var(--color-ink-soft); font: 400 15px/1.35 var(--font-body); text-align: left; cursor: pointer; }
+.folds > .fold:first-child { border-top: 0; }
+.fold b { color: var(--color-foreground); font-weight: 500; }
+.fold::after { content: ""; flex: none; width: 9px; height: 9px; margin-right: 4px; border-right: 2px solid var(--color-chevron); border-bottom: 2px solid var(--color-chevron); transform: rotate(45deg); transition: transform 200ms var(--ease-out); }
+.fold[aria-expanded=true]::after { transform: rotate(225deg); }
+.fold-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 200ms var(--ease-out); }
+.fold[aria-expanded=true] + .fold-body { grid-template-rows: 1fr; }
+.fold-body > div { overflow: hidden; min-height: 0; }
+.fold-body > div > :last-child { margin-bottom: 12px; }
+.fold-body .ln { padding: 3px 0; }
+
+/* chips (issue filter) */
+.chips { display: flex; gap: 8px; margin: 0 0 8px; overflow-x: auto; scrollbar-width: none; }
+.chips button { flex: none; min-height: 44px; padding: 6px 16px; border-radius: 999px; border: 1px solid var(--color-border-strong); background: var(--color-card); color: var(--color-ink-soft); font: 500 15px/1.2 var(--font-head); cursor: pointer; font-variant-numeric: tabular-nums; transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out), transform 160ms var(--ease-out); }
+.chips button:active { transform: scale(.97); }
+.chips button[aria-pressed=true] { background: var(--color-foreground); border-color: var(--color-foreground); color: var(--color-card); }
+button.daylink { min-height: 44px; padding: 0; margin: -8px 0; border: 0; background: none; color: var(--color-primary-dark); font: 500 15px/1.3 var(--font-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+/* edit panel: full-height sheet, save button sticky at the bottom */
+.panel { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; background: var(--color-background); transform: translateY(100%); transition: transform 200ms var(--ease-out); }
+.panel.on { transform: none; transition: transform 280ms cubic-bezier(.32, .72, 0, 1); } /* iOS drawer curve in, faster out */
+button.daylink:active, .cal-nav button:active, .daynav .d:active { opacity: .7; }
+.panel-head { display: flex; align-items: center; gap: 12px; padding: calc(10px + env(safe-area-inset-top)) var(--space-md) 10px; background: var(--color-card); box-shadow: inset 0 -1px 0 var(--color-border); }
+.panel-head h2 { margin: 0; flex: 1; font: 600 18px/1.3 var(--font-head); }
+.panel-head .x { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--color-muted); font: 500 22px/1 var(--font-head); color: var(--color-foreground); cursor: pointer; }
+.panel-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 var(--space-md); }
+.panel-body .sticky { margin-top: var(--space-md); }
+.colhead { position: sticky; top: 0; z-index: 2; display: flex; gap: 12px; padding: 10px 0 6px; background: var(--color-background); font-size: 13px; color: var(--color-ink-soft); }
+.colhead span { width: 58px; text-align: center; flex: none; }
+.colhead span:first-child { flex: 1; width: auto; text-align: left; }
+
+/* holiday · owner month calendar */
+.cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 18px 0 6px; }
+.cal-nav h2 { margin: 0; }
+.cal-nav > div { display: flex; gap: 8px; }
+.cal-nav button { width: 44px; height: 44px; border-radius: var(--radius-sm); border: 1px solid var(--color-border-strong); background: var(--color-card); font: 600 20px/1 var(--font-head); color: var(--color-foreground); cursor: pointer; }
+.cal-nav button:disabled { opacity: .35; cursor: default; }
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.cal .wd { text-align: center; font-size: 12px; color: var(--color-ink-soft); padding: 2px 0; }
+.cal .c { min-height: 54px; padding: 3px 2px; border-radius: 8px; background: var(--color-card); border: 1px solid var(--color-border); font-size: 11px; line-height: 1.25; overflow: hidden; }
+.cal .c .n { display: block; font: 500 13px/1.3 var(--font-head); font-variant-numeric: tabular-nums; }
+.cal .c.out { visibility: hidden; }
+.cal .c.today { border: 1.5px solid var(--color-primary); }
+.cal .c.shut { background: var(--color-muted); }
+.cal .c i { display: block; font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 4px; padding: 0 2px; margin-top: 1px; }
+.cal .c i.ok { background: var(--tint-success); color: var(--color-success); }
+.cal .c i.wait { background: var(--tint-wait); color: var(--on-wait); }
+.cal .c i.shop { color: var(--color-ink-soft); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; color: var(--color-ink-soft); margin: 6px 0 0; }
+.legend i { font-style: normal; padding: 0 6px; border-radius: 4px; }
+.legend i.ok { background: var(--tint-success); color: var(--color-success); }
+.legend i.wait { background: var(--tint-wait); color: var(--on-wait); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fold-body, .fold::after, .panel, .todo { transition: none; }
+}
