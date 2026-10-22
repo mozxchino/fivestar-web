@@ -53,7 +53,7 @@
       ${inp("users", x.id, "started_at", x.started_at, "เริ่มงาน", "date")}</div>
       ${x.active ? `<button class="btn sm" data-off="${x.id}" data-n="${E(x.name)}">ปิดสิทธิ์</button>` : ""}</div>`;
     $("staff").innerHTML = `<h2>รออนุมัติ</h2>` + ((pend || []).map((p) => `<div class="card" data-src="${E(p.source_id)}"><input type="text" value="${E(p.display_name)}" placeholder="ชื่อ">
-      <select><option value="staff">พนักงาน</option><option value="owner">เจ้าของ</option></select><button class="btn sm primary" data-ok>อนุมัติ</button></div>`).join("") || `<p class="muted">ไม่มี</p>`)
+      <select><option value="staff">พนักงาน</option><option value="owner">เจ้าของ</option></select><button class="btn sm" data-ok>อนุมัติ</button></div>`).join("") || `<p class="muted">ไม่มี</p>`)
       + `<h2>พนักงานที่ใช้งานอยู่</h2>` + (us || []).filter((x) => x.active).map(u).join("")
       + `<details><summary class="muted">ปิดสิทธิ์แล้ว (${(us || []).filter((x) => !x.active).length})</summary>${(us || []).filter((x) => !x.active).map(u).join("")}</details>`;
   }
