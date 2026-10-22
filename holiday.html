@@ -1,0 +1,57 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ขอหยุด/ลา</title><link rel="stylesheet" href="lib/ui.css">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script>
+</head><body>
+<div class="topbar"><div class="logo">5</div><div><h1>ขอหยุด/ลา</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></div>
+<p id="cnt" class="muted">กำลังโหลด…</p>
+<div id="form" hidden>
+  <h2 style="font-size:17px">ประเภท</h2>
+  <select id="type"><option value="off">หยุดประจำสัปดาห์</option><option value="sick">ลาป่วย</option><option value="personal">ลากิจ</option><option value="special">พิเศษ/อื่นๆ</option></select>
+  <h2 style="font-size:17px;margin-top:16px">วันที่</h2>
+  <input id="date" type="date" style="font-size:19px;padding:12px;border:1px solid var(--line);border-radius:10px;width:100%;background:#fff;color:var(--fg)">
+  <h2 style="font-size:17px;margin-top:16px">เหตุผล</h2>
+  <textarea id="note" rows="3" placeholder="เล่าสั้นๆ (ไม่บังคับ)"></textarea>
+  <button id="send" class="btn primary">ส่งคำขอ</button>
+  <p id="msg" class="muted"></p>
+</div>
+<h2 style="font-size:17px;margin-top:16px">เดือนนี้</h2>
+<div id="list"></div>
+<script>
+(async () => {
+  const TYPE = { off: "หยุดประจำสัปดาห์", sick: "ลาป่วย", personal: "ลากิจ", special: "พิเศษ/อื่นๆ" };
+  const ST = { pending: "รออนุมัติ", approved: "อนุมัติแล้ว", rejected: "ไม่อนุมัติ", cancelled: "ยกเลิก" };
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
+  const plus = (n) => { const d = new Date(today + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const ddmm = (d) => `${d.slice(8, 10)}/${d.slice(5, 7)}`;
+  try {
+    const { supabase, me } = await App.ready();
+    const setMin = () => { date.min = type.value === "sick" ? today : plus(1); date.max = plus(30); if (!date.value || date.value < date.min) date.value = date.min; };
+    type.onchange = setMin; setMin();
+    async function load() {
+      const { data: c } = await supabase.rpc("leave_counters");
+      cnt.textContent = `เดือนนี้หยุดแล้ว ${c?.month_days ?? 0} วัน · สัปดาห์นี้ใช้โควตา ${c?.week_used ?? 0}/1`;
+      const { data, error } = await supabase.from("leave_requests").select("date, type, status, users(name)")
+        .gte("date", today.slice(0, 8) + "01").lte("date", plus(31)).order("date");
+      if (error) { list.innerHTML = `<p class="err">โหลดไม่ได้: ${error.message}</p>`; return; }
+      const rows = data; // this month + upcoming (≤ 30 days)
+      list.innerHTML = rows.length ? rows.map((r) => `<div class="row"><b style="flex:1">${ddmm(r.date)} · ${TYPE[r.type] || r.type}${me.role === "owner" && r.users ? " · " + r.users.name : ""}</b><span class="pill">${ST[r.status] || r.status}</span></div>`).join("")
+        : `<p class="muted">ยังไม่มีคำขอ</p>`;
+    }
+    send.onclick = async () => {
+      if (!date.value) { msg.textContent = "เลือกวันก่อน"; msg.className = "err"; return; }
+      send.disabled = true; msg.textContent = "กำลังส่ง…"; msg.className = "muted";
+      const { data, error } = await supabase.rpc("request_leave", { d: date.value, p_type: type.value, note: note.value.trim() || null });
+      if (error) { msg.textContent = "ส่งไม่สำเร็จ: " + error.message; msg.className = "err"; send.disabled = false; return; }
+      const n = await App.fn("leave-notify", { leave_id: data.id }).catch(() => null);
+      msg.textContent = data.status === "approved" ? "อนุมัติแล้ว (โควตาประจำสัปดาห์)" : "ส่งคำขอแล้ว รอเจ้าของอนุมัติในกลุ่ม";
+      if (!n || !n.ok) msg.textContent += "\nแจ้งเตือน LINE ไม่สำเร็จ บอกเจ้าของเองด้วย";
+      msg.className = "ok"; msg.style.whiteSpace = "pre-line"; note.value = ""; send.disabled = false;
+      await load();
+    };
+    form.hidden = false;
+    await load();
+  } catch (e) { if (e.message !== "denied") cnt.textContent = "โหลดไม่ได้: " + e.message; }
+})();
+</script></body></html>

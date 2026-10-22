@@ -16,8 +16,8 @@
     const { me } = await App.ready();
     document.getElementById("who").textContent = `${me.name} · ${me.role === "owner" ? "เจ้าของ" : "พนักงาน"}`;
     document.getElementById("title").textContent = "เลือกเมนู";
-    const staff = [["open.html","เปิดร้าน","🌅"],["receive.html","รับของ","📦"],["close.html","ปิดร้าน","🌙"],["issue.html","แจ้งปัญหา","⚠️"],["history.html","ประวัติ","📅"]];
-    const owner = [["owner.html","วันนี้","📊"],["approve.html","อนุมัติใบสั่ง","✅"],["settings.html","ตั้งค่า","⚙️"]];
+    const staff = [["open.html","เปิดร้าน","🌅"],["receive.html","รับของ","📦"],["close.html","ปิดร้าน","🌙"],["issue.html","แจ้งปัญหา","⚠️"],["holiday.html","ขอหยุด/ลา","🏖️"],["history.html","ประวัติ","📅"]];
+    const owner = [["owner.html","วันนี้","📊"],["approve.html","อนุมัติใบสั่ง","✅"],["settings.html","ตั้งค่า","⚙️"],["holiday.html","ขอหยุด/ลา","🏖️"]];
     document.getElementById("menu").innerHTML = (me.role === "owner" ? owner : staff)
       .map(([h,t,ic],i) => `<a class="btn ${i===0?'primary':''}" href="${h}"><span class="ico">${ic}</span>${t}</a>`).join("");
   } catch (e) {
