@@ -1,0 +1,77 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ต้นทุน/กำไร (เจ้าของ)</title><link rel="stylesheet" href="lib/ui.css">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script>
+<style>
+table{width:100%;border-collapse:collapse}td,th{padding:8px 2px;border-bottom:1px solid var(--line);text-align:left}td+td,th+th{text-align:right}
+td.n{font-weight:600}tr.net td{font-size:20px;font-weight:700}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}.g label{display:block;font-size:14px;color:var(--muted)}
+.sm{display:inline-block;width:auto;padding:10px 16px;font-size:17px;margin:8px 8px 0 0}
+#pm{width:100%;padding:12px;font-size:19px}
+</style></head><body>
+<div class="topbar"><div class="logo">5</div><div><h1>ต้นทุน/กำไร</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></div>
+<p id="blocked" class="err" hidden></p>
+<div id="app" hidden>
+  <input id="pm" type="month">
+  <h2>สรุป</h2><div id="sum" class="card muted">กำลังโหลด…</div>
+  <h2>กรอกยอดเดือนนี้</h2><div class="card">
+    <div class="g"><div><label>ยอดหน้าร้าน (POS)</label><input type="number" id="store_sales"></div><div><label>ยอด LINE MAN</label><input type="number" id="lineman_sales"></div>
+    <div><label>ยอด Grab</label><input type="number" id="grab_sales"></div><div><label>ยอด Shopee</label><input type="number" id="shopee_sales"></div>
+    <div><label>ค่าเช่า</label><input type="number" id="rent"></div><div><label>ค่าแรง</label><input type="number" id="wages"></div>
+    <div><label>น้ำไฟ</label><input type="number" id="utilities"></div><div><label>แก๊ส</label><input type="number" id="gas"></div>
+    <div><label>จิปาถะ</label><input type="number" id="misc"></div></div>
+    <label class="muted">โน้ต</label><textarea id="note" rows="2"></textarea>
+    <button class="btn primary sm" id="save">บันทึก</button> <span id="smsg" class="muted"></span></div>
+  <h2>อัตรา GP (%)</h2><div class="card">
+    <div class="g"><div><label>LINE MAN</label><input type="number" id="lineman_gp"></div><div><label>Grab</label><input type="number" id="grab_gp"></div><div><label>Shopee</label><input type="number" id="shopee_gp"></div></div>
+    <button class="btn primary sm" id="gsave">บันทึก</button> <span id="gmsg" class="muted"></span></div>
+  <h2>รายสินค้า</h2><div id="prod" class="card muted">กำลังโหลด…</div>
+</div>
+<script>
+(async () => {
+  const $ = (i) => document.getElementById(i);
+  const { supabase, me } = await App.ready();
+  if (me.role !== "owner") { $("blocked").hidden = false; $("blocked").textContent = "เฉพาะเจ้าของ"; return; }
+  $("app").hidden = false;
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const money = (n) => n == null ? "-" : Number(n).toLocaleString("th-TH", { maximumFractionDigits: 0 });
+  const IN = ["store_sales", "lineman_sales", "grab_sales", "shopee_sales", "rent", "wages", "utilities", "gas", "misc"];
+  const GP = ["lineman_gp", "grab_gp", "shopee_gp"];
+  $("pm").value = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 7);
+  const ym = () => $("pm").value;
+
+  async function load() {
+    const [y, m] = ym().split("-").map(Number); if (!y) return;
+    const { data: r, error } = await supabase.rpc("month_costs", { y, m });
+    if (error) { $("sum").innerHTML = `<p class="err">${esc(error.message)}</p>`; return; }
+    IN.forEach((k) => $(k).value = r.inputs[k] ?? "");
+    $("note").value = r.inputs.note || "";
+    GP.forEach((k) => $(k).value = r.gp[k] ?? "");
+    const diff = r.revenue > 0 && r.stock_sales_est > 0 ? Math.round((r.stock_sales_est - r.revenue) / r.revenue * 100) : null;
+    const rows = [["รายได้รวม", money(r.revenue)], ["GP ส่ง", money(r.gp_cost)], ["ต้นทุน CPF", money(r.cpf_cost)], ["ของเสีย (เป็นเงิน)", money(r.waste_cost)], ["คงที่", money(r.fixed)]];
+    const after = [["วันเปิด", r.days_open], ["เฉลี่ย/วัน", money(r.avg_daily_sales)], ["ยอดขายตามสต็อก (ประมาณ)", money(r.stock_sales_est)]];
+    $("sum").className = "card";
+    $("sum").innerHTML = `${r.has_inputs ? "" : '<p class="muted">เดือนนี้ยังไม่กรอกยอด · ใช้ค่าคงที่เริ่มต้น</p>'}<table>
+      ${rows.map(([k, v]) => `<tr><td>${k}</td><td class="n">${v}</td></tr>`).join("")}
+      <tr class="net"><td>กำไรสุทธิ</td><td class="${r.net >= 0 ? "ok" : "err"}">${money(r.net)}</td></tr>
+      ${after.map(([k, v]) => `<tr><td>${k}</td><td class="n">${v}</td></tr>`).join("")}</table>
+      ${diff == null ? "" : `<p class="muted">ต่างจาก POS ${diff > 0 ? "+" : ""}${diff}%</p>`}
+      ${r.missing_cost.length ? `<p class="err">ยังไม่มีราคาทุน: ${esc(r.missing_cost.join(", "))} · <a href="settings.html">กรอกในตั้งค่า</a></p>` : ""}`;
+    $("prod").className = "card";
+    $("prod").innerHTML = r.per_product.length ? `<table><tr><th>ชื่อ</th><th>รับ</th><th>ขาย</th><th>เสีย</th><th>ทุน/หน่วย</th><th>ต้นทุน</th></tr>
+      ${r.per_product.map((p) => `<tr><td>${esc(p.name)}</td><td>${money(p.received)}</td><td>${money(p.sold)}</td><td>${money(p.waste)}</td><td>${p.cost_price == null ? '<span class="err">-</span>' : money(p.cost_price)}</td><td class="n">${money(p.cost)}</td></tr>`).join("")}</table>`
+      : '<p class="muted">ไม่มีข้อมูลสต็อกเดือนนี้</p>';
+  }
+  const msg = (id, error) => { $(id).className = error ? "err" : "ok"; $(id).textContent = error ? "ไม่สำเร็จ: " + error.message : "บันทึกแล้ว ✓"; };
+  $("save").onclick = async () => {
+    const row = { ym: ym(), note: $("note").value.trim() || null, updated_at: new Date().toISOString() };
+    IN.forEach((k) => row[k] = +$(k).value || 0);
+    const { error } = await supabase.from("month_inputs").upsert(row); msg("smsg", error); if (!error) load();
+  };
+  $("gsave").onclick = async () => {
+    const { error } = await supabase.from("settings").upsert(GP.map((key) => ({ key, value: +$(key).value || 0 }))); msg("gmsg", error); if (!error) load();
+  };
+  $("pm").onchange = load; await load();
+})().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เกิดข้อผิดพลาด: " + e.message; } });
+</script></body></html>

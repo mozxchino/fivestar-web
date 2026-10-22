@@ -1,5 +1,5 @@
 /* Five Star brand: red + yellow · mobile-first 375px · big tap targets for staff */
-:root { --bg:#fff7f0; --card:#fff; --fg:#1a1a1a; --muted:#6b6b6b; --line:#eadfd6; --red:#c8102e; --red-dark:#9e0b23; --yellow:#ffc425; --green:#2e7d32; --err:#c62828; --brand:var(--red); }
+:root { --bg:#fff7f0; --card:#fff; --fg:#1a1a1a; --muted:#6b6b6b; --line:#eadfd6; --red:#c82128; --red-dark:#9e0b23; --yellow:#ffe60a; --green:#2e7d32; --err:#c62828; --brand:var(--red); }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin:0; font: 18px/1.5 -apple-system, "Noto Sans Thai", "Sukhumvit Set", sans-serif; color:var(--fg); background:var(--bg); padding:0 16px 24px; }
