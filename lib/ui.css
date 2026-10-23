@@ -574,3 +574,10 @@ input.roll-dn { animation: roll-in-dn 180ms var(--ease-out); }
 .photo-view { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, .92); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
 .photo-view img { max-width: 100%; max-height: calc(100% - 48px); object-fit: contain; }
 .photo-view p { color: #fff; margin: 12px 0 0; font-size: 15px; }
+
+/* round 6: a page the signed-in role can't use → only the header + one block (UXS.only) */
+body.ux-only > :not(.topbar, .ux-block, .ux-toast, script, style, dialog) { display: none !important; }
+/* make-interfaces-feel-better round 6: the blocked block arrives softly (opacity + 6px), no motion when reduced */
+.ux-block { transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out); text-wrap: balance; }
+@starting-style { .ux-block { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) { .ux-block { transition: none; } }

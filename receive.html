@@ -3,10 +3,10 @@
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-staff.css">
+<link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-staff.css"><link rel="stylesheet" href="lib/ux-data.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js"></script>
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>รับของ</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3<span id="d"></span></div></div></header>
 <div class="sk"><span class="vh">กำลังเปิด…</span><p></p><div class="sheet"><div class="it meta sheet-head"><i class="sk-b" style="--w:34%;--h:13px;margin:0"></i><i class="sk-b" style="--w:28px;--h:13px;margin:0 auto"></i><i class="sk-b" style="--w:64px;--h:13px;margin:0 auto"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div></div><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
@@ -34,9 +34,15 @@
   <div class="sticky"><label id="shot" class="btn primary" for="ph" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><span id="shotT">ถ่ายใบส่งของ</span></label><button id="save" class="btn primary">บันทึกรับของ</button>
   <p id="msg" class="muted"></p></div>
 </div>
+<dialog id="nd" class="bsheet" aria-labelledby="ndH"><div class="body"><div class="grab"></div>
+  <div class="hd"><b id="ndH">วันนี้ไม่มีของมา</b><button class="x" type="button" aria-label="ปิด">✕</button></div>
+  <p class="ux-nd">ถ้าแค่มาช้า ไม่ต้องกด รอรับของตามปกติ</p>
+  <label class="chk ux-ndc"><input id="ndOk" type="checkbox"><span>ถามเซลล์ในกลุ่มสั่งของแล้ว<br>เซลล์ยืนยันว่าวันนี้ไม่มาส่ง</span></label></div>
+  <div class="foot"><button id="ndGo" class="btn primary" disabled>บันทึก วันนี้ไม่มีของมา</button></div></dialog>
 <script>
 (async () => {
-  const { supabase } = await App.ready();
+  const { supabase, me } = await App.ready();
+  if (UXS.only(me, ["staff", "owner"], "หน้านี้สำหรับพนักงานในร้าน", "ผู้จัดการดูงานของร้านได้ที่หน้าวันนี้", "owner.html", "ไปหน้าวันนี้")) return;
   const today = Photo.todayPrefix().slice(0, 10).replaceAll("/", "-");
   d.textContent = " · " + new Date(today + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
   const { data: o } = await supabase.from("orders").select("id").eq("for_date", today).in("status", ["sent", "failed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
@@ -83,7 +89,11 @@
     const n = arr.filter((a, i) => a.qty_received < +lines.querySelectorAll(".it .ord")[i].textContent).length;
     run(supabase.rpc("receive_order", { oid: o.id, items: arr, photos }), { order_id: o.id }, "รับของแล้ว", n ? `ของมาไม่ครบ ${n} อย่าง` : "", "ขอบคุณที่ช่วยนับของ");
   };
-  none2.onclick = () => { if (confirm("วันนี้ CPF ไม่มาส่งของเลย ใช่ไหม?")) run(supabase.rpc("no_delivery_today"), { no_delivery: true }, "บันทึกแล้ว", "วันนี้ไม่มีของมา", "ขอบคุณที่แจ้ง"); };
+  // round 6 (Mos 23 ต.ค.): a sheet instead of confirm() · late ≠ not coming, so the save stays off until the sales rep confirmed in the order group
+  const nd = UXD.sheet(document.getElementById("nd"));
+  ndOk.onchange = () => { ndGo.disabled = !ndOk.checked; };
+  none2.onclick = () => { ndOk.checked = false; ndGo.disabled = true; nd.open(); };
+  ndGo.onclick = () => { if (!ndOk.checked) return; nd.close(); run(supabase.rpc("no_delivery_today"), { no_delivery: true }, "บันทึกแล้ว", "วันนี้ไม่มีของมา", "ขอบคุณที่แจ้ง"); };
   form.hidden = false; short();
 })();
 </script></body></html>

@@ -23,6 +23,7 @@
 <script>
 (async () => {
   const { supabase, me } = await App.ready();
+  if (UXS.only(me, ["staff", "owner"], "หน้านี้สำหรับพนักงานในร้าน", "ผู้จัดการดูงานของร้านได้ที่หน้าวันนี้", "owner.html", "ไปหน้าวันนี้")) return;
   const photos = [];
   Photo.picker(supabase, ph, { paths: photos, type: "issue", name: "รูป", max: 3, status: phS });
   send.onclick = async () => {

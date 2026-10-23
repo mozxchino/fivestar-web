@@ -33,13 +33,16 @@ td+td{font-weight:600}
   const $ = (i) => document.getElementById(i);
   const U = window.UxOwner, esc = U.esc;
   const { supabase, me } = await App.ready();
-  if (me.role !== "owner") { $("blocked").hidden = false; $("blocked").textContent = "หน้านี้สำหรับเจ้าของ"; return; }
+  if (me.role !== "owner" && me.role !== "manager") { $("blocked").hidden = false; $("blocked").textContent = "หน้านี้สำหรับเจ้าของ"; return; }
+  // round 6: a manager gets วัน + ปัญหา only (no month money, no number edits, no โอที) · the DB refuses those anyway
+  const MGR = me.role === "manager";
+  if (MGR) document.querySelectorAll('.tabs [data-t="mon"], .tabs.sk button:last-child').forEach((b) => b.remove());
   $("app").hidden = false; $("tabs").hidden = false;
   const TODAY = U.today();
   const hm = (t) => t ? new Date(t).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" }) : "-";
   const when = (d) => d === TODAY ? "วันนี้" : d === U.plus(TODAY, -1) ? "เมื่อวาน" : U.dayName(d);
-  const names = Object.fromEntries(((await supabase.from("users").select("id,name")).data || []).map((u) => [u.id, u.name]));
-  const P = (await supabase.from("products").select("id,name,unit")).data || [];
+  const names = Object.fromEntries(((await supabase.from("user_public").select("id,name")).data || []).map((u) => [u.id, u.name]));
+  const P = (await supabase.from("product_names").select("id,name,unit")).data || [];
   const prods = Object.fromEntries(P.map((p) => [p.id, p.name])), unit = Object.fromEntries(P.map((p) => [p.id, p.unit || ""]));
   const remindAt = String(((await supabase.from("settings").select("key,value").eq("key", "remind_at").maybeSingle()).data || {}).value || "20:30");
   const TYPE = { waste: "ของเสีย/หมดอายุ", equipment: "เครื่องพัง", customer: "ลูกค้าร้องเรียน", cpf: "ของ CPF มาผิด", edit_request: "กรอกผิด ขอแก้", other: "เรื่องอื่น" };
@@ -63,7 +66,7 @@ td+td{font-weight:600}
   // ---- state: ?d=YYYY-MM-DD · ?tab=day|iss|month (LINE cards deep-link here) ----
   const q = new URLSearchParams(location.search);
   let D = /^\d{4}-\d{2}-\d{2}$/.test(q.get("d") || "") && q.get("d") <= TODAY ? q.get("d") : TODAY;
-  let TAB = { iss: "iss", month: "mon", mon: "mon" }[q.get("tab")] || "day";
+  let TAB = { iss: "iss", month: MGR ? "day" : "mon", mon: MGR ? "day" : "mon" }[q.get("tab")] || "day";
   let CHIP = "open";
   const sync = () => {
     const p = new URLSearchParams();
@@ -86,7 +89,7 @@ td+td{font-weight:600}
       supabase.from("consumable_checks").select("product_id,status").eq("date", d).neq("status", "ok"),
       supabase.from("orders").select("order_items(product_id,qty_proposed,qty_final,qty_received,received_at)").eq("for_date", d).eq("status", "sent").maybeSingle(),
       supabase.from("issues").select("id,date,type,text,photos,created_by,created_at,status").eq("status", "open").order("created_at", { ascending: false }),
-      isToday ? supabase.from("leave_requests").select("id,user_id,date,type,note,status,users(name)").gte("date", TODAY.slice(0, 8) + "01").lte("date", U.plus(TODAY, 31)).order("date") : Promise.resolve({ data: [] }),
+      isToday ? supabase.from("leave_requests").select("id,user_id,date,type,note,status,users:user_public(name)").gte("date", TODAY.slice(0, 8) + "01").lte("date", U.plus(TODAY, 31)).order("date") : Promise.resolve({ data: [] }),
     ]);
     const byDate = Object.fromEntries((days || []).map((x) => [x.date, x]));
     return { d, isToday, sd: byDate[d] || null, yday: byDate[U.plus(d, -1)] || null, days: days || [], sl: sl || [], cc: cc || [], items: od?.order_items || [],
@@ -117,7 +120,7 @@ td+td{font-weight:600}
         b: l.note ? esc(l.note) : "", s: `เดือนนั้นหยุดแล้ว ${off} วัน`,
         a: `<button class="btn sm" data-a="leave" data-ok="0" data-i="${l.id}">ไม่อนุมัติ</button><button class="btn sm" data-a="leave" data-ok="1" data-i="${l.id}">อนุมัติ</button>` });
     }
-    const ot = c.days.filter((s) => +s.ot_hours > 0 && !s.ot_approved_at && (c.isToday ? s.date >= U.plus(c.d, -7) && s.date <= c.d : s.date === c.d)).sort((a, b) => a.date.localeCompare(b.date));
+    const ot = MGR ? [] : c.days.filter((s) => +s.ot_hours > 0 && !s.ot_approved_at && (c.isToday ? s.date >= U.plus(c.d, -7) && s.date <= c.d : s.date === c.d)).sort((a, b) => a.date.localeCompare(b.date));
     if (ot.length === 1) { const s = ot[0];
       T.push({ r: 4, at: s.date, key: "o" + s.date, t: `${when(s.date)} โอที ${+s.ot_hours} ชม.`, s: s.closed_at ? `ปิดร้าน ${hm(s.closed_at)} น. · ${esc(names[s.closed_by] || "-")}` : "ยังไม่ปิดร้าน",
         a: `<button class="btn sm" data-a="ot" data-d="${s.date}">อนุมัติโอที</button>` }); }
@@ -190,8 +193,8 @@ td+td{font-weight:600}
       + (photos.length ? fold("pics", `<b>รูปจากร้าน ${photos.length} รูป</b>`, `<div class="sk-row" style="flex-wrap:wrap;gap:8px;padding:8px 0 12px">${sb("72px", 72, ";--r:10px").repeat(photos.length)}</div>`) : "")
       + `</div>`
       + (c.isToday ? `<a class="btn sm" href="approve.html">ดูใบสั่งพรุ่งนี้</a>` : "")
-      + `<button class="btn sm" id="edit">แก้ตัวเลข${c.isToday ? "วันนี้" : "วันนั้น"}</button>`;
-    $("edit").onclick = () => openEdit(c);
+      + (MGR ? "" : `<button class="btn sm" id="edit">แก้ตัวเลข${c.isToday ? "วันนี้" : "วันนั้น"}</button>`);
+    if (!MGR) $("edit").onclick = () => openEdit(c);
     U.folds($("out").querySelector(".folds"), async (b) => {
       if (b.dataset.f !== "pics" || b.dataset.done) return;
       b.dataset.done = 1; $("f-pics").innerHTML = (await thumbs(photos)) || `<p class="muted">เปิดรูปไม่ขึ้น</p>`;

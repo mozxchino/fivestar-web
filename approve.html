@@ -36,7 +36,7 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   const E = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const show = (id, t) => { $(id).hidden = false; if (t) $(id).textContent = t; };
   const { supabase, me } = await App.ready();
-  if (me.role !== "owner") return show("blocked", "หน้านี้สำหรับเจ้าของ");
+  if (me.role !== "owner" && me.role !== "manager") return show("blocked", "หน้านี้สำหรับเจ้าของและผู้จัดการ");
   const bkk = (add = 0) => { const d = new Date(Date.now() + 7 * 3600e3 + add * 864e5); return d.toISOString().slice(0, 10); };
   const tomorrow = bkk(1), q = new URLSearchParams(location.search);
   const ST = { proposed: "รอส่ง", approved: "รอส่ง", sent: "ส่งแล้ว", failed: "ส่งไม่ออก" };
@@ -85,15 +85,18 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   const meta = (r, q) => `${base(r)} ${E(r.unit_th)}` + (r.sets != null ? ` (${Math.round(q / r.pack_size)} เซ็ต)` : "") + (q !== Number(r.qty_proposed) ? `<br><b>แก้จาก ${n(r.qty_proposed)}</b>` : "");
   const rowH = (r, i) => `<div class="orow" id="r${i}"><div class="grow"><div class="nm">${E(r.label)}</div><div class="meta"></div></div>
     <div class="step"><button type="button" data-d="-1" data-s="${i}" aria-label="ลด ${E(r.label)}">−</button><input type="number" inputmode="decimal" min="0" step="${step[r.product_id]}" value="${Number(r.qty)}" data-i="${i}" aria-label="${E(r.label)} จำนวนสั่ง (${E(r.unit_th)})"><button type="button" data-d="1" data-s="${i}" aria-label="เพิ่ม ${E(r.label)}">+</button></div></div>`;
-  // round 5 (Mos 23 ต.ค.): two always-visible groups instead of a fold · "ต้องดู" (edited / low / no stock figure) on top, white card
-  // "ตามที่ระบบเสนอ" (at the proposal and เหลือ ≥ ควรมี) below in a grey panel · rows stay editable
+  // round 6 (Mos 23 ต.ค.): "ต้องดู" (edited / low / no stock figure) = white card on top · "ตามที่ระบบเสนอ" (at the proposal and เหลือ ≥ ควรมี)
+  // = its own grey box after a clear gap, folded by default ("ดู N รายการ"); opened rows render inside that box and stay editable
   // ponytail: the split is decided once per render (stored qty), so a row edited here never jumps under the finger; it moves after reload
-  // every row keeps its input (data-i) and cur() still walks rows in order → the same send payload
+  // every row keeps its input (data-i), folded rows only hide, cur() still walks rows in order → the same send payload
   const same = (r) => Number(r.qty) === Number(r.qty_proposed) && r.remaining != null && r.par != null && Number(r.remaining) >= Number(r.par);
   const top = rows.map((r, i) => same(r) ? "" : rowH(r, i)).join(""), sys = rows.map((r, i) => same(r) ? rowH(r, i) : "").join(""), nSame = rows.filter(same).length, nTop = rows.length - nSame;
   $("items").innerHTML = !rows.length ? '<div class="card"><p class="muted">ใบนี้ไม่มีของต้องสั่ง</p></div>'
     : (nTop ? `<h2 class="ux-gh">ต้องดู ${nTop} รายการ</h2><div class="card list">${top}</div>` : "")
-    + (nSame ? `<section class="ux-sys" aria-labelledby="sysH"><div class="ux-sysh"><h2 id="sysH">ตามที่ระบบเสนอ ${nSame} รายการ</h2><p>ของยังพอ ไม่ได้แก้จำนวน</p></div>${sys}</section>` : "");
+    + (nSame ? `<section class="ux-sys" aria-labelledby="sysH"><div class="ux-sysh"><div class="grow"><h2 id="sysH">ตามที่ระบบเสนอ ${nSame} รายการ</h2><p>ของยังพอ ไม่ได้แก้จำนวน</p></div><button type="button" id="sysT" class="chip" aria-expanded="false" aria-controls="sysL">ดู ${nSame} รายการ</button></div><div id="sysL" hidden>${sys}<button type="button" id="sysB" class="ux-sysend">ซ่อน ${nSame} รายการ</button></div></section>` : "");
+  // impeccable: a long open box gets a second "ซ่อน" at its end · folding from there brings the box header back into view
+  const fold = (open, back) => { $("sysL").hidden = !open; $("sysT").setAttribute("aria-expanded", open); $("sysT").textContent = open ? "ซ่อน" : `ดู ${nSame} รายการ`; if (back) document.querySelector(".ux-sys").scrollIntoView({ block: "center" }); };
+  if (nSame) { $("sysT").onclick = () => fold($("sysL").hidden); $("sysB").onclick = () => fold(false, true); }
   const qv = (i) => Math.max(0, Number(document.querySelector(`[data-i="${i}"]`).value) || 0);
   const cur = () => rows.map((r, i) => ({ product_id: r.product_id, qty_final: qv(i), r }));
   // ง3: how far the owner moved from what the system proposed (order_review qty_proposed)

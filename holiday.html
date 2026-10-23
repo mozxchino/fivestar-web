@@ -36,7 +36,7 @@
   const thd = (d) => new Date(d + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
   try {
     const { supabase, me } = await App.ready();
-    if (me.role === "owner") return HolidayOwner(supabase); // P2-7: owner approves + month calendar, no request form
+    if (me.role === "owner" || me.role === "manager") return HolidayOwner(supabase); // P2-7: owner (round 6: or manager) approves + month calendar, no request form
     const setMin = () => { date.min = type.value === "sick" ? today : plus(1); date.max = plus(30); if (!date.value || date.value < date.min) date.value = date.min; };
     type.onchange = setMin; setMin();
     const canCancel = (r) => r.user_id === me.userId && (r.status === "pending" || r.status === "approved") && r.date >= today;

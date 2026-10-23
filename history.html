@@ -98,7 +98,7 @@
         + (d.note ? `<p class="muted">ฝากบอกเจ้าของ: ${esc(d.note)}</p>` : "");
       body.innerHTML = h + `<div style="padding-top:8px">${'<i class="sk-b" style="--h:14px;--gap:12px"></i>'.repeat(4)}</div>`;
       try {
-        if (!P) { const r = await supabase.from("products").select("id,name,unit,sort"); if (r.error) throw r.error; P = Object.fromEntries(r.data.map((p) => [p.id, p])); }
+        if (!P) { const r = await supabase.from("product_names").select("id,name,unit,sort"); if (r.error) throw r.error; P = Object.fromEntries(r.data.map((p) => [p.id, p])); }
         const { data: ls, error: e2 } = await supabase.from("stock_lines").select("product_id,received,remain_fresh,remain_cooked,waste").eq("date", d.date);
         if (e2) throw e2;
         const rows = (ls || []).filter((l) => +l.received || +l.remain_fresh || +l.remain_cooked || +l.waste).sort((a, b) => (P[a.product_id]?.sort ?? 0) - (P[b.product_id]?.sort ?? 0));

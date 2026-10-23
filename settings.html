@@ -35,8 +35,11 @@
   const $ = (i) => document.getElementById(i);
   const E = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const { supabase, me } = await App.ready();
-  if (me.role !== "owner") { $("blocked").hidden = false; $("blocked").textContent = "หน้านี้สำหรับเจ้าของ"; return; }
-  $("app").hidden = false; $("tabs").hidden = false;
+  if (me.role !== "owner" && me.role !== "manager") { $("blocked").hidden = false; $("blocked").textContent = "หน้านี้สำหรับเจ้าของ"; return; }
+  // round 6: a manager only edits staff off-days (set_off_days) · no pay, no access cards, no products, no shop settings (the DB refuses those anyway)
+  const MGR = me.role === "manager";
+  $("app").hidden = false; $("tabs").hidden = MGR;
+  if (MGR) { document.querySelector(".topbar h1").textContent = "พนักงาน"; document.title = "พนักงาน"; document.querySelector(".topbar .sub").textContent = "วันหยุดของพนักงาน"; document.querySelector(".topbar .tabs.sk").remove(); }
   const tabs = document.querySelectorAll("#tabs button"); // #tabs: the skeleton track in the header has look-alike buttons
   tabs.forEach((b) => b.onclick = () => { tabs.forEach((x) => { x.classList.toggle("on", x === b); $(x.dataset.t).hidden = x !== b; }); });
   const qs = new URLSearchParams(location.search);
@@ -45,6 +48,11 @@
   // generic save-on-blur for any input with data-t/data-id/data-f
   document.addEventListener("change", async (ev) => {
     const el = ev.target, { t, id, f } = el.dataset;
+    if (el.dataset.offd) { // owner or manager · staff off-days only
+      const { error } = await supabase.rpc("set_off_days", { p_user_id: el.dataset.offd, n: el.value === "" ? null : Number(el.value) });
+      if (error) return fail(error);
+      return UXM.toast("บันทึกแล้ว ✓");
+    }
     if (!t) return;
     const v = el.type === "checkbox" ? el.checked : el.value === "" ? null : el.type === "number" || el.inputMode === "decimal" ? Number(el.value) : el.value;
     const { error } = await supabase.from(t).update({ [f]: v }).eq("id", id);
@@ -54,6 +62,7 @@
 
   // ---- พนักงาน
   async function staff() {
+    if (MGR) return staffMgr();
     const { data: pend } = await supabase.from("pending_users").select("*").order("first_seen");
     const { data: us } = await supabase.from("users").select("*").order("name");
     // owner row: name + เจ้าของ only (no pay fields, can't be switched off · DB guard 0024)
@@ -62,13 +71,17 @@
     const av = (x) => `<span class="av${x.active ? "" : " off"}" aria-hidden="true">${E((x.name || "?").slice(0, 1).toUpperCase())}</span>`;
     const head = (x, pill) => `<div class="cell has-av${x.active ? "" : " dim"}">${av(x)}<span class="k name">${E(x.name)}</span>${pill}</div>`;
     // round 4: a working staff member's name row opens this month's summary (bottom sheet)
-    const who = (x) => `<button class="cell has-av ux-who" type="button" data-sum="${x.id}" data-n="${E(x.name)}" aria-haspopup="dialog">${av(x)}<span class="k name">${E(x.name)}<small>ดูสรุปเดือนนี้</small></span><span class="pill">พนักงาน</span><span class="go" aria-hidden="true">›</span></button>`;
+    const who = (x) => `<button class="cell has-av ux-who" type="button" data-sum="${x.id}" data-n="${E(x.name)}" aria-haspopup="dialog">${av(x)}<span class="k name">${E(x.name)}<small>ดูสรุปเดือนนี้</small></span><span class="pill"${x.role === "manager" ? ' data-tone="ok"' : ""}>${x.role === "manager" ? "ผู้จัดการ" : "พนักงาน"}</span><span class="go" aria-hidden="true">›</span></button>`;
+    // round 6: owner only · an active staff row (claimed in the staff group) can become ผู้จัดการ and back · undo for 5 s like ปิดสิทธิ์
+    const last = (us || []).filter((x) => x.active && x.role === "staff").length === 1; // impeccable: promoting the only staff stops shop work in the app
+    const mgr = (x) => `<button class="cell act ux-mgr" type="button" data-mgr="${x.role === "manager" ? 0 : 1}" data-id="${x.id}" data-n="${E(x.name)}"><span class="k">${x.role === "manager" ? "เปลี่ยนกลับเป็นพนักงาน" : "ตั้งเป็นผู้จัดการ"}<small>${x.role === "manager" ? "อนุมัติใบสั่ง ลา และปัญหาแทนเจ้าของไม่ได้แล้ว" : `อนุมัติใบสั่ง ลา และรับทราบปัญหาแทนเจ้าของได้\nเปิดร้าน รับของ ปิดร้านไม่ได้\nไม่เห็นต้นทุน กำไร เงินเดือน${last ? "\nเป็นพนักงานคนเดียว ตั้งแล้วจะไม่มีคนเปิดร้านในแอป" : ""}`}</small></span></button>`;
     const u = (x) => x.role === "owner" ? `<div class="gl">${head(x, '<span class="pill">เจ้าของ</span>')}</div>`
       : !x.active ? `<div class="gl">${head(x, `<button class="txt-btn" type="button" data-on="${x.id}" data-n="${E(x.name)}">เปิดสิทธิ์คืน</button>`)}</div>`
       : `<div class="person"><div class="gl">${who(x)}
       ${ci(x.id, "salary_month", x.salary_month, "เงินเดือน", "บาท")}${ci(x.id, "off_days_per_month", x.off_days_per_month, "หยุดได้", "วัน/เดือน")}
       ${ci(x.id, "std_hours_per_day", x.std_hours_per_day, "ทำงาน", "ชม./วัน")}${ci(x.id, "ot_rate_hour", x.ot_rate_hour, "โอที", "บาท/ชม.")}
       ${ci(x.id, "started_at", x.started_at, "เริ่มงานวันที่", "", "date")}
+      ${mgr(x)}
       <button class="cell act danger" type="button" data-off="${x.id}" data-n="${E(x.name)}">ปิดสิทธิ์ใช้แอป</button></div></div>`;
     const off = (us || []).filter((x) => !x.active);
     $("staff").innerHTML = `<h2>คนขอใช้แอป</h2>` + ((pend || []).map((p, i) => `<div class="card gl" data-src="${E(p.source_id)}"><label class="cell"><span class="k">ชื่อ</span><input type="text" value="${E(p.display_name)}" placeholder="ชื่อที่เรียกในร้าน" aria-label="ชื่อที่เรียกในร้าน"></label>
@@ -79,6 +92,17 @@
   $("staff").onclick = async (ev) => {
     const b = ev.target.closest("button"); if (!b) return;
     if (b.dataset.sum) return openSum(b.dataset.sum, b.dataset.n);
+    if (b.dataset.mgr !== undefined) {
+      // the row changes now (pill + button), set_manager runs after 5 s unless "เลิกทำ"
+      const on = b.dataset.mgr === "1", box = b.closest(".person"), pill = box.querySelector(".pill"), k = b.querySelector(".k"), was = [pill.textContent, pill.dataset.tone, k.innerHTML];
+      pill.textContent = on ? "ผู้จัดการ" : "พนักงาน"; if (on) pill.dataset.tone = "ok"; else delete pill.dataset.tone;
+      k.textContent = on ? "ตั้งเป็นผู้จัดการแล้ว" : "เปลี่ยนกลับเป็นพนักงานแล้ว"; b.disabled = true;
+      return UXM.later(on ? `ตั้ง ${b.dataset.n} เป็นผู้จัดการแล้ว` : `${b.dataset.n} กลับเป็นพนักงานแล้ว`, async () => {
+        const r2 = await supabase.rpc("set_manager", { p_user_id: b.dataset.id, p_on: on });
+        if (r2.error) UXM.toast("บันทึกไม่ได้\n" + App.errText(r2.error), { ms: 4000 });
+        staff();
+      }, () => { [pill.textContent] = was; if (was[1]) pill.dataset.tone = was[1]; else delete pill.dataset.tone; k.innerHTML = was[2]; b.disabled = false; });
+    }
     let r;
     if (b.dataset.ok !== undefined) {
       const c = b.closest(".card"), name = c.querySelector("input").value.trim();
@@ -96,6 +120,16 @@
     if (r.error) return fail(r.error);
     staff();
   };
+
+  async function staffMgr() {
+    const { data: us, error } = await supabase.from("user_public").select("id,name,role,active,off_days_per_month").eq("role", "staff").eq("active", true).order("name");
+    if (error) { $("staff").innerHTML = `<p class="err">เปิดไม่ขึ้น: ${E(App.errText(error))}</p>`; return; }
+    const av = (x) => `<span class="av" aria-hidden="true">${E((x.name || "?").slice(0, 1).toUpperCase())}</span>`;
+    $("staff").innerHTML = `<h2>พนักงาน</h2><p class="gf">ผู้จัดการแก้ได้แค่วันหยุดต่อเดือน</p>` + ((us || []).map((x) => `<div class="person"><div class="gl">
+      <button class="cell has-av ux-who" type="button" data-sum="${x.id}" data-n="${E(x.name)}" aria-haspopup="dialog">${av(x)}<span class="k name">${E(x.name)}<small>ดูสรุปเดือนนี้</small></span><span class="pill">พนักงาน</span><span class="go" aria-hidden="true">›</span></button>
+      <label class="cell"><span class="k">หยุดได้</span><input class="num-in" type="number" inputmode="numeric" min="0" max="31" step="1" placeholder="ยังไม่ใส่" value="${E(x.off_days_per_month)}" data-offd="${x.id}" aria-label="${E(x.name)} หยุดได้ วันต่อเดือน"><span class="unit">วัน/เดือน</span></label></div></div>`).join("")
+      || `<div class="empty tight"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>ยังไม่มีพนักงาน</p></div>`);
+  }
 
   // round 4: this month for one person · วันทำงาน = days they opened or closed · โอที and เงินสดขาด = days they closed · หยุด/ลา = approved this month
   const sumS = UXD.sheet($("us"));
@@ -116,6 +150,8 @@
     const c = (v, u, k, bad) => `<div><b class="${bad ? "err" : ""}">${money(v)}<small> ${u}</small></b><span>${k}</span></div>`;
     $("usb").innerHTML = c(worked, "วัน", "วันทำงาน") + c(off, "วัน", "วันหยุด/ลา") + c(+ot.toFixed(1), "ชม.", "โอที") + c(short, "บาท", "เงินสดขาดรวม", short > 0);
   }
+
+  if (MGR) return staff(); // the product and shop tabs never load for a manager
 
   // ---- สินค้า: ค้นหา + ชิปกรอง + แถวสั้น → แผงล่างแก้ · + เพิ่มสินค้า
   const KIND = { cpf: "ของขาย (CPF)", self: "ซื้อเอง", consumable: "ของใช้ในร้าน" };

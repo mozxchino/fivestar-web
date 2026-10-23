@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-staff.css"><link rel="stylesheet" href="lib/ux-data.css">
-<script>try { if ((JSON.parse(sessionStorage.getItem("fs_session_v1") || "null") || {}).me?.role === "owner") document.documentElement.classList.add("own"); } catch (_) {} /* skeleton shape only */</script>
+<script>try { const r = (JSON.parse(sessionStorage.getItem("fs_session_v1") || "null") || {}).me?.role; if (r === "owner" || r === "manager") document.documentElement.classList.add("own"); } catch (_) {} /* skeleton shape only */</script>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-data.js"></script>
@@ -24,7 +24,7 @@
 (async () => {
   try {
     const { supabase, me } = await App.ready();
-    document.getElementById("who").textContent = `${me.name} · ${me.role === "owner" ? "เจ้าของ" : "พนักงาน"}`;
+    document.getElementById("who").textContent = `${me.name} · ${UXS.ROLE[me.role] || "พนักงาน"}`;
     // Lucide icons, stroke 2
     const I = {
       open: '<path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/>',
@@ -36,6 +36,7 @@
       today: '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
       approve: '<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
       settings: '<path d="M21 4h-7"/><path d="M10 4H3"/><path d="M21 12h-9"/><path d="M8 12H3"/><path d="M21 20h-5"/><path d="M12 20H3"/><path d="M14 2v4"/><path d="M8 10v4"/><path d="M16 18v4"/>',
+      staff: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
       costs: '<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
     };
     const svg = (p) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
@@ -43,7 +44,9 @@
     const owner = [["owner.html","วันนี้","today","เปิดร้าน รับของ ปิดร้าน เงินสด"],["approve.html","อนุมัติใบสั่ง","approve","ตรวจใบสั่งพรุ่งนี้ แล้วส่งให้เซลล์"],["settings.html","ตั้งค่า","settings","พนักงาน สินค้า กลุ่ม LINE"],["costs.html","ต้นทุน/กำไร","costs","สรุปกำไรรายเดือน"],["holiday.html","ขอหยุด/ลา","holiday","วันหยุดและวันลาของพนักงาน"]];
     const tiles = (list) => { document.getElementById("menu").innerHTML = list
         .map(([h,t,ic,s],i) => `<a class="btn tile ${i===0?'primary':''}" href="${h}"><span class="ico">${svg(I[ic])}</span><span class="t">${t}<small>${s}</small></span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></a>`).join(""); };
-    if (me.role === "owner") { try { await ownerHub(); } catch (e) { console.error("owner hub", e); document.getElementById("title").textContent = "เลือกเมนู"; tiles(owner); } return; } // read failed → plain menu
+    // round 6: a manager gets the owner hub without ต้นทุน/กำไร and with ตั้งค่า = วันหยุดพนักงาน only
+    const MGR = me.role === "manager", mine = (list) => MGR ? list.filter((r) => r[0] !== "costs.html").map((r) => r[0] === "settings.html" ? [r[0], "พนักงาน", "staff", "วันหยุดของพนักงาน", ...r.slice(4)] : r) : list;
+    if (me.role === "owner" || MGR) { try { await ownerHub(); } catch (e) { console.error("owner hub", e); document.getElementById("title").textContent = "เลือกเมนู"; tiles(mine(owner)); } return; } // read failed → plain menu
     async function ownerHub() {
     // round 4: the owner menu is a hub · each row says what waits there right now · waiting rows first · the most urgent one leads (soft red)
     const { esc, thd, hm } = UXS, today = UXS.today(), tmr = UXS.back(-1);
@@ -68,7 +71,7 @@
       ["holiday.html", "ขอหยุด/ลา", "holiday", nLv ? `รออนุมัติ ${nLv} เรื่อง` : "ไม่มีคำขอรอ", nLv ? "wait" : "ok", nLv ? 3 : null],
       ["costs.html", "ต้นทุน/กำไร", "costs", "สรุปกำไรรายเดือน", "-", null],
       ["settings.html", "ตั้งค่า", "settings", "พนักงาน สินค้า กลุ่ม LINE", "-", null],
-    ];
+    ].map((r) => mine([r])[0]).filter(Boolean);
     const wait = R.filter((r) => r[5] != null).sort((a, b) => a[5] - b[5]), list = [...wait, ...R.filter((r) => r[5] == null)];
     const title = document.getElementById("title");
     title.classList.add("ux-hello"); title.innerHTML = `สวัสดี ${esc(me.name)}<small>${thd(today, { weekday: "long" }).replace(/^วัน(\S+?)ที่ /, "$1 ")} ${wait.length ? `มีเรื่องรอ ${wait.length} อย่าง` : "ไม่มีเรื่องรอ"}</small>`;

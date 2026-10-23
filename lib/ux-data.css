@@ -112,8 +112,14 @@ button.cell.ux-who:active { background: var(--color-fill-pressed); }
 
 /* ---------- round 5 approve: two always-visible groups · "ต้องดู" = white card, "ตามที่ระบบเสนอ" = grey panel, muted text ---------- */
 #items > .ux-gh:first-child { margin-top: 6px; }
-.ux-sys { margin: 18px 0 12px; padding: 4px 16px; border-radius: var(--radius); background: #EBE6E2; box-shadow: inset 0 0 0 .5px rgba(32, 24, 24, .06); }
-.ux-sysh { padding: 12px 0 10px; border-bottom: .5px solid var(--color-separator); }
+/* round 6: the grey box is its own block after a clear gap (never reads as the white card's tail) · folded = header only, no line */
+.ux-sys { margin: 32px 0 12px; padding: 4px 16px; border-radius: var(--radius); background: #EBE6E2; box-shadow: inset 0 0 0 .5px rgba(32, 24, 24, .06); }
+.ux-sysh { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.ux-sysh:has(+ #sysL:not([hidden])) { border-bottom: .5px solid var(--color-separator); }
+.ux-sysh .chip { flex: none; min-height: 44px; padding: 6px 14px; border: 0; font: 500 14px/1.2 var(--font-body); color: var(--color-foreground); background: var(--color-card); border-radius: var(--radius-pill); cursor: pointer; touch-action: manipulation; font-variant-numeric: tabular-nums; transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out); }
+.ux-sysh .chip:active { transform: scale(.96); background: var(--color-fill-pressed); }
+#sysL:not([hidden]) { animation: fold-in 200ms var(--ease-out); }
+@media (prefers-reduced-motion: reduce) { #sysL:not([hidden]) { animation: none; } .ux-sysh .chip:active { transform: none; } }
 #items .ux-sysh h2 { margin: 0; font: 500 15px/1.4 var(--font-head); color: var(--color-ink-soft); }
 .ux-sysh p { margin: 2px 0 0; font-size: 13px; line-height: 1.35; color: var(--color-ink-soft); }
 .ux-sys .nm { font-weight: 400; color: var(--color-ink-soft); }
@@ -129,3 +135,17 @@ button.cell.ux-who:active { background: var(--color-fill-pressed); }
 /* make-interfaces-feel-better: group counts don't shift width, short titles wrap evenly */
 #items .ux-gh, #items .ux-sysh h2 { font-variant-numeric: tabular-nums; text-wrap: balance; }
 .ux-sysh p { text-wrap: pretty; }
+/* round 6 receive: "วันนี้ไม่มีของมา" sheet · the warning line first, then the one required tick */
+.ux-nd { margin: 6px 0 12px; padding: 12px 14px; border-radius: var(--radius-sm); background: #FFF6D6; color: #7A5B00; font-weight: 500; text-wrap: pretty; }
+.bsheet .chk.ux-ndc { align-items: flex-start; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--color-fill); line-height: 1.45; cursor: pointer; text-wrap: pretty; }
+.ux-ndc input { flex: none; width: 24px; height: 24px; margin: 1px 0 0; accent-color: var(--color-primary); }
+/* round 6 settings: ตั้งเป็นผู้จัดการ / เปลี่ยนกลับ · the row says what the role can and can't do */
+.cell.act.ux-mgr { justify-content: flex-start; text-align: left; color: var(--color-primary-dark); }
+.ux-mgr .k { display: flex; flex-direction: column; gap: 2px; font-weight: 500; }
+.ux-mgr .k small { font-size: 13px; font-weight: 400; line-height: 1.4; color: var(--color-ink-soft); white-space: pre-line; text-wrap: pretty; }
+/* impeccable round 6: done state of the role row is not a link any more · end-of-box ซ่อน */
+.cell.act.ux-mgr:disabled { color: var(--color-ink-soft); opacity: 1; }
+.ux-sysend { display: block; width: 100%; min-height: 48px; margin: 0; border: 0; border-top: .5px solid var(--color-separator); background: none; font: 500 15px/1.3 var(--font-body); color: var(--color-ink-soft); cursor: pointer; touch-action: manipulation; font-variant-numeric: tabular-nums; }
+.ux-sysend:active { color: var(--color-foreground); }
+/* make-interfaces-feel-better round 6: the chip keeps its width when "ดู 9 รายการ" swaps to "ซ่อน" (no jump under the finger) */
+.ux-sysh .chip { min-width: 112px; text-align: center; }
