@@ -27,7 +27,7 @@
   const $ = (i) => document.getElementById(i);
   const E = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const { supabase, me } = await App.ready();
-  if (me.role !== "owner") { $("blocked").hidden = false; $("blocked").textContent = "หน้านี้สำหรับเจ้าของ"; return; }
+  if (me.role !== "owner") { document.querySelector(".back").href = "index.html"; $("blocked").hidden = false; $("blocked").textContent = "หน้านี้สำหรับเจ้าของ"; return; }
   const today = Photo.todayPrefix().slice(0, 10).replaceAll("/", "-");
   const plus = (n) => new Date(Date.parse(today + "T00:00:00Z") + n * 864e5).toISOString().slice(0, 10);
   $("d").value = today; $("d").min = today; $("d").max = plus(7);

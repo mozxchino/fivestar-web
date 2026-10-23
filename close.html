@@ -202,7 +202,7 @@
     const rows = [...document.querySelectorAll("#lines .grid")].map((g) => ({ product_id: g.dataset.id, remain_fresh: g.querySelector(".rf").value === "" ? null : +g.querySelector(".rf").value, remain_cooked: +g.querySelector(".rc").value || 0, waste: +g.querySelector(".w").value || 0 })).filter((r) => r.remain_fresh !== null);
     if (!rows.length) { msg.textContent = "กรอกช่อง เหลือสด อย่างน้อย 1 อย่าง"; msg.className = "err"; return; }
     const under = underRows()[0];
-    if (under) { say(`ของเสียน้อยกว่าที่ทิ้งไว้แล้ว (${W[under.dataset.id]})`, true); go(1); under.querySelector(".w").focus(); return; }
+    if (under) { const p = stock.find((x) => x.id === under.dataset.id); go(1); say(`${p.name} ทิ้งไปแล้ว ${W[p.id]} ${p.unit || ""}\nช่องเสียใส่น้อยกว่านี้ไม่ได้`, true); UXM.shake(under.querySelector(".w")); under.querySelector(".w").focus(); return; } // qa2: say after go(), show() clears the message
     if (wasteRows().length) {
       const miss = !scale.length ? ["ยังไม่ได้ถ่ายรูปของเสียบนตาชั่ง", phScale] : !(+wasteKg.value > 0) ? ["ยังไม่ได้ใส่น้ำหนักของเสีย", wasteKg] : !bin.length ? ["ยังไม่ได้ถ่ายรูปตอนทิ้งลงถัง", phBin] : null;
       if (miss) { say(miss[0], true); (miss[1].closest("label") || miss[1]).scrollIntoView({ block: "center" }); if (miss[1] === wasteKg) wasteKg.focus(); return; }

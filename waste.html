@@ -9,6 +9,7 @@
 <script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script>
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ทิ้งของเสีย</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
+<p id="blocked" class="err" hidden></p>
 <div class="sk"><span class="vh">กำลังเปิด…</span><div class="field" style="display:flow-root"><i class="sk-b" style="--w:22%;--h:14px;margin:5px 0 4px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:12px;--gap:0px"></i><div class="field" style="display:flow-root"><i class="sk-b" style="--w:26%;--h:14px;margin:5px 0 4px"></i></div><i class="sk-b" style="--w:100%;--h:96px;--r:12px;--gap:0px"></i><i class="sk-b" style="--w:100%;--h:52px;--r:14px;margin:12px 0"></i><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
 <div id="form" class="ld" hidden>
   <p class="muted">ทิ้งของเมื่อไหร่ บันทึกตอนนั้นเลย<br>ตอนปิดร้าน ช่อง "เสีย" จะใส่ตัวเลขนี้ให้เอง</p>
@@ -28,7 +29,13 @@
   const { supabase, me } = await App.ready();
   if (UXS.only(me, ["staff", "owner"], "หน้านี้สำหรับพนักงานในร้าน", "ผู้จัดการดูงานของร้านได้ที่หน้าวันนี้", "owner.html", "ไปหน้าวันนี้")) return;
   // 0030 (Mos 23 ต.ค.): proof is taken when the thing is thrown away · close_day starts "เสีย" from these rows
-  const { data: prods } = await supabase.from("products").select("id,name,unit,kind").eq("active", true).order("sort");
+  const stop = (t) => { blocked.hidden = false; blocked.innerHTML = t + '<br><a class="btn" href="index.html">กลับหน้าหลัก</a>'; };
+  // qa2: a failed read must not show an empty form · after closing the server refuses new waste, so say so up front
+  const [{ data: prods, error: pErr }, { data: day, error: dErr }] = await Promise.all([
+    supabase.from("products").select("id,name,unit,kind").eq("active", true).order("sort"),
+    supabase.from("shop_days").select("status").eq("date", new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10)).maybeSingle()]);
+  if (pErr || dErr) return stop("เปิดไม่ขึ้น ลองเปิดหน้าใหม่");
+  if (day && ["sent", "closed"].includes(day.status)) return stop("วันนี้ปิดร้านแล้ว<br>บันทึกของเสียเพิ่มไม่ได้");
   const stock = (prods || []).filter((p) => p.kind !== "consumable"), P = Object.fromEntries(stock.map((p) => [p.id, p]));
   prod.innerHTML = `<option value="">เลือกสินค้า</option>` + stock.map((p) => `<option value="${p.id}">${p.name}</option>`).join("");
   prod.onchange = () => { unit2.textContent = P[prod.value]?.unit || "ชิ้น"; };
@@ -58,5 +65,5 @@
   };
   await list();
   form.hidden = false;
-})();
+})().catch(() => { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น ลองเปิดหน้าใหม่"; });
 </script></body></html>
