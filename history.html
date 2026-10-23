@@ -47,14 +47,14 @@
     const plus = (ds, n) => { const d = new Date(ds + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
     const lineOf = (d) => {
       if (d.status === "holiday") return "";
-      // most important first: one line, the tail may be cut (cash · ของขาด · ของเสีย · โอที · time)
-      const g = gapOf(d), bits = [];
-      if (g != null) bits.push(g === 0 ? "เงินสดครบ" : `<span class="${g < 0 ? "err" : ""}">เงินสด${g < 0 ? "ขาด" : "เกิน"} ${baht(g)}</span>`);
-      if (shortD.has(d.date)) bits.push('<span class="err">ของมาไม่ครบ</span>');
-      if (waste[d.date]) bits.push(`ของเสีย ${waste[d.date]} อย่าง`);
-      if (+d.ot_hours) bits.push(`โอที ${+d.ot_hours} ชม.`);
-      bits.push(d.closed_at ? `ปิด ${hm(d.closed_at)}` : d.opened_at ? `เปิด ${hm(d.opened_at)}` : "");
-      return bits.filter(Boolean).join(" · ");
+      // at most 2 short parts (middle-dot rule): the most important problem first, the rest shows when the day is opened
+      const g = gapOf(d), probs = [];
+      if (g) probs.push(`<span class="${g < 0 ? "err" : ""}">เงินสด${g < 0 ? "ขาด" : "เกิน"} ${baht(g)}</span>`);
+      if (shortD.has(d.date)) probs.push('<span class="err">ของมาไม่ครบ</span>');
+      if (waste[d.date]) probs.push(`ของเสีย ${waste[d.date]} อย่าง`);
+      if (probs.length) return probs.length > 1 ? `${probs[0]} · อีก ${probs.length - 1} เรื่อง` : probs[0];
+      const t = d.closed_at ? `ปิด ${hm(d.closed_at)}` : d.opened_at ? `เปิด ${hm(d.opened_at)}` : "";
+      return [g === 0 ? "เงินสดครบ" : "", t].filter(Boolean).join(" · ");
     };
     let R = 7, N = 5, only = false, pickD = "";
     const inRange = () => data.filter((d) => R === 30 || d.date > back(7));
