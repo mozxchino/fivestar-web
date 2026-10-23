@@ -1,0 +1,62 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ทิ้งของเสีย</title><meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="lib/ui.css">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script>
+</head><body ontouchstart="">
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ทิ้งของเสีย</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
+<div class="sk"><span class="vh">กำลังเปิด…</span><div class="field" style="display:flow-root"><i class="sk-b" style="--w:22%;--h:14px;margin:5px 0 4px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:12px;--gap:0px"></i><div class="field" style="display:flow-root"><i class="sk-b" style="--w:26%;--h:14px;margin:5px 0 4px"></i></div><i class="sk-b" style="--w:100%;--h:96px;--r:12px;--gap:0px"></i><i class="sk-b" style="--w:100%;--h:52px;--r:14px;margin:12px 0"></i><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
+<div id="form" class="ld" hidden>
+  <p class="muted">ทิ้งของเมื่อไหร่ บันทึกตอนนั้นเลย<br>ตอนปิดร้าน ช่อง "เสีย" จะใส่ตัวเลขนี้ให้เอง</p>
+  <label class="field" for="prod">ทิ้งอะไร</label>
+  <select id="prod"></select>
+  <label class="field" for="qty">จำนวน</label><div class="in"><input id="qty" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0"><span class="sfx" id="unit2">ชิ้น</span></div>
+  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปบนตาชั่ง <input id="phScale" type="file" accept="image/*" capture="environment" hidden></label>
+  <label class="field" for="kg">น้ำหนัก</label><div class="in"><input id="kg" type="number" inputmode="decimal" enterkeyhint="done" placeholder="0"><span class="sfx">กก.</span></div>
+  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปตอนทิ้งลงถัง <input id="phBin" type="file" accept="image/*" capture="environment" hidden></label>
+  <p id="phS" class="muted"></p>
+  <div class="sticky"><button id="send" class="btn primary">บันทึกของเสีย</button><a id="again" class="btn" href="waste.html" hidden>บันทึกของเสียอีก</a>
+  <p id="msg" class="muted"></p></div>
+  <div id="today"></div>
+</div>
+<script>
+(async () => {
+  const { supabase, me } = await App.ready();
+  if (UXS.only(me, ["staff", "owner"], "หน้านี้สำหรับพนักงานในร้าน", "ผู้จัดการดูงานของร้านได้ที่หน้าวันนี้", "owner.html", "ไปหน้าวันนี้")) return;
+  // 0030 (Mos 23 ต.ค.): proof is taken when the thing is thrown away · close_day starts "เสีย" from these rows
+  const { data: prods } = await supabase.from("products").select("id,name,unit,kind").eq("active", true).order("sort");
+  const stock = (prods || []).filter((p) => p.kind !== "consumable"), P = Object.fromEntries(stock.map((p) => [p.id, p]));
+  prod.innerHTML = `<option value="">เลือกสินค้า</option>` + stock.map((p) => `<option value="${p.id}">${p.name}</option>`).join("");
+  prod.onchange = () => { unit2.textContent = P[prod.value]?.unit || "ชิ้น"; };
+  const scale = [], bin = [];
+  Photo.picker(supabase, phScale, { paths: scale, type: "waste", name: "รูปตาชั่ง", need: true, max: 1, status: phS });
+  Photo.picker(supabase, phBin, { paths: bin, type: "waste", name: "รูปทิ้งลงถัง", need: true, max: 1, status: phS });
+  const list = async () => {
+    const { data } = await supabase.from("waste_logs").select("product_id,qty,kg,created_at").eq("date", new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10)).order("created_at");
+    if (!(data || []).length) { today.innerHTML = ""; return; }
+    const hm = (t) => new Date(t).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" });
+    today.innerHTML = `<h2 class="field" style="margin-top:24px">ทิ้งไปแล้ววันนี้</h2><div class="card" style="font-variant-numeric:tabular-nums">` + data.map((w) => `<div class="ln">${P[w.product_id]?.name ?? ""} ${+w.qty} ${P[w.product_id]?.unit ?? ""}<small class="muted"><br>${hm(w.created_at)} น. · ${+w.kg} กก.</small></div>`).join("") + `</div>`;
+  };
+  const bad = (t, el) => { msg.textContent = t; msg.className = "err"; if (el) UXM.shake(el); };
+  send.onclick = async () => {
+    if (!prod.value) return bad("เลือกก่อนว่าทิ้งอะไร", prod);
+    if (!(+qty.value > 0)) return bad("ใส่จำนวนที่ทิ้ง", qty);
+    if (!scale.length) return bad("ยังไม่ได้ถ่ายรูปบนตาชั่ง");
+    if (!(+kg.value > 0)) return bad("ใส่น้ำหนัก", kg);
+    if (!bin.length) return bad("ยังไม่ได้ถ่ายรูปตอนทิ้งลงถัง");
+    send.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
+    const { error } = await supabase.from("waste_logs").insert({ product_id: prod.value, qty: +qty.value, kg: +kg.value, photos: [...scale, ...bin], created_by: me.userId });
+    send.disabled = false;
+    if (error) { msg.textContent = "บันทึกไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error); msg.className = "err"; return; }
+    msg.textContent = "บันทึกของเสียแล้ว ขอบคุณ"; msg.className = "ok big";
+    send.hidden = true; again.hidden = false; prod.disabled = qty.disabled = kg.disabled = phScale.disabled = phBin.disabled = true;
+    await list();
+  };
+  await list();
+  form.hidden = false;
+})();
+</script></body></html>

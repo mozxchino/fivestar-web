@@ -46,8 +46,15 @@
   </section>
   <section id="s4" class="ux-step" hidden>
   <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปตู้และถาด <input id="phFridge" type="file" accept="image/*" capture="environment" hidden></label>
-  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปจอ POS ยอดวันนี้ <input id="phPos" type="file" accept="image/*" capture="environment" hidden></label>
+  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปจอ POS <input id="phPos" type="file" accept="image/*" capture="environment" hidden></label>
   <p id="phStatus" class="muted"></p>
+  <section id="wasteBox" class="ux-waste" hidden aria-labelledby="wasteT">
+  <h2 id="wasteT">มีของเสีย <span id="wasteN"></span> ยังไม่ได้บันทึก</h2>
+  <p>ชั่งก่อน ถ่ายรูปตาชั่ง ใส่น้ำหนัก <span class="nw">แล้วถ่ายตอนทิ้ง</span></p>
+  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปบนตาชั่ง <input id="phScale" type="file" accept="image/*" capture="environment" hidden></label>
+  <label class="field" for="wasteKg">น้ำหนักของเสีย</label><div class="in"><input id="wasteKg" type="number" inputmode="decimal" enterkeyhint="done" placeholder="0"><span class="sfx">กก.</span></div>
+  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปตอนทิ้งลงถัง <input id="phBin" type="file" accept="image/*" capture="environment" hidden></label>
+  </section>
   <label class="field" for="note">ฝากบอกเจ้าของ <small>(ไม่มีก็ข้ามได้)</small></label>
   <textarea id="note" rows="3" placeholder="เช่น ไก่ต้นตำรับหมด ลูกค้าเอาทรงเครื่องแทน"></textarea>
   </section>
@@ -70,12 +77,15 @@
   const { data: lines, error: lErr } = await supabase.from("stock_lines").select("product_id,open_fresh,open_cooked,received").eq("date", today);
   if (pErr || lErr || !prods) { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดรายการของไม่ขึ้น\n" + App.errText(pErr || lErr || "no products"); return; } // qa: never show 0s from a failed read
   const L = Object.fromEntries((lines || []).map((l) => [l.product_id, l]));
+  // 0030: what was thrown away during the day (waste.html) starts the "เสีย" box and is its floor
+  const { data: wl } = await supabase.from("waste_logs").select("product_id,qty").eq("date", today);
+  const W = {}; (wl || []).forEach((w) => { W[w.product_id] = (W[w.product_id] || 0) + +w.qty; });
   const stock = prods.filter((p) => p.kind !== "consumable"), cons = prods.filter((p) => p.kind === "consumable");
   // nothing carried over + nothing received → folded, pre-filled 0 (Mos 23 ต.ค.: submitted as 0, still openable)
-  const zero = (p) => { const l = L[p.id] || {}; return !+l.open_fresh && !+l.open_cooked && !+l.received; };
+  const zero = (p) => { const l = L[p.id] || {}; return !+l.open_fresh && !+l.open_cooked && !+l.received && !W[p.id]; };
   const row = (p, z) => { const l = L[p.id] || {}; return `
-    <div class="grid${z ? " ux-zero" : ""}" data-id="${p.id}"${z ? " hidden" : ""}><div class="nm">${p.name}<div class="meta"><span>ยกมา ${(+l.open_fresh || 0) + (+l.open_cooked || 0)}</span> · <span>รับเข้า ${+l.received || 0} ${p.unit || ""}</span></div></div>
-    <input type="number" inputmode="decimal" enterkeyhint="next" class="rf" placeholder="ใส่" aria-label="${p.name} เหลือสด"${z ? ' value="0"' : ""}><input type="number" inputmode="decimal" enterkeyhint="next" class="rc" placeholder="0" aria-label="${p.name} เหลือสุก"><input type="number" inputmode="decimal" enterkeyhint="next" class="w" placeholder="0" aria-label="${p.name} เสีย"></div>`; };
+    <div class="grid${z ? " ux-zero" : ""}" data-id="${p.id}"${z ? " hidden" : ""}><div class="nm">${p.name}<div class="meta"><span>ยกมา ${(+l.open_fresh || 0) + (+l.open_cooked || 0)}</span> · <span>รับเข้า ${+l.received || 0} ${p.unit || ""}</span>${W[p.id] ? ` · <span>ทิ้งแล้ว ${W[p.id]}</span>` : ""}</div></div>
+    <input type="number" inputmode="decimal" enterkeyhint="next" class="rf" placeholder="ใส่" aria-label="${p.name} เหลือสด"${z ? ' value="0"' : ""}><input type="number" inputmode="decimal" enterkeyhint="next" class="rc" placeholder="0" aria-label="${p.name} เหลือสุก"><input type="number" inputmode="decimal" enterkeyhint="next" class="w" placeholder="0" aria-label="${p.name} เสีย"${W[p.id] ? ` value="${W[p.id]}" min="${W[p.id]}"` : ""}></div>`; };
   const live = stock.filter((p) => !zero(p)), zeros = stock.filter(zero);
   document.getElementById("lines").innerHTML = live.map((p) => row(p, false)).join("") + zeros.map((p) => row(p, true)).join("");
   if (zeros.length) { fold.hidden = false; foldT.textContent = `ไม่มีของค้าง ${zeros.length} อย่าง`; }
@@ -97,8 +107,15 @@
   const diff = () => { const a = +cashExp.value, b = +cashCnt.value; cashDiff.textContent = (cashExp.value && cashCnt.value) ? (b - a === 0 ? "เงินสดครบ" : (b - a < 0 ? `เงินสดขาด ${(a - b).toLocaleString("th-TH")} บาท` : `เงินสดเกิน ${(b - a).toLocaleString("th-TH")} บาท`)) : ""; cashDiff.className = b - a < 0 ? "err" : "ok"; };
   cashExp.oninput = cashCnt.oninput = diff;
   const photos = [], pos = []; // pos: 0 or 1 path
-  Photo.picker(supabase, phFridge, { paths: photos, type: "fridge", name: "รูปตู้", status: phStatus, onChange: () => update() });
-  Photo.picker(supabase, phPos, { paths: pos, type: "pos", name: "รูปจอ POS", max: 1, onChange: () => update() });
+  Photo.picker(supabase, phFridge, { paths: photos, type: "fridge", name: "รูปตู้", need: true, status: phStatus, onChange: () => update() });
+  Photo.picker(supabase, phPos, { paths: pos, type: "pos", name: "รูปจอ POS", need: true, max: 1, onChange: () => update() });
+  // 0030 (Mos 23 ต.ค.): waste > 0 needs a scale photo + a bin photo + kg, server checks the same
+  const scale = [], bin = [];
+  Photo.picker(supabase, phScale, { paths: scale, type: "waste", name: "รูปตาชั่ง", need: true, max: 1, onChange: () => update() });
+  Photo.picker(supabase, phBin, { paths: bin, type: "waste", name: "รูปทิ้งลงถัง", need: true, max: 1, onChange: () => update() });
+  // only waste above what waste.html already logged (with its own photos) needs proof here
+  const wasteRows = () => [...document.querySelectorAll("#lines .grid")].filter((g) => +g.querySelector(".w").value > (W[g.dataset.id] || 0));
+  const underRows = () => [...document.querySelectorAll("#lines .grid")].filter((g) => +g.querySelector(".w").value < (W[g.dataset.id] || 0));
 
   // ---- wizard: 4 steps, one on screen · the red button walks forward, a step with gaps stops it ----
   const NAME = { 1: "นับของเหลือ", 2: "ของใช้ในร้าน", 3: "นับเงินสด", 4: "ถ่ายรูปและส่ง" };
@@ -137,6 +154,8 @@
   }
 
   function update() {
+    setTimeout(() => Photo.markNext()); // step / waste box visibility changed
+    const nw = wasteRows().length; wasteBox.hidden = !nw; wasteN.textContent = nw ? `${nw} อย่าง` : "";
     const rs = liveRows(), n = rs.length, x = n - leftRows().length;
     const was = +progT.dataset.x || 0; progT.dataset.x = x;
     progT.textContent = n ? `นับแล้ว ${x} จาก ${n}` : "ไม่มีของต้องนับ";
@@ -182,9 +201,15 @@
     const bad = [1, 2, 3].find(gap); if (bad) { show(bad); go(bad + 1); return; } // ponytail: forward moves already check · this only guards odd resumes
     const rows = [...document.querySelectorAll("#lines .grid")].map((g) => ({ product_id: g.dataset.id, remain_fresh: g.querySelector(".rf").value === "" ? null : +g.querySelector(".rf").value, remain_cooked: +g.querySelector(".rc").value || 0, waste: +g.querySelector(".w").value || 0 })).filter((r) => r.remain_fresh !== null);
     if (!rows.length) { msg.textContent = "กรอกช่อง เหลือสด อย่างน้อย 1 อย่าง"; msg.className = "err"; return; }
+    const under = underRows()[0];
+    if (under) { say(`ของเสียน้อยกว่าที่ทิ้งไว้แล้ว (${W[under.dataset.id]})`, true); go(1); under.querySelector(".w").focus(); return; }
+    if (wasteRows().length) {
+      const miss = !scale.length ? ["ยังไม่ได้ถ่ายรูปของเสียบนตาชั่ง", phScale] : !(+wasteKg.value > 0) ? ["ยังไม่ได้ใส่น้ำหนักของเสีย", wasteKg] : !bin.length ? ["ยังไม่ได้ถ่ายรูปตอนทิ้งลงถัง", phBin] : null;
+      if (miss) { say(miss[0], true); (miss[1].closest("label") || miss[1]).scrollIntoView({ block: "center" }); if (miss[1] === wasteKg) wasteKg.focus(); return; }
+    }
     if (!confirm(`ปิดร้านเลยไหม?\nนับของแล้ว ${rows.length} จาก ${stock.length} อย่าง${cashDiff.textContent ? "\n" + cashDiff.textContent : ""}\nกดแล้วแก้ตัวเลขไม่ได้`)) return;
     send.disabled = true; back.hidden = true; msg.textContent = "กำลังปิดร้าน…";
-    const payload = { lines: rows, consumables: Object.entries(state).filter(([, v]) => v !== "ok").map(([product_id, status]) => ({ product_id, status })), cash_expected: cashExp.value === "" ? null : +cashExp.value, cash_counted: cashCnt.value === "" ? null : +cashCnt.value, note: note.value || null, pos_photo: pos[0] ?? null, photos };
+    const payload = { lines: rows, consumables: Object.entries(state).filter(([, v]) => v !== "ok").map(([product_id, status]) => ({ product_id, status })), cash_expected: cashExp.value === "" ? null : +cashExp.value, cash_counted: cashCnt.value === "" ? null : +cashCnt.value, note: note.value || null, pos_photo: pos[0] ?? null, photos, ...(wasteRows().length ? { waste_photos: [...scale, ...bin], waste_kg: +wasteKg.value } : {}) };
     const { error } = await supabase.rpc("close_day", { p: payload });
     if (error) { msg.textContent = "ยังปิดร้านไม่ได้\n" + App.errText(error); msg.className = "err"; send.disabled = false; back.hidden = false; return; }
     store.del(KEY); showDraft(null);

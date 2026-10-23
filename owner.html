@@ -184,12 +184,16 @@ td+td{font-weight:600}
     const nShort = items.filter((i) => i.received_at != null && (+i.qty_received || 0) < (+(i.qty_final ?? i.qty_proposed) || 0)).length;
     const nLow = cc.filter((x) => x.status === "low").length, nOut = cc.filter((x) => x.status === "out").length;
     const photos = [sd.open_photo, ...(sd.photos || []), sd.pos_photo].filter(Boolean);
+    // 0030: proof for the day's waste = each waste.html log (2 photos + kg) and any extra found at close
+    const { data: wlog } = await supabase.from("waste_logs").select("qty,kg,photos").eq("date", sd.date);
+    const wKg = (wlog || []).reduce((a, w) => a + +w.kg, 0) + (+sd.waste_kg || 0);
+    const wPics = await thumbs([...(wlog || []).flatMap((w) => w.photos), ...(sd.waste_photos || [])]);
     const fold = (id, head, body) => `<button class="fold" aria-expanded="false" data-f="${id}">${head}</button><div class="fold-body"><div id="f-${id}">${body}</div></div>`;
     $("out").innerHTML = bento(c) + todo
       + (sd.note ? `<div class="card"><div class="k muted">พนักงานฝากบอก</div>${esc(sd.note)}</div>` : "")
       + `<div class="card folds">`
       + fold("recv", items.length ? `<b>รับของ ${items.length} รายการ${nShort ? ` ขาด ${nShort} รายการ` : ""}</b>` : `<b>ไม่มีใบสั่ง</b>`, recv || `<p class="muted">ไม่มีใบสั่ง</p>`)
-      + (waste.length ? fold("waste", `<b>ของเสีย ${waste.length} รายการ</b>`, waste.map((l) => `<div class="ln">${esc(prods[l.product_id])} ${l.waste} ${esc(unit[l.product_id])}</div>`).join("")) : "")
+      + (waste.length ? fold("waste", `<b>ของเสีย ${waste.length} รายการ</b>`, waste.map((l) => `<div class="ln">${esc(prods[l.product_id])} ${l.waste} ${esc(unit[l.product_id])}</div>`).join("") + (wKg ? `<div class="ln">หนักรวม ${Math.round(wKg * 100) / 100} กก.</div>` : "") + (wPics ? `<div>${wPics}</div>` : `<p class="muted">ไม่มีรูปของเสีย</p>`)) : "")
       + fold("cons", `<b>ของใช้ในร้าน${cc.length ? ` ${[nLow ? `ใกล้หมด ${nLow} อย่าง` : "", nOut ? `หมด ${nOut} อย่าง` : ""].filter(Boolean).join(" ")}` : " มีครบ"}</b>`,
         cc.map((c) => `<div class="ln">${esc(prods[c.product_id])} <span class="pill" data-tone="${c.status === "out" ? "bad" : "wait"}">${CS[c.status] || esc(c.status)}</span></div>`).join("") || `<p class="muted">มีครบ</p>`)
       + (photos.length ? fold("pics", `<b>รูปจากร้าน ${photos.length} รูป</b>`, `<div class="sk-row" style="flex-wrap:wrap;gap:8px;padding:8px 0 12px">${sb("72px", 72, ";--r:10px").repeat(photos.length)}</div>`) : "")

@@ -29,7 +29,7 @@
   if (day?.opened_at) { doneS.textContent = "เปิดตอน " + hm(day.opened_at) + " น."; done.hidden = false; UXS.showNext(supabase, next); return; }
   form.hidden = false;
   const shot = []; // 0 or 1 path
-  Photo.picker(supabase, ph, { paths: shot, type: "open", name: "รูปหน้าร้าน", max: 1, status: phS, failText: "ส่งรูปไม่ขึ้น กดเปิดร้านต่อได้เลย" });
+  Photo.picker(supabase, ph, { paths: shot, type: "open", name: "รูปหน้าร้าน", need: "ควรถ่าย", max: 1, status: phS, failText: "ส่งรูปไม่ขึ้น กดเปิดร้านต่อได้เลย" });
   go.onclick = async () => {
     go.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
     const { error } = await supabase.rpc("open_shop", { photo: shot[0] ?? null });

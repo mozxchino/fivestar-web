@@ -581,3 +581,20 @@ body.ux-only > :not(.topbar, .ux-block, .ux-toast, script, style, dialog) { disp
 .ux-block { transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out); text-wrap: balance; }
 @starting-style { .ux-block { opacity: 0; transform: translateY(6px); } }
 @media (prefers-reduced-motion: reduce) { .ux-block { transition: none; } }
+
+/* photo buttons the routine expects (Photo.picker need:true) · red stays the one primary CTA, so state shows as outline + tag:
+   missing = soft red edge + red icon · next to press = red ring on pink · taken = green */
+label.btn.ux-need { box-shadow: inset 0 0 0 1.5px var(--border-bad); }
+label.btn.ux-need svg { color: var(--color-primary); }
+label.btn.ux-need.ux-next { background: var(--tint-primary); box-shadow: inset 0 0 0 2px var(--color-primary); color: var(--color-primary-dark); }
+label.btn.ux-need.ux-got { background: var(--tint-success); box-shadow: inset 0 0 0 1.5px var(--border-ok); }
+label.btn.ux-need.ux-got svg { color: var(--color-success); }
+.ux-tag { flex: none; margin-left: 8px; padding: 4px 9px; border-radius: var(--radius-pill); font: 600 12px/1.1 var(--font-head); color: #fff; background: var(--color-primary); white-space: nowrap; }
+label.btn.ux-got .ux-tag { background: var(--color-success); }
+/* one line always: label + tag never wrap; on the narrowest phones (SE 320) text and tag step down a little */
+label.btn.ux-need { white-space: nowrap; }
+@media (max-width: 359px) {
+  label.btn.ux-need { font-size: 15px; padding-inline: 12px; }
+  label.btn.ux-need svg { width: 20px; height: 20px; }
+  .ux-tag { margin-left: 6px; padding: 3px 7px; font-size: 11px; }
+}
