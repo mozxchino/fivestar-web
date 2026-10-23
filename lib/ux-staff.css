@@ -189,3 +189,13 @@ details.ux-day summary .m { white-space: normal; display: -webkit-box; -webkit-l
 #form:has(> #recBox) > .sticky { margin-top: auto; }
 .ux-hub .t small[data-tone="-"]::before { display: none; } /* static description: no status dot */
 .ux-hub .t small { text-wrap: pretty; }
+
+/* ---------- round 5 receive: delivery-note photo every day (ครบ and ขาด) ---------- */
+/* impeccable: "ถ่ายรูปเพิ่ม" is a compact secondary, so it never reads as a twin of the full-width "วันนี้ไม่มีของมา" */
+#phMore { display: inline-flex; width: auto; min-height: 44px; padding: 0 18px; font-size: 16px; }
+#phMore[hidden] { display: none; }
+#phBox h2 { margin-bottom: 2px; }
+/* make-interfaces-feel-better: the photo block arrives like the rows (fade + 6px rise, 180ms), no pop */
+#phBox:not([hidden]) { transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out); }
+@starting-style { #phBox:not([hidden]) { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) { @starting-style { #phBox:not([hidden]) { transform: none; } } }

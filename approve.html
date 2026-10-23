@@ -24,7 +24,7 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
 </div>
 <div id="form" class="ld" hidden>
   <div class="chips"><span id="pill" class="pill"></span><span id="self" hidden></span></div>
-  <div id="items" class="card list"></div>
+  <div id="items"></div>
   <details class="fold"><summary>ข้อความที่เซลล์จะเห็น<span class="chip">เปิดดู</span></summary>
     <div class="card preview"><pre id="prev"></pre></div></details>
   <div class="sticky"><p id="chg" class="ux-chg" aria-live="polite"></p><button id="send" class="btn primary">ส่งใบสั่งให้เซลล์</button>
@@ -85,11 +85,15 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   const meta = (r, q) => `${base(r)} ${E(r.unit_th)}` + (r.sets != null ? ` (${Math.round(q / r.pack_size)} เซ็ต)` : "") + (q !== Number(r.qty_proposed) ? `<br><b>แก้จาก ${n(r.qty_proposed)}</b>` : "");
   const rowH = (r, i) => `<div class="orow" id="r${i}"><div class="grow"><div class="nm">${E(r.label)}</div><div class="meta"></div></div>
     <div class="step"><button type="button" data-d="-1" data-s="${i}" aria-label="ลด ${E(r.label)}">−</button><input type="number" inputmode="decimal" min="0" step="${step[r.product_id]}" value="${Number(r.qty)}" data-i="${i}" aria-label="${E(r.label)} จำนวนสั่ง (${E(r.unit_th)})"><button type="button" data-d="1" data-s="${i}" aria-label="เพิ่ม ${E(r.label)}">+</button></div></div>`;
-  // round 4: rows still at the proposal AND not low (เหลือ ≥ ควรมี) fold into one line · edited / low / no stock figure stay open on top
-  // ponytail: only the layout changes · every row keeps its input (data-i), cur() still walks rows in order → the same send payload
+  // round 5 (Mos 23 ต.ค.): two always-visible groups instead of a fold · "ต้องดู" (edited / low / no stock figure) on top, white card
+  // "ตามที่ระบบเสนอ" (at the proposal and เหลือ ≥ ควรมี) below in a grey panel · rows stay editable
+  // ponytail: the split is decided once per render (stored qty), so a row edited here never jumps under the finger; it moves after reload
+  // every row keeps its input (data-i) and cur() still walks rows in order → the same send payload
   const same = (r) => Number(r.qty) === Number(r.qty_proposed) && r.remaining != null && r.par != null && Number(r.remaining) >= Number(r.par);
-  const top = rows.map((r, i) => same(r) ? "" : rowH(r, i)).join(""), fold = rows.map((r, i) => same(r) ? rowH(r, i) : "").join(""), nSame = rows.filter(same).length;
-  $("items").innerHTML = (top + (nSame ? `<details class="fold ux-same" id="same"><summary><span><b>ส่งตามที่ระบบเสนอ ${nSame} รายการ</b><small>ของยังพอ ไม่ได้แก้จำนวน</small></span><span class="chip"><span class="o">ดู ${nSame} รายการ</span><span class="c">ซ่อน</span></span></summary>${fold}</details>` : "")) || '<p class="muted">ใบนี้ไม่มีของต้องสั่ง</p>';
+  const top = rows.map((r, i) => same(r) ? "" : rowH(r, i)).join(""), sys = rows.map((r, i) => same(r) ? rowH(r, i) : "").join(""), nSame = rows.filter(same).length, nTop = rows.length - nSame;
+  $("items").innerHTML = !rows.length ? '<div class="card"><p class="muted">ใบนี้ไม่มีของต้องสั่ง</p></div>'
+    : (nTop ? `<h2 class="ux-gh">ต้องดู ${nTop} รายการ</h2><div class="card list">${top}</div>` : "")
+    + (nSame ? `<section class="ux-sys" aria-labelledby="sysH"><div class="ux-sysh"><h2 id="sysH">ตามที่ระบบเสนอ ${nSame} รายการ</h2><p>ของยังพอ ไม่ได้แก้จำนวน</p></div>${sys}</section>` : "");
   const qv = (i) => Math.max(0, Number(document.querySelector(`[data-i="${i}"]`).value) || 0);
   const cur = () => rows.map((r, i) => ({ product_id: r.product_id, qty_final: qv(i), r }));
   // ง3: how far the owner moved from what the system proposed (order_review qty_proposed)

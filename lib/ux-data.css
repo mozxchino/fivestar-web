@@ -110,18 +110,22 @@ button.cell.ux-who:active { background: var(--color-fill-pressed); }
 .ux-4 .err { grid-column: 1 / -1; white-space: pre-line; }
 .bsheet .foot.ux-2b { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
 
-/* ---------- round 4 approve: rows at the proposal and not low fold into one line ---------- */
-.ux-same { border-top: .5px solid var(--color-separator); margin: 0; }
-.ux-same:first-child { border-top: 0; }
-.ux-same > summary { min-height: 64px; padding: 8px 0; cursor: pointer; touch-action: manipulation; }
-.ux-same > summary b { display: block; font-weight: 500; }
-.ux-same > summary small { display: block; font-size: 13px; line-height: 1.35; color: var(--color-ink-soft); }
-.ux-same > .orow:first-of-type { border-top: .5px solid var(--color-separator); }
-.ux-same .chip .c, .ux-same[open] .chip .o { display: none; }
-.ux-same[open] .chip .c { display: inline; }
+/* ---------- round 5 approve: two always-visible groups · "ต้องดู" = white card, "ตามที่ระบบเสนอ" = grey panel, muted text ---------- */
+#items > .ux-gh:first-child { margin-top: 6px; }
+.ux-sys { margin: 18px 0 12px; padding: 4px 16px; border-radius: var(--radius); background: #EBE6E2; box-shadow: inset 0 0 0 .5px rgba(32, 24, 24, .06); }
+.ux-sysh { padding: 12px 0 10px; border-bottom: .5px solid var(--color-separator); }
+#items .ux-sysh h2 { margin: 0; font: 500 15px/1.4 var(--font-head); color: var(--color-ink-soft); }
+.ux-sysh p { margin: 2px 0 0; font-size: 13px; line-height: 1.35; color: var(--color-ink-soft); }
+.ux-sys .nm { font-weight: 400; color: var(--color-ink-soft); }
+.ux-sys .meta { font-weight: 400; }
+.ux-sys .step button, .ux-sys .step input[type=number] { background-color: var(--color-card); }
+.ux-sys .step button:active { background: var(--color-fill-pressed); }
+.ux-sys .orow.chg .nm { color: var(--color-foreground); }
 /* make-interfaces-feel-better: sheet numbers fade in over the grey bars (no jump) · fold title wraps evenly */
 .ux-4 > div { transition: opacity 180ms var(--ease-out); }
 @starting-style { .ux-4 > div { opacity: 0; } }
-.ux-same > summary b { text-wrap: balance; }
 .ux-usm, .ux-4 span { text-wrap: pretty; }
 @media (prefers-reduced-motion: reduce) { .ux-4 > div { transition: none; } }
+/* make-interfaces-feel-better: group counts don't shift width, short titles wrap evenly */
+#items .ux-gh, #items .ux-sysh h2 { font-variant-numeric: tabular-nums; text-wrap: balance; }
+.ux-sysh p { text-wrap: pretty; }
