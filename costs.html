@@ -46,7 +46,8 @@
   const money = (n) => n == null ? "-" : Number(n).toLocaleString("th-TH", { maximumFractionDigits: 0 });
   const IN = ["store_sales", "lineman_sales", "grab_sales", "shopee_sales", "rent", "wages", "utilities", "gas", "misc"];
   const now = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 7);
-  let cur = now;
+  const qm = new URLSearchParams(location.search).get("m"); // round 4: owner สรุปเดือน links here with ?m=YYYY-MM
+  let cur = /^\d{4}-\d{2}$/.test(qm || "") && qm <= now ? qm : now;
   const ym = () => cur;
   const mname = (v) => new Date(v + "-01T00:00:00Z").toLocaleDateString("th-TH", { month: "short", year: "numeric", timeZone: "UTC" });
   const shift = (d) => { const [y, m] = cur.split("-").map(Number), t = new Date(Date.UTC(y, m - 1 + d, 1)); cur = t.toISOString().slice(0, 7); load(); };

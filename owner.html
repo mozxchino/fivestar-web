@@ -303,20 +303,44 @@ td+td{font-weight:600}
   const V = {
     day: dayView,
     iss: issView,
+    // round 4: every number that has days behind it opens them · a day opens the day view · ร้านหยุด → holiday · ต้นทุน/กำไร of the same month
     async mon() {
-      $("bar").innerHTML = `<input id="pm" type="month" value="${TODAY.slice(0, 7)}">`;
+      $("bar").innerHTML = `<input id="pm" type="month" value="${TODAY.slice(0, 7)}" max="${TODAY.slice(0, 7)}" aria-label="เลือกเดือน">`;
       const go = async () => {
-        const [y, m] = $("pm").value.split("-").map(Number); if (!y) return;
-        const next = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, "0")}-01`;
-        const [{ data: s, error }, { data: days }] = await Promise.all([supabase.rpc("month_summary", { y, m }),
-          supabase.from("shop_days").select("opened_by").gte("date", $("pm").value + "-01").lt("date", next)]);
+        const ym = $("pm").value, [y, m] = ym.split("-").map(Number); if (!y) return;
+        const first = ym + "-01", next = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, "0")}-01`, inM = (d) => String(d || "").slice(0, 7) === ym;
+        const [{ data: s, error }, { data: days }, { data: wl }, { data: od }] = await Promise.all([supabase.rpc("month_summary", { y, m }),
+          supabase.from("shop_days").select("date,status,opened_at,opened_by,cash_expected,cash_counted").gte("date", first).lt("date", next).order("date"),
+          supabase.from("stock_lines").select("date,waste").gte("date", first).lt("date", next).gt("waste", 0),
+          supabase.from("orders").select("for_date,order_items(qty_proposed,qty_final,qty_received)").gte("for_date", first).lt("for_date", next)]);
         if (error) { $("out").innerHTML = `<p class="err">เปิดไม่ขึ้น: ${esc(App.errText(error))}</p>`; return; }
         const r = (Array.isArray(s) ? s[0] : s) || {};
-        const L = [["เปิดร้าน", r.days_worked, "วัน"], ["ปิดร้านในแอป", r.days_closed_sent, "วัน"], ["ร้านหยุด", r.days_holiday, "วัน"], ["โอที", r.ot_hours, "ชม."], ["โอทีที่อนุมัติแล้ว", r.ot_approved_hours, "ชม."], ["ของเสียรวม", r.waste_total, "หน่วย"], ["เงินสดขาดรวม", r.cash_short_total, "บาท"], ["วันที่ของมาไม่ครบ", r.cpf_short_days, "วัน"]];
-        const cnt = {}; (days || []).forEach((x) => { if (x.opened_by) cnt[x.opened_by] = (cnt[x.opened_by] || 0) + 1; });
-        $("out").innerHTML = `<div class="card"><table>${L.map(([k, v, u]) => `<tr><td>${k}</td><td>${money(v ?? 0)} ${u}</td></tr>`).join("")}</table></div>
-          <h2>ใครเปิดร้านกี่วัน</h2><div class="card"><table>${Object.entries(cnt).map(([u, n]) => `<tr><td>${esc(names[u] || u)}</td><td>${n} วัน</td></tr>`).join("") || '<tr><td class="muted">ยังไม่มีใครเปิดร้าน</td></tr>'}</table></div>`;
+        const D0 = (days || []).filter((x) => inM(x.date));
+        // day lists behind the numbers (same rules as month_summary) · newest first
+        const openD = D0.filter((x) => x.opened_at && x.status === "open" && x.date < TODAY).map((x) => [x.date]); // opened, never closed in the app
+        const cashD = D0.map((x) => [x.date, -cashOf(x)]).filter(([, v]) => v > 0);
+        const wasteD = {}; (wl || []).filter((l) => inM(l.date) && +l.waste > 0).forEach((l) => { wasteD[l.date] = (wasteD[l.date] || 0) + 1; });
+        const shortD = {}; (od || []).filter((o) => inM(o.for_date)).forEach((o) => { const n = (o.order_items || []).filter((i) => i.qty_received != null && +i.qty_received < +(i.qty_final ?? i.qty_proposed)).length; if (n) shortD[o.for_date] = (shortD[o.for_date] || 0) + n; });
+        const day = (d, v) => `<button type="button" class="ux-mday" data-day="${d}"><span>${U.dayName(d)}</span><span class="v">${v}</span><span class="go" aria-hidden="true">›</span></button>`;
+        const newest = (a) => a.sort((x, z) => z[0].localeCompare(x[0]));
+        const val = (v, u, bad) => `<span class="v${bad && v ? " bad" : ""}">${money(v ?? 0)} ${u}</span>`;
+        const plain = (k, v, u) => `<div class="ux-mrow"><span>${k}</span>${val(v, u)}</div>`;
+        const drill = (id, k, v, u, list) => list.length ? `<button class="fold ux-mrow" aria-expanded="false" data-f="${id}"><span>${k}</span>${val(v, u, 1)}</button><div class="fold-body"><div>${list.join("")}</div></div>` : plain(k, v, u);
+        const cnt = {}; D0.forEach((x) => { if (x.opened_by) cnt[x.opened_by] = (cnt[x.opened_by] || 0) + 1; });
+        const mn = `${U.MON[m - 1]} ${y + 543}`;
+        $("out").innerHTML = `<div class="card folds ux-mon">`
+          + plain("เปิดร้าน", r.days_worked, "วัน") + plain("ปิดร้านในแอป", r.days_closed_sent, "วัน")
+          + (openD.length ? drill("open", "เปิดแต่ไม่ได้ปิดในแอป", openD.length, "วัน", newest(openD).map(([d]) => day(d, "ดูวันนั้น"))) : "")
+          + `<a class="ux-mrow" href="holiday.html"><span>ร้านหยุด<small>ดูวันหยุดและวันลา</small></span><span class="v">${money(r.days_holiday ?? 0)} วัน</span><span class="go" aria-hidden="true">›</span></a>`
+          + plain("โอที", r.ot_hours, "ชม.") + plain("โอทีที่อนุมัติแล้ว", r.ot_approved_hours, "ชม.")
+          + drill("cash", "เงินสดขาดรวม", r.cash_short_total, "บาท", newest(cashD).map(([d, v]) => day(d, `ขาด ${money(v)} บาท`)))
+          + drill("waste", "ของเสียรวม", r.waste_total, "หน่วย", newest(Object.entries(wasteD)).map(([d, n]) => day(d, `เสีย ${n} อย่าง`)))
+          + drill("short", "วันที่ของมาไม่ครบ", r.cpf_short_days, "วัน", newest(Object.entries(shortD)).map(([d, n]) => day(d, `ขาด ${n} รายการ`)))
+          + `</div><a class="btn tonal ux-costs" href="costs.html?m=${ym}">ดูต้นทุน/กำไร ${mn}</a>`
+          + `<h2>ใครเปิดร้านกี่วัน</h2><div class="card"><table>${Object.entries(cnt).map(([u, n]) => `<tr><td>${esc(names[u] || u)}</td><td>${n} วัน</td></tr>`).join("") || '<tr><td class="muted">ยังไม่มีใครเปิดร้าน</td></tr>'}</table></div>`;
+        U.folds($("out").querySelector(".ux-mon"));
       };
+      $("out").onclick = (e) => { const b = e.target.closest("button[data-day]"); if (b && TAB === "mon") { D = b.dataset.day; show("day"); } };
       $("pm").onchange = go; await go();
     },
   };

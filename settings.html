@@ -27,6 +27,9 @@
 <dialog id="ps" class="bsheet" aria-labelledby="psh"><div class="body"><div class="grab"></div>
   <div class="hd"><b id="psh"></b><button class="x" type="button" aria-label="ปิด" autofocus>✕</button></div><div id="psb"></div></div>
   <div class="foot"><button class="btn primary" id="pss"></button><p id="psm" class="err"></p></div></dialog>
+<dialog id="us" class="bsheet" aria-labelledby="ush"><div class="body"><div class="grab"></div>
+  <div class="hd"><b id="ush"></b><button class="x" type="button" aria-label="ปิด">✕</button></div><p id="usm" class="meta ux-usm"></p><div id="usb" class="ux-4" aria-live="polite"></div></div>
+  <div class="foot ux-2b"><a class="btn tonal" href="history.html">ดูประวัติ</a><a class="btn" href="holiday.html">ดูวันลา</a></div></dialog>
 <script>
 (async () => {
   const $ = (i) => document.getElementById(i);
@@ -56,22 +59,26 @@
     // owner row: name + เจ้าของ only (no pay fields, can't be switched off · DB guard 0024)
     // mock ก: one grouped list per person · label left, value right, unit after the number · save on change (toast at the bottom)
     const ci = (id, f, val, label, unit, type = "number") => `<label class="cell"><span class="k">${label}</span><input class="${type === "number" ? "num-in" : ""}" type="${type}" ${type === "number" ? 'inputmode="decimal" step="any" placeholder="ยังไม่ใส่"' : ""} value="${E(val)}" data-t="users" data-id="${id}" data-f="${f}" aria-label="${label}">${unit ? `<span class="unit">${unit}</span>` : ""}</label>`;
-    const head = (x, pill) => `<div class="cell has-av${x.active ? "" : " dim"}"><span class="av${x.active ? "" : " off"}" aria-hidden="true">${E((x.name || "?").slice(0, 1).toUpperCase())}</span><span class="k name">${E(x.name)}</span>${pill}</div>`;
+    const av = (x) => `<span class="av${x.active ? "" : " off"}" aria-hidden="true">${E((x.name || "?").slice(0, 1).toUpperCase())}</span>`;
+    const head = (x, pill) => `<div class="cell has-av${x.active ? "" : " dim"}">${av(x)}<span class="k name">${E(x.name)}</span>${pill}</div>`;
+    // round 4: a working staff member's name row opens this month's summary (bottom sheet)
+    const who = (x) => `<button class="cell has-av ux-who" type="button" data-sum="${x.id}" data-n="${E(x.name)}" aria-haspopup="dialog">${av(x)}<span class="k name">${E(x.name)}<small>ดูสรุปเดือนนี้</small></span><span class="pill">พนักงาน</span><span class="go" aria-hidden="true">›</span></button>`;
     const u = (x) => x.role === "owner" ? `<div class="gl">${head(x, '<span class="pill">เจ้าของ</span>')}</div>`
       : !x.active ? `<div class="gl">${head(x, `<button class="txt-btn" type="button" data-on="${x.id}" data-n="${E(x.name)}">เปิดสิทธิ์คืน</button>`)}</div>`
-      : `<div class="person"><div class="gl">${head(x, '<span class="pill">พนักงาน</span>')}
+      : `<div class="person"><div class="gl">${who(x)}
       ${ci(x.id, "salary_month", x.salary_month, "เงินเดือน", "บาท")}${ci(x.id, "off_days_per_month", x.off_days_per_month, "หยุดได้", "วัน/เดือน")}
       ${ci(x.id, "std_hours_per_day", x.std_hours_per_day, "ทำงาน", "ชม./วัน")}${ci(x.id, "ot_rate_hour", x.ot_rate_hour, "โอที", "บาท/ชม.")}
       ${ci(x.id, "started_at", x.started_at, "เริ่มงานวันที่", "", "date")}
       <button class="cell act danger" type="button" data-off="${x.id}" data-n="${E(x.name)}">ปิดสิทธิ์ใช้แอป</button></div></div>`;
     const off = (us || []).filter((x) => !x.active);
-    $("staff").innerHTML = `<h2>คนขอใช้แอป</h2>` + ((pend || []).map((p) => `<div class="card gl" data-src="${E(p.source_id)}"><label class="cell"><span class="k">ชื่อ</span><input type="text" value="${E(p.display_name)}" placeholder="ชื่อที่เรียกในร้าน" aria-label="ชื่อที่เรียกในร้าน"></label>
-      <button class="cell act" type="button" data-ok><span class="k">อนุมัติเป็นพนักงาน</span></button></div>`).join("") || `<p class="gf">ไม่มีคนขอ</p>`)
+    $("staff").innerHTML = `<h2>คนขอใช้แอป</h2>` + ((pend || []).map((p, i) => `<div class="card gl" data-src="${E(p.source_id)}"><label class="cell"><span class="k">ชื่อ</span><input type="text" value="${E(p.display_name)}" placeholder="ชื่อที่เรียกในร้าน" aria-label="ชื่อที่เรียกในร้าน"></label>
+      <button class="cell act${i ? "" : " ux-prim"}" type="button" data-ok><span class="k">อนุมัติเป็นพนักงาน</span></button></div>`).join("") || `<p class="gf">ไม่มีคนขอ</p>`)
       + `<h2>คนที่ใช้แอปอยู่</h2>` + (us || []).filter((x) => x.active).map(u).join("")
       + (off.length ? `<h2>ปิดสิทธิ์แล้ว (${off.length} คน)</h2>` + off.map(u).join("") : "");
   }
   $("staff").onclick = async (ev) => {
     const b = ev.target.closest("button"); if (!b) return;
+    if (b.dataset.sum) return openSum(b.dataset.sum, b.dataset.n);
     let r;
     if (b.dataset.ok !== undefined) {
       const c = b.closest(".card"), name = c.querySelector("input").value.trim();
@@ -89,6 +96,26 @@
     if (r.error) return fail(r.error);
     staff();
   };
+
+  // round 4: this month for one person · วันทำงาน = days they opened or closed · โอที and เงินสดขาด = days they closed · หยุด/ลา = approved this month
+  const sumS = UXD.sheet($("us"));
+  async function openSum(id, name) {
+    const today = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10), ym = today.slice(0, 7), nextM = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 1)).toISOString().slice(0, 10);
+    const sk = `<div><i class="sk-b" style="--w:46%;--h:26px"></i><i class="sk-b" style="--w:70%;--h:13px;--gap:6px"></i></div>`;
+    $("ush").textContent = name; $("usm").textContent = new Date(ym + "-01T00:00:00Z").toLocaleDateString("th-TH", { month: "long", year: "numeric", timeZone: "UTC" }) + " ถึงวันนี้";
+    $("usb").innerHTML = sk.repeat(4); sumS.open();
+    const [d, l] = await Promise.all([
+      supabase.from("shop_days").select("date,opened_by,closed_by,ot_hours,cash_expected,cash_counted").gte("date", ym + "-01").lte("date", today),
+      supabase.from("leave_requests").select("date,status").eq("user_id", id).eq("status", "approved").gte("date", ym + "-01").lt("date", nextM)]);
+    if (d.error || l.error) { $("usb").innerHTML = `<p class="err">เปิดไม่ขึ้น ลองแตะชื่ออีกครั้ง\n${E(App.errText(d.error || l.error))}</p>`; return; }
+    const days = (d.data || []).filter((x) => x.date.slice(0, 7) === ym && x.date <= today), closed = days.filter((x) => x.closed_by === id);
+    const worked = days.filter((x) => x.opened_by === id || x.closed_by === id).length;
+    const off = (l.data || []).filter((x) => x.status === "approved" && x.date.slice(0, 7) === ym).length;
+    const ot = closed.reduce((a, x) => a + (+x.ot_hours || 0), 0);
+    const short = closed.reduce((a, x) => a + (x.cash_expected != null && x.cash_counted != null ? Math.max(0, x.cash_expected - x.cash_counted) : 0), 0);
+    const c = (v, u, k, bad) => `<div><b class="${bad ? "err" : ""}">${money(v)}<small> ${u}</small></b><span>${k}</span></div>`;
+    $("usb").innerHTML = c(worked, "วัน", "วันทำงาน") + c(off, "วัน", "วันหยุด/ลา") + c(+ot.toFixed(1), "ชม.", "โอที") + c(short, "บาท", "เงินสดขาดรวม", short > 0);
+  }
 
   // ---- สินค้า: ค้นหา + ชิปกรอง + แถวสั้น → แผงล่างแก้ · + เพิ่มสินค้า
   const KIND = { cpf: "ของขาย (CPF)", self: "ซื้อเอง", consumable: "ของใช้ในร้าน" };

@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-staff.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script>
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>รับของ</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3<span id="d"></span></div></div></header>
 <div class="sk"><span class="vh">กำลังเปิด…</span><p></p><div class="sheet"><div class="it meta sheet-head"><i class="sk-b" style="--w:34%;--h:13px;margin:0"></i><i class="sk-b" style="--w:28px;--h:13px;margin:0 auto"></i><i class="sk-b" style="--w:64px;--h:13px;margin:0 auto"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div></div><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
@@ -14,6 +14,11 @@
 <div id="none" class="ld" hidden><div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>วันนี้ไม่มีของต้องรับ</p></div><a class="btn" href="close.html">ไปปิดร้าน</a></div>
 <div id="form" class="ld" hidden>
   <p id="st" class="ok"></p>
+  <div class="ux-pick" role="radiogroup" aria-label="ของที่มา">
+    <button type="button" id="recAll" class="ux-opt" role="radio" aria-checked="false"><b>ของมาครบตามใบสั่ง ✓</b><small id="recAllS"></small></button>
+    <button type="button" id="recShort" class="ux-opt" role="radio" aria-checked="false" aria-controls="recBox"><b>มีของขาด / ไม่ตรง</b><small>แตะแก้จำนวนที่ได้จริง</small></button>
+  </div>
+  <div id="recBox" hidden>
   <div class="sheet">
   <div class="it meta sheet-head"><div>สินค้า</div><div>สั่ง</div><div>ได้รับจริง</div></div>
   <div id="lines"></div>
@@ -22,6 +27,7 @@
   <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปใบส่งของ <input id="ph" type="file" accept="image/*" capture="environment" hidden></label>
   <p class="muted">ของมาไม่ครบ ต้องถ่าย ได้ถึง 3 รูป</p>
   <p id="phS" class="muted"></p>
+  </div>
   <button id="none2" class="btn">วันนี้ไม่มีของมา</button>
   <div class="sticky"><label id="shot" class="btn primary" for="ph" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><span id="shotT">ถ่ายรูปใบส่งของก่อนบันทึก</span></label><button id="save" class="btn primary">บันทึกรับของ</button>
   <p id="msg" class="muted"></p></div>
@@ -51,6 +57,15 @@
     shot.hidden = !need; save.hidden = need; shotT.textContent = `ถ่ายรูปใบส่งของ (ขาด ${n} อย่าง)`;
   };
   lines.addEventListener("input", short);
+  // round 4 (like close step 2): one tap "ครบ" = every row gets the ordered qty (the same numbers typing them would send) · "ขาด" opens the rows
+  let pick = "";
+  const setPick = (v) => { pick = v; save.textContent = v === "all" ? `บันทึก ของมาครบ ${items.length} อย่าง` : "บันทึกรับของ"; save.classList.add("primary"); recAll.setAttribute("aria-checked", v === "all"); recShort.setAttribute("aria-checked", v === "short"); recBox.hidden = v !== "short"; };
+  recAllS.textContent = `${items.length} อย่าง ตัวเลขเท่าที่สั่ง`;
+  recAll.onclick = () => { lines.querySelectorAll(".it").forEach((r) => { r.querySelector("input").value = +r.querySelector(".ord").textContent; }); setPick("all"); msg.textContent = ""; short(); };
+  recShort.onclick = () => { setPick("short"); msg.textContent = ""; short(); lines.querySelector("input")?.focus({ preventScroll: true }); recBox.scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); };
+  // reopened after receiving: the saved numbers decide which choice is on
+  if (!got) { save.classList.remove("primary"); save.textContent = "เลือก ครบ หรือ ขาด ก่อน"; } // no red until the choice is made
+  if (got) setPick([...lines.querySelectorAll(".it")].every((r) => +r.querySelector("input").value === +r.querySelector(".ord").textContent) ? "all" : "short");
   // done: the form gives way to the mascot screen (title · detail · thank-you line · next task)
   const run = async (p, notify, title, sub, warm) => { save.disabled = none2.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
     const { error } = await p; if (error) { msg.textContent = "ยังบันทึกไม่ได้\n" + App.errText(error); msg.className = "err"; save.disabled = none2.disabled = false; return; }
@@ -58,6 +73,7 @@
     form.hidden = true; doneT.textContent = title; doneS.textContent = sub; doneW.textContent = warm; done.hidden = false; scrollTo(0, 0);
     await UXS.showNext(supabase, next); };
   save.onclick = () => {
+    if (!pick) { msg.className = "err"; msg.textContent = "เลือก ของมาครบ หรือ มีของขาด ก่อน"; return UXM.shake(recAll.parentElement); }
     const arr = [...lines.querySelectorAll(".it")].map((r) => ({ product_id: r.dataset.id, qty_received: +r.querySelector("input").value || 0 }));
     const n = arr.filter((a, i) => a.qty_received < +lines.querySelectorAll(".it .ord")[i].textContent).length;
     run(supabase.rpc("receive_order", { oid: o.id, items: arr, photos }), { order_id: o.id }, "รับของแล้ว", n ? `ของมาไม่ครบ ${n} อย่าง` : "", "ขอบคุณที่ช่วยนับของ");

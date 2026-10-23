@@ -72,11 +72,11 @@ body:has(> #form:not([hidden])) { display: flex; flex-direction: column; min-hei
   transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out);
 }
 .ux-opt:active { transform: scale(.98); }
-#consAll[aria-checked=true] { background: var(--tint-success); border-color: var(--border-ok); }
-#consAll[aria-checked=true]::before { border-color: var(--color-success); background-color: var(--color-success);
+:is(#consAll, #recAll)[aria-checked=true] { background: var(--tint-success); border-color: var(--border-ok); }
+:is(#consAll, #recAll)[aria-checked=true]::before { border-color: var(--color-success); background-color: var(--color-success);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E"); }
-#consLow[aria-checked=true] { background: var(--tint-wait); border-color: var(--border-wait); }
-#consLow[aria-checked=true]::before { border: 8px solid var(--on-wait); }
+:is(#consLow, #recShort)[aria-checked=true] { background: var(--tint-wait); border-color: var(--border-wait); }
+:is(#consLow, #recShort)[aria-checked=true]::before { border: 8px solid var(--on-wait); }
 #consBox { padding-bottom: 4px; }
 
 /* consumables: 2-column chips, tap cycles มี → ใกล้หมด → หมด */
@@ -169,3 +169,23 @@ button.row.ux-all .ux-go { color: var(--color-primary-dark); }
 .ux-date svg { width: 16px; height: 16px; flex: none; }
 /* impeccable: a flagged day keeps its reasons readable (2 lines) instead of "เงินสดขาด 40 บาท · ของเสีย 1 …" */
 details.ux-day summary .m { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.4; }
+
+/* ---------- round 4 owner hub (index เจ้าของ): every row says what waits there · status dot + words (no count bubble, the words say it) ---------- */
+.ux-hub .t { min-width: 0; }
+.ux-hub .t small { opacity: 1; color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
+.ux-hub .t small::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; vertical-align: 1px; background: var(--color-chevron); }
+.ux-hub .t small[data-tone=ok]::before { background: var(--color-success); }
+.ux-hub .t small[data-tone=wait]::before { background: #C99A06; }
+.ux-hub .t small[data-tone=wait] { color: var(--on-wait); font-weight: 500; }
+.ux-hub .t small[data-tone=bad]::before { background: var(--color-destructive); }
+.ux-hub .t small[data-tone=bad] { color: var(--color-destructive); font-weight: 500; }
+
+/* ---------- round 4 receive: ครบ / ขาด choice above the rows (same look as close step 2) ---------- */
+#form > .ux-pick { margin-top: 4px; }
+#recBox { scroll-margin-top: calc(var(--chrome-h) + 8px); }
+#recBox:not([hidden]) { transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out); }
+@starting-style { #recBox:not([hidden]) { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) { @starting-style { #recBox:not([hidden]) { transform: none; } } }
+#form:has(> #recBox) > .sticky { margin-top: auto; }
+.ux-hub .t small[data-tone="-"]::before { display: none; } /* static description: no status dot */
+.ux-hub .t small { text-wrap: pretty; }

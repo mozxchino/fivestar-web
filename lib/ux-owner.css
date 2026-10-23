@@ -93,3 +93,26 @@ button.daylink:active, .cal-nav button:active, .daynav .d:active { opacity: .7; 
 .ux-upd:disabled { opacity: .7; cursor: default; }
 /* ง4: "รับทราบทั้งหมด (N)" sits above the new issues */
 .ux-ackall { margin: 0 0 4px; }
+
+/* ---------- round 4 สรุปเดือน: one row per number · rows with days behind them open (chevron) · each day opens the day view ---------- */
+.ux-mon { padding-top: 2px; padding-bottom: 2px; }
+.ux-mrow { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 10px 0; margin: 0; border: 0; border-top: .5px solid var(--color-separator); background: none; color: var(--color-foreground); font: 400 16px/1.35 var(--font-body); text-align: left; text-decoration: none; }
+.ux-mon > .ux-mrow:first-child { border-top: 0; }
+.ux-mrow > span:first-child { flex: 1; min-width: 0; }
+.ux-mrow small { display: block; font-size: 13px; color: var(--color-ink-soft); }
+.ux-mrow .v { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ux-mrow .v.bad { color: var(--color-destructive); }
+.ux-mrow .go, .ux-mday .go { flex: none; color: var(--color-chevron); font-size: 20px; line-height: 1; }
+a.ux-mrow, button.ux-mrow, .ux-mday { cursor: pointer; touch-action: manipulation; transition: background-color 160ms var(--ease-out); }
+a.ux-mrow:active, button.ux-mrow:active, .ux-mday:active { background: var(--color-fill-pressed); }
+.ux-mon .fold.ux-mrow { justify-content: flex-start; }
+.ux-mday { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 6px 0 6px 12px; margin: 0; border: 0; border-top: .5px solid var(--color-separator); background: var(--color-fill); color: var(--color-foreground); font: 400 15px/1.35 var(--font-body); text-align: left; font-variant-numeric: tabular-nums; }
+.ux-mday:first-child { border-top: 0; border-radius: 10px 10px 0 0; }
+.ux-mday:last-child { border-radius: 0 0 10px 10px; margin-bottom: 10px; }
+.ux-mday:only-child { border-radius: 10px; }
+.ux-mday > span:first-child { flex: 1; }
+.ux-mday .v { color: var(--color-ink-soft); padding-right: 2px; }
+.ux-mday .go { padding-right: 10px; }
+.ux-costs { margin-top: 4px; }
+.ux-mrow small, .ux-mday > span:first-child { text-wrap: pretty; }
+.ux-mrow .v, .ux-mday .v { font-variant-numeric: tabular-nums; }
