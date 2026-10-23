@@ -9,9 +9,10 @@
 <script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-staff.js"></script>
 </head><body class="grouped" ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ประวัติ</h1><div class="sub">ย้อนหลัง 30 วัน</div></div></header>
-<p id="msg" class="muted">กำลังโหลด…</p>
-<div id="sum"></div>
-<div id="list"></div>
+<div class="sk"><span class="vh">กำลังเปิด…</span><div class="card"><i class="sk-b" style="--w:30%;--h:14px;margin:3px 0 4px"></i><div class="ux-3" style="margin-top:12px"><div><i class="sk-b" style="--w:50%;--h:22px;margin:2px auto 3px"></i><i class="sk-b" style="--w:70%;--h:12px;margin:8px auto 3px"></i></div><div><i class="sk-b" style="--w:50%;--h:22px;margin:2px auto 3px"></i><i class="sk-b" style="--w:70%;--h:12px;margin:8px auto 3px"></i></div><div><i class="sk-b" style="--w:50%;--h:22px;margin:2px auto 3px"></i><i class="sk-b" style="--w:70%;--h:12px;margin:8px auto 3px"></i></div></div></div><h2 class="ux-week" style="display:flow-root"><i class="sk-b" style="--w:40%;--h:13px;margin:4px 0"></i></h2><div class="card list"><div class="sk-row" style="min-height:52px;border-bottom:.5px solid var(--color-separator)"><i class="sk-b" style="--w:64px;--h:16px"></i><i class="sk-b" style="--w:52%;--h:14px"></i></div><div class="sk-row" style="min-height:52px;border-bottom:.5px solid var(--color-separator)"><i class="sk-b" style="--w:64px;--h:16px"></i><i class="sk-b" style="--w:52%;--h:14px"></i></div><div class="sk-row" style="min-height:52px;border-bottom:.5px solid var(--color-separator)"><i class="sk-b" style="--w:64px;--h:16px"></i><i class="sk-b" style="--w:52%;--h:14px"></i></div><div class="sk-row" style="min-height:52px;border-bottom:.5px solid var(--color-separator)"><i class="sk-b" style="--w:64px;--h:16px"></i><i class="sk-b" style="--w:52%;--h:14px"></i></div><div class="sk-row" style="min-height:52px;border-bottom:.5px solid var(--color-separator)"><i class="sk-b" style="--w:64px;--h:16px"></i><i class="sk-b" style="--w:52%;--h:14px"></i></div><div class="sk-row" style="min-height:52px;border-bottom:.5px solid var(--color-separator)"><i class="sk-b" style="--w:64px;--h:16px"></i><i class="sk-b" style="--w:52%;--h:14px"></i></div></div></div>
+<p id="msg" class="muted ld"></p>
+<div id="sum" class="ld"></div>
+<div id="list" class="ld"></div>
 <script>
 (async () => {
   try {
@@ -26,7 +27,7 @@
     const baht = (n) => Math.abs(n).toLocaleString("th-TH") + " บาท";
     const gapOf = (d) => d.cash_counted != null && d.cash_expected != null ? d.cash_counted - d.cash_expected : null;
     msg.hidden = !!data.length;
-    if (!data.length) { msg.textContent = "ยังไม่มีประวัติ"; return; }
+    if (!data.length) { list.innerHTML = `<div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>ยังไม่มีประวัติ</p><p class="muted">ปิดร้านครั้งแรกแล้ว จะขึ้นที่นี่</p></div>`; return; }
     // month summary (this month, inside the 30 days staff can see)
     const mon = data.filter((d) => d.date.slice(0, 7) === today.slice(0, 7));
     const worked = mon.filter((d) => d.status !== "holiday" && (d.opened_at || d.closed_at || d.status === "backfill")).length;
@@ -54,11 +55,12 @@
       const det = e.target; if (!det.open || det.dataset.loaded) return; det.dataset.loaded = 1;
       const body = det.querySelector(".ux-body"), d = data.find((x) => x.date === det.dataset.d), g = gapOf(d);
       const kv = (k, v) => `<div class="kv"><span>${k}</span><b class="num">${v}</b></div>`;
-      let h = kv("เปิด · ปิด", `${hm(d.opened_at) || "-"} · ${hm(d.closed_at) || "-"} น.`) + kv("โอที", `${+d.ot_hours || 0} ชม.`)
-        + (d.cash_expected != null || d.cash_counted != null ? kv("เงินสด ควรมี · นับได้", `${d.cash_expected?.toLocaleString("th-TH") ?? "-"} · ${d.cash_counted?.toLocaleString("th-TH") ?? "-"} บาท`) : "")
+      // 1 เรื่อง 1 บรรทัด · cash to compare on 2 lines (ควรมี / นับได้)
+      let h = kv("เปิด", `${hm(d.opened_at) || "-"} น.`) + kv("ปิด", `${hm(d.closed_at) || "-"} น.`) + kv("โอที", `${+d.ot_hours || 0} ชม.`)
+        + (d.cash_expected != null || d.cash_counted != null ? kv("เงินสดควรมี", `${d.cash_expected?.toLocaleString("th-TH") ?? "-"} บาท`) + kv("นับได้", `${d.cash_counted?.toLocaleString("th-TH") ?? "-"} บาท`) : "")
         + (g ? kv("", `<span class="${g < 0 ? "err" : ""}">เงินสด${g < 0 ? "ขาด" : "เกิน"} ${baht(g)}</span>`) : "")
         + (d.note ? `<p class="muted">ฝากบอกเจ้าของ: ${esc(d.note)}</p>` : "");
-      body.innerHTML = h + '<p class="muted">กำลังโหลดของ…</p>';
+      body.innerHTML = h + `<div style="padding-top:8px">${'<i class="sk-b" style="--h:14px;--gap:12px"></i>'.repeat(4)}</div>`;
       try {
         if (!P) { const r = await supabase.from("products").select("id,name,unit,sort"); if (r.error) throw r.error; P = Object.fromEntries(r.data.map((p) => [p.id, p])); }
         const { data: ls, error: e2 } = await supabase.from("stock_lines").select("product_id,received,remain_fresh,remain_cooked,waste").eq("date", d.date);

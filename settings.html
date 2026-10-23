@@ -12,10 +12,11 @@
 .g label.chk{display:flex;align-items:center;gap:10px;min-height:var(--field);margin:0;align-self:end;font-size:16px;color:var(--fg)}
 </style></head><body class="grouped" ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ตั้งค่า</h1><div class="sub">สำหรับเจ้าของ</div></div>
-  <div class="tabs" id="tabs" hidden><button data-t="staff" class="on">พนักงาน</button><button data-t="prod">สินค้า</button><button data-t="sys">ร้าน</button></div></header>
+  <div class="tabs sk" aria-hidden="true"><button class="on" tabindex="-1">พนักงาน</button><button tabindex="-1">สินค้า</button><button tabindex="-1">ร้าน</button></div><div class="tabs ld" id="tabs" hidden><button data-t="staff" class="on">พนักงาน</button><button data-t="prod">สินค้า</button><button data-t="sys">ร้าน</button></div></header>
 <p id="blocked" class="err" hidden></p>
-<div id="app" hidden>
-  <section id="staff"></section>
+<div class="sk"><span class="vh">กำลังเปิด…</span><h2 style="display:flow-root"><i class="sk-b" style="--w:30%;--h:13px;margin:4px 0"></i></h2><div class="gl"><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div></div><h2 style="display:flow-root"><i class="sk-b" style="--w:36%;--h:13px;margin:4px 0"></i></h2><div class="gl"><div class="cell has-av"><i class="sk-b" style="--w:36px;--h:36px;--r:50%"></i><i class="sk-b" style="--w:30%;--h:17px;margin:0"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div></div></div>
+<div id="app" class="ld" hidden>
+  <section id="staff"><span class="vh">กำลังเปิด…</span><h2 style="display:flow-root"><i class="sk-b" style="--w:30%;--h:13px;margin:4px 0"></i></h2><div class="gl"><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div></div><h2 style="display:flow-root"><i class="sk-b" style="--w:36%;--h:13px;margin:4px 0"></i></h2><div class="gl"><div class="cell has-av"><i class="sk-b" style="--w:36px;--h:36px;--r:50%"></i><i class="sk-b" style="--w:30%;--h:17px;margin:0"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div></div></section>
   <section id="prod" hidden>
     <div class="search"><input type="text" id="q" placeholder="ค้นหาสินค้า เช่น จ๊อ" aria-label="ค้นหาสินค้า" enterkeyhint="search"><button class="btn sm" id="add">+ เพิ่มสินค้า</button></div>
     <div id="pf" class="chips" style="margin-top:10px"></div>
@@ -34,7 +35,7 @@
   const { supabase, me } = await App.ready();
   if (me.role !== "owner") { $("blocked").hidden = false; $("blocked").textContent = "หน้านี้สำหรับเจ้าของ"; return; }
   $("app").hidden = false; $("tabs").hidden = false;
-  const tabs = document.querySelectorAll(".tabs button");
+  const tabs = document.querySelectorAll("#tabs button"); // #tabs: the skeleton track in the header has look-alike buttons
   tabs.forEach((b) => b.onclick = () => { tabs.forEach((x) => { x.classList.toggle("on", x === b); $(x.dataset.t).hidden = x !== b; }); });
   const qs = new URLSearchParams(location.search);
   const fail = (e) => alert("บันทึกไม่ได้\n" + App.errText(e));
@@ -91,7 +92,7 @@
   // ---- สินค้า: ค้นหา + ชิปกรอง + แถวสั้น → แผงล่างแก้ · + เพิ่มสินค้า
   const KIND = { cpf: "ของขาย (CPF)", self: "ซื้อเอง", consumable: "ของใช้ในร้าน" };
   // เพิ่มสินค้า: one choice sets kind + supplier together (the DB needs both)
-  const ADDK = [["cpf|cpf", "ของขาย (CPF)"], ["self|self", "ของขาย · ซื้อเอง"], ["consumable|cpf", "ของใช้ในร้าน · สั่ง CPF"], ["consumable|self", "ของใช้ในร้าน · ซื้อเอง"]];
+  const ADDK = [["cpf|cpf", "ของขาย (CPF)"], ["self|self", "ของขาย (ซื้อเอง)"], ["consumable|cpf", "ของใช้ในร้าน (สั่ง CPF)"], ["consumable|self", "ของใช้ในร้าน (ซื้อเอง)"]];
   const money = (n) => Number(n).toLocaleString("th-TH", { maximumFractionDigits: 2 });
   const { data: ps0 } = await supabase.from("products").select("*").order("sort");
   let ps = ps0 || [], cur = null;
@@ -121,7 +122,7 @@
       ? `<div class="g">${num("pack_size", "แพ็คละ (ชิ้น)", p.pack_size, 1)}</div>${chk(p)}`
       : `<div class="g">${num("par_weekday", "ควรมี จ.–พฤ.", p.par_weekday, 1)}${num("par_weekend", "ควรมี ศ.–อา.", p.par_weekend, 1)}
          ${num("cost_price", "ราคาทุน (บาท)", p.cost_price)}${num("store_price", "ขายหน้าร้าน (บาท)", p.store_price)}</div>
-         <details class="fold"><summary>แพ็คละ · ราคาเดลิเวอรี · ปิดใช้<span class="chip">เปิดดู</span></summary>
+         <details class="fold"><summary>แพ็คละ ราคาเดลิเวอรี และปิดใช้<span class="chip">เปิดดู</span></summary>
          <div class="g">${num("pack_size", "แพ็คละ (ชิ้น)", p.pack_size, 1)}${num("delivery_price", "ขายเดลิเวอรี (บาท)", p.delivery_price)}</div>${chk(p)}</details>`);
     $("pss").textContent = "บันทึก " + p.name;
     sheet.open();

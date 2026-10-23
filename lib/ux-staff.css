@@ -6,6 +6,7 @@
 .ux-top-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .ux-top-row h2 { margin: 0; font: 500 18px/1.3 var(--font-head); outline: none; }
 .ux-top-row .muted { font: 400 13px/1.3 var(--font-body); white-space: nowrap; }
+.ux-top-row h2 small { margin-left: 4px; font: 400 13px/1.3 var(--font-body); color: var(--color-ink-soft); white-space: nowrap; }
 .ux-prog { height: 6px; border-radius: 99px; background: var(--color-muted); overflow: hidden; margin: 8px 0 4px; }
 .ux-prog i { display: block; height: 100%; background: var(--color-success); border-radius: 99px; transform: scaleX(0); transform-origin: left; transition: transform 200ms var(--ease-out); }
 .ux-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
@@ -14,7 +15,7 @@
   border: 0; border-radius: var(--radius-sm); background: none; font: 500 13px/1.2 var(--font-body); color: var(--color-ink-soft);
   white-space: nowrap; cursor: pointer; touch-action: manipulation; transition: transform 120ms var(--ease-out);
 }
-.ux-steps i {
+.ux-steps button i {
   display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font: 600 13px/1 var(--font-head); font-style: normal;
   border: 1.5px solid var(--color-border-input); background: var(--color-card); font-variant-numeric: tabular-nums;
   transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), color 160ms var(--ease-out);
@@ -104,6 +105,10 @@ p.ok.big:not(:empty)::before { top: 22px; }
 .it:has(.ux-short:not(:empty)) input { background-color: var(--tint-destructive); box-shadow: inset 0 0 0 1.5px var(--color-destructive); }
 
 /* ---------- staff home ---------- */
+/* pages whose #form is a flex column (open · receive · close): the skeleton lays out the same way, so nothing moves when the form appears */
+body > .sk:has(~ #form) { display: flex; flex-direction: column; }
+/* skeleton shape follows the role remembered from this LINE session (index.html head) · first open = staff shape */
+.own .sk-staff, html:not(.own) .sk-owner { display: none; }
 .ux-hello { margin: 0 0 12px; font: 600 22px/1.3 var(--font-head); }
 .ux-hello small { display: block; font: 400 14px/1.4 var(--font-body); color: var(--color-ink-soft); }
 a.row { color: inherit; text-decoration: none; }

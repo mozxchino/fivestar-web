@@ -6,20 +6,22 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-staff.css">
+<script>try { if ((JSON.parse(sessionStorage.getItem("fs_session_v1") || "null") || {}).me?.role === "owner") document.documentElement.classList.add("own"); } catch (_) {} /* skeleton shape only */</script>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-staff.js"></script>
 </head><body ontouchstart="">
 <header class="topbar home"><img class="logo" src="img/logo-96.png" alt="" width="52" height="52"><div><h1>ไก่ย่างห้าดาว</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
-<h1 id="title">กำลังเปิด…</h1>
-<nav id="menu" aria-label="เมนู"></nav>
+<div class="sk sk-staff"><span class="vh">กำลังเปิด…</span><div class="ux-hello"><i class="sk-b" style="--w:48%;--h:26px"></i><i class="sk-b" style="--w:36%;--h:16px;--gap:6px"></i></div><div class="bento trio"><div class="bt wide lead"><i class="sk-b" style="--w:44px;--h:44px;--r:14px"></i><span class="tx"><i class="sk-b" style="--w:28%;--h:14px"></i><i class="sk-b" style="--w:50%;--h:32px;--gap:6px"></i><i class="sk-b" style="--w:72%;--h:14px;--gap:6px"></i></span></div><div class="bt"><i class="sk-b" style="--w:78%;--h:13px"></i><i class="sk-b" style="--w:58%;--h:20px;--gap:6px"></i></div><div class="bt"><i class="sk-b" style="--w:78%;--h:13px"></i><i class="sk-b" style="--w:58%;--h:20px;--gap:6px"></i></div><div class="bt"><i class="sk-b" style="--w:78%;--h:13px"></i><i class="sk-b" style="--w:58%;--h:20px;--gap:6px"></i></div><div class="bt wide list"><i class="sk-b" style="--w:28%;--h:15px;--gap:0px"></i><div><div class="row"><span class="grow"><i class="sk-b" style="--w:34%;--h:17px"></i><i class="sk-b" style="--w:68%;--h:14px;--gap:7px"></i></span></div><div class="row"><span class="grow"><i class="sk-b" style="--w:34%;--h:17px"></i><i class="sk-b" style="--w:68%;--h:14px;--gap:7px"></i></span></div><div class="row"><span class="grow"><i class="sk-b" style="--w:34%;--h:17px"></i><i class="sk-b" style="--w:68%;--h:14px;--gap:7px"></i></span></div></div></div></div></div>
+<div class="sk sk-owner"><span class="vh">กำลังเปิด…</span><h1 style="display:flow-root"><i class="sk-b" style="--w:30%;--h:22px;margin:3px 0 4px"></i></h1><div class="btn tile primary"><i class="sk-b" style="--w:44px;--h:44px;--r:12px"></i><span class="grow"><i class="sk-b" style="--w:40%;--h:19px"></i><i class="sk-b" style="--w:64%;--h:13px;--gap:6px"></i></span></div><div class="btn tile"><i class="sk-b" style="--w:44px;--h:44px;--r:12px"></i><span class="grow"><i class="sk-b" style="--w:40%;--h:19px"></i><i class="sk-b" style="--w:64%;--h:13px;--gap:6px"></i></span></div><div class="btn tile"><i class="sk-b" style="--w:44px;--h:44px;--r:12px"></i><span class="grow"><i class="sk-b" style="--w:40%;--h:19px"></i><i class="sk-b" style="--w:64%;--h:13px;--gap:6px"></i></span></div><div class="btn tile"><i class="sk-b" style="--w:44px;--h:44px;--r:12px"></i><span class="grow"><i class="sk-b" style="--w:40%;--h:19px"></i><i class="sk-b" style="--w:64%;--h:13px;--gap:6px"></i></span></div><div class="btn tile"><i class="sk-b" style="--w:44px;--h:44px;--r:12px"></i><span class="grow"><i class="sk-b" style="--w:40%;--h:19px"></i><i class="sk-b" style="--w:64%;--h:13px;--gap:6px"></i></span></div></div>
+<h1 id="title" class="ld"></h1>
+<nav id="menu" class="ld" aria-label="เมนู"></nav>
 <p class="muted who" id="who"></p>
 <script>
 (async () => {
   try {
     const { supabase, me } = await App.ready();
     document.getElementById("who").textContent = `${me.name} · ${me.role === "owner" ? "เจ้าของ" : "พนักงาน"}`;
-    document.getElementById("title").textContent = "เลือกเมนู";
     // Lucide icons, stroke 2
     const I = {
       open: '<path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/>',
@@ -38,7 +40,7 @@
     const owner = [["owner.html","วันนี้","today","เปิดร้าน รับของ ปิดร้าน เงินสด"],["approve.html","อนุมัติใบสั่ง","approve","ตรวจใบสั่งพรุ่งนี้ แล้วส่งให้เซลล์"],["settings.html","ตั้งค่า","settings","พนักงาน สินค้า กลุ่ม LINE"],["costs.html","ต้นทุน/กำไร","costs","สรุปกำไรรายเดือน"],["holiday.html","ขอหยุด/ลา","holiday","วันหยุดและวันลาของพนักงาน"]];
     const tiles = (list) => { document.getElementById("menu").innerHTML = list
         .map(([h,t,ic,s],i) => `<a class="btn tile ${i===0?'primary':''}" href="${h}"><span class="ico">${svg(I[ic])}</span><span class="t">${t}<small>${s}</small></span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></a>`).join(""); };
-    if (me.role === "owner") return tiles(owner);
+    if (me.role === "owner") { document.getElementById("title").textContent = "เลือกเมนู"; return tiles(owner); }
     try { await staffHome(); } catch (e) { console.error("staff home", e); document.getElementById("title").textContent = "เลือกเมนู"; tiles(staff); } // read failed → plain menu
     async function staffHome() {
     // staff: today's real status → strip + next-task tile · "เรื่องของฉัน" (own issues · upcoming leave · last day)
@@ -50,32 +52,32 @@
       supabase.from("shop_days").select("date,status,closed_at,cash_expected,cash_counted").lt("date", today).order("date", { ascending: false }).limit(1).maybeSingle(),
     ]);
     const title = document.getElementById("title");
-    title.className = "ux-hello"; title.innerHTML = `สวัสดี ${esc(me.name)}<small>${thd(today, { weekday: "long" }).replace(/^วัน(\S+?)ที่ /, "$1 ")} · งานวันนี้</small>`;
+    title.classList.add("ux-hello"); title.innerHTML = `สวัสดี ${esc(me.name)}<small>${thd(today, { weekday: "long" }).replace(/^วัน(\S+?)ที่ /, "$1 ")} · งานวันนี้</small>`;
     const n = st.next, d = st.day || {}, rest = n.key === "done" || n.key === "holiday";
     const cell = (href, name, cls, sub) => `<a class="bt ${cls}" href="${href}"><span class="k"><i class="dot" aria-hidden="true"></i>${name}</span><span class="v">${sub}</span></a>`;
-    const c1 = d.opened_at ? cell("open.html", "เปิดร้าน ✓", "ok", hm(d.opened_at) + " น.") : n.key === "open" ? cell("open.html", "เปิดร้าน", "now", "งานถัดไป") : cell("open.html", "เปิดร้าน", "", rest ? "ร้านหยุด" : "ยังไม่เปิด");
+    const c1 = d.opened_at ? cell("open.html", "เปิดร้าน ✓", "ok", hm(d.opened_at) + " น.") : n.key === "open" ? cell("open.html", "เปิดร้าน", "now", "ยังไม่เปิด") : cell("open.html", "เปิดร้าน", "", rest ? "ร้านหยุด" : "ยังไม่เปิด");
     const c2 = st.receive === "ok" ? cell("receive.html", "รับของ ✓", "ok", hm(st.recvAt) + " น.") : st.receive === "short" ? cell("receive.html", "รับของ ✓", "wait", `ขาด ${st.short} อย่าง`)
-      : n.key === "receive" ? cell("receive.html", "รับของ", "now", "งานถัดไป") : cell("receive.html", "รับของ", "", st.receive === "none" ? "ไม่มีของมา" : "ยังไม่รับ");
-    const c3 = n.key === "done" ? cell("history.html", "ปิดร้าน ✓", "ok", hm(d.closed_at) + " น.") : n.key === "close" ? cell("close.html", "ปิดร้าน", "now", "งานถัดไป") : cell("close.html", "ปิดร้าน", "", "ยังไม่ถึง");
+      : n.key === "receive" ? cell("receive.html", "รับของ", "now", "ยังไม่รับ") : cell("receive.html", "รับของ", "", st.receive === "none" ? "ไม่มีของมา" : "ยังไม่รับ");
+    const c3 = n.key === "done" ? cell("history.html", "ปิดร้าน ✓", "ok", hm(d.closed_at) + " น.") : n.key === "close" ? cell("close.html", "ปิดร้าน", "now", "ยังไม่ปิด") : cell("close.html", "ปิดร้าน", "", "ยังไม่ถึง");
     const icon = { open: "open", receive: "receive", close: "close", done: "history", holiday: "history" }[n.key];
     const ISS = { open: ["รอรับทราบ", "wait"], ack: ["รับทราบแล้ว", "ok"], closed: ["ปิดเรื่องแล้ว", "ok"] };
     const LT = { off: "หยุดประจำสัปดาห์", sick: "ลาป่วย", personal: "ลากิจ", special: "หยุดพิเศษ" }, LS = { pending: ["รออนุมัติ", "wait"], approved: ["อนุมัติแล้ว", "ok"], rejected: ["ไม่อนุมัติ", "bad"] };
     const line = (href, t, s, pill) => `<a class="row" href="${href}"><span class="grow"><span class="ux-t">${t}</span><span class="ux-s">${s}</span></span>${pill ? `<span class="pill" data-tone="${pill[1]}">${pill[0]}</span>` : '<span class="ux-go" aria-hidden="true">›</span>'}</a>`;
     const rows = [];
-    (iss.data || []).forEach((i) => rows.push(line("issue.html", "แจ้งปัญหา", `${thd(i.date || today)} · ${esc(i.text)}`, ISS[i.status])));
-    if (!(iss.data || []).length) rows.push(line("issue.html", "แจ้งปัญหา", "ยังไม่มีเรื่องที่แจ้ง · ของเสีย เครื่องพัง"));
+    (iss.data || []).forEach((i) => rows.push(line("issue.html", "แจ้งปัญหา", `${thd(i.date || today)} ${esc(i.text)}`, ISS[i.status])));
+    if (!(iss.data || []).length) rows.push(line("issue.html", "แจ้งปัญหา", "ยังไม่มีเรื่องที่แจ้ง"));
     (lv.data || []).forEach((r) => rows.push(line("holiday.html", "ขอหยุด/ลา", `${LT[r.type] || esc(r.type)} ${thd(r.date)}`, LS[r.status])));
-    if (!(lv.data || []).length) rows.push(line("holiday.html", "ขอหยุด/ลา", "ไม่มีวันที่ขอไว้ · หยุดประจำ ลาป่วย ลากิจ"));
+    if (!(lv.data || []).length) rows.push(line("holiday.html", "ขอหยุด/ลา", "ไม่มีวันที่ขอไว้"));
     const L = last.data, gap = L && L.cash_counted != null && L.cash_expected != null ? L.cash_counted - L.cash_expected : null;
     rows.push(line("history.html", "ประวัติ 30 วัน", L ? [thd(L.date, { weekday: "short" }), L.closed_at ? `ปิด ${hm(L.closed_at)} น.` : "", gap == null ? "" : gap === 0 ? "เงินสดครบ" : `เงินสด${gap < 0 ? "ขาด" : "เกิน"} ${Math.abs(gap).toLocaleString("th-TH")} บาท`].filter(Boolean).join(" · ") : "ยังไม่มีประวัติ"));
-    // bento: tall "งานถัดไป" tile left · เปิด / รับของ / ปิด stacked right · เรื่องของฉัน across the bottom
-    document.getElementById("menu").innerHTML = `<div class="bento">
-      <a class="bt tall hero${rest ? " calm" : ""}" href="${n.href}"><span class="ico">${svg(I[icon])}</span><span class="k">${rest ? "วันนี้" : "งานถัดไป"}</span><span class="v">${n.label}</span><span class="m">${n.sub}</span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></a>
+    // Mos 23 ต.ค. รอบ 2: "งานถัดไป" across the top, only as tall as its words · เปิด / รับของ / ปิด in one row of 3 · เรื่องของฉัน below
+    document.getElementById("menu").innerHTML = `<div class="bento trio">
+      <a class="bt wide hero lead${rest ? " calm" : ""}" href="${n.href}"><span class="ico">${svg(I[icon])}</span><span class="tx"><span class="k">${rest ? "วันนี้" : "งานถัดไป"}</span><span class="v">${n.label}</span><span class="m">${n.sub}</span></span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></a>
       ${c1}${c2}${c3}
       <section class="bt wide list" aria-labelledby="mine"><h2 class="k" id="mine">เรื่องของฉัน</h2><div>${rows.join("")}</div></section></div>`;
     }
   } catch (e) {
-    if (e.message !== "denied") { document.getElementById("title").textContent = "เปิดแอปไม่ได้"; document.getElementById("who").textContent = "ปิดแล้วเปิดใหม่ใน LINE · " + App.errText(e); }
+    if (e.message !== "denied") { document.getElementById("title").textContent = "เปิดแอปไม่ได้"; document.getElementById("who").textContent = "ปิดแล้วเปิดใหม่ใน LINE\n" + App.errText(e); }
   }
 })();
 </script></body></html>

@@ -71,7 +71,7 @@ code { font: 13px/1.4 ui-monospace, Menlo, monospace; background: var(--color-mu
 .topbar.home { padding-top: calc(16px + env(safe-area-inset-top)); padding-bottom: 18px; gap: 14px; margin-bottom: var(--space-lg); }
 .topbar.home .logo { width: 52px; height: 52px; }
 .topbar.home h1 { font-size: 21px; }
-.who { text-align: center; margin-top: var(--space-lg); }
+.who { text-align: center; margin-top: var(--space-lg); white-space: pre-line; }
 .topbar .back {
   width: 44px; height: 44px; margin-left: -8px; flex: none; border-radius: 50%;
   display: grid; place-items: center; color: var(--color-foreground); background: transparent;
@@ -280,7 +280,7 @@ td + td, th + th { text-align: right; }
 p.ok.big:not(:empty) { font: 500 20px/1.4 var(--font-head); padding: 18px 16px; }
 .steps p { margin: 0; } .steps p + p { margin-top: 2px; }
 .empty { text-align: center; padding: var(--space-xl) var(--space-md) var(--space-md); color: var(--color-muted-foreground); }
-.empty p:first-child { font: 500 18px/1.4 var(--font-head); color: var(--color-foreground); }
+.empty p:first-of-type { font: 500 18px/1.4 var(--font-head); color: var(--color-foreground); }
 .empty p { margin: 2px 0; }
 
 /* ---------- mock ก · grouped list (settings): label left · value right · inset hairlines · header/footer hints ---------- */
@@ -381,6 +381,71 @@ a.bt:active, button.bt:active { transform: scale(.97); box-shadow: var(--shadow-
 .bt.list .row:last-child { border-bottom: 0; }
 @media (max-width: 359px) { .bento { gap: 8px; } .bt { padding: 12px; } .bt.hero .v { font-size: 26px; } .bt.hero .big { font-size: 40px; } }
 
+/* trio (Mos 23 ต.ค. รอบ 2): 3 small status tiles in one row of equal width (staff home · owner day) · no decorative tiles */
+.bento.trio { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.trio > .bt:not(.wide) { justify-content: flex-start; gap: 3px; min-height: 0; padding: 11px 10px 12px 12px; border-radius: 16px; }
+.trio > .bt:not(.wide) .k { gap: 5px; font-size: 13px; }
+.trio > .bt:not(.wide) .v { font-size: 17px; line-height: 1.25; letter-spacing: 0; }
+.trio > .bt:not(.wide) .v small { font-size: 13px; }
+.trio > .bt:not(.wide) .m { font-size: 12px; line-height: 1.35; }
+.trio > .bt.wide:first-child { margin-bottom: 2px; }
+/* lead: the one next task across the top · as tall as its words, still the biggest thing on the screen */
+.bt.lead { flex-direction: row; align-items: center; gap: 14px; padding: 16px 14px 16px 16px; }
+.bt.lead .tx { display: flex; flex: 1; flex-direction: column; gap: 1px; min-width: 0; }
+.bt.lead .v { margin-top: 0; font-size: 28px; line-height: 1.2; }
+.bt.lead .go { position: static; flex: none; width: 22px; height: 22px; }
+@media (max-width: 359px) { .trio > .bt:not(.wide) { padding: 10px 8px 10px 10px; } .trio > .bt:not(.wide) .v { font-size: 16px; } .bt.lead .v { font-size: 24px; } }
+
+/* ---------- skeleton (รอบ 2): grey shimmer shapes inside the page's own boxes while LIFF + data load ----------
+   CSS only: a .sk block hides itself the moment a later sibling marked .ld is shown with something in it */
+.sk:has(~ .ld:not([hidden]):not(:empty)), body:has(#blocked:not([hidden])) .sk { display: none !important; }
+.ld:empty { display: none; }
+/* real content eases in where the grey shapes were (same boxes, so only opacity moves) · #app and tabs hold skeletons themselves */
+.ld:not(#app, .tabs) { animation: msg-fade 180ms var(--ease-out); }
+.sk-b {
+  display: block; flex: none; width: var(--w, 100%); height: var(--h, 14px); border-radius: var(--r, 7px);
+  background: #ECE4DF linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .65) 50%, transparent 70%) 150% 0 / 250% 100% no-repeat;
+  animation: sk-shine 1.5s linear 10; /* ponytail: stops after 15 s so a stuck load doesn't look busy forever */
+}
+.sk-b + .sk-b { margin-top: var(--gap, 8px); }
+.sk-row { display: flex; align-items: center; gap: 10px; }
+.sk-row > .sk-b + .sk-b { margin-top: 0; }
+@keyframes sk-shine { to { background-position: -50% 0; } }
+/* on the grey grouped ground a bar needs a darker grey to show (inside white cards the default is enough) */
+body.grouped .sk-b:not(:is(.card, .gl, .bt, .sheet, .todo) *) { background-color: #E2D7D1; }
+.tabs.sk { pointer-events: none; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- mascot moments (รอบ 2): done screens + empty lists · small and warm, never a cartoon takeover ---------- */
+.mascot { display: block; width: 80px; height: 80px; margin: 0 auto; }
+.mascot.sm { width: 56px; height: 56px; }
+.mascot > img { display: block; width: 100%; height: 100%; }
+/* done screens: the mascot wears a green tick so "done" never reads like "empty" */
+.ok-badge { position: relative; }
+.ok-badge::after {
+  content: ""; position: absolute; right: -4px; bottom: -2px; width: 30px; height: 30px; border-radius: 50%; box-shadow: 0 0 0 3px var(--color-background);
+  background: var(--color-success) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 16px no-repeat;
+}
+/* done: message in the upper middle, actions pinned to the thumb zone (iOS "all set" screens) */
+.done { display: flex; flex-direction: column; min-height: calc(100vh - var(--chrome-h) - 40px - env(safe-area-inset-bottom)); min-height: calc(100dvh - var(--chrome-h) - 40px - env(safe-area-inset-bottom)); padding-top: 8vh; text-align: center; }
+.done .mascot { margin-bottom: 16px; animation: mascot-in 360ms var(--ease-out) both; }
+.done h2 { margin: 0; font: 600 24px/1.3 var(--font-head); text-wrap: balance; }
+.done p { margin: 6px 0 0; font-size: 16px; line-height: 1.45; color: var(--color-ink-soft); white-space: pre-line; font-variant-numeric: tabular-nums; text-wrap: pretty; }
+.done p:empty { display: none; }
+.done p.warm { margin-top: 12px; color: var(--color-foreground); }
+.done .acts { margin-top: auto; padding-top: 24px; text-align: left; }
+.done .acts .btn { margin: 0 0 8px; }
+/* with a next-task button above it, "กลับหน้าหลัก" steps back to a quiet text button (one strong action) */
+.done #next:not(:empty) + .home { background: none; color: var(--color-ink-soft); }
+.done #next:not(:empty) + .home:active { background: var(--color-fill); }
+.empty .mascot { margin-bottom: 12px; }
+.empty.tight { padding: 14px 16px 6px; }
+@keyframes mascot-in { from { opacity: 0; transform: scale(.92) translateY(6px); filter: blur(4px); } }
+/* the tick lands just after the mascot: a small, quick "done" beat (3 times a day · no bounce) */
+.done .ok-badge::after { animation: badge-in 240ms 200ms var(--ease-out) both; }
+@keyframes badge-in { from { opacity: 0; transform: scale(.4); } }
+.empty p { text-wrap: balance; }
+
 /* denied: centered message under the mascot */
 .hero-msg { text-align: center; padding-top: var(--space-md); }
 .hero-msg > img { width: 120px; height: 120px; display: block; margin: 0 auto var(--space-sm); }
@@ -456,6 +521,9 @@ a.bt:active, button.bt:active { transform: scale(.97); box-shadow: var(--shadow-
   .grid .nm::before { transform: none; }
   p.ok:not(:empty), p.err:not(:empty) { animation-name: msg-fade; }
   .btn:disabled:has(~ #msg.muted:not(:empty))::after { animation-duration: 1.4s; }
+  .sk-b { animation: none; }
+  .done .mascot { animation-name: msg-fade; }
+  .done .ok-badge::after { animation-name: msg-fade; }
 }
 @keyframes msg-fade { from { opacity: 0; } }
 

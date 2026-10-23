@@ -8,9 +8,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script>
 </head><body ontouchstart="">
-<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ปิดร้าน</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3 · <span id="d"></span></div></div></header>
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ปิดร้าน</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3<span id="d"></span></div></div></header>
 <p id="blocked" class="err" hidden></p>
-<div id="form" hidden>
+<div class="sk"><span class="vh">กำลังเปิด…</span><div class="ux-top"><div class="ux-top-row sk-row"><i class="sk-b" style="--w:44%;--h:22px"></i><i class="sk-b" style="--w:24%;--h:13px"></i></div><div class="ux-prog"></div><div class="ux-steps"><span style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:48px"><i class="sk-b" style="--w:24px;--h:24px;--r:50%;margin:0"></i><i class="sk-b" style="--w:70%;--h:12px;margin:0"></i></span><span style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:48px"><i class="sk-b" style="--w:24px;--h:24px;--r:50%;margin:0"></i><i class="sk-b" style="--w:70%;--h:12px;margin:0"></i></span><span style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:48px"><i class="sk-b" style="--w:24px;--h:24px;--r:50%;margin:0"></i><i class="sk-b" style="--w:70%;--h:12px;margin:0"></i></span><span style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:48px"><i class="sk-b" style="--w:24px;--h:24px;--r:50%;margin:0"></i><i class="sk-b" style="--w:70%;--h:12px;margin:0"></i></span></div></div><div class="ux-step"><div class="sheet"><div class="grid meta sheet-head"><i class="sk-b" style="--w:40%;--h:13px;margin:0"></i><i class="sk-b" style="--w:36px;--h:13px;margin:0 auto"></i><i class="sk-b" style="--w:36px;--h:13px;margin:0 auto"></i><i class="sk-b" style="--w:28px;--h:13px;margin:0 auto"></i></div><div class="grid"><div><i class="sk-b" style="--w:74%;--h:17px"></i><i class="sk-b" style="--w:56%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="grid"><div><i class="sk-b" style="--w:74%;--h:17px"></i><i class="sk-b" style="--w:56%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="grid"><div><i class="sk-b" style="--w:74%;--h:17px"></i><i class="sk-b" style="--w:56%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="grid"><div><i class="sk-b" style="--w:74%;--h:17px"></i><i class="sk-b" style="--w:56%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="grid"><div><i class="sk-b" style="--w:74%;--h:17px"></i><i class="sk-b" style="--w:56%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="grid"><div><i class="sk-b" style="--w:74%;--h:17px"></i><i class="sk-b" style="--w:56%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="grid"><div><i class="sk-b" style="--w:74%;--h:17px"></i><i class="sk-b" style="--w:56%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div></div></div><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
+<section id="done" class="done ld" hidden aria-live="polite"><span class="mascot ok-badge"><img src="img/mascot-240.png" alt="" width="80" height="80"></span><h2 id="doneT">ปิดร้านเรียบร้อย</h2><p id="doneS"></p><p class="warm">วันนี้จบแล้ว ขอบคุณที่ช่วยร้าน</p><div class="acts"><div id="next"></div><a class="btn home" href="index.html">กลับหน้าหลัก</a></div></section>
+<div id="form" class="ld" hidden>
   <div id="uxTop" class="ux-top">
     <div class="ux-top-row"><h2 id="stepT" tabindex="-1"></h2><span id="draftT" class="muted"></span></div>
     <div class="ux-prog" aria-hidden="true"><i id="progBar"></i></div>
@@ -22,7 +24,7 @@
   <div class="sheet">
   <div class="grid meta sheet-head"><div id="progT">สินค้า</div><div>เหลือสด</div><div>เหลือสุก</div><div>เสีย</div></div>
   <div id="lines"></div>
-  <div id="fold" class="ux-fold" hidden><span><b id="foldT"></b><small>ยกมา 0 · รับเข้า 0 · นับเป็น 0 ให้แล้ว</small></span><button type="button" id="foldB" class="btn sm" aria-expanded="false">เปิดดู</button></div>
+  <div id="fold" class="ux-fold" hidden><span><b id="foldT"></b><small>ยกมา 0 · รับเข้า 0</small><small>นับเป็น 0 ให้แล้ว</small></span><button type="button" id="foldB" class="btn sm" aria-expanded="false">เปิดดู</button></div>
   </div>
   </section>
   <section id="s2" class="ux-step" hidden>
@@ -31,7 +33,7 @@
     <button type="button" id="consLow" class="ux-opt" role="radio" aria-checked="false" aria-controls="consBox"><b>มีของใกล้หมด / หมด</b><small>แตะเลือกของที่ต้องเติม</small></button>
   </div>
   <div id="consBox" hidden>
-  <p class="ux-hint">แตะ 1 ครั้ง = ใกล้หมด · 2 ครั้ง = หมด · 3 ครั้ง = มี</p>
+  <p class="ux-hint">แตะ 1 ครั้ง = ใกล้หมด<br>แตะ 2 ครั้ง = หมด<br>แตะ 3 ครั้ง = กลับเป็นมี</p>
   <div id="cons" class="ux-cgrid"></div>
   </div>
   </section>
@@ -46,8 +48,8 @@
   <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปตู้และถาด <input id="phFridge" type="file" accept="image/*" capture="environment" hidden></label>
   <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปจอ POS ยอดวันนี้ <input id="phPos" type="file" accept="image/*" capture="environment" hidden></label>
   <p id="phStatus" class="muted"></p>
-  <label class="field" for="note">ฝากบอกเจ้าของ</label>
-  <textarea id="note" rows="3" placeholder="ไม่มีก็ข้ามได้ · เช่น ไก่ต้นตำรับหมด ลูกค้าเอาทรงเครื่องแทน"></textarea>
+  <label class="field" for="note">ฝากบอกเจ้าของ <small>(ไม่มีก็ข้ามได้)</small></label>
+  <textarea id="note" rows="3" placeholder="เช่น ไก่ต้นตำรับหมด ลูกค้าเอาทรงเครื่องแทน"></textarea>
   </section>
   <div class="sticky ux-foot"><button type="button" id="back" class="btn" hidden>ย้อนกลับ</button><button id="send" class="btn primary">ปิดร้าน</button><p id="msg" class="muted"></p></div>
 </div>
@@ -55,10 +57,10 @@
 (async () => {
   const { supabase, me } = await App.ready();
   const today = Photo.todayPrefix().slice(0, 10).replaceAll("/", "-");
-  document.getElementById("d").textContent = new Date(today + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
+  document.getElementById("d").textContent = " · " + new Date(today + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
   await supabase.rpc("ensure_day", { d: today });
   const { data: day } = await supabase.from("shop_days").select("status").eq("date", today).maybeSingle();
-  if (day?.status === "sent") { const b = document.getElementById("blocked"); b.hidden = false; b.className = "ok big"; b.innerHTML = 'วันนี้ปิดร้านแล้ว<br><small>กรอกผิด บอกเจ้าของที่ <a href="issue.html">แจ้งปัญหา</a></small>'; return; }
+  if (day?.status === "sent") { doneT.textContent = "วันนี้ปิดร้านแล้ว"; doneS.textContent = "กรอกผิด บอกเจ้าของที่แจ้งปัญหา"; next.innerHTML = '<a class="btn" href="issue.html">แจ้งปัญหา</a>'; document.getElementById("done").hidden = false; return; }
   const { data: pend } = await supabase.from("orders").select("id, order_items(qty_received, received_at)").eq("for_date", today).in("status", ["sent", "failed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (pend && pend.order_items.some((i) => i.qty_received == null && i.received_at == null)) {
     const b = document.getElementById("blocked"); b.hidden = false; b.innerHTML = 'ต้องกดรับของก่อน ถึงจะปิดร้านได้<br><a class="btn primary" href="receive.html">ไปรับของ</a>'; return;
@@ -79,7 +81,7 @@
     document.querySelectorAll("#lines .ux-zero").forEach((g) => g.hidden = !open); };
   const state = {};
   const SAY = { ok: "มี", low: "ใกล้หมด", out: "หมด" }, NEXT = { ok: "low", low: "out", out: "ok" };
-  const paint = (b) => { const v = state[b.dataset.id]; b.dataset.v = v; b.querySelector("small").textContent = v === "ok" ? "" : SAY[v]; b.setAttribute("aria-label", `${b.dataset.n} ${SAY[v]} · แตะเพื่อเปลี่ยน`); };
+  const paint = (b) => { const v = state[b.dataset.id]; b.dataset.v = v; b.querySelector("small").textContent = v === "ok" ? "" : SAY[v]; b.setAttribute("aria-label", `${b.dataset.n} ${SAY[v]} แตะเพื่อเปลี่ยน`); };
   document.getElementById("cons").innerHTML = cons.map((p) => { state[p.id] = "ok"; return `<button type="button" class="ux-cchip" data-id="${p.id}" data-n="${p.name}">${p.name}<small></small></button>`; }).join("");
   document.querySelectorAll("#cons .ux-cchip").forEach(paint);
   document.getElementById("cons").addEventListener("click", (e) => { const b = e.target.closest(".ux-cchip"); if (!b) return; state[b.dataset.id] = NEXT[state[b.dataset.id]]; paint(b); say(""); save(); update(); });
@@ -98,6 +100,7 @@
 
   // ---- wizard: 4 steps, one on screen · the red button walks forward, a step with gaps stops it ----
   const NAME = { 1: "นับของเหลือ", 2: "ของใช้ในร้าน", 3: "นับเงินสด", 4: "ถ่ายรูปและส่ง" };
+  const GO = { 2: "ไปเช็กของใช้", 3: "ไปนับเงินสด", 4: "ไปถ่ายรูปและส่ง" }; // red button = verb + thing
   let cur = 1, reached = 1;
   const liveRows = () => [...document.querySelectorAll("#lines .grid:not(.ux-zero)")];
   const leftRows = () => liveRows().filter((g) => g.querySelector(".rf").value === "");
@@ -135,13 +138,13 @@
     const rs = liveRows(), n = rs.length, x = n - leftRows().length;
     progT.textContent = n ? `นับแล้ว ${x} จาก ${n}` : "ไม่มีของต้องนับ";
     progBar.style.transform = `scaleX(${(cur - 1 + (cur === 1 ? (n ? x / n : 1) : 0)) / 4})`;
-    stepT.textContent = `ขั้น ${cur} จาก 4 · ${NAME[cur]}`;
+    stepT.innerHTML = `${NAME[cur]} <small>ขั้น ${cur} จาก 4</small>`;
     document.querySelectorAll("#steps button").forEach((b) => { const s = +b.dataset.s, done = s !== cur && s < reached && !gap(s);
       b.classList.toggle("on", s === cur); b.classList.toggle("ok", done); b.querySelector("i").textContent = done ? "✓" : s;
       b.setAttribute("aria-disabled", s > reached); s === cur ? b.setAttribute("aria-current", "step") : b.removeAttribute("aria-current"); });
     if (send.disabled) return;
     back.hidden = cur === 1;
-    send.textContent = cur < 4 ? `ถัดไป · ${NAME[cur + 1]}` : "ปิดร้าน";
+    send.textContent = cur < 4 ? GO[cur + 1] : "ปิดร้าน";
   }
   // move to step n · forward passes through every step's check, stops at the first gap and shows it
   function go(n, quiet) {
@@ -182,8 +185,10 @@
     if (error) { msg.textContent = "ยังปิดร้านไม่ได้\n" + App.errText(error); msg.className = "err"; send.disabled = false; back.hidden = false; return; }
     store.del(KEY); showDraft(null);
     await App.fn("close-notify", { date: today }).catch(() => {});
-    msg.textContent = "ปิดร้านแล้ว ขอบคุณ"; msg.className = "ok big"; document.querySelectorAll("input,textarea,button").forEach((x) => x.disabled = true);
-    send.hidden = true; await UXS.showNext(supabase, msg, true, "afterend");
+    // done: the wizard gives way to the mascot screen + next task · first line = how the day ended
+    doneS.textContent = [`นับของแล้ว ${rows.length} จาก ${stock.length} อย่าง`, cashDiff.textContent].filter(Boolean).join("\n");
+    document.getElementById("form").hidden = true; document.getElementById("done").hidden = false; scrollTo(0, 0);
+    await UXS.showNext(supabase, next);
   };
   document.getElementById("form").hidden = false;
   // resume where the draft left off, but never past a step that has a gap (stock_lines can change after the draft)

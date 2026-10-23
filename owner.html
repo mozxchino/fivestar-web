@@ -21,10 +21,11 @@ td+td{font-weight:600}
 .iss .who{font-size:14px;color:var(--color-ink-soft);display:flex;flex-wrap:wrap;align-items:center;gap:0 6px}
 </style></head><body class="grouped" ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>วันนี้</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div>
-  <div class="tabs" id="tabs" hidden><button data-t="day" class="on">วัน</button><button data-t="iss">ปัญหา</button><button data-t="mon">สรุปเดือน</button></div></header>
+  <div class="tabs sk" aria-hidden="true"><button class="on" tabindex="-1">วัน</button><button tabindex="-1">ปัญหา</button><button tabindex="-1">สรุปเดือน</button></div><div class="tabs ld" id="tabs" hidden><button data-t="day" class="on">วัน</button><button data-t="iss">ปัญหา</button><button data-t="mon">สรุปเดือน</button></div></header>
 <p id="blocked" class="err" hidden></p>
-<div id="app" hidden>
-  <div id="bar"></div><div id="out"></div>
+<div class="sk"><span class="vh">กำลังเปิด…</span><div class="daynav"><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i><div class="d"><i class="sk-b" style="--w:56%;--h:22px;margin:2px auto 0"></i><i class="sk-b" style="--w:40%;--h:13px;margin:6px auto 0"></i></div><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i></div><div class="bento trio"><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div></div><h3 class="sec"><i class="sk-b" style="--w:38%;--h:15px"></i></h3><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div></div>
+<div id="app" class="ld" hidden>
+  <div id="bar"><div class="daynav"><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i><div class="d"><i class="sk-b" style="--w:56%;--h:22px;margin:2px auto 0"></i><i class="sk-b" style="--w:40%;--h:13px;margin:6px auto 0"></i></div><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i></div></div><div id="out"><span class="vh">กำลังเปิด…</span><div class="bento trio"><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div></div><h3 class="sec"><i class="sk-b" style="--w:38%;--h:15px"></i></h3><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div></div>
 </div>
 <div id="panel" class="panel" role="dialog" aria-modal="true" aria-labelledby="ph" hidden></div>
 <script>
@@ -47,6 +48,17 @@ td+td{font-weight:600}
   const baht = (n) => n == null ? "-" : money(n) + " บาท";
   const thumbs = async (ps) => (await Promise.all((ps || []).filter(Boolean).map(async (p) => { try { return `<img class="th" alt="รูปจากร้าน" src="${await Photo.url(supabase, p)}">`; } catch { return ""; } }))).join("");
   document.addEventListener("click", (e) => { const im = e.target.closest("img.th"); if (im) Photo.view(im.src); });
+  // skeletons (รอบ 2): grey shapes in the tab's own boxes until its data arrives · same shapes as the static one in the HTML
+  const sb = (w, h, x = "") => `<i class="sk-b" style="--w:${w};--h:${h}px${x}"></i>`;
+  const SK_TODO = `<div class="card todo">${sb("62%", 18)}${sb("84%", 14, ";--gap:8px")}<div class="acts sk-row">${sb("calc(50% - 4px)", 44, ";--r:12px")}${sb("calc(50% - 4px)", 44, ";--r:12px")}</div></div>`;
+  const SK = {
+    day: `<span class="vh">กำลังเปิด…</span><div class="bento trio">${`<div class="bt">${sb("70%", 13)}${sb("62%", 20, ";--gap:6px")}${sb("84%", 12, ";--gap:6px")}${sb("60%", 12, ";--gap:5px")}</div>`.repeat(3)}</div><h3 class="sec">${sb("38%", 15)}</h3>${SK_TODO.repeat(2)}`,
+    iss: `<span class="vh">กำลังเปิด…</span>` + `<div class="card iss"><div class="day-head sk-row">${sb("42%", 18)}${sb("64px", 22, ";--r:999px")}</div>${sb("90%", 15, ";--gap:12px")}${sb("50%", 14, ";--gap:10px")}<div class="sk-row" style="margin-top:14px">${sb("96px", 44, ";--r:12px")}${sb("96px", 44, ";--r:12px")}</div></div>`.repeat(3),
+    mon: `<span class="vh">กำลังเปิด…</span><div class="card">${`<div class="sk-row" style="justify-content:space-between;padding:14px 2px">${sb("42%", 15)}${sb("22%", 15)}</div>`.repeat(8)}</div>`,
+  };
+  const SKB = { iss: `<div class="chips sk-row">${sb("78px", 44, ";--r:999px").repeat(3)}</div>` };
+  const EMPTY = (t, m = "") => `<div class="empty tight"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>${t}</p>${m ? `<p class="muted">${m}</p>` : ""}</div>`;
+  const ALLDONE = EMPTY("ไม่มีเรื่องต้องจัดการ", "ร้านเรียบร้อยดี");
 
   // ---- state: ?d=YYYY-MM-DD · ?tab=day|iss|month (LINE cards deep-link here) ----
   const q = new URLSearchParams(location.search);
@@ -59,7 +71,7 @@ td+td{font-weight:600}
     if (TAB === "day" && D !== TODAY) p.set("d", D);
     try { history.replaceState(null, "", location.pathname + (p.toString() ? "?" + p : "")); } catch (_) { /* LIFF webview without history: fine */ }
   };
-  const show = (t) => { TAB = t; document.querySelectorAll("#tabs button").forEach((x) => x.classList.toggle("on", x.dataset.t === t)); $("out").innerHTML = ""; $("bar").innerHTML = ""; sync(); return V[t](); };
+  const show = (t) => { TAB = t; document.querySelectorAll("#tabs button").forEach((x) => x.classList.toggle("on", x.dataset.t === t)); $("out").innerHTML = SK[t] || ""; $("bar").innerHTML = SKB[t] || ""; sync(); return V[t](); };
 
   // ---- day ----
   let ctx = null; // last loaded day (used by the edit panel)
@@ -84,42 +96,39 @@ td+td{font-weight:600}
     for (const i of c.iss) {
       const n = (i.photos || []).filter(Boolean).length, line = String(i.text || "").split("\n")[0];
       T.push({ r: 0, bad: 1, at: i.created_at, key: "i" + i.id,
-        t: `${TYPE[i.type] || esc(i.type)} · ${esc(line.length > 40 ? line.slice(0, 40) + "…" : line)}`,
+        t: TYPE[i.type] || esc(i.type), b: esc(line.length > 80 ? line.slice(0, 80) + "…" : line),
         s: `${esc(names[i.created_by] || "-")} · ${(i.date || "").slice(0, 10) !== c.d ? when((i.date || "").slice(0, 10)) + " " : ""}${hm(i.created_at)} น.${n ? ` · มีรูป ${n} รูป` : ""}`,
         a: `${n ? `<button class="btn sm" data-a="photos" data-i="${i.id}">ดูรูป</button>` : ""}<button class="btn sm" data-a="ack" data-i="${i.id}">รับทราบ</button>` });
     }
     for (const s of [c.sd, c.isToday ? c.yday : null].filter(Boolean)) {
       const x = cashOf(s); if (x == null || x >= 0) continue;
-      T.push({ r: 1, bad: 1, at: s.date, key: "c" + s.date, t: `เงินสดขาด ${baht(-x)} · ${when(s.date)}`, s: `ควรมี ${baht(s.cash_expected)} · นับได้ ${baht(s.cash_counted)}`,
+      T.push({ r: 1, bad: 1, at: s.date, key: "c" + s.date, t: `${when(s.date)} เงินสดขาด ${baht(-x)}`, s: `ควรมี ${baht(s.cash_expected)}<br>นับได้ ${baht(s.cash_counted)}`,
         a: s.date !== c.d ? `<button class="btn sm go" data-a="go" data-d="${s.date}">ดู${when(s.date)}</button>` : "" });
     }
     const short = c.items.filter((i) => i.received_at != null && (+i.qty_received || 0) < (+(i.qty_final ?? i.qty_proposed) || 0));
-    if (short.length) T.push({ r: 2, bad: 1, key: "g", t: `ของมาไม่ครบ · ขาด ${short.length} รายการ`, s: esc(short.slice(0, 3).map((i) => prods[i.product_id]).join(" · ") + (short.length > 3 ? " …" : "")),
+    if (short.length) T.push({ r: 2, bad: 1, key: "g", t: `ของมาไม่ครบ ขาด ${short.length} รายการ`, s: esc(short.slice(0, 3).map((i) => prods[i.product_id]).join(" · ") + (short.length > 3 ? " …" : "")),
       a: `<button class="btn sm go" data-a="recv">ดูที่ขาด</button>` });
     for (const l of c.lv.filter((l) => l.status === "pending" && l.date >= TODAY)) {
       const off = c.lv.filter((x) => x.user_id === l.user_id && x.status === "approved" && x.date.slice(0, 7) === l.date.slice(0, 7)).length;
-      T.push({ r: 3, at: l.date, key: "l" + l.id, t: `${U.LEAVE[l.type] || esc(l.type)} ${U.dayName(l.date)} · ${esc(l.users?.name || names[l.user_id] || "-")}`,
-        s: (l.note ? esc(l.note) + " · " : "") + `เดือนนั้นหยุดแล้ว ${off} วัน`,
+      T.push({ r: 3, at: l.date, key: "l" + l.id, t: `${esc(l.users?.name || names[l.user_id] || "-")} ${U.LEAVE[l.type] || esc(l.type)} ${U.dayName(l.date)}`,
+        b: l.note ? esc(l.note) : "", s: `เดือนนั้นหยุดแล้ว ${off} วัน`,
         a: `<button class="btn sm" data-a="leave" data-ok="0" data-i="${l.id}">ไม่อนุมัติ</button><button class="btn sm" data-a="leave" data-ok="1" data-i="${l.id}">อนุมัติ</button>` });
     }
     const ot = c.days.filter((s) => +s.ot_hours > 0 && !s.ot_approved_at && (c.isToday ? s.date >= U.plus(c.d, -7) && s.date <= c.d : s.date === c.d)).sort((a, b) => a.date.localeCompare(b.date));
     if (ot.length === 1) { const s = ot[0];
-      T.push({ r: 4, at: s.date, key: "o" + s.date, t: `โอที ${+s.ot_hours} ชม. · ${when(s.date)}`, s: s.closed_at ? `ปิดร้าน ${hm(s.closed_at)} น. · ${esc(names[s.closed_by] || "-")}` : "ยังไม่ปิดร้าน",
+      T.push({ r: 4, at: s.date, key: "o" + s.date, t: `${when(s.date)} โอที ${+s.ot_hours} ชม.`, s: s.closed_at ? `ปิดร้าน ${hm(s.closed_at)} น. · ${esc(names[s.closed_by] || "-")}` : "ยังไม่ปิดร้าน",
         a: `<button class="btn sm" data-a="ot" data-d="${s.date}">อนุมัติโอที</button>` }); }
     // several days waiting → one card, one press (approve_ot per day)
-    if (ot.length > 1) T.push({ r: 4, at: ot[0].date, key: "o", t: `โอทีรออนุมัติ ${ot.length} วัน · รวม ${ot.reduce((n, s) => n + +s.ot_hours, 0)} ชม.`,
+    if (ot.length > 1) T.push({ r: 4, at: ot[0].date, key: "o", t: `โอทีรออนุมัติ ${ot.length} วัน รวม ${ot.reduce((n, s) => n + +s.ot_hours, 0)} ชม.`,
       s: `${U.short(ot[0].date)} – ${U.short(ot[ot.length - 1].date)}`, a: `<button class="btn sm" data-a="ot" data-d="${ot.map((s) => s.date).join(",")}">อนุมัติโอทีทั้ง ${ot.length} วัน</button>` });
     return T.sort((a, b) => a.r - b.r || String(a.at || "").localeCompare(String(b.at || "")));
   }
 
-  // bento (Mos 23 ต.ค.): tall "ต้องจัดการ N เรื่อง" left · เงินสด / ของขาด / สถานะร้าน stacked right · one clear value per tile
-  const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>';
-  function bento(c, T) {
+  // trio (Mos 23 ต.ค. รอบ 2): เงินสด / ของขาด / สถานะร้าน in one row · the to-do list sits right under it (no "ต้องจัดการ N" tile)
+  // narrow tiles: each meta part on its own line instead of a dot
+  function bento(c) {
     const { sd, items, isToday } = c;
     const tile = (cls, k, v, m, a) => `<${a ? `button type="button" data-a="${a}"` : "div"} class="bt ${cls}"><span class="k"><i class="dot" aria-hidden="true"></i>${k}</span><span class="v">${v}</span>${m ? `<span class="m">${m}</span>` : ""}</${a ? "button" : "div"}>`;
-    const hero = T.length
-      ? `<a class="bt tall hero" href="#todoh"><span class="ico">${ICON}</span><span class="k">ต้องจัดการ</span><span class="v"><span class="big" id="todoN">${T.length}</span> <small>เรื่อง</small></span><span class="m">${T.slice(0, 2).map((x) => x.t.split(" · ")[0]).join(" · ")}</span></a>`
-      : `<div class="bt tall hero calm"><span class="ico">${ICON}</span><span class="k">ต้องจัดการ</span><span class="v">เรียบร้อย</span><span class="m">ไม่มีเรื่องต้องจัดการ</span></div>`;
     const x = cashOf(sd);
     const cash = !sd ? tile("", "เงินสด", "-", "ไม่มีบันทึก") : x == null ? tile("", "เงินสด", "ยังไม่นับ", "")
       : tile(x < 0 ? "bad" : "ok", "เงินสด", x < 0 ? `ขาด ${money(-x)} <small>บาท</small>` : x > 0 ? `เกิน ${money(x)} <small>บาท</small>` : "ครบ", `นับได้ ${baht(sd.cash_counted)}`);
@@ -127,34 +136,34 @@ td+td{font-weight:600}
     const rAt = recvd.length ? hm(recvd.map((i) => i.received_at).sort()[0]) : "", fold = sd && items.length ? "recv" : "";
     const recv = !items.length ? tile("", "ของขาด", "ไม่มีใบสั่ง", "")
       : !recvd.length ? tile(isToday ? "wait" : "", "ของขาด", "ยังไม่รับของ", `ใบสั่ง ${items.length} รายการ`, fold)
-      : short.length ? tile("bad", "ของขาด", `ขาด ${short.length} <small>รายการ</small>`, `รับของ ${rAt} น.`, fold) : tile("ok", "ของขาด", "ครบ", `${items.length} รายการ · ${rAt} น.`, fold);
-    const ot = sd && +sd.ot_hours ? ` · โอที ${+sd.ot_hours} ชม.` : "";
+      : short.length ? tile("bad", "ของขาด", `${short.length} <small>รายการ</small>`, `รับของ ${rAt} น.`, fold) : tile("ok", "ของขาด", "ครบ", `${items.length} รายการ<br>รับ ${rAt} น.`, fold);
+    const ot = sd && +sd.ot_hours ? `<br>โอที ${+sd.ot_hours} ชม.` : "";
     const shop = sd?.status === "holiday" ? tile("", "สถานะร้าน", "ร้านหยุด", "")
       : sd?.closed_at ? tile("ok", "สถานะร้าน", `ปิด ${hm(sd.closed_at)}`, esc(names[sd.closed_by] || "-") + ot)
-      : sd?.opened_at ? tile(isToday ? "wait" : "bad", "สถานะร้าน", isToday ? "เปิดอยู่" : "ไม่ได้ปิดในแอป", `เปิด ${hm(sd.opened_at)} · ${esc(names[sd.opened_by] || "-")}${ot}`)
+      : sd?.opened_at ? tile(isToday ? "wait" : "bad", "สถานะร้าน", isToday ? "เปิดอยู่" : "ไม่ได้ปิดในแอป", `เปิด ${hm(sd.opened_at)}<br>${esc(names[sd.opened_by] || "-")}${ot}`)
       : tile(isToday ? "" : "bad", "สถานะร้าน", "ยังไม่เปิด", isToday ? `เตือนปิด ${esc(remindAt)}` : "ไม่ได้เปิดในแอป");
-    return `<div class="bento">${hero}${cash}${recv}${shop}</div>`;
+    return `<div class="bento trio">${cash}${recv}${shop}</div>`;
   }
 
   async function dayView() {
     const d = D;
     $("bar").innerHTML = `<div class="daynav"><button id="prev" aria-label="วันก่อน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
-      <div class="d"><span>${U.dayName(d)}</span><small>${d === TODAY ? "วันนี้ · " : d === U.plus(TODAY, -1) ? "เมื่อวาน · " : ""}แตะเลือกวัน</small><input id="pd" type="date" value="${d}" max="${TODAY}" aria-label="เลือกวัน"></div>
+      <div class="d"><span>${U.dayName(d)}</span><small>${d === TODAY ? "วันนี้ " : d === U.plus(TODAY, -1) ? "เมื่อวาน " : ""}แตะเลือกวัน</small><input id="pd" type="date" value="${d}" max="${TODAY}" aria-label="เลือกวัน"></div>
       <button id="next" aria-label="วันถัดไป" ${d >= TODAY ? "disabled" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div>`;
     $("prev").onclick = () => go(U.plus(D, -1));
     $("next").onclick = () => go(U.plus(D, 1));
     $("pd").onchange = () => { const v = $("pd").value; if (v) go(v > TODAY ? TODAY : v); };
     $("pd").onclick = () => { try { $("pd").showPicker(); } catch (_) { /* iOS opens the picker on tap anyway */ } };
-    $("out").innerHTML = `<p class="muted">กำลังเปิด…</p>`;
+    $("out").innerHTML = SK.day;
     const c = ctx = await loadDay(d);
     if (d !== D || TAB !== "day") return; // user moved on while loading
     const { sd, sl, cc, items } = c;
     const T = todos(c);
     const todo = `<h3 class="sec" id="todoh">${T.length ? `ต้องจัดการ ${T.length} เรื่อง` : "ต้องจัดการ"}</h3>` + (T.length
-      ? T.map((x) => `<div class="card todo${x.bad ? " bad" : ""}" data-k="${x.key}"><div class="t">${x.t}</div><div class="s">${x.s}</div>${x.a ? `<div class="acts">${x.a}</div>` : ""}</div>`).join("")
-      : `<p class="alldone">ไม่มีเรื่องต้องจัดการ</p>`);
+      ? T.map((x) => `<div class="card todo${x.bad ? " bad" : ""}" data-k="${x.key}"><div class="t">${x.t}</div>${x.b ? `<div class="b">${x.b}</div>` : ""}<div class="s">${x.s}</div>${x.a ? `<div class="acts">${x.a}</div>` : ""}</div>`).join("")
+      : ALLDONE);
     if (!sd) {
-      $("out").innerHTML = bento(c, T) + todo + `<div class="card muted">ไม่มีบันทึกของ${when(d)}</div>` + (c.isToday ? `<a class="btn sm" href="approve.html">ดูใบสั่งพรุ่งนี้</a>` : "");
+      $("out").innerHTML = bento(c) + todo + `<div class="card muted">ไม่มีบันทึกของ${when(d)}</div>` + (c.isToday ? `<a class="btn sm" href="approve.html">ดูใบสั่งพรุ่งนี้</a>` : "");
       return;
     }
     const waste = sl.filter((l) => +l.waste > 0);
@@ -162,20 +171,20 @@ td+td{font-weight:600}
       const o = +(i.qty_final ?? i.qty_proposed) || 0;
       if (i.received_at == null) return `<div class="ln">${esc(prods[i.product_id])} สั่ง ${o} ${esc(unit[i.product_id])} <span class="muted">ยังไม่รับของ</span></div>`;
       const r = +i.qty_received || 0;
-      return `<div class="ln">${esc(prods[i.product_id])} สั่ง ${o} · ได้ ${r} ${esc(unit[i.product_id])}${r < o ? ` <b class="err">ขาด ${o - r} ${esc(unit[i.product_id])}</b>` : ""}</div>`;
+      return `<div class="ln">${esc(prods[i.product_id])} สั่ง ${o} ได้ ${r} ${esc(unit[i.product_id])}${r < o ? ` <b class="err">ขาด ${o - r} ${esc(unit[i.product_id])}</b>` : ""}</div>`;
     }).join("");
     const nShort = items.filter((i) => i.received_at != null && (+i.qty_received || 0) < (+(i.qty_final ?? i.qty_proposed) || 0)).length;
     const nLow = cc.filter((x) => x.status === "low").length, nOut = cc.filter((x) => x.status === "out").length;
     const photos = [sd.open_photo, ...(sd.photos || []), sd.pos_photo].filter(Boolean);
     const fold = (id, head, body) => `<button class="fold" aria-expanded="false" data-f="${id}">${head}</button><div class="fold-body"><div id="f-${id}">${body}</div></div>`;
-    $("out").innerHTML = bento(c, T) + todo
+    $("out").innerHTML = bento(c) + todo
       + (sd.note ? `<div class="card"><div class="k muted">พนักงานฝากบอก</div>${esc(sd.note)}</div>` : "")
       + `<div class="card folds">`
-      + fold("recv", items.length ? `<b>รับของ ${items.length} รายการ${nShort ? ` · ขาด ${nShort}` : ""}</b>` : `<b>ไม่มีใบสั่ง</b>`, recv || `<p class="muted">ไม่มีใบสั่ง</p>`)
+      + fold("recv", items.length ? `<b>รับของ ${items.length} รายการ${nShort ? ` ขาด ${nShort} รายการ` : ""}</b>` : `<b>ไม่มีใบสั่ง</b>`, recv || `<p class="muted">ไม่มีใบสั่ง</p>`)
       + (waste.length ? fold("waste", `<b>ของเสีย ${waste.length} รายการ</b>`, waste.map((l) => `<div class="ln">${esc(prods[l.product_id])} ${l.waste} ${esc(unit[l.product_id])}</div>`).join("")) : "")
-      + fold("cons", `<b>ของใช้ในร้าน${cc.length ? ` · ${[nLow ? `ใกล้หมด ${nLow}` : "", nOut ? `หมด ${nOut}` : ""].filter(Boolean).join(" · ")}` : " · มีครบ"}</b>`,
+      + fold("cons", `<b>ของใช้ในร้าน${cc.length ? ` ${[nLow ? `ใกล้หมด ${nLow} อย่าง` : "", nOut ? `หมด ${nOut} อย่าง` : ""].filter(Boolean).join(" ")}` : " มีครบ"}</b>`,
         cc.map((c) => `<div class="ln">${esc(prods[c.product_id])} <span class="pill" data-tone="${c.status === "out" ? "bad" : "wait"}">${CS[c.status] || esc(c.status)}</span></div>`).join("") || `<p class="muted">มีครบ</p>`)
-      + (photos.length ? fold("pics", `<b>รูปจากร้าน ${photos.length} รูป</b>`, `<p class="muted">กำลังโหลดรูป…</p>`) : "")
+      + (photos.length ? fold("pics", `<b>รูปจากร้าน ${photos.length} รูป</b>`, `<div class="sk-row" style="flex-wrap:wrap;gap:8px;padding:8px 0 12px">${sb("72px", 72, ";--r:10px").repeat(photos.length)}</div>`) : "")
       + `</div>`
       + (c.isToday ? `<a class="btn sm" href="approve.html">ดูใบสั่งพรุ่งนี้</a>` : "")
       + `<button class="btn sm" id="edit">แก้ตัวเลข${c.isToday ? "วันนี้" : "วันนั้น"}</button>`;
@@ -191,8 +200,7 @@ td+td{font-weight:600}
   const gone = (card) => {
     card.classList.add("gone");
     setTimeout(() => { card.remove(); const n = document.querySelectorAll("#out .todo").length; $("todoh").textContent = n ? `ต้องจัดการ ${n} เรื่อง` : "ต้องจัดการ";
-      if ($("todoN")) { $("todoN").textContent = n; if (!n) $("todoN").closest(".bt").classList.add("calm"); }
-      if (!n) $("todoh").insertAdjacentHTML("afterend", `<p class="alldone">ไม่มีเรื่องต้องจัดการ</p>`); }, 200);
+      if (!n) $("todoh").insertAdjacentHTML("afterend", ALLDONE); }, 200);
   };
   const say = (card, text, ok) => { let p = card.querySelector(".say"); if (!p) { p = document.createElement("p"); card.appendChild(p); } p.className = "say " + (ok ? "ok" : "err"); p.textContent = text; };
   $("out").addEventListener("click", async (e) => {
@@ -272,7 +280,7 @@ td+td{font-weight:600}
         <div style="white-space:pre-line">${esc(i.text)}</div>
         <div class="who"><button class="daylink" data-day="${d}">${U.dayName(d)}</button><span>${hm(i.created_at)} น. · ${esc(names[i.created_by] || "-")}</span></div><div>${await thumbs(i.photos)}</div>
         ${i.status === "open" ? `<button class="btn sm" data-i="${i.id}" data-s="ack">รับทราบ</button>` : ""}${i.status !== "closed" ? `<button class="btn sm" data-i="${i.id}" data-s="closed">ปิดเรื่อง</button>` : ""}</div>`;
-      }))).join("") || `<p class="muted">${{ open: "ไม่มีเรื่องใหม่", ack: "ไม่มีเรื่องที่รับทราบค้างอยู่", closed: "ยังไม่มีเรื่องที่ปิดแล้ว" }[CHIP]}</p>`;
+      }))).join("") || EMPTY({ open: "ไม่มีเรื่องใหม่", ack: "ไม่มีเรื่องที่รับทราบค้างอยู่", closed: "ยังไม่มีเรื่องที่ปิดแล้ว" }[CHIP], CHIP === "open" ? "พนักงานแจ้งเรื่องเมื่อไร จะขึ้นที่นี่" : "");
     };
     $("bar").onclick = (e) => { const b = e.target.closest("button[data-c]"); if (b) { CHIP = b.dataset.c; draw(); } };
     $("out").onclick = async (e) => {

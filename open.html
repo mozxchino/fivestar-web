@@ -8,9 +8,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script>
 </head><body ontouchstart="">
-<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>เปิดร้าน</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3 · <span id="d"></span></div></div></header>
-<div id="done" hidden><p class="ok big" id="doneT"></p><div id="next"></div><a class="btn" href="index.html">กลับหน้าหลัก</a></div>
-<div id="form" hidden>
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>เปิดร้าน</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3<span id="d"></span></div></div></header>
+<div class="sk"><span class="vh">กำลังเปิด…</span><div class="card steps"><i class="sk-b" style="--w:54%;--h:18px"></i><i class="sk-b" style="--w:44%;--h:18px;--gap:10px"></i><i class="sk-b" style="--w:40%;--h:14px;--gap:10px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:14px;margin:12px 0"></i><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
+<section id="done" class="done ld" hidden aria-live="polite"><span class="mascot ok-badge"><img src="img/mascot-240.png" alt="" width="80" height="80"></span><h2 id="doneT">เปิดร้านแล้ว</h2><p id="doneS"></p><p class="warm" id="doneW">ขอให้ขายดีทั้งวัน</p><div class="acts"><div id="next"></div><a class="btn home" href="index.html">กลับหน้าหลัก</a></div></section>
+<div id="form" class="ld" hidden>
   <div class="card steps"><p>1. ถ่ายรูปหน้าร้าน</p><p>2. กดปุ่ม เปิดร้าน</p><p class="muted">ไม่มีรูปก็เปิดร้านได้</p></div>
   <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปหน้าร้าน <input id="ph" type="file" accept="image/*" capture="environment" hidden></label>
   <p id="phS" class="muted"></p>
@@ -21,18 +22,18 @@
 (async () => {
   const { supabase } = await App.ready();
   const today = Photo.todayPrefix().slice(0, 10).replaceAll("/", "-");
-  d.textContent = new Date(today + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
+  d.textContent = " · " + new Date(today + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
   const hm = (t) => new Date(t).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" });
   const { data: day } = await supabase.from("shop_days").select("opened_at").eq("date", today).maybeSingle();
-  if (day?.opened_at) { doneT.textContent = "เปิดร้านแล้ว · " + hm(day.opened_at) + " น."; done.hidden = false; UXS.showNext(supabase, next); return; }
+  if (day?.opened_at) { doneS.textContent = "เปิดตอน " + hm(day.opened_at) + " น."; done.hidden = false; UXS.showNext(supabase, next); return; }
   form.hidden = false;
   const shot = []; // 0 or 1 path
-  Photo.picker(supabase, ph, { paths: shot, type: "open", name: "รูปหน้าร้าน", max: 1, status: phS, failText: "ส่งรูปไม่ขึ้น · กดเปิดร้านต่อได้เลย" });
+  Photo.picker(supabase, ph, { paths: shot, type: "open", name: "รูปหน้าร้าน", max: 1, status: phS, failText: "ส่งรูปไม่ขึ้น กดเปิดร้านต่อได้เลย" });
   go.onclick = async () => {
     go.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
     const { error } = await supabase.rpc("open_shop", { photo: shot[0] ?? null });
     if (error) { msg.textContent = "เปิดร้านไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error); msg.className = "err"; go.disabled = false; return; }
-    form.hidden = true; doneT.textContent = "เปิดร้านแล้ว · " + hm(Date.now()) + " น." + (shot[0] ? "" : "\nไม่มีรูปหน้าร้าน"); done.hidden = false; UXS.showNext(supabase, next);
+    form.hidden = true; doneS.textContent = "เปิดตอน " + hm(Date.now()) + " น." + (shot[0] ? "" : "\nไม่มีรูปหน้าร้าน"); done.hidden = false; scrollTo(0, 0); UXS.showNext(supabase, next);
   };
 })();
 </script></body></html>

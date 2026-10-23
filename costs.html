@@ -16,10 +16,11 @@
 </style></head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ต้นทุน/กำไร</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
 <p id="blocked" class="err" hidden></p>
-<div id="app" hidden>
+<div class="sk"><span class="vh">กำลังเปิด…</span><div class="monthnav"><i class="sk-b" style="--w:48px;--h:48px;--r:50%;margin:0"></i><i class="sk-b" style="--w:30%;--h:22px;margin:0 auto"></i><i class="sk-b" style="--w:48px;--h:48px;--r:50%;margin:0"></i></div><p></p><div class="bento"><div class="bt wide"><i class="sk-b" style="--w:46%;--h:14px"></i><i class="sk-b" style="--w:58%;--h:44px;--gap:10px"></i></div><div class="bt "><i class="sk-b" style="--w:40%;--h:14px"></i><i class="sk-b" style="--w:70%;--h:26px;--gap:8px"></i></div><div class="bt "><i class="sk-b" style="--w:40%;--h:14px"></i><i class="sk-b" style="--w:64%;--h:26px;--gap:8px"></i></div><div class="bt wide"><i class="sk-b" style="--w:24%;--h:14px"></i><i class="sk-b" style="--w:44%;--h:26px;--gap:8px"></i><i class="sk-b" style="--w:76%;--h:13px;--gap:8px"></i></div></div><div class="sk-row" style="justify-content:space-between;min-height:52px"><i class="sk-b" style="--w:44%;--h:16px"></i><i class="sk-b" style="--w:64px;--h:36px;--r:999px"></i></div><div class="sk-row" style="justify-content:space-between;min-height:52px"><i class="sk-b" style="--w:44%;--h:16px"></i><i class="sk-b" style="--w:64px;--h:36px;--r:999px"></i></div><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
+<div id="app" class="ld" hidden>
   <div class="monthnav"><button type="button" id="mp" aria-label="เดือนก่อน">‹</button><div class="m" id="ml" aria-live="polite"></div><button type="button" id="mn" aria-label="เดือนถัดไป">›</button></div>
   <p id="saved" class="ok"></p>
-  <div id="sum" class="card muted">กำลังโหลด…</div>
+  <div id="sum" class="bento"><span class="vh">กำลังเปิด…</span><div class="bt wide"><i class="sk-b" style="--w:46%;--h:14px"></i><i class="sk-b" style="--w:58%;--h:44px;--gap:10px"></i></div><div class="bt "><i class="sk-b" style="--w:40%;--h:14px"></i><i class="sk-b" style="--w:70%;--h:26px;--gap:8px"></i></div><div class="bt "><i class="sk-b" style="--w:40%;--h:14px"></i><i class="sk-b" style="--w:64%;--h:26px;--gap:8px"></i></div><div class="bt wide"><i class="sk-b" style="--w:24%;--h:14px"></i><i class="sk-b" style="--w:44%;--h:26px;--gap:8px"></i><i class="sk-b" style="--w:76%;--h:13px;--gap:8px"></i></div></div>
   <div id="todo" class="chips" style="margin-top:12px" hidden></div>
   <details class="fold" id="moref"><summary>ตัวเลขอื่นของเดือน<span class="chip">เปิดดู</span></summary><div id="more" class="card"></div></details>
   <details class="fold" id="prodf"><summary><span>ต้นทุนรายสินค้า <span id="pc" class="muted"></span></span><span class="chip">เปิดดู</span></summary><div id="prod" class="card list"></div></details>
@@ -27,7 +28,7 @@
 </div>
 <dialog id="fs" class="bsheet" aria-labelledby="fsh"><div class="body"><div class="grab"></div>
   <div class="hd"><b id="fsh">กรอกยอดขายและค่าใช้จ่าย</b><button class="x" type="button" aria-label="ปิด" autofocus>✕</button></div>
-  <p class="meta" style="margin:2px 0 0">ใส่เป็นบาท · ช่องว่าง = 0</p>
+  <p class="meta" style="margin:2px 0 0">ใส่เป็นบาท ช่องที่เว้นว่างนับเป็น 0</p>
   <div class="g"><label>ยอดหน้าร้าน (POS ไม่รวมเดลิเวอรี่)<span class="in"><input type="number" inputmode="decimal" id="store_sales"><span class="sfx">บาท</span></span></label><label>ยอด LINE MAN<span class="in"><input type="number" inputmode="decimal" id="lineman_sales"><span class="sfx">บาท</span></span></label>
     <label>ยอด Grab<span class="in"><input type="number" inputmode="decimal" id="grab_sales"><span class="sfx">บาท</span></span></label><label>ยอด Shopee<span class="in"><input type="number" inputmode="decimal" id="shopee_sales"><span class="sfx">บาท</span></span></label>
     <label>ค่าเช่า<span class="in"><input type="number" inputmode="decimal" id="rent"><span class="sfx">บาท</span></span></label><label>ค่าแรง<span class="in"><input type="number" inputmode="decimal" id="wages"><span class="sfx">บาท</span></span></label>
@@ -67,7 +68,7 @@
     const t = (cls, k, v, m) => `<div class="bt ${cls}"><span class="k">${k}</span><span class="v">${money(v)} <small>บาท</small></span>${m ? `<span class="m">${m}</span>` : ""}</div>`;
     $("sum").className = "bento";
     $("sum").innerHTML = `<div class="bt wide hero${r.net >= 0 ? " calm" : ""}"><span class="k">กำไรสุทธิ ${mname(ym())}</span><span class="v"><span class="big">${money(r.net)}</span> <small>บาท</small></span>`
-      + (r.has_inputs ? "" : '<span class="m">ยังไม่กรอกยอดเดือนนี้ · ค่าเช่า ค่าแรง ใช้ตัวเลขประมาณไปก่อน</span>') + `</div>`
+      + (r.has_inputs ? "" : '<span class="m">ยังไม่กรอกยอดเดือนนี้<br>ค่าเช่า ค่าแรง ใช้ตัวเลขประมาณไปก่อน</span>') + `</div>`
       + t("", "ยอดขายรวม", r.revenue) + t("", "ค่า GP แอปส่ง", r.gp_cost)
       + `<button type="button" class="bt wide" id="costT"><span class="k">ต้นทุน</span><span class="v">${money((+r.cpf_cost || 0) + (+r.fixed || 0))} <small>บาท</small></span><span class="m">ค่าของ CPF ${money(r.cpf_cost)} · ค่าใช้จ่ายประจำ ${money(r.fixed)} บาท</span><svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>`;
     $("costT").onclick = () => { $("prodf").open = true; $("prodf").scrollIntoView({ behavior: "smooth", block: "start" }); };
