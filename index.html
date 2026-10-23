@@ -42,11 +42,20 @@
     const svg = (p) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
     const staff = [["open.html","เปิดร้าน","open","ถ่ายรูปหน้าร้าน แล้วกดเปิด"],["receive.html","รับของ","receive","ของ CPF มาถึง นับแล้วกดรับ"],["close.html","ปิดร้าน","close","นับของเหลือ นับเงิน ก่อนกลับ"],["issue.html","แจ้งปัญหา","issue","ของเสีย เครื่องพัง ลูกค้าร้องเรียน"],["holiday.html","ขอหยุด/ลา","holiday","หยุดประจำ ลาป่วย ลากิจ"],["history.html","ประวัติ","history","ย้อนดู 30 วัน"]];
     const owner = [["owner.html","วันนี้","today","เปิดร้าน รับของ ปิดร้าน เงินสด"],["approve.html","อนุมัติใบสั่ง","approve","ตรวจใบสั่งพรุ่งนี้ แล้วส่งให้เซลล์"],["settings.html","ตั้งค่า","settings","พนักงาน สินค้า กลุ่ม LINE"],["costs.html","ต้นทุน/กำไร","costs","สรุปกำไรรายเดือน"],["holiday.html","ขอหยุด/ลา","holiday","วันหยุดและวันลาของพนักงาน"]];
-    const tiles = (list) => { document.getElementById("menu").innerHTML = list
-        .map(([h,t,ic,s],i) => `<a class="btn tile ${i===0?'primary':''}" href="${h}"><span class="ico">${svg(I[ic])}</span><span class="t">${t}<small>${s}</small></span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></a>`).join(""); };
+    const tiles = (list, top = "") => { document.getElementById("menu").innerHTML = top + list
+        .map(([h,t,ic,s],i) => `<a class="btn tile ${i===0&&!top?'primary':''}" href="${h}"><span class="ico">${svg(I[ic])}</span><span class="t">${t}<small>${s}</small></span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></a>`).join(""); };
     // round 6: a manager gets the owner hub without ต้นทุน/กำไร and with ตั้งค่า = วันหยุดพนักงาน only
     const MGR = me.role === "manager", mine = (list) => MGR ? list.filter((r) => r[0] !== "costs.html").map((r) => r[0] === "settings.html" ? [r[0], "พนักงาน", "staff", "วันหยุดของพนักงาน", ...r.slice(4)] : r) : list;
-    if (me.role === "owner" || MGR) { try { await ownerHub(); } catch (e) { console.error("owner hub", e); document.getElementById("title").textContent = "เลือกเมนู"; tiles(mine(owner)); } return; } // read failed → plain menu
+    // qa3 #2: a failed read never looks like "nothing to do" · say เปิดไม่ขึ้น + ลองอีกครั้ง, keep the plain menu under it
+    const OWN = me.role === "owner" || MGR, hub = OWN ? ownerHub : staffHome;
+    const home = async () => { try { await hub(); } catch (e) { console.error("home", e); failed(e); } };
+    function failed(e) {
+      const title = document.getElementById("title");
+      title.classList.add("ux-hello"); title.innerHTML = `สวัสดี ${UXS.esc(me.name)}<small>${UXS.thd(UXS.today(), { weekday: "long" }).replace(/^วัน(\S+?)ที่ /, "$1 ")}</small>`;
+      tiles(OWN ? mine(owner) : staff, `<p class="err" role="alert">เปิดไม่ขึ้น: ${UXS.esc(App.errText(e))}<button type="button" class="btn" id="retry">ลองอีกครั้ง</button></p>`);
+      document.getElementById("retry").onclick = (ev) => { ev.currentTarget.disabled = true; ev.currentTarget.textContent = "กำลังเปิด…"; home(); };
+    }
+    await home(); return;
     async function ownerHub() {
     // round 4: the owner menu is a hub · each row says what waits there right now · waiting rows first · the most urgent one leads (soft red)
     const { esc, thd, hm } = UXS, today = UXS.today(), tmr = UXS.back(-1);
@@ -57,7 +66,7 @@
       supabase.from("shop_days").select("status,opened_at,closed_at").eq("date", today).maybeSingle(),
       supabase.from("settings").select("key,value").in("key", ["holidays", "auto_send_at"]),
     ]);
-    for (const r of [iss, lv, od, sd]) if (r.error) throw r.error;
+    for (const r of [iss, lv, od, sd, hol]) if (r.error) throw r.error;
     const nIss = (iss.data || []).filter((i) => i.status === "open").length;
     const nLv = (lv.data || []).filter((l) => l.status === "pending" && l.date >= today).length;
     const S = Object.fromEntries((hol.data || []).map((x) => [x.key, x.value])), d = sd.data || {}, shut = d.status === "holiday" || (Array.isArray(S.holidays) && S.holidays.includes(today));
@@ -78,7 +87,6 @@
     // one lead: the most urgent waiting row, or วันนี้ when nothing waits
     document.getElementById("menu").innerHTML = list.map(([h, t, ic, st, tone, rank], i) => `<a class="btn tile ux-hub${i === 0 ? " primary" : ""}${rank != null ? " waits" : ""}" href="${h}"><span class="ico">${svg(I[ic])}</span><span class="t">${t}<small data-tone="${tone}">${st}</small></span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></a>`).join("");
     }
-    try { await staffHome(); } catch (e) { console.error("staff home", e); document.getElementById("title").textContent = "เลือกเมนู"; tiles(staff); } // read failed → plain menu
     async function staffHome() {
     // staff: today's real status → strip + next-task tile · "เรื่องของฉัน" (own issues · upcoming leave · last day)
     const { esc, thd, hm } = UXS, today = UXS.today();
@@ -88,6 +96,7 @@
       supabase.from("leave_requests").select("id,date,type,status,requested_at").eq("user_id", me.userId).gte("date", UXS.back(30)).neq("status", "cancelled").order("date").limit(50),
       supabase.from("shop_days").select("date,status,closed_at,cash_expected,cash_counted").lt("date", today).order("date", { ascending: false }).limit(1).maybeSingle(),
     ]);
+    for (const r of [iss, lv, last]) if (r.error) throw r.error; // qa3 #2: no "ยังไม่มีเรื่องที่แจ้ง" when the read failed
     const title = document.getElementById("title");
     title.classList.add("ux-hello"); title.innerHTML = `สวัสดี ${esc(me.name)}<small>${thd(today, { weekday: "long" }).replace(/^วัน(\S+?)ที่ /, "$1 ")} · งานวันนี้</small>`;
     const n = st.next, d = st.day || {}, rest = n.key === "done" || n.key === "holiday";
