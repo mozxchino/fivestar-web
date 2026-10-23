@@ -89,6 +89,11 @@
       + `<h2>คนที่ใช้แอปอยู่</h2>` + (us || []).filter((x) => x.active).map(u).join("")
       + (off.length ? `<h2>ปิดสิทธิ์แล้ว (${off.length} คน)</h2>` + off.map(u).join("") : "");
   }
+  // LINE menu follows the role: manager → เมนูผู้จัดการ · staff / ปิดสิทธิ์ → เมนูร้าน (the role itself is already saved)
+  async function syncMenu(id) {
+    const r = await App.fn("notify", { menu_user: id }).catch((e) => ({ error: e }));
+    if (!r.ok) UXM.toast("บันทึกแล้ว\nเมนู LINE ของคนนี้ยังไม่เปลี่ยน", { ms: 4000 });
+  }
   $("staff").onclick = async (ev) => {
     const b = ev.target.closest("button"); if (!b) return;
     if (b.dataset.sum) return openSum(b.dataset.sum, b.dataset.n);
@@ -100,6 +105,7 @@
       return UXM.later(on ? `ตั้ง ${b.dataset.n} เป็นผู้จัดการแล้ว` : `${b.dataset.n} กลับเป็นพนักงานแล้ว`, async () => {
         const r2 = await supabase.rpc("set_manager", { p_user_id: b.dataset.id, p_on: on });
         if (r2.error) UXM.toast("บันทึกไม่ได้\n" + App.errText(r2.error), { ms: 4000 });
+        else await syncMenu(b.dataset.id);
         staff();
       }, () => { [pill.textContent] = was; if (was[1]) pill.dataset.tone = was[1]; else delete pill.dataset.tone; k.innerHTML = was[2]; b.disabled = false; });
     }
@@ -114,6 +120,7 @@
       return UXM.later(off ? `ปิดสิทธิ์ ${b.dataset.n} แล้ว` : `เปิดสิทธิ์ ${b.dataset.n} คืนแล้ว`, async () => {
         const r2 = off ? await supabase.rpc("deactivate_user", { p_user_id: b.dataset.off }) : await supabase.from("users").update({ active: true }).eq("id", b.dataset.on);
         if (r2.error) UXM.toast("บันทึกไม่ได้\n" + App.errText(r2.error), { ms: 4000 });
+        else await syncMenu(b.dataset.off || b.dataset.on);
         staff();
       }, () => { box.hidden = false; });
     } else return;
