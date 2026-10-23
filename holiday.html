@@ -52,8 +52,8 @@
       }, load);
     };
     async function load() {
-      const { data: c } = await supabase.rpc("leave_counters");
-      cnt.innerHTML = `เดือนนี้หยุดไปแล้ว <b class="num">${+(c?.month_days ?? 0)} วัน</b><br><span class="muted">หยุดประจำสัปดาห์นี้ ใช้แล้ว ${+(c?.week_used ?? 0)} จาก 1 วัน</span>`;
+      const { data: c, error: cErr } = await supabase.rpc("leave_counters");
+      cnt.innerHTML = cErr ? `<span class="err">นับวันหยุดไม่ขึ้น ลองเปิดหน้าใหม่</span>` : `เดือนนี้หยุดไปแล้ว <b class="num">${+(c?.month_days ?? 0)} วัน</b><br><span class="muted">หยุดประจำสัปดาห์นี้ ใช้แล้ว ${+(c?.week_used ?? 0)} จาก 1 วัน</span>`;
       const { data, error } = await supabase.from("leave_requests").select("id, user_id, date, type, status, users(name)")
         .gte("date", today.slice(0, 8) + "01").lte("date", plus(31)).order("date");
       if (error) { list.innerHTML = `<p class="err">เปิดไม่ขึ้น: ${App.errText(error)}</p>`; return; }

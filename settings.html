@@ -9,6 +9,7 @@
 <script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js"></script>
 <style>
 .g{align-items:end}
+#hd{min-height:44px} /* qa: the add-holiday field sits in a plain row (not a label), so the field itself is the tap target */
 .g label.chk{display:flex;align-items:center;gap:10px;min-height:var(--field);margin:0;align-self:end;font-size:16px;color:var(--fg)}
 </style></head><body class="grouped" ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ตั้งค่า</h1><div class="sub">สำหรับเจ้าของ</div></div>
@@ -44,6 +45,7 @@
   tabs.forEach((b) => b.onclick = () => { tabs.forEach((x) => { x.classList.toggle("on", x === b); $(x.dataset.t).hidden = x !== b; }); });
   const qs = new URLSearchParams(location.search);
   const fail = (e) => alert("บันทึกไม่ได้\n" + App.errText(e));
+  const money = (n) => Number(n).toLocaleString("th-TH", { maximumFractionDigits: 2 }); // qa: openSum (manager too) needs it before the manager return
 
   // generic save-on-blur for any input with data-t/data-id/data-f
   document.addEventListener("change", async (ev) => {
@@ -63,8 +65,9 @@
   // ---- พนักงาน
   async function staff() {
     if (MGR) return staffMgr();
-    const { data: pend } = await supabase.from("pending_users").select("*").order("first_seen");
-    const { data: us } = await supabase.from("users").select("*").order("name");
+    const { data: pend, error: e1 } = await supabase.from("pending_users").select("*").order("first_seen");
+    const { data: us, error: e2 } = await supabase.from("users").select("*").order("name");
+    if (e1 || e2) { $("staff").innerHTML = `<p class="err">เปิดรายชื่อไม่ขึ้น ลองเปิดหน้าใหม่\n${E(App.errText(e1 || e2))}</p>`; return; }
     // owner row: name + เจ้าของ only (no pay fields, can't be switched off · DB guard 0024)
     // mock ก: one grouped list per person · label left, value right, unit after the number · save on change (toast at the bottom)
     const ci = (id, f, val, label, unit, type = "number") => `<label class="cell"><span class="k">${label}</span><input class="${type === "number" ? "num-in" : ""}" type="${type}" ${type === "number" ? 'inputmode="decimal" step="any" placeholder="ยังไม่ใส่"' : ""} value="${E(val)}" data-t="users" data-id="${id}" data-f="${f}" aria-label="${label}">${unit ? `<span class="unit">${unit}</span>` : ""}</label>`;
@@ -164,8 +167,7 @@
   const KIND = { cpf: "ของขาย (CPF)", self: "ซื้อเอง", consumable: "ของใช้ในร้าน" };
   // เพิ่มสินค้า: one choice sets kind + supplier together (the DB needs both)
   const ADDK = [["cpf|cpf", "ของขาย (CPF)"], ["self|self", "ของขาย (ซื้อเอง)"], ["consumable|cpf", "ของใช้ในร้าน (สั่ง CPF)"], ["consumable|self", "ของใช้ในร้าน (ซื้อเอง)"]];
-  const money = (n) => Number(n).toLocaleString("th-TH", { maximumFractionDigits: 2 });
-  const { data: ps0 } = await supabase.from("products").select("*").order("sort");
+  const { data: ps0, error: psErr } = await supabase.from("products").select("*").order("sort");
   let ps = ps0 || [], cur = null;
   const isCons = (p) => p.kind === "consumable";
   const noCost = (p) => p.active && !isCons(p) && p.cost_price == null;
@@ -179,7 +181,7 @@
     // ponytail: search looks through every product (ignores the chip) so a hit is never hidden by the wrong filter
     const list = q ? ps.filter((p) => p.name.toLowerCase().includes(q)) : ps.filter(FIL[pf][1]);
     $("plist").innerHTML = list.map((p) => `<button type="button" class="prow${p.active ? "" : " off"}" data-id="${p.id}"><div class="grow"><div class="nm">${E(p.name)}</div><div class="meta">${pmeta(p)}</div></div><span class="go" aria-hidden="true">›</span></button>`).join("")
-      || `<p class="muted">${q ? "ไม่เจอสินค้าชื่อนี้" : pf === "nocost" ? "ใส่ราคาทุนครบแล้ว ✓" : "ไม่มีสินค้า"}</p>`;
+      || `<p class="${psErr ? "err" : "muted"}">${psErr ? "เปิดรายการสินค้าไม่ขึ้น ลองเปิดหน้าใหม่" : q ? "ไม่เจอสินค้าชื่อนี้" : pf === "nocost" ? "ใส่ราคาทุนครบแล้ว ✓" : "ไม่มีสินค้า"}</p>`;
   }
   $("q").oninput = () => drawProd();
   $("pf").onclick = (ev) => { const b = ev.target.closest("[data-f]"); if (!b) return; pf = b.dataset.f; $("q").value = ""; drawProd(); };
@@ -243,7 +245,11 @@
   drawProd();
 
   // ---- ระบบ
-  const { data: st } = await supabase.from("settings").select("key,value");
+  const { data: st, error: stErr } = await supabase.from("settings").select("key,value");
+  if (stErr) { // qa: saving blank fields here would wipe the shop settings
+    $("sys").innerHTML = `<p class="err">เปิดตั้งค่าร้านไม่ขึ้น ลองเปิดหน้าใหม่\n${E(App.errText(stErr))}</p>`;
+    staff(); const t1 = document.querySelector(`.tabs [data-t="${qs.get("tab")}"]`); if (t1) t1.click(); return;
+  }
   const S = Object.fromEntries((st || []).map((s) => [s.key, s.value]));
   const { data: gs } = await supabase.from("line_sources").select("source_id,display_name").eq("source_type", "group");
   let hol = [...(S.holidays || [])].sort();

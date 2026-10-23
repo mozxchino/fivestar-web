@@ -45,7 +45,9 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   async function findOrder() {
     let r = supabase.from("orders").select("id,status,for_date,sent_at");
     r = orderId ? r.eq("id", orderId) : r.eq("for_date", tomorrow).in("status", ["proposed", "approved", "failed", "sent"]).order("created_at", { ascending: false });
-    return (await r.limit(1).maybeSingle()).data;
+    const { data, error } = await r.limit(1).maybeSingle();
+    if (error) throw error; // qa: shown as "เปิดไม่ขึ้น", not "ยังไม่มีใบสั่ง"
+    return data;
   }
   order = await findOrder();
   if (!order) {

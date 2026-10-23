@@ -45,10 +45,12 @@
   if (UXS.only(me, ["staff", "owner"], "หน้านี้สำหรับพนักงานในร้าน", "ผู้จัดการดูงานของร้านได้ที่หน้าวันนี้", "owner.html", "ไปหน้าวันนี้")) return;
   const today = Photo.todayPrefix().slice(0, 10).replaceAll("/", "-");
   d.textContent = " · " + new Date(today + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
-  const { data: o } = await supabase.from("orders").select("id").eq("for_date", today).in("status", ["sent", "failed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const { data: o, error: oErr } = await supabase.from("orders").select("id").eq("for_date", today).in("status", ["sent", "failed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const cant = (e) => { none.hidden = false; const p = none.querySelector("p"); p.className = "err"; p.textContent = "เปิดใบสั่งไม่ขึ้น\n" + App.errText(e); none.querySelector("a").hidden = true; }; // qa: not "no delivery" when the read failed
+  if (oErr) return cant(oErr);
   if (!o) { none.hidden = false; return; }
   const { data: items, error } = await supabase.from("order_items").select("product_id,qty_proposed,qty_final,qty_received,received_at,products(name,unit,pack_size,sort)").eq("order_id", o.id);
-  if (error) { none.hidden = false; none.querySelector("p").textContent = "เปิดใบสั่งไม่ขึ้น: " + App.errText(error); return; }
+  if (error) return cant(error);
   items.sort((a, b) => (a.products?.sort ?? 0) - (b.products?.sort ?? 0));
   const got = items.some((i) => i.received_at);
   if (got) { st.textContent = "รับของแล้ว\nแก้ตัวเลขได้จนกว่าจะกดปิดร้าน"; }

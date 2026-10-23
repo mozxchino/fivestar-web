@@ -52,9 +52,9 @@
       if (g) probs.push(`<span class="${g < 0 ? "err" : ""}">เงินสด${g < 0 ? "ขาด" : "เกิน"} ${baht(g)}</span>`);
       if (shortD.has(d.date)) probs.push('<span class="err">ของมาไม่ครบ</span>');
       if (waste[d.date]) probs.push(`ของเสีย ${waste[d.date]} อย่าง`);
-      if (probs.length) return probs.length > 1 ? `${probs[0]} · อีก ${probs.length - 1} เรื่อง` : probs[0];
+      if (probs.length) return probs.length > 1 ? `${probs[0]} และอีก ${probs.length - 1} เรื่อง` : probs[0];
       const t = d.closed_at ? `ปิด ${hm(d.closed_at)}` : d.opened_at ? `เปิด ${hm(d.opened_at)}` : "";
-      return [g === 0 ? "เงินสดครบ" : "", t].filter(Boolean).join(" · ");
+      return [g === 0 ? "เงินสดครบ" : "", t].filter(Boolean).join(" ");
     };
     let R = 7, N = 5, only = false, pickD = "";
     const inRange = () => data.filter((d) => R === 30 || d.date > back(7));
@@ -106,6 +106,6 @@
       } catch (err) { h += `<p class="err">เปิดไม่ขึ้น: ${App.errText(err)}</p>`; }
       body.innerHTML = h;
     }, true);
-  } catch (e) { if (e.message !== "denied") document.getElementById("msg").textContent = "เปิดไม่ขึ้น: " + App.errText(e); }
+  } catch (e) { if (e.message !== "denied") { const m = document.getElementById("msg"); m.className = "err ld"; m.textContent = "เปิดไม่ขึ้น\n" + App.errText(e); } }
 })();
 </script></body></html>

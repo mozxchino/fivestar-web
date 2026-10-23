@@ -83,7 +83,7 @@ td+td{font-weight:600}
   let ctx = null; // last loaded day (used by the edit panel)
   async function loadDay(d) {
     const isToday = d === TODAY;
-    const [{ data: days }, { data: sl }, { data: cc }, { data: od }, { data: iss }, { data: lv }] = await Promise.all([
+    const res = await Promise.all([
       supabase.from("shop_days").select("*").gte("date", U.plus(d, -7)).lte("date", d).order("date", { ascending: false }),
       supabase.from("stock_lines").select("*").eq("date", d),
       supabase.from("consumable_checks").select("product_id,status").eq("date", d).neq("status", "ok"),
@@ -91,6 +91,8 @@ td+td{font-weight:600}
       supabase.from("issues").select("id,date,type,text,photos,created_by,created_at,status").eq("status", "open").order("created_at", { ascending: false }),
       isToday ? supabase.from("leave_requests").select("id,user_id,date,type,note,status,users:user_public(name)").gte("date", TODAY.slice(0, 8) + "01").lte("date", U.plus(TODAY, 31)).order("date") : Promise.resolve({ data: [] }),
     ]);
+    const bad = res.find((r) => r.error); if (bad) throw bad.error; // qa: a failed read must not read as "ไม่มีเรื่องต้องจัดการ"
+    const [{ data: days }, { data: sl }, { data: cc }, { data: od }, { data: iss }, { data: lv }] = res;
     const byDate = Object.fromEntries((days || []).map((x) => [x.date, x]));
     return { d, isToday, sd: byDate[d] || null, yday: byDate[U.plus(d, -1)] || null, days: days || [], sl: sl || [], cc: cc || [], items: od?.order_items || [],
       iss: (iss || []).filter((i) => i.status === "open" && (isToday || (i.date || "").slice(0, 10) === d)), lv: lv || [] };
@@ -161,7 +163,7 @@ td+td{font-weight:600}
     $("pd").onchange = () => { const v = $("pd").value; if (v) go(v > TODAY ? TODAY : v); };
     $("pd").onclick = () => { try { $("pd").showPicker(); } catch (_) { /* iOS opens the picker on tap anyway */ } };
     $("out").innerHTML = SK.day;
-    const c = ctx = await loadDay(d);
+    let c; try { c = ctx = await loadDay(d); } catch (e) { if (d === D && TAB === "day") $("out").innerHTML = `<p class="err">เปิดไม่ขึ้น แตะ อัปเดต เพื่อลองใหม่\n${esc(App.errText(e))}</p>`; return; }
     if (d !== D || TAB !== "day") return; // user moved on while loading
     const { sd, sl, cc, items } = c;
     const T = todos(c);
