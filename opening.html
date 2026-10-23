@@ -1,0 +1,60 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>นับสต็อกตั้งต้น</title><meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="lib/ui.css">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-motion.js"></script>
+<style>.sheet .grid { grid-template-columns: minmax(0, 1fr) 64px 64px; } #dS { white-space: pre-line; }</style>
+</head><body ontouchstart="">
+<header class="topbar"><a class="back" href="settings.html?tab=sys" aria-label="กลับตั้งค่า"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>นับสต็อกตั้งต้น</h1><div class="sub">สำหรับเจ้าของ</div></div></header>
+<p id="blocked" class="err" hidden></p>
+<div class="sk"><span class="vh">กำลังเปิด…</span><i class="sk-b" style="--w:100%;--h:52px;--r:14px;margin:12px 0"></i><i class="sk-b" style="--w:100%;--h:68px"></i><i class="sk-b" style="--w:100%;--h:68px"></i><i class="sk-b" style="--w:100%;--h:68px"></i></div>
+<div id="form" class="ld" hidden>
+  <div class="card steps"><p>1. นับของในตู้ทุกอย่างก่อนเปิดร้าน</p><p>2. กรอกจำนวนสดและสุก</p><p>3. กด บันทึกยอดนับ</p><p class="muted">ตัวเลขนี้เป็น ยกมา ของวันที่เลือก แทนใบเก่าของเจ้าของเดิม</p></div>
+  <label class="cell"><span class="k">ยกมาของวันที่</span> <input type="date" id="d"></label>
+  <p id="dS" class="muted"></p>
+  <div class="sheet">
+    <div class="grid meta sheet-head"><div>สินค้า</div><div>สด</div><div>สุก</div></div>
+    <div id="lines"></div>
+  </div>
+  <div class="sticky"><button id="go" class="btn primary">บันทึกยอดนับ</button><p id="msg" class="muted"></p></div>
+</div>
+<script>
+(async () => {
+  const $ = (i) => document.getElementById(i);
+  const E = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const { supabase, me } = await App.ready();
+  if (me.role !== "owner") { $("blocked").hidden = false; $("blocked").textContent = "หน้านี้สำหรับเจ้าของ"; return; }
+  const today = Photo.todayPrefix().slice(0, 10).replaceAll("/", "-");
+  const plus = (n) => new Date(Date.parse(today + "T00:00:00Z") + n * 864e5).toISOString().slice(0, 10);
+  $("d").value = today; $("d").min = today; $("d").max = plus(7);
+  const { data: prods, error } = await supabase.from("products").select("id,name,unit").eq("active", true).in("kind", ["cpf", "self"]).order("sort");
+  if (error) throw error;
+  $("lines").innerHTML = prods.map((p) => `<div class="grid" data-id="${p.id}"><div class="nm">${E(p.name)}<div class="meta">${E(p.unit)}</div></div>
+    <input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rf" placeholder="ใส่" aria-label="${E(p.name)} สด"><input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rc" placeholder="0" aria-label="${E(p.name)} สุก"></div>`).join("");
+  // a re-count shows what was saved for that day; a day with no rows yet starts blank
+  const load = async () => {
+    const { data: ls } = await supabase.from("stock_lines").select("product_id,open_fresh,open_cooked").eq("date", $("d").value);
+    const L = Object.fromEntries((ls || []).map((l) => [l.product_id, l]));
+    document.querySelectorAll("#lines .grid").forEach((g) => { const l = L[g.dataset.id];
+      g.querySelector(".rf").value = l ? +l.open_fresh : ""; g.querySelector(".rc").value = l && +l.open_cooked ? +l.open_cooked : ""; });
+    $("dS").textContent = ls?.length ? "วันนั้นมียกมาอยู่แล้ว\nบันทึกแล้วจะแทนของเดิม" : "";
+  };
+  $("d").onchange = load; await load();
+  document.querySelector(".sk").remove(); $("form").hidden = false;
+  $("go").onclick = async () => {
+    const rows = [...document.querySelectorAll("#lines .grid")];
+    const left = rows.filter((g) => g.querySelector(".rf").value === "").length;
+    if (left && !confirm(`ยังไม่ได้กรอกสด ${left} อย่าง บันทึกเป็น 0 เลยไหม?`)) return;
+    const items = rows.map((g) => ({ product_id: g.dataset.id, fresh: +g.querySelector(".rf").value || 0, cooked: +g.querySelector(".rc").value || 0 }));
+    $("go").disabled = true; $("msg").className = "muted"; $("msg").textContent = "กำลังบันทึก…";
+    const { error } = await supabase.rpc("set_opening_stock", { d: $("d").value, items });
+    $("go").disabled = false;
+    if (error) { $("msg").className = "err"; $("msg").textContent = "บันทึกไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error); return; }
+    $("msg").textContent = ""; UXM.toast("บันทึกยอดนับแล้ว ✓"); load();
+  };
+})().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น: " + App.errText(e); } });
+</script></body></html>

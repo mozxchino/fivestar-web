@@ -9,6 +9,7 @@
 <script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js"></script>
 <style>
 .g{align-items:end}
+a.cell{text-decoration:none;color:inherit}
 #hd{min-height:44px} /* qa: the add-holiday field sits in a plain row (not a label), so the field itself is the tap target */
 .g label.chk{display:flex;align-items:center;gap:10px;min-height:var(--field);margin:0;align-self:end;font-size:16px;color:var(--fg)}
 </style></head><body class="grouped" ontouchstart="">
@@ -261,6 +262,7 @@
   const gp = (id, label) => `<label class="cell"><span class="k">${label}</span><input class="num-in" type="number" inputmode="decimal" step="any" min="0" id="${id}" value="${E(S[id])}" placeholder="ยังไม่ใส่"><span class="unit">%</span></label>`;
   // mock ก (iOS grouped): every setting is a row · pickers open the native list · one red save in the glass bar
   $("sys").innerHTML = `<h2>ร้าน</h2><div class="gl"><label class="cell"><span class="k">ชื่อร้าน</span><input type="text" id="shop" value="${E(S.shop_name)}"></label></div><p class="gf">ชื่อนี้ขึ้นหัวใบสั่ง</p>
+    <h2>วันรับร้าน</h2><div class="gl"><a class="cell nav" href="opening.html"><span class="k">นับสต็อกตั้งต้น<small>กรอกของที่นับได้ เป็นยกมาของวันแรก</small></span>${chev}</a></div>
     <h2>เวลา</h2><div class="gl"><label class="cell"><span class="k">เตือนปิดร้านตอน</span><input type="time" id="rem" value="${E(S.remind_at)}"></label><label class="cell"><span class="k">แอปส่งใบสั่งตอน</span><input type="time" id="auto" value="${E(S.auto_send_at)}"></label></div>
     <p class="gf">ถ้าไม่กดส่ง แอปส่งใบสั่งให้เซลล์ตามเวลานี้</p>
     <h2>กลุ่ม LINE</h2><div class="gl"><label class="cell nav"><span class="k">กลุ่มสั่งของ<small>มีเซลล์อยู่</small></span><span class="v" data-for="sg"></span>${chev}${sel("sg", S.sales_group_id)}</label>
