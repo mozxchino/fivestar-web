@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-data.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-data.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js"></script>
 <style>
 .g{align-items:end}
 .g label.chk{display:flex;align-items:center;gap:10px;min-height:var(--field);margin:0;align-self:end;font-size:16px;color:var(--fg)}
@@ -20,7 +20,6 @@
   <section id="prod" hidden>
     <div class="search"><input type="text" id="q" placeholder="ค้นหาสินค้า เช่น จ๊อ" aria-label="ค้นหาสินค้า" enterkeyhint="search"><button class="btn sm" id="add">+ เพิ่มสินค้า</button></div>
     <div id="pf" class="chips" style="margin-top:10px"></div>
-    <p id="pmsg" class="ok"></p>
     <div id="plist" class="card list"></div>
   </section>
   <section id="sys" hidden></section>
@@ -47,7 +46,7 @@
     const v = el.type === "checkbox" ? el.checked : el.value === "" ? null : el.type === "number" || el.inputMode === "decimal" ? Number(el.value) : el.value;
     const { error } = await supabase.from(t).update({ [f]: v }).eq("id", id);
     if (error) return fail(error);
-    const fl = el.closest(".card, .person").querySelector(".flash"); fl.classList.add("on"); setTimeout(() => fl.classList.remove("on"), 1500);
+    UXM.toast("บันทึกแล้ว ✓"); // ก4: one toast instead of the flash under the group
   });
 
   // ---- พนักงาน
@@ -55,17 +54,16 @@
     const { data: pend } = await supabase.from("pending_users").select("*").order("first_seen");
     const { data: us } = await supabase.from("users").select("*").order("name");
     // owner row: name + เจ้าของ only (no pay fields, can't be switched off · DB guard 0024)
-    // mock ก: one grouped list per person · label left, value right, unit after the number · save on change (flash under the group)
+    // mock ก: one grouped list per person · label left, value right, unit after the number · save on change (toast at the bottom)
     const ci = (id, f, val, label, unit, type = "number") => `<label class="cell"><span class="k">${label}</span><input class="${type === "number" ? "num-in" : ""}" type="${type}" ${type === "number" ? 'inputmode="decimal" step="any" placeholder="ยังไม่ใส่"' : ""} value="${E(val)}" data-t="users" data-id="${id}" data-f="${f}" aria-label="${label}">${unit ? `<span class="unit">${unit}</span>` : ""}</label>`;
     const head = (x, pill) => `<div class="cell has-av${x.active ? "" : " dim"}"><span class="av${x.active ? "" : " off"}" aria-hidden="true">${E((x.name || "?").slice(0, 1).toUpperCase())}</span><span class="k name">${E(x.name)}</span>${pill}</div>`;
     const u = (x) => x.role === "owner" ? `<div class="gl">${head(x, '<span class="pill">เจ้าของ</span>')}</div>`
-      : !x.active ? `<div class="gl">${head(x, `<button class="txt-btn" type="button" data-on="${x.id}">เปิดสิทธิ์คืน</button>`)}</div>`
+      : !x.active ? `<div class="gl">${head(x, `<button class="txt-btn" type="button" data-on="${x.id}" data-n="${E(x.name)}">เปิดสิทธิ์คืน</button>`)}</div>`
       : `<div class="person"><div class="gl">${head(x, '<span class="pill">พนักงาน</span>')}
       ${ci(x.id, "salary_month", x.salary_month, "เงินเดือน", "บาท")}${ci(x.id, "off_days_per_month", x.off_days_per_month, "หยุดได้", "วัน/เดือน")}
       ${ci(x.id, "std_hours_per_day", x.std_hours_per_day, "ทำงาน", "ชม./วัน")}${ci(x.id, "ot_rate_hour", x.ot_rate_hour, "โอที", "บาท/ชม.")}
       ${ci(x.id, "started_at", x.started_at, "เริ่มงานวันที่", "", "date")}
-      <button class="cell act danger" type="button" data-off="${x.id}" data-n="${E(x.name)}">ปิดสิทธิ์ใช้แอป</button></div>
-      <p class="gf"><span class="flash">บันทึกแล้ว ✓</span></p></div>`;
+      <button class="cell act danger" type="button" data-off="${x.id}" data-n="${E(x.name)}">ปิดสิทธิ์ใช้แอป</button></div></div>`;
     const off = (us || []).filter((x) => !x.active);
     $("staff").innerHTML = `<h2>คนขอใช้แอป</h2>` + ((pend || []).map((p) => `<div class="card gl" data-src="${E(p.source_id)}"><label class="cell"><span class="k">ชื่อ</span><input type="text" value="${E(p.display_name)}" placeholder="ชื่อที่เรียกในร้าน" aria-label="ชื่อที่เรียกในร้าน"></label>
       <button class="cell act" type="button" data-ok><span class="k">อนุมัติเป็นพนักงาน</span></button></div>`).join("") || `<p class="gf">ไม่มีคนขอ</p>`)
@@ -79,11 +77,14 @@
       const c = b.closest(".card"), name = c.querySelector("input").value.trim();
       if (!name) return fail("ใส่ชื่อก่อน");
       r = await supabase.rpc("approve_user", { p_line_user_id: c.dataset.src, p_name: name, p_role: "staff" });
-    } else if (b.dataset.off) {
-      if (!confirm("ปิดสิทธิ์ใช้แอปของ " + b.dataset.n + " ใช่ไหม?\nเขาจะเปิดแอปไม่ได้อีก")) return;
-      r = await supabase.rpc("deactivate_user", { p_user_id: b.dataset.off });
-    } else if (b.dataset.on) {
-      r = await supabase.from("users").update({ active: true }).eq("id", b.dataset.on);
+    } else if (b.dataset.off || b.dataset.on) {
+      // ง1: no confirm · the person leaves the list now, the change runs after 5 s unless "เลิกทำ" (both ways can be switched back)
+      const box = b.closest(".person") || b.closest(".gl"), off = !!b.dataset.off; box.hidden = true;
+      return UXM.later(off ? `ปิดสิทธิ์ ${b.dataset.n} แล้ว` : `เปิดสิทธิ์ ${b.dataset.n} คืนแล้ว`, async () => {
+        const r2 = off ? await supabase.rpc("deactivate_user", { p_user_id: b.dataset.off }) : await supabase.from("users").update({ active: true }).eq("id", b.dataset.on);
+        if (r2.error) UXM.toast("บันทึกไม่ได้\n" + App.errText(r2.error), { ms: 4000 });
+        staff();
+      }, () => { box.hidden = false; });
     } else return;
     if (r.error) return fail(r.error);
     staff();
@@ -110,7 +111,7 @@
     $("plist").innerHTML = list.map((p) => `<button type="button" class="prow${p.active ? "" : " off"}" data-id="${p.id}"><div class="grow"><div class="nm">${E(p.name)}</div><div class="meta">${pmeta(p)}</div></div><span class="go" aria-hidden="true">›</span></button>`).join("")
       || `<p class="muted">${q ? "ไม่เจอสินค้าชื่อนี้" : pf === "nocost" ? "ใส่ราคาทุนครบแล้ว ✓" : "ไม่มีสินค้า"}</p>`;
   }
-  $("q").oninput = () => { $("pmsg").textContent = ""; drawProd(); };
+  $("q").oninput = () => drawProd();
   $("pf").onclick = (ev) => { const b = ev.target.closest("[data-f]"); if (!b) return; pf = b.dataset.f; $("q").value = ""; drawProd(); };
   const sheet = UXD.sheet($("ps"));
   const num = (f, label, v, int) => `<label>${label}<input type="number" inputmode="${int ? "numeric" : "decimal"}" min="0" step="${int ? 1 : "any"}" name="${f}" value="${v ?? ""}"></label>`;
@@ -153,9 +154,10 @@
       if ("pack_size" in row && !(row.pack_size >= 1)) return bad("แพ็คละ ต้องเป็น 1 ขึ้นไป");
     } else {
       const [kind, supplier] = f.kk.split("|"), pk = n("pack_size", 1);
-      if (!f.name) return bad("ใส่ชื่อสินค้าก่อน");
+      const need = (n) => UXM.shake($("psb").querySelector(`[name=${n}]`)); // ก5: jump to the empty field and shake it
+      if (!f.name) { need("name"); return bad("ใส่ชื่อสินค้าก่อน"); }
       if (ps.some((p) => p.name === f.name)) return bad("มีสินค้าชื่อนี้แล้ว");
-      if (!f.unit) return bad("ใส่หน่วยก่อน เช่น ชิ้น");
+      if (!f.unit) { need("unit"); return bad("ใส่หน่วยก่อน เช่น ชิ้น"); }
       if (!(pk >= 1)) return bad("แพ็คละ ต้องเป็นเลขเต็ม 1 ขึ้นไป");
       row = { name: f.name, kind, supplier, unit: f.unit, pack_size: pk, sort: Math.max(0, ...ps.map((p) => p.sort)) + 1, par_weekday: 0, par_weekend: 0, active: true };
     }
@@ -166,7 +168,7 @@
     const saved = r.data || { ...cur, ...row };
     ps = cur ? ps.map((p) => p.id === cur.id ? saved : p) : [...ps, saved];
     if (!cur) { pf = isCons(saved) ? "cons" : "sell"; $("q").value = ""; }
-    sheet.close(); drawProd(); $("pmsg").textContent = (cur ? "บันทึก " : "เพิ่ม ") + saved.name + " แล้ว";
+    sheet.close(); drawProd(); UXM.toast((cur ? "บันทึก " : "เพิ่ม ") + saved.name + " แล้ว ✓");
   };
   drawProd();
 
@@ -203,8 +205,9 @@
   $("claim").onclick = async () => {
     $("cmsg").className = "muted"; $("cmsg").textContent = "กำลังส่ง…";
     const r = await App.fn("notify", { card: "claim" }).catch((e) => ({ error: e }));
-    $("cmsg").className = r.ok ? "ok" : "err";
-    $("cmsg").textContent = r.ok ? "ส่งการ์ดเข้ากลุ่มแล้ว" : r.error === "staff_group_id not set" ? "ยังไม่ได้ตั้งกลุ่มพนักงาน" : "ส่งไม่ได้: " + App.errText(r.error);
+    if (r.ok) UXM.toast("ส่งการ์ดเข้ากลุ่มแล้ว ✓");
+    $("cmsg").className = r.ok ? "muted" : "err";
+    $("cmsg").textContent = r.ok ? "" : r.error === "staff_group_id not set" ? "ยังไม่ได้ตั้งกลุ่มพนักงาน" : "ส่งไม่ได้: " + App.errText(r.error);
   };
   $("save").onclick = async () => {
     const rows = [["shop_name", $("shop").value.trim()], ["remind_at", $("rem").value || "20:30"], ["auto_send_at", $("auto").value || "21:00"],
@@ -212,7 +215,8 @@
       // GP: blank = keep what is saved (never write 0 by accident)
       ...["lineman_gp", "grab_gp", "shopee_gp"].filter((k) => $(k).value !== "").map((k) => [k, Number($(k).value)])].map(([key, value]) => ({ key, value }));
     const { error } = await supabase.from("settings").upsert(rows);
-    $("smsg").className = error ? "err" : "ok"; $("smsg").textContent = error ? "บันทึกไม่ได้: " + App.errText(error) : "บันทึกแล้ว ✓";
+    $("smsg").className = error ? "err" : "muted"; $("smsg").textContent = error ? "บันทึกไม่ได้: " + App.errText(error) : "";
+    if (!error) UXM.toast("บันทึกแล้ว ✓");
   };
   staff();
   const t0 = document.querySelector(`.tabs [data-t="${qs.get("tab")}"]`); if (t0) t0.click();

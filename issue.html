@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="lib/ui.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script>
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>แจ้งปัญหา</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
 <div class="sk"><span class="vh">กำลังเปิด…</span><div class="field" style="display:flow-root"><i class="sk-b" style="--w:22%;--h:14px;margin:5px 0 4px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:12px;--gap:0px"></i><div class="field" style="display:flow-root"><i class="sk-b" style="--w:26%;--h:14px;margin:5px 0 4px"></i></div><i class="sk-b" style="--w:100%;--h:96px;--r:12px;--gap:0px"></i><i class="sk-b" style="--w:100%;--h:52px;--r:14px;margin:12px 0"></i><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
@@ -26,7 +26,7 @@
   const photos = [];
   Photo.picker(supabase, ph, { paths: photos, type: "issue", name: "รูป", max: 3, status: phS });
   send.onclick = async () => {
-    if (!text.value.trim()) { msg.textContent = "เขียนก่อนว่าเกิดอะไรขึ้น"; msg.className = "err"; return; }
+    if (!text.value.trim()) { msg.textContent = "เขียนก่อนว่าเกิดอะไรขึ้น"; msg.className = "err"; UXM.shake(text); return; }
     send.disabled = true; msg.textContent = "กำลังส่ง…"; msg.className = "muted";
     const { data, error } = await supabase.from("issues").insert({ type: type.value, text: text.value.trim(), photos, created_by: me.userId }).select("id").single();
     if (error) { msg.textContent = "ส่งไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error); msg.className = "err"; send.disabled = false; return; }

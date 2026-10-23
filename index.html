@@ -5,11 +5,11 @@
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-staff.css">
+<link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-staff.css"><link rel="stylesheet" href="lib/ux-data.css">
 <script>try { if ((JSON.parse(sessionStorage.getItem("fs_session_v1") || "null") || {}).me?.role === "owner") document.documentElement.classList.add("own"); } catch (_) {} /* skeleton shape only */</script>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-staff.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-data.js"></script>
 </head><body ontouchstart="">
 <header class="topbar home"><img class="logo" src="img/logo-96.png" alt="" width="52" height="52"><div><h1>ไก่ย่างห้าดาว</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
 <div class="sk sk-staff"><span class="vh">กำลังเปิด…</span><div class="ux-hello"><i class="sk-b" style="--w:48%;--h:26px"></i><i class="sk-b" style="--w:36%;--h:16px;--gap:6px"></i></div><div class="bento trio"><div class="bt wide lead"><i class="sk-b" style="--w:44px;--h:44px;--r:14px"></i><span class="tx"><i class="sk-b" style="--w:28%;--h:14px"></i><i class="sk-b" style="--w:50%;--h:32px;--gap:6px"></i><i class="sk-b" style="--w:72%;--h:14px;--gap:6px"></i></span></div><div class="bt"><i class="sk-b" style="--w:78%;--h:13px"></i><i class="sk-b" style="--w:58%;--h:20px;--gap:6px"></i></div><div class="bt"><i class="sk-b" style="--w:78%;--h:13px"></i><i class="sk-b" style="--w:58%;--h:20px;--gap:6px"></i></div><div class="bt"><i class="sk-b" style="--w:78%;--h:13px"></i><i class="sk-b" style="--w:58%;--h:20px;--gap:6px"></i></div><div class="bt wide list"><i class="sk-b" style="--w:28%;--h:15px;--gap:0px"></i><div><div class="row"><span class="grow"><i class="sk-b" style="--w:34%;--h:17px"></i><i class="sk-b" style="--w:68%;--h:14px;--gap:7px"></i></span></div><div class="row"><span class="grow"><i class="sk-b" style="--w:34%;--h:17px"></i><i class="sk-b" style="--w:68%;--h:14px;--gap:7px"></i></span></div><div class="row"><span class="grow"><i class="sk-b" style="--w:34%;--h:17px"></i><i class="sk-b" style="--w:68%;--h:14px;--gap:7px"></i></span></div></div></div></div></div>
@@ -17,6 +17,9 @@
 <h1 id="title" class="ld"></h1>
 <nav id="menu" class="ld" aria-label="เมนู"></nav>
 <p class="muted who" id="who"></p>
+<dialog id="mineS" class="bsheet" aria-labelledby="mineH"><div class="body"><div class="grab"></div>
+  <div class="hd"><b id="mineH">เรื่องของฉัน</b><button class="x" type="button" aria-label="ปิด">✕</button></div>
+  <div id="mineF" class="chips" role="group" aria-label="กรองเรื่อง"></div><div id="mineL"></div></div></dialog>
 <script>
 (async () => {
   try {
@@ -47,8 +50,8 @@
     const { esc, thd, hm } = UXS, today = UXS.today();
     const [st, iss, lv, last] = await Promise.all([
       UXS.status(supabase),
-      supabase.from("issues").select("id,date,text,status,created_at").eq("created_by", me.userId).order("created_at", { ascending: false }).limit(2),
-      supabase.from("leave_requests").select("id,date,type,status").eq("user_id", me.userId).gte("date", today).neq("status", "cancelled").order("date").limit(2),
+      supabase.from("issues").select("id,date,text,status,created_at").eq("created_by", me.userId).order("created_at", { ascending: false }).limit(50),
+      supabase.from("leave_requests").select("id,date,type,status,requested_at").eq("user_id", me.userId).gte("date", UXS.back(30)).neq("status", "cancelled").order("date").limit(50),
       supabase.from("shop_days").select("date,status,closed_at,cash_expected,cash_counted").lt("date", today).order("date", { ascending: false }).limit(1).maybeSingle(),
     ]);
     const title = document.getElementById("title");
@@ -63,18 +66,34 @@
     const ISS = { open: ["รอรับทราบ", "wait"], ack: ["รับทราบแล้ว", "ok"], closed: ["ปิดเรื่องแล้ว", "ok"] };
     const LT = { off: "หยุดประจำสัปดาห์", sick: "ลาป่วย", personal: "ลากิจ", special: "หยุดพิเศษ" }, LS = { pending: ["รออนุมัติ", "wait"], approved: ["อนุมัติแล้ว", "ok"], rejected: ["ไม่อนุมัติ", "bad"] };
     const line = (href, t, s, pill) => `<a class="row" href="${href}"><span class="grow"><span class="ux-t">${t}</span><span class="ux-s">${s}</span></span>${pill ? `<span class="pill" data-tone="${pill[1]}">${pill[0]}</span>` : '<span class="ux-go" aria-hidden="true">›</span>'}</a>`;
-    const rows = [];
-    (iss.data || []).forEach((i) => rows.push(line("issue.html", "แจ้งปัญหา", `${thd(i.date || today)} ${esc(i.text)}`, ISS[i.status])));
+    // ข: my issues + my leave requests as one list · waiting for the owner (ยังไม่รับทราบ / รออนุมัติ) first, then newest · 4 here, the rest in a sheet
+    const all = [
+      ...(iss.data || []).map((i) => ({ k: "iss", wait: i.status === "open", at: i.created_at || "", h: line("issue.html", "แจ้งปัญหา", `${thd(i.date || today)} ${esc(i.text)}`, ISS[i.status]) })),
+      ...(lv.data || []).map((r) => ({ k: "lv", wait: r.status === "pending", at: r.requested_at || r.date, h: line("holiday.html", "ขอหยุด/ลา", `${LT[r.type] || esc(r.type)} ${thd(r.date)}`, LS[r.status]) })),
+    ].sort((a, b) => b.wait - a.wait || String(b.at).localeCompare(String(a.at)));
+    const nWait = all.filter((x) => x.wait).length;
+    const rows = all.slice(0, 4).map((x) => x.h);
     if (!(iss.data || []).length) rows.push(line("issue.html", "แจ้งปัญหา", "ยังไม่มีเรื่องที่แจ้ง"));
-    (lv.data || []).forEach((r) => rows.push(line("holiday.html", "ขอหยุด/ลา", `${LT[r.type] || esc(r.type)} ${thd(r.date)}`, LS[r.status])));
     if (!(lv.data || []).length) rows.push(line("holiday.html", "ขอหยุด/ลา", "ไม่มีวันที่ขอไว้"));
+    if (all.length > 4) rows.push(`<button type="button" class="row ux-all" id="mineAll" aria-haspopup="dialog"><span class="grow ux-t">ดูทั้งหมด ${all.length} เรื่อง</span><span class="ux-go" aria-hidden="true">›</span></button>`);
     const L = last.data, gap = L && L.cash_counted != null && L.cash_expected != null ? L.cash_counted - L.cash_expected : null;
     rows.push(line("history.html", "ประวัติ 30 วัน", L ? [thd(L.date, { weekday: "short" }), L.closed_at ? `ปิด ${hm(L.closed_at)} น.` : "", gap == null ? "" : gap === 0 ? "เงินสดครบ" : `เงินสด${gap < 0 ? "ขาด" : "เกิน"} ${Math.abs(gap).toLocaleString("th-TH")} บาท`].filter(Boolean).join(" · ") : "ยังไม่มีประวัติ"));
     // Mos 23 ต.ค. รอบ 2: "งานถัดไป" across the top, only as tall as its words · เปิด / รับของ / ปิด in one row of 3 · เรื่องของฉัน below
     document.getElementById("menu").innerHTML = `<div class="bento trio">
       <a class="bt wide hero lead${rest ? " calm" : ""}" href="${n.href}"><span class="ico">${svg(I[icon])}</span><span class="tx"><span class="k">${rest ? "วันนี้" : "งานถัดไป"}</span><span class="v">${n.label}</span><span class="m">${n.sub}</span></span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></a>
       ${c1}${c2}${c3}
-      <section class="bt wide list" aria-labelledby="mine"><h2 class="k" id="mine">เรื่องของฉัน</h2><div>${rows.join("")}</div></section></div>`;
+      <section class="bt wide list" aria-labelledby="mine"><h2 class="k" id="mine">เรื่องของฉัน${nWait ? `<span class="ux-badge"><span class="vh">รอคำตอบ </span>${nWait}<span class="vh"> เรื่อง</span></span>` : ""}</h2><div>${rows.join("")}</div></section></div>`;
+    if (all.length > 4) {
+      const sheet = UXD.sheet(document.getElementById("mineS")), F = [["all", "ทั้งหมด", () => true], ["iss", "ปัญหา", (x) => x.k === "iss"], ["lv", "ขอหยุด", (x) => x.k === "lv"], ["wait", "รอคำตอบ", (x) => x.wait]];
+      let f = "all";
+      const draw = () => {
+        document.getElementById("mineF").innerHTML = F.map(([k, t, fn]) => `<button type="button" class="chip${k === f ? " on" : ""}" data-f="${k}" aria-pressed="${k === f}">${t} <b>${all.filter(fn).length}</b></button>`).join("");
+        const list = all.filter(F.find(([k]) => k === f)[2]);
+        document.getElementById("mineL").innerHTML = list.map((x) => x.h).join("") || `<p class="muted">${{ iss: "ยังไม่มีเรื่องที่แจ้ง", lv: "ไม่มีวันที่ขอไว้", wait: "ไม่มีเรื่องรอคำตอบ" }[f]}</p>`;
+      };
+      document.getElementById("mineF").onclick = (e) => { const b = e.target.closest("[data-f]"); if (b) { f = b.dataset.f; draw(); } };
+      document.getElementById("mineAll").onclick = () => { f = "all"; draw(); sheet.open(); };
+    }
     }
   } catch (e) {
     if (e.message !== "denied") { document.getElementById("title").textContent = "เปิดแอปไม่ได้"; document.getElementById("who").textContent = "ปิดแล้วเปิดใหม่ใน LINE\n" + App.errText(e); }

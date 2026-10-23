@@ -88,3 +88,7 @@ dialog.bsheet[open]::backdrop { animation: dim-in 200ms ease-out; }
 }
 .monthnav button:disabled { opacity: .35; cursor: default; }
 .monthnav .m { flex: 1; text-align: center; font: 600 20px/1.2 var(--font-head); }
+
+/* round 3 ง3 approve: one grey line above the send button · how many rows differ from what the system proposed */
+.sticky .ux-chg { margin: 0 0 8px; padding: 0; text-align: center; font-size: 14px; line-height: 1.4; color: var(--color-ink-soft); background: none; animation: none; font-variant-numeric: tabular-nums; }
+.ux-chg:empty { display: none; }

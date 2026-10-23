@@ -8,7 +8,7 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-owner.js"></script>
-<script src="lib/ux-staff.js"></script>
+<script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script>
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ขอหยุด/ลา</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
 <p id="cnt" class="card stat"><span class="vh">กำลังเปิด…</span><i class="sk-b" style="--w:56%;--h:18px;margin:4px 0"></i><i class="sk-b" style="--w:72%;--h:14px;margin:10px 0 5px"></i></p>
@@ -42,12 +42,14 @@
     const canCancel = (r) => r.user_id === me.userId && (r.status === "pending" || r.status === "approved") && r.date >= today;
     list.onclick = async (ev) => {
       const b = ev.target.closest("button[data-cancel]"); if (!b) return;
-      if (!confirm(`ยกเลิกที่ขอไว้วันที่ ${b.dataset.d} ใช่ไหม?`)) return;
-      b.disabled = true;
-      const { error } = await supabase.rpc("cancel_leave", { p_id: b.dataset.cancel });
-      msg.textContent = error ? "ยกเลิกไม่ได้\n" + App.errText(error) : `ยกเลิกวันที่ ${b.dataset.d} แล้ว`;
-      msg.className = error ? "err" : "ok";
-      await load();
+      // ง1: no confirm · the row shows ยกเลิกแล้ว now, cancel_leave runs after 5 s unless "เลิกทำ"
+      const row = b.closest(".row"), pill = row.querySelector(".pill");
+      b.hidden = true; pill.dataset.tone = ""; pill.textContent = ST.cancelled; msg.textContent = ""; msg.className = "muted";
+      UXM.later(`ยกเลิกวันที่ ${b.dataset.d} แล้ว`, async () => {
+        const { error } = await supabase.rpc("cancel_leave", { p_id: b.dataset.cancel });
+        if (error) UXM.toast("ยกเลิกไม่ได้\n" + App.errText(error), { ms: 4000 });
+        await load();
+      }, load);
     };
     async function load() {
       const { data: c } = await supabase.rpc("leave_counters");
@@ -60,14 +62,14 @@
         : `<div class="empty tight"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>ยังไม่มีใครขอหยุด</p><p class="muted">ขอหยุดหรือลาแล้ว จะขึ้นที่นี่</p></div>`;
     }
     send.onclick = async () => {
-      if (!date.value) { msg.textContent = "เลือกวันก่อน"; msg.className = "err"; return; }
+      if (!date.value) { msg.textContent = "เลือกวันก่อน"; msg.className = "err"; UXM.shake(date); return; }
       send.disabled = true; msg.textContent = "กำลังส่ง…"; msg.className = "muted";
       const { data, error } = await supabase.rpc("request_leave", { d: date.value, p_type: type.value, note: note.value.trim() || null });
       if (error) { msg.textContent = "ส่งไม่ได้\n" + App.errText(error); msg.className = "err"; send.disabled = false; return; }
       const n = await App.fn("leave-notify", { leave_id: data.id }).catch(() => null);
-      msg.textContent = data.status === "approved" ? "หยุดได้เลย (หยุดประจำสัปดาห์)" : "ส่งแล้ว รอเจ้าของกดอนุมัติในกลุ่ม LINE";
-      if (!n || !n.ok) msg.textContent += "\nLINE แจ้งเจ้าของไม่ได้ ช่วยบอกเจ้าของเองด้วย";
-      msg.className = "ok"; msg.style.whiteSpace = "pre-line"; note.value = ""; send.disabled = false;
+      UXM.toast(data.status === "approved" ? "หยุดได้เลย ✓" : "ส่งแล้ว รอเจ้าของอนุมัติ ✓"); // ก4: success = toast · the row below shows the status
+      msg.textContent = !n || !n.ok ? "LINE แจ้งเจ้าของไม่ได้\nช่วยบอกเจ้าของเองด้วย" : ""; msg.className = msg.textContent ? "err" : "muted";
+      note.value = ""; send.disabled = false;
       // ux(staff): done state → next task · staff only (owner view is another stream's)
       if (me.role !== "owner" && !document.querySelector(".ux-next")) await UXS.showNext(supabase, msg, false, "afterend");
       await load();

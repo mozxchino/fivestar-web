@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-data.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/config.js"></script><script src="lib/session.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-motion.js"></script>
 <style>
 #items{margin-top:0}
 #pill{flex:none;align-self:center;font-size:15px;padding:6px 12px 6px 10px}
@@ -27,7 +27,7 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   <div id="items" class="card list"></div>
   <details class="fold"><summary>ข้อความที่เซลล์จะเห็น<span class="chip">เปิดดู</span></summary>
     <div class="card preview"><pre id="prev"></pre></div></details>
-  <div class="sticky"><button id="send" class="btn primary">ส่งใบสั่งให้เซลล์</button>
+  <div class="sticky"><p id="chg" class="ux-chg" aria-live="polite"></p><button id="send" class="btn primary">ส่งใบสั่งให้เซลล์</button>
     <p id="msg" class="muted"></p><button id="copy" class="btn" hidden>คัดลอกไปส่งเอง</button></div>
 </div>
 <script>
@@ -87,13 +87,16 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
     <div class="step"><button type="button" data-d="-1" data-s="${i}" aria-label="ลด ${E(r.label)}">−</button><input type="number" inputmode="decimal" min="0" step="${step[r.product_id]}" value="${Number(r.qty)}" data-i="${i}" aria-label="${E(r.label)} จำนวนสั่ง (${E(r.unit_th)})"><button type="button" data-d="1" data-s="${i}" aria-label="เพิ่ม ${E(r.label)}">+</button></div></div>`).join("") || '<p class="muted">ใบนี้ไม่มีของต้องสั่ง</p>';
   const qv = (i) => Math.max(0, Number(document.querySelector(`[data-i="${i}"]`).value) || 0);
   const cur = () => rows.map((r, i) => ({ product_id: r.product_id, qty_final: qv(i), r }));
-  const label = () => { const k = cur().filter((x) => x.qty_final > 0).length; $("send").disabled = k === 0; $("send").textContent = k === 0 ? "ไม่มีของที่จะสั่ง" : `ส่งใบสั่งให้เซลล์${order.status === "sent" ? "อีกครั้ง" : ""} ${k} รายการ`; };
+  // ง3: how far the owner moved from what the system proposed (order_review qty_proposed)
+  const label = () => { const e = rows.filter((r, i) => qv(i) !== Number(r.qty_proposed)).length; $("chg").textContent = e ? `แก้จากที่ระบบเสนอ ${e} รายการ` : "ตามที่ระบบเสนอ";
+    const k = cur().filter((x) => x.qty_final > 0).length; $("send").disabled = k === 0; $("send").textContent = k === 0 ? "ไม่มีของที่จะสั่ง" : `ส่งใบสั่งให้เซลล์${order.status === "sent" ? "อีกครั้ง" : ""} ${k} รายการ`; };
   const mark = (i) => { const q = qv(i), r = rows[i], row = $("r" + i); row.classList.toggle("chg", q !== Number(r.qty_proposed)); row.querySelector(".meta").innerHTML = meta(r, q); };
   rows.forEach((_, i) => mark(i));
   $("items").onclick = (ev) => {
     const b = ev.target.closest("button[data-d]"); if (!b) return;
     const i = +b.dataset.s, s = step[rows[i].product_id], inp = document.querySelector(`[data-i="${i}"]`);
-    inp.value = Math.max(0, Math.round((qv(i) + s * +b.dataset.d) / s) * s); inp.dispatchEvent(new Event("input", { bubbles: true }));
+    const was = qv(i); inp.value = Math.max(0, Math.round((was + s * +b.dataset.d) / s) * s);
+    UXM.roll(inp, Math.sign(qv(i) - was)); inp.dispatchEvent(new Event("input", { bubbles: true })); // ก3: the number slides, never jumps
   };
   const text = (head) => { const d = order.for_date.slice(8) + "/" + order.for_date.slice(5, 7); return `${head} ${d} ${shop}\n` + cur().filter((x) => x.qty_final > 0).map(({ r, qty_final: n }) => `${r.order_as ? r.label.replace(/^เซ็ต/, "") : r.label} ${n} ${r.unit_th}` + (r.sets != null ? ` (${Math.round(n / step[r.product_id])} เซ็ต)` : "")).join("\n"); };
   const prev = () => { $("prev").textContent = text(order.sent_at ? "แก้ไขใบสั่ง" : "สั่งของ"); };
@@ -105,7 +108,7 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
     $("send").disabled = true; $("copy").hidden = true; $("msg").className = "muted"; $("msg").textContent = "กำลังส่ง…";
     try {
       const r = await App.fn("send-order", { order_id: orderId, mode: "manual", items: cur().map(({ product_id, qty_final }) => ({ product_id, qty_final })) });
-      if (r.ok) { $("msg").className = "ok"; $("msg").textContent = "ส่งใบสั่งให้เซลล์แล้ว"; $("pill").textContent = "ส่งแล้ว"; $("pill").dataset.tone = "ok"; order.status = "sent"; order.sent_at = order.sent_at || new Date().toISOString(); prev(); label(); }
+      if (r.ok) { $("msg").className = "muted"; $("msg").textContent = ""; UXM.toast("ส่งใบสั่งให้เซลล์แล้ว ✓"); $("pill").textContent = "ส่งแล้ว"; $("pill").dataset.tone = "ok"; order.status = "sent"; order.sent_at = order.sent_at || new Date().toISOString(); prev(); label(); }
       else { $("msg").className = "err"; $("msg").textContent = "ส่งไม่ออก\nกดคัดลอก แล้วไปวางในกลุ่มสั่งของเอง"; $("pill").textContent = "ส่งไม่ออก"; $("pill").dataset.tone = "bad"; $("copy").hidden = false; $("copy").onclick = async () => { await navigator.clipboard.writeText(r.message || text("สั่งของ")); $("copy").textContent = "คัดลอกแล้ว"; }; }
     } catch (e) { $("msg").className = "err"; $("msg").textContent = "ส่งไม่ออก ลองกดอีกครั้ง\n" + App.errText(e); }
     label();

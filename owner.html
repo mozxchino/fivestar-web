@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="lib/ux-owner.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-owner.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-owner.js"></script><script src="lib/ux-motion.js"></script>
 <style>
 @media (min-width:360px){.tabs button{font-size:15px}}
 .th{width:72px;height:72px;object-fit:cover;border-radius:10px;margin:8px 8px 0 0;background:var(--color-muted);border:1px solid var(--color-border);cursor:zoom-in}
@@ -25,7 +25,7 @@ td+td{font-weight:600}
 <p id="blocked" class="err" hidden></p>
 <div class="sk"><span class="vh">กำลังเปิด…</span><div class="daynav"><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i><div class="d"><i class="sk-b" style="--w:56%;--h:22px;margin:2px auto 0"></i><i class="sk-b" style="--w:40%;--h:13px;margin:6px auto 0"></i></div><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i></div><div class="bento trio"><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div></div><h3 class="sec"><i class="sk-b" style="--w:38%;--h:15px"></i></h3><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div></div>
 <div id="app" class="ld" hidden>
-  <div id="bar"><div class="daynav"><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i><div class="d"><i class="sk-b" style="--w:56%;--h:22px;margin:2px auto 0"></i><i class="sk-b" style="--w:40%;--h:13px;margin:6px auto 0"></i></div><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i></div></div><div id="out"><span class="vh">กำลังเปิด…</span><div class="bento trio"><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div></div><h3 class="sec"><i class="sk-b" style="--w:38%;--h:15px"></i></h3><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div></div>
+  <div id="bar"><div class="daynav"><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i><div class="d"><i class="sk-b" style="--w:56%;--h:22px;margin:2px auto 0"></i><i class="sk-b" style="--w:40%;--h:13px;margin:6px auto 0"></i></div><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i></div></div><button id="upd" class="ux-upd" type="button" hidden></button><div id="out"><span class="vh">กำลังเปิด…</span><div class="bento trio"><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div></div><h3 class="sec"><i class="sk-b" style="--w:38%;--h:15px"></i></h3><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div></div>
 </div>
 <div id="panel" class="panel" role="dialog" aria-modal="true" aria-labelledby="ph" hidden></div>
 <script>
@@ -71,7 +71,10 @@ td+td{font-weight:600}
     if (TAB === "day" && D !== TODAY) p.set("d", D);
     try { history.replaceState(null, "", location.pathname + (p.toString() ? "?" + p : "")); } catch (_) { /* LIFF webview without history: fine */ }
   };
-  const show = (t) => { TAB = t; document.querySelectorAll("#tabs button").forEach((x) => x.classList.toggle("on", x.dataset.t === t)); $("out").innerHTML = SK[t] || ""; $("bar").innerHTML = SKB[t] || ""; sync(); return V[t](); };
+  // ง2: "อัปเดต HH:MM น." under the bar · tap = load this tab again (pending undo jobs commit first so the reload sees them)
+  const stamp = () => { $("upd").hidden = false; $("upd").disabled = false; $("upd").textContent = `อัปเดต ${hm(new Date())} น. แตะเพื่อโหลดใหม่`; };
+  const show = async (t) => { await UXM.flush(); TAB = t; document.querySelectorAll("#tabs button").forEach((x) => x.classList.toggle("on", x.dataset.t === t)); $("out").innerHTML = SK[t] || ""; $("bar").innerHTML = SKB[t] || ""; sync(); await V[t](); stamp(); };
+  $("upd").onclick = () => { $("upd").disabled = true; $("upd").textContent = "กำลังโหลดใหม่…"; $("bar").onclick = null; $("out").onclick = null; show(TAB); };
 
   // ---- day ----
   let ctx = null; // last loaded day (used by the edit panel)
@@ -194,15 +197,15 @@ td+td{font-weight:600}
       b.dataset.done = 1; $("f-pics").innerHTML = (await thumbs(photos)) || `<p class="muted">เปิดรูปไม่ขึ้น</p>`;
     });
   }
-  const go = (d) => { D = d; sync(); dayView(); };
+  const go = async (d) => { await UXM.flush(); D = d; sync(); await dayView(); stamp(); };
 
-  // in-place decisions on the to-do cards (R10: press → done → card leaves)
-  const gone = (card) => {
-    card.classList.add("gone");
-    setTimeout(() => { card.remove(); const n = document.querySelectorAll("#out .todo").length; $("todoh").textContent = n ? `ต้องจัดการ ${n} เรื่อง` : "ต้องจัดการ";
-      if (!n) $("todoh").insertAdjacentHTML("afterend", ALLDONE); }, 200);
-  };
-  const say = (card, text, ok) => { let p = card.querySelector(".say"); if (!p) { p = document.createElement("p"); card.appendChild(p); } p.className = "say " + (ok ? "ok" : "err"); p.textContent = text; };
+  // in-place decisions on the to-do cards (R10: press → done → card leaves) · round 3 ง1: the card leaves now, the server call waits 5 s for "เลิกทำ"
+  const recount = () => { const h = $("todoh"); if (!h) return; const n = document.querySelectorAll("#out .todo:not([hidden])").length;
+    h.textContent = n ? `ต้องจัดการ ${n} เรื่อง` : "ต้องจัดการ"; $("alld")?.remove(); if (!n) h.insertAdjacentHTML("afterend", `<div id="alld">${ALLDONE}</div>`); };
+  const gone = (card) => { card.classList.add("gone"); setTimeout(() => { if (card.classList.contains("gone")) { card.hidden = true; recount(); } }, 200); };
+  const back = (card) => { card.hidden = false; card.querySelectorAll("button").forEach((x) => x.disabled = false); recount(); requestAnimationFrame(() => card.classList.remove("gone")); };
+  const undoable = (card, text, call) => { card.querySelectorAll("button").forEach((x) => x.disabled = true); gone(card);
+    UXM.later(text, async () => { const msg = await call(); if (msg) { back(card); UXM.toast(msg, { ms: 4000 }); } else card.remove(); }, () => back(card)); };
   $("out").addEventListener("click", async (e) => {
     if (TAB !== "day") return;
     const b = e.target.closest("button[data-a]"); if (!b) return;
@@ -213,25 +216,15 @@ td+td{font-weight:600}
       const i = ctx.iss.find((x) => String(x.id) === b.dataset.i); b.disabled = true;
       card.insertAdjacentHTML("beforeend", `<div>${await thumbs(i?.photos)}</div>`); b.remove(); return;
     }
-    b.disabled = true;
-    if (a === "ack") {
+    if (a === "ack") return undoable(card, "รับทราบแล้ว", async () => {
       const { error } = await supabase.from("issues").update({ status: "ack", ack_by: me.userId, ack_at: new Date().toISOString() }).eq("id", b.dataset.i);
-      if (error) { b.disabled = false; return say(card, "รับทราบไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error)); }
-      return gone(card);
-    }
-    if (a === "ot") {
-      let error = null;
-      for (const d of b.dataset.d.split(",")) { error = (await supabase.rpc("approve_ot", { d })).error; if (error) break; }
-      if (error) { b.disabled = false; return say(card, "อนุมัติโอทีไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error)); }
-      return gone(card);
-    }
-    if (a === "leave") {
-      card.querySelectorAll("button").forEach((x) => x.disabled = true);
+      return error && "รับทราบไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error); });
+    if (a === "ot") return undoable(card, "อนุมัติโอทีแล้ว", async () => {
+      for (const d of b.dataset.d.split(",")) { const { error } = await supabase.rpc("approve_ot", { d }); if (error) return "อนุมัติโอทีไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error); } });
+    if (a === "leave") return undoable(card, `${b.dataset.ok === "1" ? "อนุมัติ" : "ไม่อนุมัติ"} ${card.querySelector(".t").textContent}`, async () => {
       const r = await U.decideLeave(supabase, b.dataset.i, b.dataset.ok === "1");
-      say(card, r.text, r.ok);
-      if (!r.ok) { card.querySelectorAll("button").forEach((x) => x.disabled = false); return; }
-      setTimeout(() => gone(card), 1200);
-    }
+      if (!r.ok) return r.text;
+      if (r.data?.error) UXM.toast(r.text, { ms: 4000 }); }); // decided elsewhere / cancelled meanwhile: say so, the card stays gone
   });
 
   // ---- edit panel (P2-4): numbers of one day, save button sticky at the bottom ----
@@ -261,8 +254,8 @@ td+td{font-weight:600}
       }
       const { error } = await supabase.from("shop_days").update({ cash_expected: num($("ce").value), cash_counted: num($("cn").value), note: $("nt").value || null }).eq("date", d);
       $("sv").disabled = false;
-      $("sm").textContent = (err || error) ? "บันทึกไม่ได้ ลองกดอีกครั้ง\n" + App.errText(err || error) : "บันทึกแล้ว ✓"; $("sm").className = (err || error) ? "err" : "ok";
-      if (!(err || error)) { close(); if (TAB === "day") dayView(); }
+      $("sm").textContent = (err || error) ? "บันทึกไม่ได้ ลองกดอีกครั้ง\n" + App.errText(err || error) : ""; $("sm").className = (err || error) ? "err" : "muted";
+      if (!(err || error)) { close(); UXM.toast("บันทึกแล้ว ✓"); if (TAB === "day") dayView(); }
     };
   }
 
@@ -273,8 +266,9 @@ td+td{font-weight:600}
     const all = data || [], CH = [["open", "ใหม่"], ["ack", "รับทราบ"], ["closed", "ปิดแล้ว"]];
     const draw = async () => {
       $("bar").innerHTML = `<div class="chips" role="group" aria-label="กรองเรื่อง">${CH.map(([k, t]) => `<button data-c="${k}" aria-pressed="${k === CHIP}">${t} ${all.filter((i) => i.status === k).length}</button>`).join("")}</div>`;
-      const rows = all.filter((i) => i.status === CHIP);
-      $("out").innerHTML = (await Promise.all(rows.map(async (i) => {
+      const rows = all.filter((i) => i.status === CHIP), nNew = all.filter((i) => i.status === "open").length;
+      // ง4: 2+ new issues → one tonal button acknowledges them all (same per-issue update, one undo)
+      $("out").innerHTML = (CHIP === "open" && nNew >= 2 ? `<button class="btn tonal ux-ackall" type="button" id="ackall">รับทราบทั้งหมด (${nNew})</button>` : "") + (await Promise.all(rows.map(async (i) => {
         const d = (i.date || new Date(new Date(i.created_at).getTime() + 7 * 3600e3).toISOString()).slice(0, 10);
         return `<div class="card iss"><div class="day-head"><b>${TYPE[i.type] || esc(i.type)}</b><span class="pill" data-tone="${{ open: "bad", ack: "wait", closed: "ok" }[i.status] || ""}">${{ open: "ใหม่", ack: "รับทราบแล้ว", closed: "ปิดแล้ว" }[i.status] || esc(i.status)}</span></div>
         <div style="white-space:pre-line">${esc(i.text)}</div>
@@ -283,15 +277,25 @@ td+td{font-weight:600}
       }))).join("") || EMPTY({ open: "ไม่มีเรื่องใหม่", ack: "ไม่มีเรื่องที่รับทราบค้างอยู่", closed: "ยังไม่มีเรื่องที่ปิดแล้ว" }[CHIP], CHIP === "open" ? "พนักงานแจ้งเรื่องเมื่อไร จะขึ้นที่นี่" : "");
     };
     $("bar").onclick = (e) => { const b = e.target.closest("button[data-c]"); if (b) { CHIP = b.dataset.c; draw(); } };
+    // ง1: the card moves to its new chip now · the update waits 5 s for "เลิกทำ" · a failed update puts it back
+    const ackU = () => ({ status: "ack", ack_by: me.userId, ack_at: new Date().toISOString() });
+    const change = (list, u, text) => {
+      const olds = list.map((i) => ({ i, o: { status: i.status, ack_by: i.ack_by, ack_at: i.ack_at } }));
+      list.forEach((i) => Object.assign(i, u)); draw();
+      const undo = () => { olds.forEach(({ i, o }) => Object.assign(i, o)); if (TAB === "iss") draw(); };
+      UXM.later(text, async () => {
+        const bad = [];
+        for (const { i, o } of olds) { const { error } = await supabase.from("issues").update(u).eq("id", i.id); if (error) { bad.push(error); Object.assign(i, o); } }
+        if (bad.length) { if (TAB === "iss") draw(); UXM.toast("ทำไม่ได้ ลองกดอีกครั้ง\n" + App.errText(bad[0]), { ms: 4000 }); }
+      }, undo);
+    };
     $("out").onclick = async (e) => {
       if (TAB !== "iss") return;
       const dl = e.target.closest("button[data-day]"); if (dl) { D = dl.dataset.day; return show("day"); }
+      if (e.target.closest("#ackall")) { const list = all.filter((i) => i.status === "open"); return change(list, ackU(), `รับทราบแล้ว ${list.length} เรื่อง`); }
       const b = e.target.closest("button[data-i]"); if (!b) return;
-      b.disabled = true;
-      const u = b.dataset.s === "ack" ? { status: "ack", ack_by: me.userId, ack_at: new Date().toISOString() } : { status: "closed" };
-      const { error } = await supabase.from("issues").update(u).eq("id", b.dataset.i);
-      if (error) { b.disabled = false; return alert("ทำไม่ได้\n" + App.errText(error)); }
-      Object.assign(all.find((i) => String(i.id) === b.dataset.i) || {}, u); draw();
+      const i = all.find((x) => String(x.id) === b.dataset.i); if (!i) return;
+      change([i], b.dataset.s === "ack" ? ackU() : { status: "closed" }, b.dataset.s === "ack" ? "รับทราบแล้ว" : "ปิดเรื่องแล้ว");
     };
     await draw();
   }

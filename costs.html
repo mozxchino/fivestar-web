@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-data.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-data.js"></script>
+<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js"></script>
 <style>
 #more td.n{font-weight:600}
 #prod .row{min-height:64px}
@@ -19,7 +19,6 @@
 <div class="sk"><span class="vh">กำลังเปิด…</span><div class="monthnav"><i class="sk-b" style="--w:48px;--h:48px;--r:50%;margin:0"></i><i class="sk-b" style="--w:30%;--h:22px;margin:0 auto"></i><i class="sk-b" style="--w:48px;--h:48px;--r:50%;margin:0"></i></div><p></p><div class="bento"><div class="bt wide"><i class="sk-b" style="--w:46%;--h:14px"></i><i class="sk-b" style="--w:58%;--h:44px;--gap:10px"></i></div><div class="bt "><i class="sk-b" style="--w:40%;--h:14px"></i><i class="sk-b" style="--w:70%;--h:26px;--gap:8px"></i></div><div class="bt "><i class="sk-b" style="--w:40%;--h:14px"></i><i class="sk-b" style="--w:64%;--h:26px;--gap:8px"></i></div><div class="bt wide"><i class="sk-b" style="--w:24%;--h:14px"></i><i class="sk-b" style="--w:44%;--h:26px;--gap:8px"></i><i class="sk-b" style="--w:76%;--h:13px;--gap:8px"></i></div></div><div class="sk-row" style="justify-content:space-between;min-height:52px"><i class="sk-b" style="--w:44%;--h:16px"></i><i class="sk-b" style="--w:64px;--h:36px;--r:999px"></i></div><div class="sk-row" style="justify-content:space-between;min-height:52px"><i class="sk-b" style="--w:44%;--h:16px"></i><i class="sk-b" style="--w:64px;--h:36px;--r:999px"></i></div><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
 <div id="app" class="ld" hidden>
   <div class="monthnav"><button type="button" id="mp" aria-label="เดือนก่อน">‹</button><div class="m" id="ml" aria-live="polite"></div><button type="button" id="mn" aria-label="เดือนถัดไป">›</button></div>
-  <p id="saved" class="ok"></p>
   <div id="sum" class="bento"><span class="vh">กำลังเปิด…</span><div class="bt wide"><i class="sk-b" style="--w:46%;--h:14px"></i><i class="sk-b" style="--w:58%;--h:44px;--gap:10px"></i></div><div class="bt "><i class="sk-b" style="--w:40%;--h:14px"></i><i class="sk-b" style="--w:70%;--h:26px;--gap:8px"></i></div><div class="bt "><i class="sk-b" style="--w:40%;--h:14px"></i><i class="sk-b" style="--w:64%;--h:26px;--gap:8px"></i></div><div class="bt wide"><i class="sk-b" style="--w:24%;--h:14px"></i><i class="sk-b" style="--w:44%;--h:26px;--gap:8px"></i><i class="sk-b" style="--w:76%;--h:13px;--gap:8px"></i></div></div>
   <div id="todo" class="chips" style="margin-top:12px" hidden></div>
   <details class="fold" id="moref"><summary>ตัวเลขอื่นของเดือน<span class="chip">เปิดดู</span></summary><div id="more" class="card"></div></details>
@@ -51,7 +50,7 @@
   const ym = () => cur;
   const mname = (v) => new Date(v + "-01T00:00:00Z").toLocaleDateString("th-TH", { month: "short", year: "numeric", timeZone: "UTC" });
   const shift = (d) => { const [y, m] = cur.split("-").map(Number), t = new Date(Date.UTC(y, m - 1 + d, 1)); cur = t.toISOString().slice(0, 7); load(); };
-  $("mp").onclick = () => { $("saved").textContent = ""; shift(-1); }; $("mn").onclick = () => { $("saved").textContent = ""; shift(1); };
+  $("mp").onclick = () => shift(-1); $("mn").onclick = () => shift(1);
   const sheet = UXD.sheet($("fs"));
   $("open").onclick = () => { $("smsg").className = "muted"; $("smsg").textContent = ""; sheet.open(); };
 
@@ -94,7 +93,7 @@
     const { error } = await supabase.from("month_inputs").upsert(row);
     $("save").disabled = false;
     if (error) { $("smsg").className = "err"; $("smsg").textContent = "บันทึกไม่ได้: " + App.errText(error); return; }
-    sheet.close(); $("saved").textContent = "บันทึกยอด " + mname(ym()) + " แล้ว"; await load();
+    sheet.close(); UXM.toast("บันทึกยอด " + mname(ym()) + " แล้ว ✓"); await load();
   };
   await load();
 })().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น: " + App.errText(e); } });

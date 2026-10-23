@@ -86,3 +86,10 @@ button.daylink:active, .cal-nav button:active, .daynav .d:active { opacity: .7; 
 @media (prefers-reduced-motion: reduce) {
   .fold-body, .fold::after, .panel, .todo { transition: none; }
 }
+
+/* round 3 ง2: "อัปเดต HH:MM น. แตะเพื่อโหลดใหม่" · small grey line, 28px to the eye, 44px to the finger */
+.ux-upd { position: relative; display: block; width: 100%; min-height: 28px; margin: -6px 0 2px; padding: 4px 0; border: 0; background: none; font: 400 13px/1.4 var(--font-body); color: var(--color-ink-soft); text-align: center; cursor: pointer; font-variant-numeric: tabular-nums; }
+.ux-upd::before { content: ""; position: absolute; inset: -8px 0; }
+.ux-upd:disabled { opacity: .7; cursor: default; }
+/* ง4: "รับทราบทั้งหมด (N)" sits above the new issues */
+.ux-ackall { margin: 0 0 4px; }
