@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="lib/ux-owner.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-owner.js"></script><script src="lib/ux-motion.js"></script>
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-owner.js"></script><script src="lib/ux-motion.js"></script>
 <style>
 @media (min-width:360px){.tabs button{font-size:15px}}
 .th{width:72px;height:72px;object-fit:cover;border-radius:10px;margin:8px 8px 0 0;background:var(--color-muted);border:1px solid var(--color-border);cursor:zoom-in}
@@ -43,7 +43,7 @@ td+td{font-weight:600}
   const when = (d) => d === TODAY ? "วันนี้" : d === U.plus(TODAY, -1) ? "เมื่อวาน" : U.dayName(d);
   const names = Object.fromEntries(((await supabase.from("user_public").select("id,name")).data || []).map((u) => [u.id, u.name]));
   const P = (await supabase.from("product_names").select("id,name,unit")).data || [];
-  const prods = Object.fromEntries(P.map((p) => [p.id, p.name])), unit = Object.fromEntries(P.map((p) => [p.id, p.unit || ""]));
+  const prods = Object.fromEntries(P.map((p) => [p.id, p.name])), unit = Object.fromEntries(P.map((p) => [p.id, UXM.unit(p.unit)]));
   const remindAt = String(((await supabase.from("settings").select("key,value").eq("key", "remind_at").maybeSingle()).data || {}).value || "20:30");
   const TYPE = { waste: "ของเสีย/หมดอายุ", equipment: "เครื่องพัง", customer: "ลูกค้าร้องเรียน", cpf: "ของ CPF มาผิด", edit_request: "กรอกผิด ขอแก้", other: "เรื่องอื่น" };
   const CS = { low: "ใกล้หมด", out: "หมด" };

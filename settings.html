@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-data.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js"></script>
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js"></script>
 <style>
 .g{align-items:end}
 a.cell{text-decoration:none;color:inherit}
@@ -271,13 +271,14 @@ a.cell{text-decoration:none;color:inherit}
     <p id="cmsg" class="muted" aria-live="polite"></p>
     <p class="gf"><span>ใช้เมื่อ: น้องยังไม่ได้กด หรือการ์ดจมไปแล้ว</span><span>กดปุ่มนี้ → การ์ดเด้งในกลุ่มพนักงาน</span><span>น้องกด 'ฉันเป็นพนักงาน' ในกลุ่ม → ใช้แอปได้เลย</span></p>
     <h2>ค่า GP แอปส่งอาหาร</h2><div class="gl">${gp("lineman_gp", "LINE MAN")}${gp("grab_gp", "Grab")}${gp("shopee_gp", "Shopee")}</div><p class="gf">หน้าต้นทุน/กำไรใช้ตัวเลขนี้คิดค่า GP</p>
-    <h2>วันหยุดร้าน</h2><div class="gl"><div class="cell"><span class="k">เพิ่มวัน</span><input type="date" id="hd" aria-label="วันหยุดที่จะเพิ่ม"><button class="txt-btn" type="button" id="ha">เพิ่ม</button></div></div>
+    <h2>วันหยุดร้าน</h2><div class="gl"><div class="cell"><span class="k" style="white-space:nowrap">วัน</span><input type="date" id="hd" aria-label="วันหยุดที่จะเพิ่ม"><button class="txt-btn" type="button" id="ha">เพิ่ม</button></div></div>
     <div class="gl" id="hl"></div><p class="gf">เพิ่มหรือลบแล้ว กด บันทึกตั้งค่าร้าน ด้านล่าง</p>
     <div class="sticky"><button class="btn primary" id="save">บันทึกตั้งค่าร้าน</button><p id="smsg" class="muted"></p></div>`;
   // picker rows show the chosen group's name as the value
   const showSel = (id) => { const o = $(id).selectedOptions[0]; document.querySelector(`[data-for="${id}"]`).textContent = o ? o.textContent : ""; };
   ["sg", "fg"].forEach((id) => { showSel(id); $(id).addEventListener("change", () => showSel(id)); });
   drawHol();
+  UXM.dateTh($("hd")); // Mos 26 ต.ค.: Thai day over the native picker
   $("ha").onclick = () => { const d = $("hd").value; if (d && !hol.includes(d)) { hol.push(d); hol.sort(); drawHol(); } $("hd").value = ""; };
   $("hl").onclick = (ev) => { const i = ev.target.dataset.del; if (i !== undefined) { hol.splice(i, 1); drawHol(); } };
   $("claim").onclick = async () => {

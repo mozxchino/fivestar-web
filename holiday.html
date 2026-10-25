@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="lib/ux-owner.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-owner.js"></script>
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-owner.js"></script>
 <script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script>
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ขอหยุด/ลา</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
@@ -37,6 +37,7 @@
   try {
     const { supabase, me } = await App.ready();
     if (me.role === "owner" || me.role === "manager") return HolidayOwner(supabase); // P2-7: owner (round 6: or manager) approves + month calendar, no request form
+    UXM.dateTh(date); // Mos 26 ต.ค.: Thai day over the native picker
     const setMin = () => { date.min = type.value === "sick" ? today : plus(1); date.max = plus(30); if (!date.value || date.value < date.min) date.value = date.min; };
     type.onchange = setMin; setMin();
     const canCancel = (r) => r.user_id === me.userId && (r.status === "pending" || r.status === "approved") && r.date >= today;

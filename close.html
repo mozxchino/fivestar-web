@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-staff.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script>
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script>
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ปิดร้าน</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3<span id="d"></span></div></div></header>
 <p id="blocked" class="err" hidden></p>
@@ -52,7 +52,7 @@
   <h2 id="wasteT">มีของเสีย <span id="wasteN"></span> ยังไม่ได้บันทึก</h2>
   <p>ชั่งก่อน ถ่ายรูปตาชั่ง ใส่น้ำหนัก <span class="nw">แล้วถ่ายตอนทิ้ง</span></p>
   <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปบนตาชั่ง <input id="phScale" type="file" accept="image/*" capture="environment" hidden></label>
-  <label class="field" for="wasteKg">น้ำหนักของเสีย</label><div class="in"><input id="wasteKg" type="number" inputmode="decimal" enterkeyhint="done" placeholder="0"><span class="sfx">กก.</span></div>
+  <label class="field" for="wasteKg">น้ำหนักของเสีย</label><div class="in"><input id="wasteKg" type="number" inputmode="numeric" pattern="[0-9]*" step="1" min="0" enterkeyhint="done" placeholder="0"><span class="sfx">กรัม</span></div>
   <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปตอนทิ้งลงถัง <input id="phBin" type="file" accept="image/*" capture="environment" hidden></label>
   </section>
   <label class="field" for="note">ฝากบอกเจ้าของ <small>(ไม่มีก็ข้ามได้)</small></label>
@@ -75,7 +75,8 @@
   }
   const { data: prods, error: pErr } = await supabase.from("products").select("id,sort,name,unit,kind").eq("active", true).order("sort");
   const { data: lines, error: lErr } = await supabase.from("stock_lines").select("product_id,open_fresh,open_cooked,received").eq("date", today);
-  if (pErr || lErr || !prods) { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดรายการของไม่ขึ้น\n" + App.errText(pErr || lErr || "no products"); return; } // qa: never show 0s from a failed read
+  if (pErr || lErr || !prods) { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดรายการของไม่ขึ้น\n" + App.errText(pErr || lErr || "no products"); return; }
+  prods.forEach((p) => { p.unit = UXM.unit(p.unit); }); // EA / PC → ตัว / ชิ้น // qa: never show 0s from a failed read
   const L = Object.fromEntries((lines || []).map((l) => [l.product_id, l]));
   // 0030: what was thrown away during the day (waste.html) starts the "เสีย" box and is its floor
   const { data: wl } = await supabase.from("waste_logs").select("product_id,qty").eq("date", today);
@@ -204,12 +205,12 @@
     const under = underRows()[0];
     if (under) { const p = stock.find((x) => x.id === under.dataset.id); go(1); say(`${p.name} ทิ้งไปแล้ว ${W[p.id]} ${p.unit || ""}\nช่องเสียใส่น้อยกว่านี้ไม่ได้`, true); UXM.shake(under.querySelector(".w")); under.querySelector(".w").focus(); return; } // qa2: say after go(), show() clears the message
     if (wasteRows().length) {
-      const miss = !scale.length ? ["ยังไม่ได้ถ่ายรูปของเสียบนตาชั่ง", phScale] : !(+wasteKg.value > 0) ? ["ยังไม่ได้ใส่น้ำหนักของเสีย", wasteKg] : !bin.length ? ["ยังไม่ได้ถ่ายรูปตอนทิ้งลงถัง", phBin] : null;
+      const miss = !scale.length ? ["ยังไม่ได้ถ่ายรูปของเสียบนตาชั่ง", phScale] : !(Math.round(+wasteKg.value) >= 10) ? [+wasteKg.value > 0 ? "น้ำหนักของเสียน้อยสุด 10 กรัม" : "ยังไม่ได้ใส่น้ำหนักของเสีย", wasteKg] : !bin.length ? ["ยังไม่ได้ถ่ายรูปตอนทิ้งลงถัง", phBin] : null;
       if (miss) { say(miss[0], true); (miss[1].closest("label") || miss[1]).scrollIntoView({ block: "center" }); if (miss[1] === wasteKg) wasteKg.focus(); return; }
     }
     if (!confirm(`ปิดร้านเลยไหม?\nนับของแล้ว ${rows.length} จาก ${stock.length} อย่าง${cashDiff.textContent ? "\n" + cashDiff.textContent : ""}\nกดแล้วแก้ตัวเลขไม่ได้`)) return;
     send.disabled = true; back.hidden = true; msg.textContent = "กำลังปิดร้าน…";
-    const payload = { lines: rows, consumables: Object.entries(state).filter(([, v]) => v !== "ok").map(([product_id, status]) => ({ product_id, status })), cash_expected: cashExp.value === "" ? null : +cashExp.value, cash_counted: cashCnt.value === "" ? null : +cashCnt.value, note: note.value || null, pos_photo: pos[0] ?? null, photos, ...(wasteRows().length ? { waste_photos: [...scale, ...bin], waste_kg: +wasteKg.value } : {}) };
+    const payload = { lines: rows, consumables: Object.entries(state).filter(([, v]) => v !== "ok").map(([product_id, status]) => ({ product_id, status })), cash_expected: cashExp.value === "" ? null : +cashExp.value, cash_counted: cashCnt.value === "" ? null : +cashCnt.value, note: note.value || null, pos_photo: pos[0] ?? null, photos, ...(wasteRows().length ? { waste_photos: [...scale, ...bin], waste_kg: Math.round(+wasteKg.value) / 1000 } /* Mos 26 ต.ค.: staff type grams, the server keeps kg */ : {}) };
     const { error } = await supabase.rpc("close_day", { p: payload });
     if (error) { msg.textContent = "ยังปิดร้านไม่ได้\n" + App.errText(error); msg.className = "err"; send.disabled = false; back.hidden = false; return; }
     store.del(KEY); showDraft(null);

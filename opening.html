@@ -6,8 +6,8 @@
 <link rel="stylesheet" href="lib/ui.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-motion.js"></script>
-<style>.sheet .grid { grid-template-columns: minmax(0, 1fr) 64px 64px; } #dS { white-space: pre-line; }</style>
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-motion.js"></script>
+<style>.sheet .grid { grid-template-columns: minmax(0, 1fr) 64px 64px; } #dS { margin: 8px 0 0; }</style>
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="settings.html?tab=sys" aria-label="กลับตั้งค่า"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>นับสต็อกตั้งต้น</h1><div class="sub">สำหรับเจ้าของ</div></div></header>
 <p id="blocked" class="err" hidden></p>
@@ -30,10 +30,11 @@
   if (me.role !== "owner") { document.querySelector(".back").href = "index.html"; $("blocked").hidden = false; $("blocked").textContent = "หน้านี้สำหรับเจ้าของ"; return; }
   const today = Photo.todayPrefix().slice(0, 10).replaceAll("/", "-");
   const plus = (n) => new Date(Date.parse(today + "T00:00:00Z") + n * 864e5).toISOString().slice(0, 10);
+  UXM.dateTh($("d")); // Mos 26 ต.ค.: Thai day over the native picker (an English iPhone showed "Oct 26, 2026")
   $("d").value = today; $("d").min = today; $("d").max = plus(7);
   const { data: prods, error } = await supabase.from("products").select("id,name,unit").eq("active", true).in("kind", ["cpf", "self"]).order("sort");
   if (error) throw error;
-  $("lines").innerHTML = prods.map((p) => `<div class="grid" data-id="${p.id}"><div class="nm">${E(p.name)}<div class="meta">${E(p.unit)}</div></div>
+  $("lines").innerHTML = prods.map((p) => `<div class="grid" data-id="${p.id}"><div class="nm">${E(p.name)}<div class="meta">${E(UXM.unit(p.unit))}</div></div>
     <input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rf" placeholder="ใส่" aria-label="${E(p.name)} สด"><input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rc" placeholder="0" aria-label="${E(p.name)} สุก"></div>`).join("");
   // a re-count shows what was saved for that day; a day with no rows yet starts blank
   const load = async () => {
@@ -41,7 +42,7 @@
     const L = Object.fromEntries((ls || []).map((l) => [l.product_id, l]));
     document.querySelectorAll("#lines .grid").forEach((g) => { const l = L[g.dataset.id];
       g.querySelector(".rf").value = l ? +l.open_fresh : ""; g.querySelector(".rc").value = l && +l.open_cooked ? +l.open_cooked : ""; });
-    $("dS").textContent = ls?.length ? "วันนั้นมียกมาอยู่แล้ว\nบันทึกแล้วจะแทนของเดิม" : "";
+    $("dS").textContent = ls?.length ? "มียกมาแล้ว บันทึกใหม่จะแทนของเดิม" : "";
   };
   $("d").onchange = load; await load();
   document.querySelector(".sk").remove(); $("form").hidden = false;

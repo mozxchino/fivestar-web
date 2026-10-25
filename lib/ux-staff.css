@@ -209,3 +209,13 @@ details.ux-day summary .m { white-space: normal; display: -webkit-box; -webkit-l
 .ux-waste .nw { white-space: nowrap; } /* a phrase that must not split mid-way on 320px */
 .ux-waste .field { margin-top: 12px; }
 .ux-waste .in { background: var(--color-card); }
+
+/* open.html (Mos 26 ต.ค. "เว้นทำไม"): the red button sits on the screen bottom in the standard action bar, not under the card with a line and a gap.
+   Plain page class, no :has(), so LINE's iOS WebKit lays it out the same · the skeleton takes the same shape */
+.pg-open { padding-bottom: 0; }
+.pg-open #form:not([hidden]), .pg-open > .sk { min-height: calc(100vh - var(--chrome-h) - var(--space-md)); min-height: calc(100dvh - var(--chrome-h) - var(--space-md)); }
+.pg-open #form > .sticky, .pg-open > .sk > .sticky { margin-top: auto; }
+/* the red button turning from ถ่ายรูปหน้าร้าน into เปิดร้าน fades in, so the swap reads as one button changing state */
+.pg-open #go { transition: opacity 180ms var(--ease-out); }
+@starting-style { .pg-open #go { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .pg-open #go { transition: none; } }

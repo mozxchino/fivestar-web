@@ -1,4 +1,4 @@
-/* Five Star (ไก่ย่างห้าดาว) ops app · tokens + components · source of truth: design-system/fivestar/MASTER.md
+/* Five Star (ไก่ย่างห้าดาว) ops app · tokens + components · source of truth: DESIGN.md
    Use scene: one staff member at the counter, bright light, greasy hands → big targets, high contrast, one red CTA per screen.
    Soft pass (22 ต.ค.): white-cream ground, white cards, red is an accent only (~10% of the screen). */
 :root {
@@ -601,3 +601,10 @@ label.btn.ux-need { white-space: nowrap; }
   label.btn.ux-need svg { width: 20px; height: 20px; }
   .ux-tag { margin-left: 6px; padding: 3px 7px; font-size: 11px; }
 }
+
+/* Mos 26 ต.ค.: Thai text over a native date box (UXM.dateTh) · the phone's own picker opens on tap, its English value is hidden */
+.th-date { position: relative; display: flex; padding: 0 !important; margin: 0 !important; } /* the box is exactly the input, so the Thai text lands on it */
+.cell .th-date { flex: none; }
+.th-date > input { color: transparent !important; -webkit-text-fill-color: transparent; }
+.th-date > b { position: absolute; top: 0; bottom: 0; left: 0; display: flex; align-items: center; width: max-content; max-width: 100%; font: 500 17px/1.3 var(--font-body); font-variant-numeric: tabular-nums; color: var(--color-foreground); white-space: nowrap; pointer-events: none; }
+.th-date.empty > b { color: var(--color-ink-soft); font-weight: 400; }

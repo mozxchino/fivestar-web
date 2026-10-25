@@ -4,25 +4,46 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="lib/ui.css">
+<style>
+/* Mos 26 ต.ค.: two tabs at the top, form right under them, the red button in the bottom bar · plain page class, no :has() (iPhone LINE) */
+.pg-waste { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; padding-bottom: 0; }
+.pg-waste #form:not([hidden]), .pg-waste > .sk { flex: 1; display: flex; flex-direction: column; }
+.pg-waste #form > .sticky, .pg-waste > .sk > .sticky { margin-top: auto; }
+.pg-waste .tabs button b { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 6px; padding: 0 6px; border-radius: 10px; font: 600 12px/1 var(--font-head); font-variant-numeric: tabular-nums; color: #fff; background: var(--color-primary); }
+.pg-waste .tabs button b:empty { display: none; }
+#pNew > .muted:first-child { margin-top: 0; }
+.wl { padding: 4px 16px; }
+.wl .wr { display: flex; align-items: center; gap: 12px; min-height: 72px; padding: 10px 0; }
+.wl .wr + .wr { border-top: .5px solid var(--color-separator); }
+.wl .see { flex: none; width: 52px; height: 52px; padding: 0; border: 0; border-radius: var(--radius-sm); overflow: hidden; background: var(--color-fill); outline: 1px solid rgba(0, 0, 0, .08); outline-offset: -1px; }
+.wl .see img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wl .grow { flex: 1; min-width: 0; }
+.wl .grow b { display: block; font-weight: 500; }
+.wl .grow small { display: block; font-size: 14px; color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
+</style>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script>
-</head><body ontouchstart="">
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script>
+</head><body class="pg-waste" ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ทิ้งของเสีย</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
 <p id="blocked" class="err" hidden></p>
-<div class="sk"><span class="vh">กำลังเปิด…</span><div class="field" style="display:flow-root"><i class="sk-b" style="--w:22%;--h:14px;margin:5px 0 4px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:12px;--gap:0px"></i><div class="field" style="display:flow-root"><i class="sk-b" style="--w:26%;--h:14px;margin:5px 0 4px"></i></div><i class="sk-b" style="--w:100%;--h:96px;--r:12px;--gap:0px"></i><i class="sk-b" style="--w:100%;--h:52px;--r:14px;margin:12px 0"></i><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
+<div class="tabs sk" aria-hidden="true"><button class="on" tabindex="-1">บันทึกใหม่</button><button tabindex="-1">ทิ้งแล้ววันนี้</button></div>
+<div class="tabs ld" id="tabs" role="tablist" aria-label="ของเสีย" hidden><button type="button" role="tab" data-t="new" class="on" aria-selected="true">บันทึกใหม่</button><button type="button" role="tab" data-t="list" aria-selected="false">ทิ้งแล้ววันนี้<b id="cnt"></b></button></div>
+<div class="sk"><span class="vh">กำลังเปิด…</span><div class="field" style="display:flow-root"><i class="sk-b" style="--w:22%;--h:14px;margin:5px 0 4px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:12px;--gap:0px"></i><div class="field" style="display:flow-root"><i class="sk-b" style="--w:26%;--h:14px;margin:5px 0 4px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:12px;--gap:0px"></i><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
 <div id="form" class="ld" hidden>
-  <p class="muted">ทิ้งของเมื่อไหร่ บันทึกตอนนั้นเลย<br>ตอนปิดร้าน ช่อง "เสีย" จะใส่ตัวเลขนี้ให้เอง</p>
+  <div id="pNew" role="tabpanel">
+  <p class="muted">ทิ้งเมื่อไหร่ บันทึกตอนนั้นเลย<br>ตอนปิดร้าน ช่อง "เสีย" ใส่ตัวเลขนี้ให้เอง</p>
   <label class="field" for="prod">ทิ้งอะไร</label>
   <select id="prod"></select>
   <label class="field" for="qty">จำนวน</label><div class="in"><input id="qty" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0"><span class="sfx" id="unit2">ชิ้น</span></div>
   <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปบนตาชั่ง <input id="phScale" type="file" accept="image/*" capture="environment" hidden></label>
-  <label class="field" for="kg">น้ำหนัก</label><div class="in"><input id="kg" type="number" inputmode="decimal" enterkeyhint="done" placeholder="0"><span class="sfx">กก.</span></div>
+  <label class="field" for="g">น้ำหนัก</label><div class="in"><input id="g" type="number" inputmode="numeric" pattern="[0-9]*" step="1" min="0" enterkeyhint="done" placeholder="0"><span class="sfx">กรัม</span></div>
   <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปตอนทิ้งลงถัง <input id="phBin" type="file" accept="image/*" capture="environment" hidden></label>
   <p id="phS" class="muted"></p>
-  <div class="sticky"><button id="send" class="btn primary">บันทึกของเสีย</button><a id="again" class="btn" href="waste.html" hidden>บันทึกของเสียอีก</a>
+  </div>
+  <div id="pList" role="tabpanel" hidden></div>
+  <div class="sticky"><button id="send" class="btn primary">บันทึกของเสีย</button><button id="more" type="button" class="btn primary" hidden>บันทึกของเสียอีก</button>
   <p id="msg" class="muted"></p></div>
-  <div id="today"></div>
 </div>
 <script>
 (async () => {
@@ -36,34 +57,52 @@
     supabase.from("shop_days").select("status").eq("date", new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10)).maybeSingle()]);
   if (pErr || dErr) return stop("เปิดไม่ขึ้น ลองเปิดหน้าใหม่");
   if (day && ["sent", "closed"].includes(day.status)) return stop("วันนี้ปิดร้านแล้ว<br>บันทึกของเสียเพิ่มไม่ได้");
-  const stock = (prods || []).filter((p) => p.kind !== "consumable"), P = Object.fromEntries(stock.map((p) => [p.id, p]));
+  const stock = (prods || []).filter((p) => p.kind !== "consumable").map((p) => ({ ...p, unit: UXM.unit(p.unit) })), P = Object.fromEntries(stock.map((p) => [p.id, p]));
   prod.innerHTML = `<option value="">เลือกสินค้า</option>` + stock.map((p) => `<option value="${p.id}">${p.name}</option>`).join("");
   prod.onchange = () => { unit2.textContent = P[prod.value]?.unit || "ชิ้น"; };
   const scale = [], bin = [];
   Photo.picker(supabase, phScale, { paths: scale, type: "waste", name: "รูปตาชั่ง", need: true, max: 1, status: phS });
   Photo.picker(supabase, phBin, { paths: bin, type: "waste", name: "รูปทิ้งลงถัง", need: true, max: 1, status: phS });
+  // Mos 26 ต.ค.: two tabs (บันทึกใหม่ · ทิ้งแล้ววันนี้ N) instead of a list far below the form · weight typed in grams, stored in kg
+  const hm = (t) => new Date(t).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" });
+  const gram = (kg) => Math.round(+kg * 1000).toLocaleString("th-TH");
+  const tab = (t) => { tabs.querySelectorAll("button").forEach((b) => { const on = b.dataset.t === t; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); });
+    pNew.hidden = t !== "new"; pList.hidden = t !== "list"; send.hidden = t !== "new"; more.hidden = t !== "list"; msg.textContent = ""; msg.className = "muted"; scrollTo(0, 0); };
+  tabs.onclick = (e) => { const b = e.target.closest("[data-t]"); if (b) tab(b.dataset.t); };
+  more.onclick = () => tab("new");
   const list = async () => {
-    const { data } = await supabase.from("waste_logs").select("product_id,qty,kg,created_at").eq("date", new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10)).order("created_at");
-    if (!(data || []).length) { today.innerHTML = ""; return; }
-    const hm = (t) => new Date(t).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" });
-    today.innerHTML = `<h2 class="field" style="margin-top:24px">ทิ้งไปแล้ววันนี้</h2><div class="card" style="font-variant-numeric:tabular-nums">` + data.map((w) => `<div class="ln">${P[w.product_id]?.name ?? ""} ${+w.qty} ${P[w.product_id]?.unit ?? ""}<small class="muted"><br>${hm(w.created_at)} น. · ${+w.kg} กก.</small></div>`).join("") + `</div>`;
+    const { data, error } = await supabase.from("waste_logs").select("product_id,qty,kg,photos,created_at").eq("date", new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10)).order("created_at", { ascending: false });
+    if (error) { pList.innerHTML = `<p class="err">เปิดรายการไม่ขึ้น ลองเปิดหน้าใหม่</p>`; return; }
+    const rows = data || [];
+    cnt.textContent = rows.length || ""; more.textContent = rows.length ? "บันทึกของเสียอีก" : "บันทึกของเสีย";
+    pList.innerHTML = rows.length ? `<div class="card wl">` + rows.map((w, i) => `<div class="wr"><button type="button" class="see" data-i="${i}" aria-label="ดูรูป ${UXS.esc(P[w.product_id]?.name ?? "")} เต็มจอ"></button><div class="grow"><b>${UXS.esc(P[w.product_id]?.name ?? "")} ${+w.qty} ${UXS.esc(P[w.product_id]?.unit ?? "")}</b><small>${gram(w.kg)} กรัม · ${hm(w.created_at)} น.</small></div></div>`).join("") + `</div>`
+      : `<div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>วันนี้ยังไม่มีของเสีย</p></div>`;
+    // ponytail: thumbs = the scale photo of each log, fetched one by one (a day has a handful)
+    pList.querySelectorAll(".see").forEach(async (b) => { const ph = (rows[b.dataset.i].photos || [])[0]; if (!ph) return b.remove(); try { const u = await Photo.url(supabase, ph); b.innerHTML = `<img alt="" src="${u}">`; b.onclick = () => Photo.view(u); } catch (_) { b.remove(); } });
   };
   const bad = (t, el) => { msg.textContent = t; msg.className = "err"; if (el) UXM.shake(el); };
   send.onclick = async () => {
     if (!prod.value) return bad("เลือกก่อนว่าทิ้งอะไร", prod);
     if (!(+qty.value > 0)) return bad("ใส่จำนวนที่ทิ้ง", qty);
     if (!scale.length) return bad("ยังไม่ได้ถ่ายรูปบนตาชั่ง");
-    if (!(+kg.value > 0)) return bad("ใส่น้ำหนัก", kg);
+    const g = Math.round(+g_.value);
+    if (!(g > 0)) return bad("ใส่น้ำหนักเป็นกรัม", g_);
+    if (g < 10) return bad("น้ำหนักน้อยสุด 10 กรัม", g_); // kg is stored with 2 decimals (10 g steps)
     if (!bin.length) return bad("ยังไม่ได้ถ่ายรูปตอนทิ้งลงถัง");
     send.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
-    const { error } = await supabase.from("waste_logs").insert({ product_id: prod.value, qty: +qty.value, kg: +kg.value, photos: [...scale, ...bin], created_by: me.userId });
+    const { error } = await supabase.from("waste_logs").insert({ product_id: prod.value, qty: +qty.value, kg: g / 1000, photos: [...scale, ...bin], created_by: me.userId });
     send.disabled = false;
     if (error) { msg.textContent = "บันทึกไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error); msg.className = "err"; return; }
-    msg.textContent = "บันทึกของเสียแล้ว ขอบคุณ"; msg.className = "ok big";
-    send.hidden = true; again.hidden = false; prod.disabled = qty.disabled = kg.disabled = phScale.disabled = phBin.disabled = true;
-    await list();
+    // done: one toast, the list tab shows the new row, the form is clean for the next one (✕ on each thumb = the picker's own delete)
+    UXM.toast("บันทึกของเสียแล้ว ✓");
+    document.querySelectorAll("#pNew .thumb .x").forEach((b) => b.click());
+    prod.value = ""; qty.value = ""; g_.value = ""; unit2.textContent = "ชิ้น";
+    await list(); tab("list");
   };
+  const g_ = document.getElementById("g");
   await list();
-  form.hidden = false;
+  form.hidden = false; tabs.hidden = false;
+  const q = new URLSearchParams(location.search);
+  tab(q.get("tab") === "list" ? "list" : "new");
 })().catch(() => { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น ลองเปิดหน้าใหม่"; });
 </script></body></html>
