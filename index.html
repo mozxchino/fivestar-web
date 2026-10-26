@@ -58,25 +58,30 @@
     await home(); return;
     async function ownerHub() {
     // round 4: the owner menu is a hub · each row says what waits there right now · waiting rows first · the most urgent one leads (soft red)
-    const { esc, thd, hm } = UXS, today = UXS.today(), tmr = UXS.back(-1);
-    const [iss, lv, od, sd, hol] = await Promise.all([
+    const { esc, thd, hm } = UXS, today = UXS.today();
+    const [iss, lv, od, sd, hol, any] = await Promise.all([
       supabase.from("issues").select("id,status").eq("status", "open"),
       supabase.from("leave_requests").select("id,status,date").eq("status", "pending").gte("date", today),
-      supabase.from("orders").select("status").eq("for_date", tmr).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      // 0033: the newest CPF order still to come (tonight's lands the day after tomorrow)
+      supabase.from("orders").select("status,for_date").gt("for_date", today).order("created_at", { ascending: false }).limit(1).maybeSingle(),
       supabase.from("shop_days").select("status,opened_at,closed_at").eq("date", today).maybeSingle(),
       supabase.from("settings").select("key,value").in("key", ["holidays", "auto_send_at"]),
+      supabase.from("orders").select("id").limit(1), // 0033: no order ever → the first-order row leads (takeover)
     ]);
-    for (const r of [iss, lv, od, sd, hol]) if (r.error) throw r.error;
+    for (const r of [iss, lv, od, sd, hol, any]) if (r.error) throw r.error;
     const nIss = (iss.data || []).filter((i) => i.status === "open").length;
     const nLv = (lv.data || []).filter((l) => l.status === "pending" && l.date >= today).length;
     const S = Object.fromEntries((hol.data || []).map((x) => [x.key, x.value])), d = sd.data || {}, shut = d.status === "holiday" || (Array.isArray(S.holidays) && S.holidays.includes(today));
     // [status words, tone, rank when something waits for the owner] · failed order first, then new issues, then the order to send, then leave
-    const ord = { proposed: [`รอส่ง ก่อน ${esc(S.auto_send_at || "21:00")} น.`, "wait", 2], approved: [`รอส่ง ก่อน ${esc(S.auto_send_at || "21:00")} น.`, "wait", 2], failed: ["ส่งไม่ออก", "bad", 0], sent: ["ส่งแล้ว", "ok"] }[od.data?.status] || ["ยังไม่มี", ""];
+    // 0033: named by the delivery day ("ใบสั่งของ ศ. 6 พ.ย. รอส่ง")
+    const dd = od.data ? ` ${thd(od.data.for_date, { weekday: "short" })}` : "";
+    const ord = { proposed: [`รอส่ง ก่อน ${esc(S.auto_send_at || "21:00")} น.`, "wait", 2], approved: [`รอส่ง ก่อน ${esc(S.auto_send_at || "21:00")} น.`, "wait", 2], failed: ["ส่งไม่ออก", "bad", 0], sent: ["ส่งแล้ว", "ok"] }[od.data?.status] || ["คืนนี้ยังไม่มี", ""];
     const shop = shut ? ["หยุด", ""] : d.closed_at ? [`ปิดแล้ว ${hm(d.closed_at)} น.`, "ok"] : d.opened_at ? [`เปิดอยู่ ตั้งแต่ ${hm(d.opened_at)} น.`, "ok"] : ["ยังไม่เปิด", ""];
     const R = [ // href, name, icon, status line, tone, rank (null = nothing waits)
       ["owner.html", "วันนี้", "today", `ร้านวันนี้ ${shop[0]}`, shop[1], null],
       ["owner.html?tab=iss", "ปัญหาจากร้าน", "issue", nIss ? `รอรับทราบ ${nIss} เรื่อง` : "ไม่มีเรื่องค้าง", nIss ? "bad" : "ok", nIss ? 1 : null],
-      ["approve.html", "อนุมัติใบสั่ง", "approve", `ใบสั่งพรุ่งนี้ ${ord[0]}`, ord[1], ord[2] ?? null],
+      ...(me.role === "owner" && !(any.data || []).length ? [["opening.html", "ใบสั่งแรก", "approve", "นับของรับร้าน แล้วสร้างใบสั่งของ", "wait", 0]] : []),
+      ["approve.html", "อนุมัติใบสั่ง", "approve", `ใบสั่งของ${od.data ? dd : ""} ${ord[0]}`, ord[1], ord[2] ?? null],
       ["holiday.html", "ขอหยุด/ลา", "holiday", nLv ? `รออนุมัติ ${nLv} เรื่อง` : "ไม่มีคำขอรอ", nLv ? "wait" : "ok", nLv ? 3 : null],
       ["costs.html", "ต้นทุน/กำไร", "costs", "สรุปกำไรรายเดือน", "-", null],
       ["settings.html", "ตั้งค่า", "settings", "พนักงาน สินค้า กลุ่ม LINE", "-", null],

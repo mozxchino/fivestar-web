@@ -13,14 +13,14 @@
 <p id="blocked" class="err" hidden></p>
 <div class="sk"><span class="vh">กำลังเปิด…</span><i class="sk-b" style="--w:100%;--h:52px;--r:14px;margin:12px 0"></i><i class="sk-b" style="--w:100%;--h:68px"></i><i class="sk-b" style="--w:100%;--h:68px"></i><i class="sk-b" style="--w:100%;--h:68px"></i></div>
 <div id="form" class="ld" hidden>
-  <div class="card steps"><p>1. นับของในตู้ทุกอย่างก่อนเปิดร้าน</p><p>2. กรอกจำนวนสดและสุก</p><p>3. กด บันทึกยอดนับ</p><p class="muted">ตัวเลขนี้เป็น ยกมา ของวันที่เลือก แทนใบเก่าของเจ้าของเดิม</p></div>
+  <div class="card steps"><p>1. นับของในตู้ทุกอย่างก่อนเปิดร้าน</p><p>2. กรอกจำนวนสดและสุก</p><p>3. กด บันทึกยอดนับ</p><p>4. กดปุ่มแดง สร้างใบสั่งของ แล้วกดส่งให้เซลล์</p><p class="muted">ตัวเลขนี้เป็น ยกมา ของวันที่เลือก แทนใบเก่าของเจ้าของเดิม</p><p class="muted">ใบปิดร้านคืนก่อนรับร้านของเจ้าของเดิม = ยกมาของวันรับร้าน</p></div>
   <label class="cell"><span class="k">ยกมาของวันที่</span> <input type="date" id="d"></label>
   <p id="dS" class="muted"></p>
   <div class="sheet">
     <div class="grid meta sheet-head"><div>สินค้า</div><div>สด</div><div>สุก</div></div>
     <div id="lines"></div>
   </div>
-  <div class="sticky"><button id="go" class="btn primary">บันทึกยอดนับ</button><p id="msg" class="muted"></p></div>
+  <div class="sticky"><p id="fh" class="muted" hidden></p><button id="first" class="btn primary" hidden>สร้างใบสั่งของ</button><button id="go" class="btn primary">บันทึกยอดนับ</button><p id="msg" class="muted"></p></div>
 </div>
 <script>
 (async () => {
@@ -43,6 +43,26 @@
     document.querySelectorAll("#lines .grid").forEach((g) => { const l = L[g.dataset.id];
       g.querySelector(".rf").value = l ? +l.open_fresh : ""; g.querySelector(".rc").value = l && +l.open_cooked ? +l.open_cooked : ""; });
     $("dS").textContent = ls?.length ? "มียกมาแล้ว บันทึกใหม่จะแทนของเดิม" : "";
+    firstReady(!!ls?.length);
+  };
+  // 0033 ใบสั่งแรก (Mos 26 ต.ค.): once the count is saved, one big red button "สร้างใบสั่งของ <delivery day>" makes the first CPF order
+  // from it (the old owner's average × days until the next lot) · re-saving the count stays possible as a plain button under it
+  const day = (iso) => new Date(iso + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+  const firstReady = async (on) => {
+    $("first").hidden = !on; $("fh").hidden = !on;
+    $("go").className = on ? "btn" : "btn primary"; $("go").textContent = on ? "บันทึกยอดนับใหม่" : "บันทึกยอดนับ";
+    if (!on) return;
+    const { data: pl } = await supabase.rpc("night_plan", { d: $("d").value, opening: true });
+    if (!pl || pl.none || !pl.arrive) { $("fh").textContent = "สร้างใบสั่งจากยอดนับนี้"; return; }
+    $("first").textContent = `สร้างใบสั่งของ ${day(pl.arrive)}`;
+    $("fh").textContent = Number(pl.mult) > 1 ? `ของถึง ${pl.deliver_at} น. ต้องพอถึง ${day(pl.until)} ใช้ค่าเฉลี่ยใบเดิม × ${pl.mult}` : `ของถึง ${pl.deliver_at} น. ใช้ค่าเฉลี่ยใบเดิม`;
+  };
+  $("first").onclick = async () => {
+    $("first").disabled = true; $("msg").className = "muted"; $("msg").textContent = "กำลังทำใบสั่ง…";
+    const { data, error } = await supabase.rpc("first_order", { d: $("d").value });
+    $("first").disabled = false;
+    if (error || !data?.order_id) { $("msg").className = "err"; $("msg").textContent = "ทำใบสั่งไม่ได้\n" + App.errText(error || new Error("ไม่มีใบสั่ง")); return; }
+    location.href = "approve.html?order=" + data.order_id;
   };
   $("d").onchange = load; await load();
   document.querySelector(".sk").remove(); $("form").hidden = false;

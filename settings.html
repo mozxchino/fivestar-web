@@ -10,7 +10,11 @@
 <style>
 .g{align-items:end}
 a.cell{text-decoration:none;color:inherit}
-#hd{min-height:44px} /* qa: the add-holiday field sits in a plain row (not a label), so the field itself is the tap target */
+#hd{min-height:44px}
+/* 0033 รอบสั่ง CPF: 7 weekday toggles in one row, each a full-height tap target */
+.dow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;width:calc(100% + 20px);margin:0 -10px;padding:4px 0}
+.dow .chip{justify-content:center;padding:0;box-shadow:none;background:var(--color-fill)}
+.dow .chip.on{background:var(--color-foreground)} /* qa: the add-holiday field sits in a plain row (not a label), so the field itself is the tap target */
 .g label.chk{display:flex;align-items:center;gap:10px;min-height:var(--field);margin:0;align-self:end;font-size:16px;color:var(--fg)}
 </style></head><body class="grouped" ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ตั้งค่า</h1><div class="sub">สำหรับเจ้าของ</div></div>
@@ -174,7 +178,7 @@ a.cell{text-decoration:none;color:inherit}
   const noCost = (p) => p.active && !isCons(p) && p.cost_price == null;
   const FIL = { sell: ["ของขาย", (p) => p.active && !isCons(p)], cons: ["ของใช้ในร้าน", (p) => p.active && isCons(p)], nocost: ["ยังไม่ใส่ทุน", noCost], off: ["ปิดใช้แล้ว", (p) => !p.active] };
   let pf = FIL[qs.get("f")] ? qs.get("f") : "sell";
-  const pmeta = (p) => isCons(p) ? `${KIND.consumable} · ${p.supplier === "cpf" ? "สั่ง CPF" : "ซื้อเอง"} · แพ็คละ ${p.pack_size}`
+  const pmeta = (p) => isCons(p) ? `${KIND.consumable} · ${p.supplier === "cpf" ? "สั่ง CPF" : "ซื้อเอง"} · ถุงละ ${p.pack_size}`
     : `${(p.par_weekday || 0) + (p.par_weekend || 0) === 0 ? "ไม่สั่ง (ควรมี 0)" : `ควรมี ${p.par_weekday} / ${p.par_weekend}`} · ${p.cost_price == null ? '<b class="err">ยังไม่ใส่ทุน</b>' : `ทุน ${money(p.cost_price)} บาท`}${p.kind === "self" ? " · ซื้อเอง" : ""}`;
   function drawProd() {
     const q = $("q").value.trim().toLowerCase();
@@ -193,11 +197,13 @@ a.cell{text-decoration:none;color:inherit}
     cur = p; $("psm").textContent = "";
     $("psh").textContent = p.name;
     $("psb").innerHTML = `<p class="meta" style="margin:2px 0 0">${KIND[p.kind] || E(p.kind)}${isCons(p) ? ` · ${p.supplier === "cpf" ? "สั่ง CPF" : "ซื้อเอง"}` : ""}</p>` + (isCons(p)
-      ? `<div class="g">${num("pack_size", "แพ็คละ (ชิ้น)", p.pack_size, 1)}</div>${chk(p)}`
+      // 0033 (Mos 26 ต.ค.): where it comes from decides the order: CPF = ticked low/out goes into the CPF order (1 bag), ซื้อเอง = ของใช้ต้องซื้อเอง
+      ? `<label class="field" for="psup">ซื้อจากไหน</label><select id="psup" name="supplier"><option value="cpf" ${p.supplier === "cpf" ? "selected" : ""}>สั่ง CPF (อยู่ในใบสั่ง)</option><option value="self" ${p.supplier === "self" ? "selected" : ""}>ซื้อเอง (ช้อปปี้ แม็คโคร)</option></select>
+         <div class="g">${num("pack_size", "ถุงละ (ใบสั่ง CPF)", p.pack_size, 1)}</div>${chk(p)}`
       : `<div class="g">${num("par_weekday", "ควรมี จ.–พฤ.", p.par_weekday, 1)}${num("par_weekend", "ควรมี ศ.–อา.", p.par_weekend, 1)}
          ${num("cost_price", "ราคาทุน (บาท)", p.cost_price)}${num("store_price", "ขายหน้าร้าน (บาท)", p.store_price)}</div>
-         <details class="fold"><summary>แพ็คละ ราคาเดลิเวอรี และปิดใช้<span class="chip">เปิดดู</span></summary>
-         <div class="g">${num("pack_size", "แพ็คละ (ชิ้น)", p.pack_size, 1)}${num("delivery_price", "ขายเดลิเวอรี (บาท)", p.delivery_price)}</div>${chk(p)}</details>`);
+         <details class="fold"><summary>ถุงละ ราคาเดลิเวอรี และปิดใช้<span class="chip">เปิดดู</span></summary>
+         <div class="g">${num("pack_size", "ถุงละ (ใบสั่ง CPF)", p.pack_size, 1)}${num("delivery_price", "ขายเดลิเวอรี (บาท)", p.delivery_price)}</div>${chk(p)}</details>`);
     $("pss").textContent = "บันทึก " + p.name;
     sheet.open();
   }
@@ -206,7 +212,7 @@ a.cell{text-decoration:none;color:inherit}
     $("psh").textContent = "เพิ่มสินค้า";
     $("psb").innerHTML = `<label class="field" for="an">ชื่อสินค้า</label><input type="text" id="an" name="name" required>
       <label class="field" for="ak">เป็นของแบบไหน</label><select id="ak" name="kk">${ADDK.map(([v, t]) => `<option value="${v}">${t}</option>`).join("")}</select>
-      <div class="g"><label>หน่วย<input type="text" name="unit" list="units" placeholder="ชิ้น" required></label>${num("pack_size", "แพ็คละ (ชิ้น)", 1, 1)}</div>
+      <div class="g"><label>หน่วย<input type="text" name="unit" list="units" placeholder="ชิ้น" required></label>${num("pack_size", "ถุงละ (ใบสั่ง CPF)", 1, 1)}</div>
       <datalist id="units"><option value="ตัว"><option value="ชิ้น"><option value="แพ็ค"><option value="ขวด"><option value="กก."><option value="ม้วน"><option value="ซอง"></datalist>
       <p class="muted">ควรมี กับ ราคาทุน ใส่ต่อได้หลังเพิ่ม</p>`;
     $("pss").textContent = "เพิ่มสินค้า";
@@ -224,14 +230,15 @@ a.cell{text-decoration:none;color:inherit}
       for (const [k, int] of [["par_weekday", 1], ["par_weekend", 1], ["pack_size", 1], ["cost_price"], ["store_price"], ["delivery_price"]]) if (k in f) row[k] = n(k, int);
       if (Object.values(row).some(Number.isNaN)) return bad("ตัวเลขไม่ถูก\nใส่เลข 0 ขึ้นไป (ควรมี กับ แพ็ค ใช้เลขเต็ม)");
       for (const k of ["par_weekday", "par_weekend"]) if (k in row && row[k] == null) row[k] = 0;   // not null in the DB
-      if ("pack_size" in row && !(row.pack_size >= 1)) return bad("แพ็คละ ต้องเป็น 1 ขึ้นไป");
+      if ("pack_size" in row && !(row.pack_size >= 1)) return bad("ถุงละ ต้องเป็น 1 ขึ้นไป");
+      if (f.supplier === "cpf" || f.supplier === "self") row.supplier = f.supplier;
     } else {
       const [kind, supplier] = f.kk.split("|"), pk = n("pack_size", 1);
       const need = (n) => UXM.shake($("psb").querySelector(`[name=${n}]`)); // ก5: jump to the empty field and shake it
       if (!f.name) { need("name"); return bad("ใส่ชื่อสินค้าก่อน"); }
       if (ps.some((p) => p.name === f.name)) return bad("มีสินค้าชื่อนี้แล้ว");
       if (!f.unit) { need("unit"); return bad("ใส่หน่วยก่อน เช่น ชิ้น"); }
-      if (!(pk >= 1)) return bad("แพ็คละ ต้องเป็นเลขเต็ม 1 ขึ้นไป");
+      if (!(pk >= 1)) return bad("ถุงละ ต้องเป็นเลขเต็ม 1 ขึ้นไป");
       row = { name: f.name, kind, supplier, unit: f.unit, pack_size: pk, sort: Math.max(0, ...ps.map((p) => p.sort)) + 1, par_weekday: 0, par_weekend: 0, active: true };
     }
     $("pss").disabled = true;
@@ -254,6 +261,7 @@ a.cell{text-decoration:none;color:inherit}
   const S = Object.fromEntries((st || []).map((s) => [s.key, s.value]));
   const { data: gs } = await supabase.from("line_sources").select("source_id,display_name").eq("source_type", "group");
   let hol = [...(S.holidays || [])].sort();
+  let nod = Array.isArray(S.cpf_no_delivery_dow) ? [...S.cpf_no_delivery_dow] : [1];
   const sel = (id, cur) => `<select id="${id}"><option value="">ยังไม่เลือก</option>${(gs || []).map((g) => `<option value="${E(g.source_id)}" ${g.source_id === cur ? "selected" : ""}>${E(g.display_name || g.source_id)}</option>`).join("")}</select>`;
   const chev = `<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>`;
   const send = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>`;
@@ -265,6 +273,12 @@ a.cell{text-decoration:none;color:inherit}
     <h2>วันรับร้าน</h2><div class="gl"><a class="cell nav" href="opening.html"><span class="k">นับสต็อกตั้งต้น<small>กรอกของที่นับได้ เป็นยกมาของวันแรก</small></span>${chev}</a></div>
     <h2>เวลา</h2><div class="gl"><label class="cell"><span class="k">เตือนปิดร้านตอน</span><input type="time" id="rem" value="${E(S.remind_at)}"></label><label class="cell"><span class="k">แอปส่งใบสั่งตอน</span><input type="time" id="auto" value="${E(S.auto_send_at)}"></label></div>
     <p class="gf">ถ้าไม่กดส่ง แอปส่งใบสั่งให้เซลล์ตามเวลานี้</p>
+    <h2>รอบสั่ง CPF</h2><div class="gl">
+      <label class="cell nav"><span class="k">สั่งคืนนี้ ของมากี่วัน<small>CPF ตัดรอบบ่ายโมง</small></span><span class="v" data-for="lead"></span>${chev}<select id="lead">${[1, 2, 3].map((n) => `<option value="${n}" ${Number(S.order_lead_days ?? 2) === n ? "selected" : ""}>${n === 1 ? "พรุ่งนี้" : n === 2 ? "มะรืน (2 วัน)" : "3 วัน"}</option>`).join("")}</select></label>
+      <label class="cell"><span class="k">ของถึงกี่โมง</span><input type="time" id="dlv" value="${E(S.delivery_at ?? "14:00")}"></label>
+      <label class="cell"><span class="k">แท็กเซลล์ท้ายใบสั่ง<small>ข้อความนี้ไม่ใช่การแท็กจริง บอกเซลล์ครั้งเดียวว่าใบสั่งมาจาก 5STARCHICKEN</small></span><input type="text" id="tag" value="${E(S.sales_mention ?? "@new")}" placeholder="@new" style="max-width:9em"></label>
+      <div class="cell" style="flex-wrap:wrap"><span class="k">CPF ไม่ส่งของวัน</span><div class="dow" id="nod" role="group" aria-label="วันที่ CPF ไม่ส่งของ">${["จ", "อ", "พ", "พฤ", "ศ", "ส", "อา"].map((w, i) => `<button type="button" class="chip${nod.includes(i + 1) ? " on" : ""}" data-d="${i + 1}" aria-pressed="${nod.includes(i + 1)}">${w}</button>`).join("")}</div></div></div>
+    <p class="gf"><span>สั่ง = ขายวันนี้ ปัดเป็นแพ็ก</span><span>ของถึงวันที่ CPF ไม่ส่ง = คืนนั้นไม่มีใบสั่ง</span><span>ล็อตก่อนหน้าสั่งเผื่อวันนั้น (เช่น ล็อตอาทิตย์ × 2)</span></p>
     <h2>กลุ่ม LINE</h2><div class="gl"><label class="cell nav"><span class="k">กลุ่มสั่งของ<small>มีเซลล์อยู่</small></span><span class="v" data-for="sg"></span>${chev}${sel("sg", S.sales_group_id)}</label>
       <label class="cell nav"><span class="k">กลุ่มพนักงาน</span><span class="v" data-for="fg"></span>${chev}${sel("fg", S.staff_group_id)}</label>
       <button class="cell act" type="button" id="claim"><span class="ic">${send}</span><span class="k">ส่งการ์ดยืนยันตัวตนเข้ากลุ่มพนักงาน</span></button></div>
@@ -276,7 +290,8 @@ a.cell{text-decoration:none;color:inherit}
     <div class="sticky"><button class="btn primary" id="save">บันทึกตั้งค่าร้าน</button><p id="smsg" class="muted"></p></div>`;
   // picker rows show the chosen group's name as the value
   const showSel = (id) => { const o = $(id).selectedOptions[0]; document.querySelector(`[data-for="${id}"]`).textContent = o ? o.textContent : ""; };
-  ["sg", "fg"].forEach((id) => { showSel(id); $(id).addEventListener("change", () => showSel(id)); });
+  ["sg", "fg", "lead"].forEach((id) => { showSel(id); $(id).addEventListener("change", () => showSel(id)); });
+  $("nod").onclick = (ev) => { const b = ev.target.closest("[data-d]"); if (!b) return; const d = +b.dataset.d; nod = nod.includes(d) ? nod.filter((x) => x !== d) : [...nod, d].sort(); b.classList.toggle("on"); b.setAttribute("aria-pressed", nod.includes(d)); };
   drawHol();
   UXM.dateTh($("hd")); // Mos 26 ต.ค.: Thai day over the native picker
   $("ha").onclick = () => { const d = $("hd").value; if (d && !hol.includes(d)) { hol.push(d); hol.sort(); drawHol(); } $("hd").value = ""; };
@@ -291,6 +306,8 @@ a.cell{text-decoration:none;color:inherit}
   $("save").onclick = async () => {
     const rows = [["shop_name", $("shop").value.trim()], ["remind_at", $("rem").value || "20:30"], ["auto_send_at", $("auto").value || "21:00"],
       ["sales_group_id", $("sg").value || ""], ["staff_group_id", $("fg").value || ""], ["holidays", hol],
+      // 0033 รอบสั่ง CPF · out-of-range numbers fall back to the defaults instead of saving nonsense
+      ["order_lead_days", Number($("lead").value) || 2], ["delivery_at", $("dlv").value || "14:00"], ["sales_mention", $("tag").value.trim()], ["cpf_no_delivery_dow", nod],
       // GP: blank = keep what is saved (never write 0 by accident)
       ...["lineman_gp", "grab_gp", "shopee_gp"].filter((k) => $(k).value !== "").map((k) => [k, Number($(k).value)])].map(([key, value]) => ({ key, value }));
     const { error } = await supabase.from("settings").upsert(rows);

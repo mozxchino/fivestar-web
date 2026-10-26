@@ -171,7 +171,7 @@ td+td{font-weight:600}
       ? T.map((x) => `<div class="card todo${x.bad ? " bad" : ""}" data-k="${x.key}"><div class="t">${x.t}</div>${x.b ? `<div class="b">${x.b}</div>` : ""}<div class="s">${x.s}</div>${x.a ? `<div class="acts">${x.a}</div>` : ""}</div>`).join("")
       : ALLDONE);
     if (!sd) {
-      $("out").innerHTML = bento(c) + todo + `<div class="card muted">ไม่มีบันทึกของ${when(d)}</div>` + (c.isToday ? `<a class="btn sm" href="approve.html">ดูใบสั่งพรุ่งนี้</a>` : "");
+      $("out").innerHTML = bento(c) + todo + `<div class="card muted">ไม่มีบันทึกของ${when(d)}</div>` + (c.isToday ? `<a class="btn sm" href="approve.html">ดูใบสั่ง</a>` : "");
       return;
     }
     const waste = sl.filter((l) => +l.waste > 0);
@@ -200,7 +200,7 @@ td+td{font-weight:600}
         cc.map((c) => `<div class="ln">${esc(prods[c.product_id])} <span class="pill" data-tone="${c.status === "out" ? "bad" : "wait"}">${CS[c.status] || esc(c.status)}</span></div>`).join("") || `<p class="muted">มีครบ</p>`)
       + (photos.length ? fold("pics", `<b>รูปจากร้าน</b>${fv("", `${photos.length} รูป`)}`, `<div class="sk-row" style="flex-wrap:wrap;gap:8px;padding:8px 0 12px">${sb("72px", 72, ";--r:10px").repeat(photos.length)}</div>`) : "")
       + `</div>`
-      + (c.isToday ? `<a class="btn sm" href="approve.html">ดูใบสั่งพรุ่งนี้</a>` : "")
+      + (c.isToday ? `<a class="btn sm" href="approve.html">ดูใบสั่ง</a>` : "")
       + (MGR ? "" : `<button class="btn sm" id="edit">แก้ตัวเลข${c.isToday ? "วันนี้" : "วันนั้น"}</button>`);
     if (!MGR) $("edit").onclick = () => openEdit(c);
     U.folds($("out").querySelector(".folds"), async (b) => {
