@@ -5,13 +5,9 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="lib/ui.css">
 <style>
-/* Mos 26 ต.ค.: two tabs at the top, form right under them, the red button in the bottom bar · plain page class, no :has() (iPhone LINE) */
-.pg-waste { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; padding-bottom: 0; }
-.pg-waste #form:not([hidden]), .pg-waste > .sk { flex: 1; display: flex; flex-direction: column; }
-.pg-waste #form > .sticky, .pg-waste > .sk > .sticky { margin-top: auto; }
+/* Mos 26 ต.ค.: two tabs at the top, form right under them, the red button in the bottom bar (.pg-fill in ui.css) · plain page class, no :has() (iPhone LINE) */
 .pg-waste .tabs button b { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 6px; padding: 0 6px; border-radius: 10px; font: 600 12px/1 var(--font-head); font-variant-numeric: tabular-nums; color: #fff; background: var(--color-primary); }
 .pg-waste .tabs button b:empty { display: none; }
-#pNew > .muted:first-child { margin-top: 0; }
 .wl { padding: 4px 16px; }
 .wl .wr { display: flex; align-items: center; gap: 12px; min-height: 72px; padding: 10px 0; }
 .wl .wr + .wr { border-top: .5px solid var(--color-separator); }
@@ -24,7 +20,7 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script>
-</head><body class="pg-waste" ontouchstart="">
+</head><body class="pg-waste pg-fill" ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ทิ้งของเสีย</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
 <p id="blocked" class="err" hidden></p>
 <div class="tabs sk" aria-hidden="true"><button class="on" tabindex="-1">บันทึกใหม่</button><button tabindex="-1">ทิ้งแล้ววันนี้</button></div>
@@ -32,12 +28,14 @@
 <div class="sk"><span class="vh">กำลังเปิด…</span><div class="field" style="display:flow-root"><i class="sk-b" style="--w:22%;--h:14px;margin:5px 0 4px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:12px;--gap:0px"></i><div class="field" style="display:flow-root"><i class="sk-b" style="--w:26%;--h:14px;margin:5px 0 4px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:12px;--gap:0px"></i><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
 <div id="form" class="ld" hidden>
   <div id="pNew" role="tabpanel">
-  <p class="muted">ทิ้งเมื่อไหร่ บันทึกตอนนั้นเลย<br>ตอนปิดร้าน ช่อง "เสีย" ใส่ตัวเลขนี้ให้เอง</p>
-  <label class="field" for="prod">ทิ้งอะไร</label>
+  <p class="fhint">ทิ้งแล้วบันทึกเลย ช่อง "เสีย" ตอนปิดร้านใส่ให้เอง</p>
+  <label class="fstep" for="prod"><i>1</i>ทิ้งอะไร</label>
   <select id="prod"></select>
-  <label class="field" for="qty">จำนวน</label><div class="in"><input id="qty" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0"><span class="sfx" id="unit2">ชิ้น</span></div>
+  <label class="fstep" for="qty"><i>2</i>จำนวน</label><div class="in"><input id="qty" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0"><span class="sfx" id="unit2">ชิ้น</span></div>
+  <label class="fstep" for="g"><i>3</i>น้ำหนัก<small>ถ่ายรูปตาชั่งก่อน</small></label>
   <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปบนตาชั่ง <input id="phScale" type="file" accept="image/*" capture="environment" hidden></label>
-  <label class="field" for="g">น้ำหนัก</label><div class="in"><input id="g" type="number" inputmode="numeric" pattern="[0-9]*" step="1" min="0" enterkeyhint="done" placeholder="0"><span class="sfx">กรัม</span></div>
+  <div class="in"><input id="g" type="number" inputmode="numeric" pattern="[0-9]*" step="1" min="0" enterkeyhint="done" placeholder="0"><span class="sfx">กรัม</span></div>
+  <h3 class="fstep"><i>4</i>ทิ้งลงถัง</h3>
   <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปตอนทิ้งลงถัง <input id="phBin" type="file" accept="image/*" capture="environment" hidden></label>
   <p id="phS" class="muted"></p>
   </div>

@@ -2,32 +2,38 @@
 
 /* ---------- close: 4-step wizard · step bar on top, one step on screen, back + red next at the bottom ---------- */
 /* the step bar scrolls away (the red button at the bottom is the way on) · only the sheet's column header sticks */
-.ux-top { margin: -4px 0 0; padding: 0 0 6px; }
+.ux-top { margin: -4px 0 0; padding: 0 0 4px; }
 .ux-top-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.ux-top-row h2 { margin: 0; font: 500 18px/1.3 var(--font-head); outline: none; }
+.ux-top-row h2 { margin: 0; font: 600 21px/1.3 var(--font-head); outline: none; }
 .ux-top-row .muted { font: 400 13px/1.3 var(--font-body); white-space: nowrap; }
-.ux-top-row h2 small { margin-left: 4px; font: 400 13px/1.3 var(--font-body); color: var(--color-ink-soft); white-space: nowrap; }
-.ux-prog { height: 6px; border-radius: 99px; background: var(--color-muted); overflow: hidden; margin: 8px 0 4px; }
-.ux-prog i { display: block; height: 100%; background: var(--color-success); border-radius: 99px; transform: scaleX(0); transform-origin: left; transition: transform 200ms var(--ease-out); }
-.ux-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
-.ux-steps button {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 48px; padding: 4px 2px;
-  border: 0; border-radius: var(--radius-sm); background: none; font: 500 13px/1.2 var(--font-body); color: var(--color-ink-soft);
-  white-space: nowrap; cursor: pointer; touch-action: manipulation; transition: transform 120ms var(--ease-out);
+.ux-top-row h2 small { margin-left: 6px; font: 500 14px/1.3 var(--font-body); color: var(--color-ink-soft); white-space: nowrap; }
+/* round 2: the connector lines between the step dots carry the progress, the bar stays in the markup for update() but is not drawn */
+.ux-prog { display: none; }
+/* step indicator (close 4 steps · open 2 steps), Mos 26 ต.ค. รอบ 2: the current step is a filled dark dot + dark bold label on a white pill,
+   done = green dot with ✓, not reached = hollow dot + grey label · a line joins the dots and turns green behind a done step */
+.ux-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin: 12px 0 0; padding: 0; list-style: none; }
+.ux-steps > * {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 4px; min-height: 60px; padding: 6px 2px;
+  border: 0; border-radius: var(--radius-sm); background: none; font: 500 14px/1.2 var(--font-body); color: var(--color-ink-soft);
+  white-space: nowrap; touch-action: manipulation; transition: transform 120ms var(--ease-out), background-color 160ms var(--ease-out);
 }
-.ux-steps button i {
-  display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font: 600 13px/1 var(--font-head); font-style: normal;
-  border: 1.5px solid var(--color-border-input); background: var(--color-card); font-variant-numeric: tabular-nums;
-  transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), color 160ms var(--ease-out);
+.ux-steps > button { cursor: pointer; }
+.ux-steps > * + *::before { content: ""; position: absolute; z-index: 0; top: 20px; right: 50%; width: 100%; height: 2px; margin-right: 15px; border-radius: 1px; background: var(--color-border-strong); }
+.ux-steps > :is(.ok, .on)::before { background: var(--color-success); }
+.ux-steps > * > i {
+  position: relative; z-index: 1; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; font: 600 15px/1 var(--font-head); font-style: normal;
+  border: 2px solid var(--color-border-input); background: var(--color-card); color: var(--color-ink-soft); font-variant-numeric: tabular-nums;
+  transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), color 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
 }
-.ux-steps button:active { transform: scale(.96); }
-.ux-steps .on { color: var(--color-foreground); }
-.ux-steps .on i { background: var(--color-foreground); border-color: var(--color-foreground); color: #fff; }
-.ux-steps .ok i { background: var(--tint-success); border-color: var(--border-ok); color: var(--color-success); }
-.ux-steps [aria-disabled=true] { cursor: default; color: var(--color-muted-foreground); }
+.ux-steps > button:active { transform: scale(.96); }
+.ux-steps > .on { color: var(--color-foreground); font-weight: 700; background: var(--color-card); box-shadow: var(--shadow-raised); }
+.ux-steps > .on > i { background: var(--color-foreground); border-color: var(--color-foreground); color: #fff; box-shadow: 0 0 0 4px rgba(32, 24, 24, .10); }
+.ux-steps > .ok { color: var(--color-foreground); }
+.ux-steps > .ok > i { background: var(--color-success); border-color: var(--color-success); color: #fff; }
+.ux-steps [aria-disabled=true] { cursor: default; color: var(--color-muted-foreground); font-weight: 400; }
+.ux-steps [aria-disabled=true] > i { border-color: var(--color-border-strong); color: var(--color-muted-foreground); }
 .ux-steps button:focus-visible, .ux-opt:focus-visible, .ux-cchip:focus-visible { outline: 3px solid rgba(200, 33, 40, .35); outline-offset: 2px; }
 .ux-steps [aria-disabled=true]:active { transform: none; }
-.ux-steps [aria-disabled=true] i { border-color: var(--color-border-strong); }
 .grid { scroll-margin-top: calc(var(--chrome-h) + 48px); scroll-margin-bottom: 120px; }
 #progT { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ux-step { padding-top: 10px; }
@@ -100,9 +106,12 @@ p.ok.big:not(:empty) { padding-left: 48px; }
 p.ok.big:not(:empty)::before { top: 22px; }
 
 /* ---------- receive: shortage on the row ---------- */
-.ux-short { display: block; font-size: 14px; font-weight: 700; color: var(--color-destructive); }
+/* round 2b (Mos 26 ต.ค.): changed rows are amber (a difference to check, not an error) · bar left + tinted box + short label under the name */
+.ux-short { display: inline-block; margin-top: 4px; padding: 2px 8px; border-radius: var(--radius-pill); font: 600 13px/1.35 var(--font-body); color: var(--on-wait); background: var(--tint-wait); font-variant-numeric: tabular-nums; }
 .ux-short:empty { display: none; }
-.it:has(.ux-short:not(:empty)) input { background-color: var(--tint-destructive); box-shadow: inset 0 0 0 1.5px var(--color-destructive); }
+#lines > .it { position: relative; padding-left: 12px; padding-right: 12px; margin: 0 -12px; }
+#lines > .it.rc-chg { background: #FFFBEC; box-shadow: inset 4px 0 0 var(--color-wait-mark); }
+#lines > .it.rc-chg input { background-color: var(--tint-wait); box-shadow: inset 0 0 0 1.5px var(--color-wait-mark); color: var(--on-wait); }
 
 /* ---------- staff home ---------- */
 /* pages whose #form is a flex column (open · receive · close): the skeleton lays out the same way, so nothing moves when the form appears */
@@ -123,7 +132,7 @@ a.row:active { background: var(--color-muted); }
 .ux-3 small { display: block; font-size: 13px; color: var(--color-ink-soft); }
 .ux-3 b { font: 600 20px/1.3 var(--font-head); font-variant-numeric: tabular-nums; }
 .ux-3 .err { color: var(--color-destructive); }
-.ux-week { font: 500 15px/1.3 var(--font-head); color: var(--color-ink-soft); margin: 18px 0 4px; }
+.ux-week { font: 600 17px/1.35 var(--font-head); color: var(--color-foreground); margin: 22px 4px 6px; }
 details.ux-day { border-bottom: .5px solid var(--color-separator); }
 details.ux-day:last-child { border-bottom: 0; }
 details.ux-day summary { list-style: none; gap: 10px; min-height: 52px; padding: 6px 0; font-variant-numeric: tabular-nums; }
@@ -143,7 +152,7 @@ details.ux-day[open] summary::after { transform: rotate(90deg); }
 
 @media (prefers-reduced-motion: reduce) {
   @starting-style { .ux-next, .ux-step, #consBox { transform: none; } }
-  .ux-steps button:active, .ux-opt:active, .ux-cchip:active { transform: none; }
+  .ux-steps > button:active, .ux-opt:active, .ux-cchip:active { transform: none; }
   .ux-prog i, details.ux-day summary::after { transition: none; }
 }
 
@@ -167,15 +176,16 @@ button.row.ux-all .ux-go { color: var(--color-primary-dark); }
 .ux-more { margin-top: 12px; font-variant-numeric: tabular-nums; }
 .ux-date span { display: inline-flex; align-items: center; gap: 4px; }
 .ux-date svg { width: 16px; height: 16px; flex: none; }
-/* impeccable: a flagged day keeps its reasons readable (2 lines) instead of "เงินสดขาด 40 บาท · ของเสีย 1 …" */
-details.ux-day summary .m { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.4; }
+/* visual hierarchy rule 3 (26 ต.ค.): one line per day · the main problem first, "อีก N เรื่อง" counts the rest (all of it shows when the day opens) */
+details.ux-day summary .m { font-size: 15px; }
+details.ux-day summary .m b { font-weight: 500; color: var(--color-ink-soft); }
 
 /* ---------- round 4 owner hub (index เจ้าของ): every row says what waits there · status dot + words (no count bubble, the words say it) ---------- */
 .ux-hub .t { min-width: 0; }
 .ux-hub .t small { opacity: 1; color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
 .ux-hub .t small::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; vertical-align: 1px; background: var(--color-chevron); }
 .ux-hub .t small[data-tone=ok]::before { background: var(--color-success); }
-.ux-hub .t small[data-tone=wait]::before { background: #C99A06; }
+.ux-hub .t small[data-tone=wait]::before { background: var(--color-wait-mark); }
 .ux-hub .t small[data-tone=wait] { color: var(--on-wait); font-weight: 500; }
 .ux-hub .t small[data-tone=bad]::before { background: var(--color-destructive); }
 .ux-hub .t small[data-tone=bad] { color: var(--color-destructive); font-weight: 500; }
@@ -210,6 +220,33 @@ details.ux-day summary .m { white-space: normal; display: -webkit-box; -webkit-l
 .ux-waste .field { margin-top: 12px; }
 .ux-waste .in { background: var(--color-card); }
 
+/* open.html round 2 (Mos 26 ต.ค.): two steps, a big title, the photo frame is the focal point, who + the clock under it */
+.op-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0; }
+.op-t { margin: 18px 4px 10px; font: 600 24px/1.25 var(--font-head); outline: none; text-wrap: balance; }
+.op-frame {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; aspect-ratio: 4 / 3; padding: 16px;
+  border-radius: var(--radius-card); background: var(--color-card); color: var(--color-foreground); text-align: center; cursor: pointer;
+  box-shadow: var(--shadow-card), inset 0 0 0 2px rgba(200, 33, 40, .28); background-image: repeating-linear-gradient(135deg, transparent 0 14px, rgba(200, 33, 40, .035) 14px 28px);
+  touch-action: manipulation; transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+}
+.op-frame[hidden] { display: none; }
+.op-frame:active { transform: scale(.98); }
+.op-frame .op-store { width: 84px; height: 84px; color: var(--color-primary); opacity: .9; margin-bottom: 4px; }
+.op-frame b { display: inline-flex; align-items: center; gap: 8px; font: 600 19px/1.3 var(--font-head); color: var(--color-primary-dark); }
+.op-frame b svg { width: 22px; height: 22px; }
+.op-frame small { font-size: 15px; color: var(--color-ink-soft); }
+.op-frame-sk { aspect-ratio: 4 / 3; height: auto !important; }
+/* once taken, the photo stands where the frame was, same size (tap = full screen, ✕ = drop it) */
+.pg-open .thumbs { margin: 0; }
+.pg-open .thumb, .pg-open .thumb .see { width: 100%; height: auto; aspect-ratio: 4 / 3; border-radius: var(--radius-card); }
+.pg-open .thumb .x { top: 2px; right: 2px; }
+.pg-open #again { margin: 10px 0 0; }
+.pg-open #phS:empty { display: none; }
+.op-kv { margin: 14px 4px 0; }
+.op-kv .kv { padding: 6px 0; font-size: 16px; border-bottom: .5px solid var(--color-separator); }
+.op-kv .kv b { color: var(--color-foreground); font-weight: 600; font-variant-numeric: tabular-nums; }
+.op-kv .muted { margin: 8px 0 0; }
+
 /* open.html (Mos 26 ต.ค. "เว้นทำไม"): the red button sits on the screen bottom in the standard action bar, not under the card with a line and a gap.
    Plain page class, no :has(), so LINE's iOS WebKit lays it out the same · the skeleton takes the same shape */
 .pg-open { padding-bottom: 0; }
@@ -219,3 +256,106 @@ details.ux-day summary .m { white-space: normal; display: -webkit-box; -webkit-l
 .pg-open #go { transition: opacity 180ms var(--ease-out); }
 @starting-style { .pg-open #go { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .pg-open #go { transition: none; } }
+
+/* ---------- close step 1, round 2 (Mos 26 ต.ค.): the count table gets anchors ----------
+   a header band that reads as column titles (dark, bold, own background) · product name bold on one line · the carried-over line muted ·
+   every other row on a faint warm band so the eye keeps its row across the three boxes */
+.sheet:has(> .grid) { padding: 0; overflow: clip; }
+.sheet > .grid.sheet-head { margin: 0; padding: 11px 12px 10px !important; background: var(--color-fill); font: 600 14px/1.3 var(--font-head); color: var(--color-foreground); box-shadow: 0 1px 0 var(--color-border-strong), 0 6px 8px -8px rgba(32, 24, 24, .25); }
+.sheet > .grid.sheet-head > div { white-space: nowrap; font-size: 13px; }
+.sheet > .grid.sheet-head #progT { font-family: var(--font-body); font-weight: 700; }
+#lines > .grid, .sheet > .ux-fold { padding-left: 12px; padding-right: 12px; }
+.sheet .grid { grid-template-columns: minmax(0, 1fr) 48px 48px 44px; gap: 4px; }
+#lines > .grid:nth-child(even of :not([hidden])) { background: #FBF7F4; }
+#lines .nm { font-size: 16px; font-weight: 600; line-height: 1.3; } /* fits one line at 375px for every product (measured) · 320px may still wrap a long one */
+#lines .nm .meta { font-size: 13px; font-weight: 400; color: var(--color-ink-soft); margin-top: 3px; }
+#lines > .grid::after { right: 3px; }
+@media (max-width: 359px) { .sheet .grid { grid-template-columns: minmax(0, 1fr) 46px 46px 44px; } #lines .nm { font-size: 15px; } }
+
+/* ---------- receive round 2 (Mos 26 ต.ค.): the question + two big answer cards lead, the order fills the middle, save waits visibly ---------- */
+.rc-q { margin: 6px 4px 12px; font: 600 24px/1.25 var(--font-head); text-wrap: balance; }
+#form > .rc-pick { margin-top: 0; gap: 12px; }
+.rc-pick .ux-opt { min-height: 92px; padding: 16px 16px 16px 64px; border-width: 2px; }
+.rc-pick .ux-opt b { font-size: 20px; font-weight: 600; }
+.rc-pick .ux-opt small { font-size: 15px; margin-top: 2px; }
+.rc-pick .ux-opt::before { left: 18px; width: 30px; height: 30px; margin-top: -15px; }
+.rc-ord { margin-top: 22px; }
+.rc-ord[hidden] { display: none; }
+.rc-ord .sh { margin: 0 4px 8px; }
+.rc-ord .card { margin: 0; padding: 4px 16px; }
+.rc-ord .kv { min-height: 44px; align-items: center; padding: 6px 0; font-size: 16px; color: var(--color-foreground); border-bottom: .5px solid var(--color-separator); }
+.rc-ord .kv:last-child { border-bottom: 0; }
+.rc-ord .kv span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.rc-ord .kv b { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* "วันนี้ไม่มีของมา" is the rare way out, so it stays a quiet button under the content, not a twin of the answer cards */
+.btn.rc-none { display: flex; width: auto; margin: 16px auto 8px; padding: 0 20px; background: none; color: var(--color-primary-dark); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.btn.rc-none:active { background: var(--color-fill); }
+/* save before a choice: still the red button's shape and place, pale (no solid red yet) · the reason is one short line above it */
+.rc-why { margin: 0 0 8px; text-align: center; font: 500 15px/1.35 var(--font-body); color: var(--color-foreground); }
+.rc-why[hidden] { display: none; }
+.sticky .btn.rc-wait[aria-disabled=true] { cursor: pointer; color: var(--color-primary-dark); background: var(--tint-primary); box-shadow: inset 0 0 0 1.5px var(--border-bad); }
+
+/* ---------- index staff round 2 (Mos 26 ต.ค.): the next task is the one solid red on the home screen (the page has no other red button) ----------
+   rest days keep the calm green tint · white on #C82128 = 5.7:1 · the 3 status tiles under it stay equal thirds, one-line values */
+.trio > .bt.hero.lead:not(.calm) {
+  min-height: 116px; padding: 20px 16px 20px 18px; color: #fff; background: var(--color-primary) linear-gradient(160deg, #D63A40, var(--color-primary) 60%, #B71C23);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 2px 4px rgba(158, 11, 35, .22), 0 14px 28px -12px rgba(158, 11, 35, .55);
+}
+.trio > .bt.hero.lead:not(.calm) :is(.k, .v, .m, .go) { color: #fff; }
+.trio > .bt.hero.lead:not(.calm) .k { font-weight: 600; opacity: .92; }
+.trio > .bt.hero.lead:not(.calm) .v { font-size: 32px; }
+.trio > .bt.hero.lead:not(.calm) .m { font-size: 14px; opacity: .95; }
+.trio > .bt.hero.lead:not(.calm) .ico { width: 52px; height: 52px; border-radius: 16px; }
+.trio > .bt.hero.lead:not(.calm) .ico svg { width: 28px; height: 28px; }
+.trio > .bt.hero.lead:not(.calm):active { background: var(--color-primary-dark); }
+.trio > .bt:not(.wide) { min-width: 0; }
+.trio > .bt:not(.wide) .k { white-space: nowrap; }
+@media (max-width: 359px) { .trio > .bt:not(.wide) { padding: 10px 6px 10px 9px; } .trio > .bt:not(.wide) .v { font-size: 15px; } .trio > .bt:not(.wide) .v small { font-size: 12px; } .trio > .bt.hero.lead:not(.calm) .v { font-size: 26px; } }
+
+/* ---------- receive round 2b: two-sided rows, the other answer folds away ---------- */
+#recBox .sheet .it { grid-template-columns: minmax(0, 1fr) auto 84px; gap: 10px; }
+#recBox .nm { font-weight: 600; }
+#recBox .ord { font-size: 15px; color: var(--color-ink-soft); white-space: nowrap; }
+#recBox .it:not(.sheet-head) .ord::before { content: "สั่ง "; }
+.rc-pick[data-pick=short] #recAll, .rc-pick[data-pick=all] #recShort { min-height: 48px; padding: 10px 16px 10px 52px; background: var(--color-fill); box-shadow: none; border-color: transparent; }
+.rc-pick[data-pick=short] #recAll b, .rc-pick[data-pick=all] #recShort b { font: 500 16px/1.3 var(--font-head); color: var(--color-ink-soft); }
+.rc-pick[data-pick=short] #recAll small, .rc-pick[data-pick=all] #recShort small { display: none; }
+.rc-pick[data-pick=short] #recAll::before, .rc-pick[data-pick=all] #recShort::before { left: 18px; width: 22px; height: 22px; margin-top: -11px; }
+#sum { font-variant-numeric: tabular-nums; }
+
+/* ---------- close step 4 round 2b (Mos 26 ต.ค.): what is being sent on top, the two photos as big frames (same idea as the open frame) ---------- */
+.cl-sum { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 14px; }
+.cl-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; min-height: 60px; padding: 9px 10px 10px 11px; border: 0; border-radius: 14px;
+  background: var(--color-card); box-shadow: var(--shadow-raised); font: inherit; color: var(--color-foreground); text-align: left; cursor: pointer; touch-action: manipulation; transition: transform 120ms var(--ease-out); }
+.cl-cell:active { transform: scale(.97); }
+.cl-cell .k { display: flex; align-items: center; gap: 5px; font: 500 13px/1.3 var(--font-head); color: var(--color-ink-soft); white-space: nowrap; }
+.cl-cell .dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--color-chevron); }
+.cl-cell .v { max-width: 100%; font: 600 16px/1.25 var(--font-head); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.cl-cell .v small { font-size: 12px; font-weight: 500; }
+.cl-cell.ok .dot { background: var(--color-success); } .cl-cell.ok .v { color: var(--color-success); }
+.cl-cell.wait .dot { background: var(--color-wait-mark); } .cl-cell.wait .v { color: var(--on-wait); }
+.cl-cell.bad .dot { background: var(--color-destructive); } .cl-cell.bad .v { color: var(--color-destructive); }
+.cl-shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+.cl-shot { min-width: 0; }
+label.btn.cl-frame {
+  position: relative; flex-direction: column; gap: 6px; aspect-ratio: 3 / 4; min-height: 0; margin: 0; padding: 14px 10px; white-space: normal; overflow: hidden;
+  border-radius: var(--radius-card); background-color: var(--color-card); box-shadow: var(--shadow-card), inset 0 0 0 2px rgba(200, 33, 40, .28);
+  background-image: repeating-linear-gradient(135deg, transparent 0 14px, rgba(200, 33, 40, .035) 14px 28px); text-align: center;
+}
+label.btn.cl-frame:active { transform: scale(.98); }
+label.btn.cl-frame .cl-ico { width: 56px; height: 56px; color: var(--color-primary); }
+label.btn.cl-frame b { font: 600 17px/1.3 var(--font-head); color: var(--color-foreground); text-wrap: balance; }
+label.btn.cl-frame small { display: inline-flex; align-items: center; gap: 5px; font: 500 14px/1.3 var(--font-body); color: var(--color-primary-dark); }
+label.btn.cl-frame small svg { width: 16px; height: 16px; }
+label.btn.cl-frame .ux-tag { position: absolute; top: 10px; right: 10px; margin: 0; }
+label.btn.cl-frame.ux-next { box-shadow: var(--shadow-card), inset 0 0 0 2.5px var(--color-primary); }
+/* taken: the photo fills the frame (inline background-image from the page), green tag, one dark strip says how to shoot again */
+.cl-shot label.btn.cl-frame.ux-got { background-color: var(--color-muted); background-size: cover; background-position: center; box-shadow: var(--shadow-card), inset 0 0 0 2px var(--color-success); }
+.cl-frame.ux-got > :is(svg, b, small) { visibility: hidden; }
+.cl-frame.ux-got::after { content: attr(data-again); position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 8px 10px; font: 500 14px/1.2 var(--font-head); color: #fff; background: linear-gradient(transparent, rgba(32, 24, 24, .72)); }
+.cl-shot .thumbs { gap: 8px; margin: 8px 0 0; }
+.cl-shot .thumb, .cl-shot .thumb .see { width: 52px; height: 52px; }
+.cl-shot > p.muted { margin: 4px 2px 0; font-size: 13px; }
+.cl-shot > p.muted:empty { display: none; }
+#s4 > .field { margin-top: 20px; }
+@media (max-width: 359px) { label.btn.cl-frame b { font-size: 15px; } .cl-sum { gap: 6px; } .cl-cell { padding: 8px 6px 8px 8px; } .cl-cell .v { font-size: 14px; } .cl-cell .v small { font-size: 11px; } }

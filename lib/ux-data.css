@@ -120,7 +120,7 @@ button.cell.ux-who:active { background: var(--color-fill-pressed); }
 .ux-sysh .chip:active { transform: scale(.96); background: var(--color-fill-pressed); }
 #sysL:not([hidden]) { animation: fold-in 200ms var(--ease-out); }
 @media (prefers-reduced-motion: reduce) { #sysL:not([hidden]) { animation: none; } .ux-sysh .chip:active { transform: none; } }
-#items .ux-sysh h2 { margin: 0; font: 500 15px/1.4 var(--font-head); color: var(--color-ink-soft); }
+#items .ux-sysh h2 { margin: 0; font: 600 15px/1.4 var(--font-head); color: var(--color-foreground); }
 .ux-sysh p { margin: 2px 0 0; font-size: 13px; line-height: 1.35; color: var(--color-ink-soft); }
 .ux-sys .nm { font-weight: 400; color: var(--color-ink-soft); }
 .ux-sys .meta { font-weight: 400; }

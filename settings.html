@@ -88,10 +88,10 @@ a.cell{text-decoration:none;color:inherit}
       ${mgr(x)}
       <button class="cell act danger" type="button" data-off="${x.id}" data-n="${E(x.name)}">ปิดสิทธิ์ใช้แอป</button></div></div>`;
     const off = (us || []).filter((x) => !x.active);
-    $("staff").innerHTML = `<h2>คนขอใช้แอป</h2>` + ((pend || []).map((p, i) => `<div class="card gl" data-src="${E(p.source_id)}"><label class="cell"><span class="k">ชื่อ</span><input type="text" value="${E(p.display_name)}" placeholder="ชื่อที่เรียกในร้าน" aria-label="ชื่อที่เรียกในร้าน"></label>
+    $("staff").innerHTML = `<h2${(pend || []).length ? ' data-tone="bad"' : ""}>คนขอใช้แอป<span class="n">${(pend || []).length} คน</span></h2>` + ((pend || []).map((p, i) => `<div class="card gl" data-src="${E(p.source_id)}"><label class="cell"><span class="k">ชื่อ</span><input type="text" value="${E(p.display_name)}" placeholder="ชื่อที่เรียกในร้าน" aria-label="ชื่อที่เรียกในร้าน"></label>
       <button class="cell act${i ? "" : " ux-prim"}" type="button" data-ok><span class="k">อนุมัติเป็นพนักงาน</span></button></div>`).join("") || `<p class="gf">ไม่มีคนขอ</p>`)
-      + `<h2>คนที่ใช้แอปอยู่</h2>` + (us || []).filter((x) => x.active).map(u).join("")
-      + (off.length ? `<h2>ปิดสิทธิ์แล้ว (${off.length} คน)</h2>` + off.map(u).join("") : "");
+      + `<h2>คนที่ใช้แอปอยู่<span class="n">${(us || []).filter((x) => x.active).length} คน</span></h2>` + (us || []).filter((x) => x.active).map(u).join("")
+      + (off.length ? `<h2>ปิดสิทธิ์แล้ว<span class="n">${off.length} คน</span></h2>` + off.map(u).join("") : "");
   }
   // LINE menu follows the role: manager → เมนูผู้จัดการ · staff / ปิดสิทธิ์ → เมนูร้าน (the role itself is already saved)
   async function syncMenu(id) {

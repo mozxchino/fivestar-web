@@ -52,7 +52,7 @@
       if (g) probs.push(`<span class="${g < 0 ? "err" : ""}">เงินสด${g < 0 ? "ขาด" : "เกิน"} ${baht(g)}</span>`);
       if (shortD.has(d.date)) probs.push('<span class="err">ของมาไม่ครบ</span>');
       if (waste[d.date]) probs.push(`ของเสีย ${waste[d.date]} อย่าง`);
-      if (probs.length) return probs.length > 1 ? `${probs[0]} และอีก ${probs.length - 1} เรื่อง` : probs[0];
+      if (probs.length) return probs.length > 1 ? `${probs[0]} <b>อีก ${probs.length - 1} เรื่อง</b>` : probs[0];
       const t = d.closed_at ? `ปิด ${hm(d.closed_at)}` : d.opened_at ? `เปิด ${hm(d.opened_at)}` : "";
       return [g === 0 ? "เงินสดครบ" : "", t].filter(Boolean).join(" ");
     };

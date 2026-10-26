@@ -94,7 +94,7 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   const same = (r) => Number(r.qty) === Number(r.qty_proposed) && r.remaining != null && r.par != null && Number(r.remaining) >= Number(r.par);
   const top = rows.map((r, i) => same(r) ? "" : rowH(r, i)).join(""), sys = rows.map((r, i) => same(r) ? rowH(r, i) : "").join(""), nSame = rows.filter(same).length, nTop = rows.length - nSame;
   $("items").innerHTML = !rows.length ? '<div class="card"><p class="muted">ใบนี้ไม่มีของต้องสั่ง</p></div>'
-    : (nTop ? `<h2 class="ux-gh">ต้องดู ${nTop} รายการ</h2><div class="card list">${top}</div>` : "")
+    : (nTop ? `<h2 class="ux-gh" data-tone="wait">ต้องดู<span class="n">${nTop} รายการ</span></h2><div class="card list">${top}</div>` : "")
     + (nSame ? `<section class="ux-sys" aria-labelledby="sysH"><div class="ux-sysh"><div class="grow"><h2 id="sysH">ตามที่ระบบเสนอ ${nSame} รายการ</h2><p>ของยังพอ ไม่ได้แก้จำนวน</p></div><button type="button" id="sysT" class="chip" aria-expanded="false" aria-controls="sysL">ดู ${nSame} รายการ</button></div><div id="sysL" hidden>${sys}<button type="button" id="sysB" class="ux-sysend">ซ่อน ${nSame} รายการ</button></div></section>` : "");
   // impeccable: a long open box gets a second "ซ่อน" at its end · folding from there brings the box header back into view
   const fold = (open, back) => { $("sysL").hidden = !open; $("sysT").setAttribute("aria-expanded", open); $("sysT").textContent = open ? "ซ่อน" : `ดู ${nSame} รายการ`; if (back) document.querySelector(".ux-sys").scrollIntoView({ block: "center" }); };

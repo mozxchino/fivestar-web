@@ -12,11 +12,11 @@
 .daynav .d:has(input:focus-visible) { outline: 2px solid var(--color-ring); outline-offset: 2px; }
 
 /* section heading + to-do cards (urgent = red edge) */
-h3.sec { font: 500 15px/1.3 var(--font-head); color: var(--color-ink-soft); margin: 22px 16px 6px; scroll-margin-top: calc(var(--chrome-h) + 72px); }
+h3.sec { font: 600 17px/1.35 var(--font-head); color: var(--color-foreground); margin: 24px 16px 8px; scroll-margin-top: calc(var(--chrome-h) + 72px); }
 /* to-do card: a status dot leads the title (red = urgent · amber = decide) · no side stripe */
 .todo { padding: 14px 16px; margin: 8px 0; transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out); }
 .todo .t { position: relative; padding-left: 16px; font: 500 16px/1.35 var(--font-head); }
-.todo .t::before { content: ""; position: absolute; left: 0; top: .5em; width: 8px; height: 8px; border-radius: 50%; background: #C99A06; }
+.todo .t::before { content: ""; position: absolute; left: 0; top: .5em; width: 8px; height: 8px; border-radius: 50%; background: var(--color-wait-mark); }
 .todo.bad .t::before { background: var(--color-destructive); }
 .todo .s { padding-left: 16px; }
 .todo .s { font-size: 14px; color: var(--color-ink-soft); }
@@ -33,6 +33,8 @@ h3.sec { font: 500 15px/1.3 var(--font-head); color: var(--color-ink-soft); marg
 .fold { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; padding: 10px 0; margin: 0; background: none; border: 0; border-top: .5px solid var(--color-separator); color: var(--color-ink-soft); font: 400 15px/1.35 var(--font-body); text-align: left; cursor: pointer; }
 .folds > .fold:first-child { border-top: 0; }
 .fold b { color: var(--color-foreground); font-weight: 500; }
+.fold .fv { margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--color-ink-soft); }
+.fold .fv[data-tone] { font-weight: 600; } .fold .fv[data-tone=bad] { color: var(--color-destructive); } .fold .fv[data-tone=wait] { color: var(--on-wait); } .fold .fv[data-tone=ok] { color: var(--color-success); }
 .fold::after { content: ""; flex: none; width: 9px; height: 9px; margin-right: 4px; border-right: 2px solid var(--color-chevron); border-bottom: 2px solid var(--color-chevron); transform: rotate(45deg); transition: transform 200ms var(--ease-out); }
 .fold[aria-expanded=true]::after { transform: rotate(225deg); }
 .fold-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 200ms var(--ease-out); }

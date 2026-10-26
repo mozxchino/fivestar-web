@@ -167,7 +167,7 @@ td+td{font-weight:600}
     if (d !== D || TAB !== "day") return; // user moved on while loading
     const { sd, sl, cc, items } = c;
     const T = todos(c);
-    const todo = `<h3 class="sec" id="todoh">${T.length ? `ต้องจัดการ ${T.length} เรื่อง` : "ต้องจัดการ"}</h3>` + (T.length
+    const todo = `<h3 class="sec" id="todoh"${T.length ? ` data-tone="${T.some((x) => x.bad) ? "bad" : "wait"}"` : ' data-tone="ok"'}>ต้องจัดการ<span class="n">${T.length ? `${T.length} เรื่อง` : "ไม่มี"}</span></h3>` + (T.length
       ? T.map((x) => `<div class="card todo${x.bad ? " bad" : ""}" data-k="${x.key}"><div class="t">${x.t}</div>${x.b ? `<div class="b">${x.b}</div>` : ""}<div class="s">${x.s}</div>${x.a ? `<div class="acts">${x.a}</div>` : ""}</div>`).join("")
       : ALLDONE);
     if (!sd) {
@@ -188,15 +188,17 @@ td+td{font-weight:600}
     const { data: wlog } = await supabase.from("waste_logs").select("qty,kg,photos").eq("date", sd.date);
     const wKg = (wlog || []).reduce((a, w) => a + +w.kg, 0) + (+sd.waste_kg || 0);
     const wPics = await thumbs([...(wlog || []).flatMap((w) => w.photos), ...(sd.waste_photos || [])]);
+    // visual hierarchy rule 3: label left, value right, one line · the value carries the tone (bad act · wait check · ok fine)
+    const fv = (tone, v) => `<span class="fv"${tone ? ` data-tone="${tone}"` : ""}>${v}</span>`;
     const fold = (id, head, body) => `<button class="fold" aria-expanded="false" data-f="${id}">${head}</button><div class="fold-body"><div id="f-${id}">${body}</div></div>`;
     $("out").innerHTML = bento(c) + todo
       + (sd.note ? `<div class="card"><div class="k muted">พนักงานฝากบอก</div>${esc(sd.note)}</div>` : "")
       + `<div class="card folds">`
-      + fold("recv", items.length ? `<b>รับของ ${items.length} รายการ${nShort ? ` ขาด ${nShort} รายการ` : ""}</b>` : `<b>ไม่มีใบสั่ง</b>`, recv || `<p class="muted">ไม่มีใบสั่ง</p>`)
-      + (waste.length ? fold("waste", `<b>ของเสีย ${waste.length} รายการ</b>`, waste.map((l) => `<div class="ln">${esc(prods[l.product_id])} ${l.waste} ${esc(unit[l.product_id])}</div>`).join("") + (wKg ? `<div class="ln">หนักรวม ${Math.round(wKg * 100) / 100} กก.</div>` : "") + (wPics ? `<div>${wPics}</div>` : `<p class="muted">ไม่มีรูปของเสีย</p>`)) : "")
-      + fold("cons", `<b>ของใช้ในร้าน${cc.length ? ` ${[nLow ? `ใกล้หมด ${nLow} อย่าง` : "", nOut ? `หมด ${nOut} อย่าง` : ""].filter(Boolean).join(" ")}` : " มีครบ"}</b>`,
+      + fold("recv", items.length ? `<b>รับของ</b>${fv(nShort ? "bad" : "ok", nShort ? `ขาด ${nShort} จาก ${items.length}` : `ครบ ${items.length} รายการ`)}` : `<b>ใบสั่ง</b>${fv("", "ไม่มี")}`, recv || `<p class="muted">ไม่มีใบสั่ง</p>`)
+      + (waste.length ? fold("waste", `<b>ของเสีย</b>${fv("wait", `${waste.length} รายการ`)}`, waste.map((l) => `<div class="ln">${esc(prods[l.product_id])} ${l.waste} ${esc(unit[l.product_id])}</div>`).join("") + (wKg ? `<div class="ln">หนักรวม ${Math.round(wKg * 100) / 100} กก.</div>` : "") + (wPics ? `<div>${wPics}</div>` : `<p class="muted">ไม่มีรูปของเสีย</p>`)) : "")
+      + fold("cons", `<b>ของใช้ในร้าน</b>${!cc.length ? fv("ok", "มีครบ") : nOut && nLow ? fv("bad", `หมด/ใกล้หมด ${nOut + nLow} อย่าง`) : nOut ? fv("bad", `หมด ${nOut} อย่าง`) : fv("wait", `ใกล้หมด ${nLow} อย่าง`)}`,
         cc.map((c) => `<div class="ln">${esc(prods[c.product_id])} <span class="pill" data-tone="${c.status === "out" ? "bad" : "wait"}">${CS[c.status] || esc(c.status)}</span></div>`).join("") || `<p class="muted">มีครบ</p>`)
-      + (photos.length ? fold("pics", `<b>รูปจากร้าน ${photos.length} รูป</b>`, `<div class="sk-row" style="flex-wrap:wrap;gap:8px;padding:8px 0 12px">${sb("72px", 72, ";--r:10px").repeat(photos.length)}</div>`) : "")
+      + (photos.length ? fold("pics", `<b>รูปจากร้าน</b>${fv("", `${photos.length} รูป`)}`, `<div class="sk-row" style="flex-wrap:wrap;gap:8px;padding:8px 0 12px">${sb("72px", 72, ";--r:10px").repeat(photos.length)}</div>`) : "")
       + `</div>`
       + (c.isToday ? `<a class="btn sm" href="approve.html">ดูใบสั่งพรุ่งนี้</a>` : "")
       + (MGR ? "" : `<button class="btn sm" id="edit">แก้ตัวเลข${c.isToday ? "วันนี้" : "วันนั้น"}</button>`);

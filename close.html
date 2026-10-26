@@ -45,9 +45,11 @@
   <p id="cashDiff" class="muted"></p>
   </section>
   <section id="s4" class="ux-step" hidden>
-  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปตู้และถาด <input id="phFridge" type="file" accept="image/*" capture="environment" hidden></label>
-  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปจอ POS <input id="phPos" type="file" accept="image/*" capture="environment" hidden></label>
-  <p id="phStatus" class="muted"></p>
+  <div id="sum4" class="cl-sum" aria-label="สรุปที่จะส่ง"></div>
+  <div class="cl-shots">
+    <div class="cl-shot"><label class="btn cl-frame" data-again="แตะถ่ายเพิ่ม"><svg class="cl-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6Z"/><path d="M5 10h14"/><path d="M15 7v6"/></svg><b>รูปตู้และถาด</b><small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>แตะเพื่อถ่าย</small><input id="phFridge" type="file" accept="image/*" capture="environment" hidden></label><p id="phStatus" class="muted"></p></div>
+    <div class="cl-shot"><label class="btn cl-frame" data-again="แตะถ่ายใหม่"><svg class="cl-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg><b>รูปจอ POS</b><small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>แตะเพื่อถ่าย</small><input id="phPos" type="file" accept="image/*" capture="environment" hidden></label></div>
+  </div>
   <section id="wasteBox" class="ux-waste" hidden aria-labelledby="wasteT">
   <h2 id="wasteT">มีของเสีย <span id="wasteN"></span> ยังไม่ได้บันทึก</h2>
   <p>ชั่งก่อน ถ่ายรูปตาชั่ง ใส่น้ำหนัก <span class="nw">แล้วถ่ายตอนทิ้ง</span></p>
@@ -108,8 +110,10 @@
   const diff = () => { const a = +cashExp.value, b = +cashCnt.value; cashDiff.textContent = (cashExp.value && cashCnt.value) ? (b - a === 0 ? "เงินสดครบ" : (b - a < 0 ? `เงินสดขาด ${(a - b).toLocaleString("th-TH")} บาท` : `เงินสดเกิน ${(b - a).toLocaleString("th-TH")} บาท`)) : ""; cashDiff.className = b - a < 0 ? "err" : "ok"; };
   cashExp.oninput = cashCnt.oninput = diff;
   const photos = [], pos = []; // pos: 0 or 1 path
-  Photo.picker(supabase, phFridge, { paths: photos, type: "fridge", name: "รูปตู้", need: true, status: phStatus, onChange: () => update() });
-  Photo.picker(supabase, phPos, { paths: pos, type: "pos", name: "รูปจอ POS", need: true, max: 1, onChange: () => update() });
+  // round 2b (Mos 26 ต.ค.): the frame shows the photo just taken (the thumbs under it still view / drop each one)
+  const face = (inp) => { const lab = inp.closest("label"), im = lab.nextElementSibling?.querySelector(".thumb:last-child img"); lab.style.backgroundImage = im ? `url("${im.src}")` : ""; };
+  Photo.picker(supabase, phFridge, { paths: photos, type: "fridge", name: "รูปตู้", need: true, status: phStatus, onChange: () => { face(phFridge); update(); } });
+  Photo.picker(supabase, phPos, { paths: pos, type: "pos", name: "รูปจอ POS", need: true, max: 1, onChange: () => { face(phPos); update(); } });
   // 0030 (Mos 23 ต.ค.): waste > 0 needs a scale photo + a bin photo + kg, server checks the same
   const scale = [], bin = [];
   Photo.picker(supabase, phScale, { paths: scale, type: "waste", name: "รูปตาชั่ง", need: true, max: 1, onChange: () => update() });
@@ -163,6 +167,12 @@
     if (x > was) UXM.roll(progT, 1); // round 3: the count ticks up as each row is filled
     progBar.style.transform = `scaleX(${(cur - 1 + (cur === 1 ? (n ? x / n : 1) : 0)) / 4})`;
     stepT.innerHTML = `${NAME[cur]} <small>ขั้น ${cur} จาก 4</small>`;
+    // round 2b: step 4 opens with what is about to be sent (steps 1–3), each cell goes back to its step
+    if (cur === 4) { const lf = leftRows().length, nl = Object.values(state).filter((v) => v !== "ok").length, a = +cashExp.value, c = +cashCnt.value, cash = cashExp.value && cashCnt.value ? c - a : null;
+      sum4.innerHTML = [[1, "ของเหลือ", !n ? "ไม่มีของ" : lf ? `ยังขาด ${lf}<small> อย่าง</small>` : `ครบ ${n}<small> อย่าง</small>`, lf ? "bad" : "ok"],
+        [2, "ของใช้", nl ? `เติม ${nl}<small> อย่าง</small>` : "ครบ", nl ? "wait" : "ok"],
+        [3, "เงินสด", cash == null ? "ยังไม่ใส่" : cash === 0 ? "ครบ" : `${cash < 0 ? "ขาด" : "เกิน"} ${Math.abs(cash).toLocaleString("th-TH")}<small> บาท</small>`, cash == null ? "" : cash < 0 ? "bad" : cash > 0 ? "wait" : "ok"]]
+        .map(([s, k, v, t]) => `<button type="button" class="cl-cell ${t}" data-s="${s}"><span class="k"><i class="dot" aria-hidden="true"></i>${k}</span><span class="v">${v}</span></button>`).join(""); }
     document.querySelectorAll("#steps button").forEach((b) => { const s = +b.dataset.s, done = s !== cur && s < reached && !gap(s);
       b.classList.toggle("on", s === cur); b.classList.toggle("ok", done); b.querySelector("i").textContent = done ? "✓" : s;
       b.setAttribute("aria-disabled", s > reached); s === cur ? b.setAttribute("aria-current", "step") : b.removeAttribute("aria-current"); });
@@ -185,6 +195,7 @@
     say(""); scrollTo(0, 0); update(); save();
     if (n === 3 && !cashExp.value) cashExp.focus({ preventScroll: true }); else stepT.focus({ preventScroll: true });
   }
+  sum4.onclick = (e) => { const b = e.target.closest("[data-s]"); if (b) go(+b.dataset.s); };
   steps.onclick = (e) => { const b = e.target.closest("button"); if (b && +b.dataset.s <= reached && +b.dataset.s !== cur) go(+b.dataset.s); };
   back.onclick = () => go(cur - 1);
   // P3-3: "ถัดไป" on the keyboard → next row's เหลือสด · last row closes the keyboard

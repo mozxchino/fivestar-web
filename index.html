@@ -102,7 +102,7 @@
     const n = st.next, d = st.day || {}, rest = n.key === "done" || n.key === "holiday";
     const cell = (href, name, cls, sub) => `<a class="bt ${cls}" href="${href}"><span class="k"><i class="dot" aria-hidden="true"></i>${name}</span><span class="v">${sub}</span></a>`;
     const c1 = d.opened_at ? cell("open.html", "เปิดร้าน ✓", "ok", hm(d.opened_at) + " น.") : n.key === "open" ? cell("open.html", "เปิดร้าน", "now", "ยังไม่เปิด") : cell("open.html", "เปิดร้าน", "", rest ? "ร้านหยุด" : "ยังไม่เปิด");
-    const c2 = st.receive === "ok" ? cell("receive.html", "รับของ ✓", "ok", hm(st.recvAt) + " น.") : st.receive === "short" ? cell("receive.html", "รับของ ✓", "wait", `ขาด ${st.short} อย่าง`)
+    const c2 = st.receive === "ok" ? cell("receive.html", "รับของ ✓", "ok", hm(st.recvAt) + " น.") : st.receive === "short" ? cell("receive.html", "รับของ ✓", "wait", `ขาด ${st.short}<small> อย่าง</small>`)
       : n.key === "receive" ? cell("receive.html", "รับของ", "now", "ยังไม่รับ") : cell("receive.html", "รับของ", "", st.receive === "none" ? "ไม่มีของมา" : "ยังไม่รับ");
     const c3 = n.key === "done" ? cell("history.html", "ปิดร้าน ✓", "ok", hm(d.closed_at) + " น.") : n.key === "close" ? cell("close.html", "ปิดร้าน", "now", "ยังไม่ปิด") : cell("close.html", "ปิดร้าน", "", "ยังไม่ถึง");
     const icon = { open: "open", receive: "receive", close: "close", done: "history", holiday: "history" }[n.key];
@@ -127,7 +127,8 @@
     document.getElementById("menu").innerHTML = `<div class="bento trio">
       <a class="bt wide hero lead${rest ? " calm" : ""}" href="${n.href}"><span class="ico">${svg(I[icon])}</span><span class="tx"><span class="k">${rest ? "วันนี้" : "งานถัดไป"}</span><span class="v">${n.label}</span><span class="m">${n.sub}</span></span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></a>
       ${c1}${c2}${c3}
-      <section class="bt wide list" aria-labelledby="mine"><h2 class="k" id="mine">เรื่องของฉัน${nWait ? `<span class="ux-badge"><span class="vh">รอคำตอบ </span>${nWait}<span class="vh"> เรื่อง</span></span>` : ""}</h2><div>${rows.join("")}</div></section></div>`;
+      <section class="bt wide list" aria-labelledby="mine"><h2 class="k" id="mine"${nWait ? ' data-tone="wait"' : ""}>เรื่องของฉัน${nWait ? `<span class="n">รอคำตอบ ${nWait} เรื่อง</span>` : ""}</h2><div>${rows.slice(0, -3).join("")}</div></section>
+      <nav class="bt wide list ux-more-menu" aria-label="เมนูอื่น"><div>${rows.slice(-3).join("")}</div></nav></div>`;
     if (all.length > 4) {
       const sheet = UXD.sheet(document.getElementById("mineS")), F = [["all", "ทั้งหมด", () => true], ["iss", "ปัญหา", (x) => x.k === "iss"], ["lv", "ขอหยุด", (x) => x.k === "lv"], ["wait", "รอคำตอบ", (x) => x.wait]];
       let f = "all";

@@ -5,12 +5,12 @@
   --color-primary: #C82128; --color-on-primary: #FFFFFF; --color-primary-dark: #9E0B23;
   --color-accent: #FFE60A; --color-on-accent: #201818; --color-warning: #FFDA2B;
   --color-background: #FFFAF6; --color-card: #FFFFFF; --color-foreground: #201818;
-  --color-muted: #F4EFEC; --color-muted-foreground: #6B6B6B; --color-border: #EFE6E0; --color-border-strong: #E3D9D3;
-  --color-success: #2E7D32; --color-destructive: #C62828; --color-ring: #C82128;
+  --color-muted: #F4EFEC; --color-muted-foreground: #5C5450; --color-border: #EFE6E0; --color-border-strong: #E3D9D3;
+  --color-success: #2A7430; --color-destructive: #C62828; --color-ring: #C82128;
   --tint-success: #E8F5E9; --tint-destructive: #FDECEC; --tint-primary: #FDF0EF; --tint-icon: #FCEDEC;
   --tint-wait: #FFF6D6; --on-wait: #7A5B00; --tint-neutral: #F1EEEC;
   /* audit 22 ต.ค.: field edges need 3:1 on white cards (sunlight) · data captions use a darker ink than muted */
-  --color-border-input: #9C8F89; --color-ink-soft: #5C5450; --color-chevron: #8F817A; --color-placeholder: #736965; --color-disabled-fg: #8A7F7B;
+  --color-border-input: #9C8F89; --color-ink-soft: #5C5450; --color-chevron: #8F817A; --color-placeholder: #6B625E; --color-disabled-fg: #6E6460;
   --tint-primary-pressed: #FBE4E2; --tint-filled: #F6FBF6; --border-filled: #9CCB9F; --border-ok: #A9D3AC; --border-wait: #EBD48A; --border-bad: #F1B9B9;
   --space-xs: 4px; --space-sm: 8px; --space-md: 16px; --space-lg: 24px; --space-xl: 32px;
   --radius-sm: 10px; --radius: 14px; --radius-lg: 18px;
@@ -22,7 +22,9 @@
   --tap: 52px; --field: 52px;
   /* premium pass 23 ต.ค. (design/premium/tokens.css): grouped ground · soft fill · hairlines · layered shadow · glass chrome */
   --color-grouped: #F4EEEA; --color-fill: #F5EFEB; --color-fill-pressed: #EDE5E0;
-  --color-separator: rgba(60, 40, 36, .16); --color-secondary: #6B625E;
+  --color-separator: rgba(60, 40, 36, .16); --color-secondary: #4A4340;
+  /* visual hierarchy 26 ต.ค. (Mos, iPhone in bright light): every readable grey ≥ 4.5:1 on the ground it sits on · status marks ≥ 3:1 */
+  --color-wait-mark: #B07F05; --sh-bar: #B9AEA8;
   /* filled field edge: 3.8:1 on white · 3.3:1 on the fill (WCAG 1.4.11) */
   --color-field-edge: #8F817A;
   --shadow-card: 0 1px 2px rgba(32, 24, 24, .04), 0 6px 20px -8px rgba(32, 24, 24, .10);
@@ -85,8 +87,9 @@ code { font: 13px/1.4 ui-monospace, Menlo, monospace; background: var(--color-mu
 
 /* ---------- type ---------- */
 h1 { font: 600 22px/1.3 var(--font-head); margin: var(--space-sm) 0 var(--space-md); text-wrap: balance; }
-h2 { font: 500 18px/1.35 var(--font-head); margin: var(--space-lg) 0 var(--space-sm); color: var(--color-foreground); }
-.card h2 { font: 500 15px/1.35 var(--font-head); margin: var(--space-md) 0 var(--space-xs); color: var(--color-muted-foreground); }
+/* visual hierarchy 26 ต.ค.: a section heading is bold ink, one size everywhere, never paler than the words under it */
+h2 { font: 600 17px/1.35 var(--font-head); margin: var(--space-lg) 0 var(--space-sm); color: var(--color-foreground); }
+.card h2 { font: 600 17px/1.35 var(--font-head); margin: var(--space-md) 0 var(--space-sm); color: var(--color-foreground); }
 p { margin: var(--space-sm) 0; }
 .muted { color: var(--color-muted-foreground); font-size: 14px; }
 .num, input[type=number], td, .pill { font-variant-numeric: tabular-nums; }
@@ -160,7 +163,7 @@ p.ok a, p.err a { color: inherit; font-weight: 700; }
 .tile.primary:active { background: var(--tint-primary-pressed); }
 .tile.primary .ico { color: var(--color-primary); background: var(--color-card); }
 .tile.primary .go { color: var(--color-primary); }
-.tile .t small { display: block; font: 400 13px/1.3 var(--font-body); opacity: .85; }
+.tile .t small { display: block; font: 400 13px/1.3 var(--font-body); color: var(--color-ink-soft); }
 
 /* ---------- surfaces ---------- */
 .card { position: relative; background: var(--color-card); border: 0; border-radius: var(--radius-card); padding: var(--space-md); margin: 12px 0; box-shadow: var(--shadow-card); }
@@ -185,7 +188,7 @@ input::-webkit-date-and-time-value { text-align: left; }
 textarea { resize: vertical; min-height: 96px; }
 select {
   padding-right: 40px; cursor: pointer;
-  background: var(--color-fill) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B6B6B' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") right 12px center / 20px no-repeat;
+  background: var(--color-fill) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235C5450' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") right 12px center / 20px no-repeat;
 }
 ::placeholder { color: var(--color-placeholder); opacity: 1; }
 input:focus, textarea:focus, select:focus { outline: none; background-color: var(--color-card); border-color: transparent; box-shadow: 0 0 0 2px var(--color-primary), 0 0 0 6px rgba(200, 33, 40, .14); }
@@ -206,13 +209,13 @@ label { cursor: pointer; }
 input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; }
 
 /* field label stacked above its control */
-.field { display: block; font-size: 15px; font-weight: 500; color: var(--color-ink-soft); margin: var(--space-md) 4px 6px; }
+.field { display: block; font-size: 16px; font-weight: 500; color: var(--color-foreground); margin: var(--space-md) 4px 6px; }
 .field small { font-weight: 400; }
 .field + .in { margin-top: 0; }
 .in > input[type=number] { font-size: 18px; font-weight: 500; }
 /* 2-up field grid (settings · costs): label wraps its input so a tap on the words focuses the field */
 .g { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-top: 12px; }
-.g > label, .g > div > label { display: block; font-size: 14px; font-weight: 500; line-height: 1.35; color: var(--color-ink-soft); }
+.g > label, .g > div > label { display: block; font-size: 15px; font-weight: 500; line-height: 1.35; color: var(--color-foreground); }
 .g > label > input, .g > label > select { margin-top: 4px; }
 .g > label:has(> .in) { display: flex; flex-direction: column; justify-content: flex-end; }
 
@@ -270,7 +273,7 @@ td + td, th + th { text-align: right; }
 .grow { flex: 1; min-width: 0; }
 .list { padding-top: 4px; padding-bottom: 4px; }
 .list > p { margin: 10px 0; }
-.kv { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; color: var(--color-muted-foreground); }
+.kv { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; color: var(--color-ink-soft); }
 .kv > span:first-child { white-space: nowrap; }
 .kv b { color: var(--color-foreground); font-weight: 500; text-align: right; }
 .day-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
@@ -286,7 +289,7 @@ p.ok.big:not(:empty) { font: 500 20px/1.4 var(--font-head); padding: 18px 16px; 
 .empty p { margin: 2px 0; }
 
 /* ---------- mock ก · grouped list (settings): label left · value right · inset hairlines · header/footer hints ---------- */
-body.grouped h2:not(.card h2, .panel h2, .cal-nav h2) { margin: 26px 16px 6px; font: 500 15px/1.4 var(--font-head); color: var(--color-ink-soft); }
+body.grouped h2:not(.card h2, .panel h2, .cal-nav h2) { margin: 26px 16px 8px; font: 600 17px/1.35 var(--font-head); color: var(--color-foreground); }
 .gl { position: relative; margin: 0; padding: 0; background: var(--color-card); border-radius: var(--radius); overflow: hidden; box-shadow: 0 1px 2px rgba(32, 24, 24, .05); }
 .gl + .gl, .gl + .person, .person + .gl, .person + .person { margin-top: 12px; }
 /* on the grey ground the warm fill disappears → loose fields and tonal buttons sit on white instead */
@@ -363,7 +366,7 @@ a.bt:active, button.bt:active { transform: scale(.97); box-shadow: var(--shadow-
 .bt.wait .v { color: var(--on-wait); }
 /* status dot before the label: colour + word, never colour alone */
 .bt .dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--color-chevron); }
-.bt.ok .dot { background: var(--color-success); } .bt.bad .dot { background: var(--color-destructive); } .bt.wait .dot { background: #C99A06; } .bt.now .dot { background: var(--color-primary); }
+.bt.ok .dot { background: var(--color-success); } .bt.bad .dot { background: var(--color-destructive); } .bt.wait .dot { background: var(--color-wait-mark); } .bt.now .dot { background: var(--color-primary); }
 .bt.now .v { color: var(--color-primary); }
 /* hero tile: the one thing to do next · soft red ground, number/word large */
 .bt.hero { justify-content: flex-start; background: var(--tint-primary); box-shadow: var(--shadow-card), inset 0 0 0 1px rgba(200, 33, 40, .14); }
@@ -380,6 +383,7 @@ a.bt:active, button.bt:active { transform: scale(.97); box-shadow: var(--shadow-
 .bt.list { padding-top: 12px; padding-bottom: 4px; justify-content: flex-start; }
 .bt.list .row { padding-left: 0; padding-right: 0; }
 .bt.list .row:last-child { border-bottom: 0; }
+.bt.list > h2.k { margin: 2px 0 4px; font: 600 17px/1.35 var(--font-head); color: var(--color-foreground); }
 @media (max-width: 359px) { .bento { gap: 8px; } .bt { padding: 12px; } .bt.hero .v { font-size: 26px; } .bt.hero .big { font-size: 40px; } }
 
 /* trio (Mos 23 ต.ค. รอบ 2): 3 small status tiles in one row of equal width (staff home · owner day) · no decorative tiles */
@@ -388,6 +392,7 @@ a.bt:active, button.bt:active { transform: scale(.97); box-shadow: var(--shadow-
 .trio > .bt:not(.wide) .k { gap: 5px; font-size: 13px; }
 .trio > .bt:not(.wide) .v { font-size: 17px; line-height: 1.25; letter-spacing: 0; }
 .trio > .bt:not(.wide) .v small { font-size: 13px; }
+.trio > .bt:not(.wide) .v { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* visual hierarchy rule 3: a tile value is one line · the unit steps down to <small> */
 .trio > .bt:not(.wide) .m { font-size: 12px; line-height: 1.35; }
 .trio > .bt.wide:first-child { margin-bottom: 2px; }
 /* lead: the one next task across the top · as tall as its words, still the biggest thing on the screen */
@@ -462,6 +467,7 @@ body.grouped .sk-b:not(:is(.card, .gl, .bt, .sheet, .todo) *) { background-color
   box-shadow: 0 6px 8px -8px rgba(32, 24, 24, .25);
 }
 .sheet-head > div:not(:first-child) { text-align: center; }
+.sheet-head, .sheet-head .meta { color: var(--color-foreground); font-weight: 600; } /* column headers outrank the grey caption in each row */
 .meta { font-size: 13px; line-height: 1.35; color: var(--color-ink-soft); font-weight: 500; font-variant-numeric: tabular-nums; }
 .nm { font-size: 17px; font-weight: 500; line-height: 1.35; min-width: 0; }
 .nm .meta { font-weight: 400; margin-top: 2px; }
@@ -608,3 +614,32 @@ label.btn.ux-need { white-space: nowrap; }
 .th-date > input { color: transparent !important; -webkit-text-fill-color: transparent; }
 .th-date > b { position: absolute; top: 0; bottom: 0; left: 0; display: flex; align-items: center; width: max-content; max-width: 100%; font: 500 17px/1.3 var(--font-body); font-variant-numeric: tabular-nums; color: var(--color-foreground); white-space: nowrap; pointer-events: none; }
 .th-date.empty > b { color: var(--color-ink-soft); font-weight: 400; }
+
+/* ---------- visual hierarchy (Mos 26 ต.ค. 2026 · same grammar as LINE cards headings-v2) ----------
+   1 section heading = bold ink (h2 above) · 2 a short tone bar on the left, the count right-aligned on the heading line (.n) ·
+   tone: data-tone="bad" act now · "wait" check · "ok" fine · none = grey (info) · skeleton headings and headings with buttons (.cal-nav) skip the bar */
+:is(body.grouped h2:not(.card h2, .panel h2, .cal-nav h2, .done h2, .ux-sysh h2), .card > h2, h3.sec, .ux-gh, .ux-week, .bt.list > h2.k, .sh):not(:has(.sk-b)) {
+  display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; text-wrap: balance;
+}
+:is(body.grouped h2:not(.card h2, .panel h2, .cal-nav h2, .done h2, .ux-sysh h2), .card > h2, h3.sec, .ux-gh, .ux-week, .bt.list > h2.k, .sh):not(:has(.sk-b))::before {
+  content: ""; flex: none; width: 4px; height: 16px; border-radius: 2px; background: var(--tone, var(--sh-bar));
+}
+:is(h2, h3, .sh) > .n { margin-left: auto; padding-left: 12px; font: 500 15px/1.3 var(--font-body); color: var(--tone-ink, var(--color-ink-soft)); white-space: nowrap; font-variant-numeric: tabular-nums; }
+[data-tone=bad]:is(h2, h3, .sh) { --tone: var(--color-destructive); --tone-ink: var(--color-destructive); }
+[data-tone=wait]:is(h2, h3, .sh) { --tone: var(--color-wait-mark); --tone-ink: var(--on-wait); }
+[data-tone=ok]:is(h2, h3, .sh) { --tone: var(--color-success); --tone-ink: var(--color-success); }
+[data-tone]:is(h2, h3, .sh) > .n { font-weight: 700; }
+
+/* ---------- visual hierarchy round 2 (Mos 26 ต.ค. 2026): form fields read as numbered steps ----------
+   waste · issue: each field opens with a dark bold heading and its number, its photo button sits inside the same group,
+   space above a heading (24px) is wider than inside a group (8px) · .fhint = the page's one short how-to line */
+.fhint { margin: 0 4px 4px; font-size: 15px; line-height: 1.4; color: var(--color-ink-soft); text-wrap: pretty; }
+.fstep { display: flex; align-items: center; gap: 10px; margin: 24px 2px 8px; font: 600 18px/1.35 var(--font-head); color: var(--color-foreground); text-wrap: balance; }
+.fstep > i { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font: 600 14px/1 var(--font-head); font-style: normal; color: #fff; background: var(--color-foreground); font-variant-numeric: tabular-nums; }
+.fstep > small { margin-left: auto; padding-left: 8px; font: 400 14px/1.3 var(--font-body); color: var(--color-ink-soft); white-space: nowrap; }
+.fstep:first-child { margin-top: 4px; }
+.fstep + label.btn { margin: 0 0 8px; }
+/* short form pages: the red button sits on the screen bottom, not right under the last field */
+.pg-fill { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; padding-bottom: 0; }
+.pg-fill #form:not([hidden]), .pg-fill > .sk { flex: 1; display: flex; flex-direction: column; }
+.pg-fill #form > .sticky, .pg-fill > .sk > .sticky { margin-top: auto; }
