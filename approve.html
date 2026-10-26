@@ -113,6 +113,9 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   $("ttl").textContent = "ใบสั่งของ"; document.title = `ใบสั่งของ ${day(order.for_date)}`;
   $("d").textContent = `${day(order.for_date)}${plan ? ` ${plan.deliver_at} น.` : ""}`; $("sd").textContent = day(cutDay);
   if (plan && plan.opening) $("cdl").textContent = "ใบสั่งแรก กดส่งให้เซลล์เอง";
+  // 0035 weekly holiday night: the order uses the last open day's sales (same line as the card)
+  const salesDay = plan && plan.sales_day ? new Date(plan.sales_day + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "long", timeZone: "UTC" }) : "";
+  if (salesDay) $("cdl").textContent = `ร้านปิดวันนี้ ใช้ยอดขาย${salesDay}`;
   // ×2 lot (a no-delivery / closed day in between): one red strip · no "ร้านเปิดไหม" (0034: the weekly holiday is a setting)
   const mult = plan ? Number(plan.mult || 1) : 1;
   // Mos 26 ต.ค. (iPhone): no formula text anywhere · the strip says the time the way people say it
@@ -124,7 +127,7 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   // 0033: plan rows say how the number came about: left tonight, sold today (× mult) · no sold today = the old owner's average, in grey
   const left = (r) => r.remaining == null ? "" : `เหลือ ${n(r.remaining)} ${E(r.unit_th)} · `;
   const base = (r) => r.kind === "consumable" ? `ของใช้ CPF ติ๊กใกล้หมดตอนปิดร้าน 1 ถุง` : r.daily_use != null
-    ? `${left(r)}${r.use_src === "today" ? `ขายวันนี้ ${n(r.daily_use)}` : `ขายวันละ ${r.daily_use < 1 ? n(r.daily_use) : Math.round(r.daily_use)}`}`
+    ? `${left(r)}${r.use_src === "today" ? `${salesDay ? "ขาย" + salesDay : "ขายวันนี้"} ${n(r.daily_use)}` : `ขายวันละ ${r.daily_use < 1 ? n(r.daily_use) : Math.round(r.daily_use)}`}`
     : `เหลือ ${r.remaining == null ? "-" : n(r.remaining)} · ควรมี ${r.par == null ? "-" : n(r.par)} ${E(r.unit_th)}`;
   const meta = (r, q) => base(r) + (r.sets != null ? ` · ${Math.round(q / r.pack_size)} เซ็ต` : "") + (q !== Number(r.qty_proposed) ? `<br><b>แก้จาก ${n(r.qty_proposed)}</b>` : "");
   const rowH = (r, i) => `<div class="orow" id="r${i}"><div class="grow"><div class="nm">${E(r.label)}</div><div class="meta"></div></div>
