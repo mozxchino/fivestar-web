@@ -65,13 +65,14 @@
       // 0033: the newest CPF order still to come (tonight's lands the day after tomorrow)
       supabase.from("orders").select("status,for_date").gt("for_date", today).order("created_at", { ascending: false }).limit(1).maybeSingle(),
       supabase.from("shop_days").select("status,opened_at,closed_at").eq("date", today).maybeSingle(),
-      supabase.from("settings").select("key,value").in("key", ["holidays", "auto_send_at"]),
+      supabase.from("settings").select("key,value").in("key", ["holidays", "shop_closed_dow", "auto_send_at"]),
       supabase.from("orders").select("id").limit(1), // 0033: no order ever → the first-order row leads (takeover)
     ]);
     for (const r of [iss, lv, od, sd, hol, any]) if (r.error) throw r.error;
     const nIss = (iss.data || []).filter((i) => i.status === "open").length;
     const nLv = (lv.data || []).filter((l) => l.status === "pending" && l.date >= today).length;
-    const S = Object.fromEntries((hol.data || []).map((x) => [x.key, x.value])), d = sd.data || {}, shut = d.status === "holiday" || (Array.isArray(S.holidays) && S.holidays.includes(today));
+    const S = Object.fromEntries((hol.data || []).map((x) => [x.key, x.value])), d = sd.data || {}, shut = d.status === "holiday" || (Array.isArray(S.holidays) && S.holidays.includes(today))
+      || (!d.opened_at && (Array.isArray(S.shop_closed_dow) ? S.shop_closed_dow : [1]).includes(new Date(today + "T00:00:00Z").getUTCDay() || 7)); // 0034 weekly holiday
     // [status words, tone, rank when something waits for the owner] · failed order first, then new issues, then the order to send, then leave
     // 0033: named by the delivery day ("ใบสั่งของ ศ. 6 พ.ย. รอส่ง")
     const dd = od.data ? ` ${thd(od.data.for_date, { weekday: "short" })}` : "";

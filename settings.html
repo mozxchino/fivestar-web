@@ -262,6 +262,10 @@ a.cell{text-decoration:none;color:inherit}
   const { data: gs } = await supabase.from("line_sources").select("source_id,display_name").eq("source_type", "group");
   let hol = [...(S.holidays || [])].sort();
   let nod = Array.isArray(S.cpf_no_delivery_dow) ? [...S.cpf_no_delivery_dow] : [1];
+  // 0034 (Mos 26 ต.ค.): the shop is closed every Monday · one toggle row per weekday set, same look as "CPF ไม่ส่งของวัน"
+  let cld = Array.isArray(S.shop_closed_dow) ? [...S.shop_closed_dow] : [1];
+  const cx = [0, 0.5, 1].includes(Number(S.closed_day_extra ?? 0.5)) ? Number(S.closed_day_extra ?? 0.5) : 0.5;
+  const dowRow = (id, on, aria) => `<div class="dow" id="${id}" role="group" aria-label="${aria}">${["จ", "อ", "พ", "พฤ", "ศ", "ส", "อา"].map((w, i) => `<button type="button" class="chip${on.includes(i + 1) ? " on" : ""}" data-d="${i + 1}" aria-pressed="${on.includes(i + 1)}">${w}</button>`).join("")}</div>`;
   const sel = (id, cur) => `<select id="${id}"><option value="">ยังไม่เลือก</option>${(gs || []).map((g) => `<option value="${E(g.source_id)}" ${g.source_id === cur ? "selected" : ""}>${E(g.display_name || g.source_id)}</option>`).join("")}</select>`;
   const chev = `<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>`;
   const send = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>`;
@@ -277,7 +281,8 @@ a.cell{text-decoration:none;color:inherit}
       <label class="cell nav"><span class="k">สั่งคืนนี้ ของมากี่วัน<small>CPF ตัดรอบบ่ายโมง</small></span><span class="v" data-for="lead"></span>${chev}<select id="lead">${[1, 2, 3].map((n) => `<option value="${n}" ${Number(S.order_lead_days ?? 2) === n ? "selected" : ""}>${n === 1 ? "พรุ่งนี้" : n === 2 ? "มะรืน (2 วัน)" : "3 วัน"}</option>`).join("")}</select></label>
       <label class="cell"><span class="k">ของถึงกี่โมง</span><input type="time" id="dlv" value="${E(S.delivery_at ?? "14:00")}"></label>
       <label class="cell"><span class="k">แท็กเซลล์ท้ายใบสั่ง<small>ข้อความนี้ไม่ใช่การแท็กจริง บอกเซลล์ครั้งเดียวว่าใบสั่งมาจาก 5STARCHICKEN</small></span><input type="text" id="tag" value="${E(S.sales_mention ?? "@new")}" placeholder="@new" style="max-width:9em"></label>
-      <div class="cell" style="flex-wrap:wrap"><span class="k">CPF ไม่ส่งของวัน</span><div class="dow" id="nod" role="group" aria-label="วันที่ CPF ไม่ส่งของ">${["จ", "อ", "พ", "พฤ", "ศ", "ส", "อา"].map((w, i) => `<button type="button" class="chip${nod.includes(i + 1) ? " on" : ""}" data-d="${i + 1}" aria-pressed="${nod.includes(i + 1)}">${w}</button>`).join("")}</div></div></div>
+      <div class="cell" style="flex-wrap:wrap"><span class="k">CPF ไม่ส่งของวัน</span>${dowRow("nod", nod, "วันที่ CPF ไม่ส่งของ")}</div>
+      <label class="cell nav"><span class="k">สั่งเผื่อวันที่ร้านปิด<small>ครึ่งวัน = ล็อตศุกร์ × 1.5</small></span><span class="v" data-for="cx"></span>${chev}<select id="cx">${[[0, "ไม่เผื่อ"], [0.5, "ครึ่งวัน"], [1, "เต็มวัน"]].map(([v, t]) => `<option value="${v}" ${v === cx ? "selected" : ""}>${t}</option>`).join("")}</select></label></div>
     <p class="gf"><span>สั่ง = ขายวันนี้ ปัดเป็นแพ็ก</span><span>ของถึงวันที่ CPF ไม่ส่ง = คืนนั้นไม่มีใบสั่ง</span><span>ล็อตก่อนหน้าสั่งเผื่อวันนั้น (เช่น ล็อตอาทิตย์ × 2)</span></p>
     <h2>กลุ่ม LINE</h2><div class="gl"><label class="cell nav"><span class="k">กลุ่มสั่งของ<small>มีเซลล์อยู่</small></span><span class="v" data-for="sg"></span>${chev}${sel("sg", S.sales_group_id)}</label>
       <label class="cell nav"><span class="k">กลุ่มพนักงาน</span><span class="v" data-for="fg"></span>${chev}${sel("fg", S.staff_group_id)}</label>
@@ -285,13 +290,16 @@ a.cell{text-decoration:none;color:inherit}
     <p id="cmsg" class="muted" aria-live="polite"></p>
     <p class="gf"><span>ใช้เมื่อ: น้องยังไม่ได้กด หรือการ์ดจมไปแล้ว</span><span>กดปุ่มนี้ → การ์ดเด้งในกลุ่มพนักงาน</span><span>น้องกด 'ฉันเป็นพนักงาน' ในกลุ่ม → ใช้แอปได้เลย</span></p>
     <h2>ค่า GP แอปส่งอาหาร</h2><div class="gl">${gp("lineman_gp", "LINE MAN")}${gp("grab_gp", "Grab")}${gp("shopee_gp", "Shopee")}</div><p class="gf">หน้าต้นทุน/กำไรใช้ตัวเลขนี้คิดค่า GP</p>
-    <h2>วันหยุดร้าน</h2><div class="gl"><div class="cell"><span class="k" style="white-space:nowrap">วัน</span><input type="date" id="hd" aria-label="วันหยุดที่จะเพิ่ม"><button class="txt-btn" type="button" id="ha">เพิ่ม</button></div></div>
+    <h2>วันหยุดร้าน</h2><div class="gl"><div class="cell" style="flex-wrap:wrap"><span class="k">หยุดทุกสัปดาห์</span>${dowRow("cld", cld, "วันหยุดร้านประจำ")}</div></div>
+    <p class="gf"><span>วันหยุดประจำ ไม่มีเตือนปิดร้าน ไม่มีใบสั่ง</span><span>หน้าหลักพนักงานขึ้น วันนี้ร้านหยุด</span></p>
+    <div class="gl"><div class="cell"><span class="k" style="white-space:nowrap">เฉพาะวัน</span><input type="date" id="hd" aria-label="วันหยุดที่จะเพิ่ม"><button class="txt-btn" type="button" id="ha">เพิ่ม</button></div></div>
     <div class="gl" id="hl"></div><p class="gf">เพิ่มหรือลบแล้ว กด บันทึกตั้งค่าร้าน ด้านล่าง</p>
     <div class="sticky"><button class="btn primary" id="save">บันทึกตั้งค่าร้าน</button><p id="smsg" class="muted"></p></div>`;
   // picker rows show the chosen group's name as the value
   const showSel = (id) => { const o = $(id).selectedOptions[0]; document.querySelector(`[data-for="${id}"]`).textContent = o ? o.textContent : ""; };
-  ["sg", "fg", "lead"].forEach((id) => { showSel(id); $(id).addEventListener("change", () => showSel(id)); });
-  $("nod").onclick = (ev) => { const b = ev.target.closest("[data-d]"); if (!b) return; const d = +b.dataset.d; nod = nod.includes(d) ? nod.filter((x) => x !== d) : [...nod, d].sort(); b.classList.toggle("on"); b.setAttribute("aria-pressed", nod.includes(d)); };
+  ["sg", "fg", "lead", "cx"].forEach((id) => { showSel(id); $(id).addEventListener("change", () => showSel(id)); });
+  const dowTap = (get, put) => (ev) => { const b = ev.target.closest("[data-d]"); if (!b) return; const d = +b.dataset.d, a = get(); put(a.includes(d) ? a.filter((x) => x !== d) : [...a, d].sort()); b.classList.toggle("on"); b.setAttribute("aria-pressed", get().includes(d)); };
+  $("nod").onclick = dowTap(() => nod, (a) => (nod = a)); $("cld").onclick = dowTap(() => cld, (a) => (cld = a));
   drawHol();
   UXM.dateTh($("hd")); // Mos 26 ต.ค.: Thai day over the native picker
   $("ha").onclick = () => { const d = $("hd").value; if (d && !hol.includes(d)) { hol.push(d); hol.sort(); drawHol(); } $("hd").value = ""; };
@@ -307,7 +315,7 @@ a.cell{text-decoration:none;color:inherit}
     const rows = [["shop_name", $("shop").value.trim()], ["remind_at", $("rem").value || "20:30"], ["auto_send_at", $("auto").value || "21:00"],
       ["sales_group_id", $("sg").value || ""], ["staff_group_id", $("fg").value || ""], ["holidays", hol],
       // 0033 รอบสั่ง CPF · out-of-range numbers fall back to the defaults instead of saving nonsense
-      ["order_lead_days", Number($("lead").value) || 2], ["delivery_at", $("dlv").value || "14:00"], ["sales_mention", $("tag").value.trim()], ["cpf_no_delivery_dow", nod],
+      ["order_lead_days", Number($("lead").value) || 2], ["delivery_at", $("dlv").value || "14:00"], ["sales_mention", $("tag").value.trim()], ["cpf_no_delivery_dow", nod], ["shop_closed_dow", cld], ["closed_day_extra", Number($("cx").value)],
       // GP: blank = keep what is saved (never write 0 by accident)
       ...["lineman_gp", "grab_gp", "shopee_gp"].filter((k) => $(k).value !== "").map((k) => [k, Number($(k).value)])].map(([key, value]) => ({ key, value }));
     const { error } = await supabase.from("settings").upsert(rows);

@@ -13,12 +13,9 @@
 #self{display:contents}
 body:has(#repeat:not([hidden]), #none:not([hidden])) .sk{display:none}
 pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-numeric:tabular-nums}
-/* 0033 ×2 lot: red strip (lasts until) + "shop open?" segment · grey average when there is no sold today */
+/* 0033 ×2 lot: red strip (lasts until) */
 .ux-lot{display:flex;flex-direction:column;gap:2px;margin:0 0 10px;padding:10px 14px;border-radius:14px;background:var(--tint-destructive);color:var(--color-destructive);box-shadow:inset 3px 0 0 var(--color-destructive)}
 .ux-lot b{font:600 16px/1.35 var(--font-head);text-wrap:balance;font-variant-numeric:tabular-nums}.ux-lot span{font-size:14px;color:var(--color-ink-soft)}
-.ux-ask{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding:10px 14px}.ux-ask .nm{font-weight:600}.ux-ask .meta{font-size:13px;color:var(--color-ink-soft);text-wrap:pretty}
-.ux-seg{display:flex;gap:6px;flex:none}.ux-seg .chip{min-width:56px;justify-content:center}
-.ux-seed{opacity:.6}
 .ux-nopack{margin:0 0 12px;padding:10px 14px;border-radius:14px;background:var(--tint-wait);color:var(--on-wait);font-size:14px;line-height:1.5;text-wrap:pretty}.ux-nopack a{color:inherit;font-weight:600}
 .ux-2l{display:flex;flex-direction:column}.ux-2l b{color:var(--color-foreground);font-weight:600;font-variant-numeric:tabular-nums}
 </style></head><body class="grouped" ontouchstart="">
@@ -33,7 +30,6 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
 <div id="none" class="ld empty" hidden></div>
 <div id="form" class="ld" hidden>
   <div class="chips"><span id="pill" class="pill"></span><span id="self" hidden></span></div>
-  <p id="how" class="gf" style="margin:0 2px 10px"></p>
   <div id="lot"></div>
   <p id="nopack" class="ux-nopack" role="note" hidden></p>
   <div id="items"></div>
@@ -116,35 +112,21 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   const cutDay = new Date(Date.parse(order.for_date + "T00:00:00Z") - 864e5).toISOString().slice(0, 10);
   $("ttl").textContent = "ใบสั่งของ"; document.title = `ใบสั่งของ ${day(order.for_date)}`;
   $("d").textContent = `${day(order.for_date)}${plan ? ` ${plan.deliver_at} น.` : ""}`; $("sd").textContent = day(cutDay);
-  if (plan && plan.opening) $("cdl").textContent = "ใบสั่งแรก แอปไม่ส่งเอง กดส่งให้เซลล์";
-  // ×2 lot (a no-delivery day in between): red strip + "<day> ร้านเปิดไหม" · answering re-makes the order (rpc order_shut → new id)
-  const mult = plan ? Number(plan.mult || 1) : 1, gap = plan && plan.gap ? plan.gap : [];
-  const shut = gap.some((g) => g.shut);
-  const answer = async (close) => {
-    if (close === shut) return;
-    document.querySelectorAll("#lot button").forEach((b) => (b.disabled = true));
-    const { data, error } = await supabase.rpc("order_shut", { oid: orderId, shut: close });
-    if (error || !data?.order_id) { UXM.toast("บันทึกไม่ได้ ลองอีกครั้ง"); document.querySelectorAll("#lot button").forEach((b) => (b.disabled = false)); return; }
-    location.replace("approve.html?order=" + data.order_id);
-  };
-  if (plan && !plan.none) $("how").textContent = plan.opening ? `คิดจาก ค่าเฉลี่ยขายวันละใบเจ้าของเดิม${mult > 1 ? ` × ${mult}` : ""} ปัดเป็นแพ็ก` : `คิดจาก ขายวันนี้${mult > 1 ? ` × ${mult}` : ""} ปัดเป็นแพ็ก`;
-  if (mult > 1 && gap.length) {
-    const g = gap.map((x) => day(x.date)).join(" ");
-    $("lot").innerHTML = `<div class="ux-lot" role="note"><b>ล็อตนี้ต้องพอถึง ${day(plan.until)} ${plan.deliver_at}</b></div>
-      <div class="card ux-ask"><div class="grow"><div class="nm">${g} ร้านเปิดไหม</div><div class="meta">ปิด = สั่ง × 1.5 แทน × 2</div></div>
-      <div class="ux-seg" role="group" aria-label="${g} ร้านเปิดไหม"><button type="button" class="chip${shut ? "" : " on"}" aria-pressed="${!shut}" data-shut="0">เปิด</button><button type="button" class="chip${shut ? " on" : ""}" aria-pressed="${shut}" data-shut="1">ปิด</button></div></div>`;
-    $("lot").onclick = (ev) => { const b = ev.target.closest("[data-shut]"); if (b) answer(b.dataset.shut === "1"); };
-    if (q.get("shut") === "1" && !shut && order.status !== "sent") return answer(true); // card button "จ. ร้านปิด"
-  }
+  if (plan && plan.opening) $("cdl").textContent = "ใบสั่งแรก กดส่งให้เซลล์เอง";
+  // ×2 lot (a no-delivery / closed day in between): one red strip · no "ร้านเปิดไหม" (0034: the weekly holiday is a setting)
+  const mult = plan ? Number(plan.mult || 1) : 1;
+  // Mos 26 ต.ค. (iPhone): no formula text anywhere · the strip says the time the way people say it
+  // ponytail: only whole afternoon hours get words (delivery is 14:00), anything else stays "HH:MM น."
+  const hmTh = (hm) => { const [h, m] = String(hm).split(":").map(Number); return h >= 13 && h <= 15 && !m ? `บ่าย ${h - 12}` : `${hm} น.`; };
+  if (mult > 1) $("lot").innerHTML = `<div class="ux-lot" role="note"><b>ล็อตนี้ต้องพอขายถึง ${dayLong(plan.until)} ${hmTh(plan.deliver_at)}</b></div>`;
   $("pill").textContent = ST[order.status] || order.status; $("pill").dataset.tone = { sent: "ok", failed: "bad" }[order.status] || "wait";
   const n = (v) => Number(v).toLocaleString("th-TH", { maximumFractionDigits: 1 });
   // 0033: plan rows say how the number came about: left tonight, sold today (× mult) · no sold today = the old owner's average, in grey
-  const xm = ""; // the ×2 sits once in the red strip above, not on every row (rows wrapped at 375)
   const left = (r) => r.remaining == null ? "" : `เหลือ ${n(r.remaining)} ${E(r.unit_th)} · `;
   const base = (r) => r.kind === "consumable" ? `ของใช้ CPF ติ๊กใกล้หมดตอนปิดร้าน 1 ถุง` : r.daily_use != null
-    ? (r.use_src === "today" ? `${left(r)}ขายวันนี้ ${n(r.daily_use)}${xm}` : `${left(r)}<span class="ux-seed">เฉลี่ย ${n(r.daily_use)}${xm}</span>`)
+    ? `${left(r)}${r.use_src === "today" ? `ขายวันนี้ ${n(r.daily_use)}` : `ขายวันละ ${r.daily_use < 1 ? n(r.daily_use) : Math.round(r.daily_use)}`}`
     : `เหลือ ${r.remaining == null ? "-" : n(r.remaining)} · ควรมี ${r.par == null ? "-" : n(r.par)} ${E(r.unit_th)}`;
-  const meta = (r, q) => base(r) + (r.sets != null ? ` (${Math.round(q / r.pack_size)} เซ็ต)` : "") + (q !== Number(r.qty_proposed) ? `<br><b>แก้จาก ${n(r.qty_proposed)}</b>` : "");
+  const meta = (r, q) => base(r) + (r.sets != null ? ` · ${Math.round(q / r.pack_size)} เซ็ต` : "") + (q !== Number(r.qty_proposed) ? `<br><b>แก้จาก ${n(r.qty_proposed)}</b>` : "");
   const rowH = (r, i) => `<div class="orow" id="r${i}"><div class="grow"><div class="nm">${E(r.label)}</div><div class="meta"></div></div>
     <div class="step"><button type="button" data-d="-1" data-s="${i}" aria-label="ลด ${E(r.label)}">−</button><input type="number" inputmode="decimal" min="0" step="${step[r.product_id]}" value="${Number(r.qty)}" data-i="${i}" aria-label="${E(r.label)} จำนวนสั่ง (${E(r.unit_th)})"><button type="button" data-d="1" data-s="${i}" aria-label="เพิ่ม ${E(r.label)}">+</button></div></div>`;
   // round 6 (Mos 23 ต.ค.): "ต้องดู" (edited / low / no stock figure) = white card on top · "ตามที่ระบบเสนอ" (at the proposal and เหลือ ≥ ควรมี)
@@ -153,17 +135,16 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   // every row keeps its input (data-i), folded rows only hide, cur() still walks rows in order → the same send payload
   const same = (r) => Number(r.qty) === Number(r.qty_proposed) && r.remaining != null && r.par != null && Number(r.remaining) >= Number(r.par);
   const top = rows.map((r, i) => same(r) ? "" : rowH(r, i)).join(""), sys = rows.map((r, i) => same(r) ? rowH(r, i) : "").join(""), nSame = rows.filter(same).length, nTop = rows.length - nSame;
-  const seedNote = rows.some((r) => r.use_src === "seed") ? `<p class="gf">${plan && plan.opening ? "ใบสั่งแรก" : "ตัวเทา = ยังไม่มียอดขายวันนี้"} ใช้ค่าเฉลี่ยขายวันละจากใบเจ้าของเดิม</p>` : "";
-  $("items").innerHTML = seedNote + (!rows.length ? '<div class="card"><p class="muted">ใบนี้ไม่มีของต้องสั่ง</p></div>'
+  $("items").innerHTML = (!rows.length ? '<div class="card"><p class="muted">ใบนี้ไม่มีของต้องสั่ง</p></div>'
     : (nTop ? `<h2 class="ux-gh" data-tone="wait">ต้องดู<span class="n">${nTop} รายการ</span></h2><div class="card list">${top}</div>` : "")
-    + (nSame ? `<section class="ux-sys" aria-labelledby="sysH"><div class="ux-sysh"><div class="grow"><h2 id="sysH">ตามที่ระบบเสนอ ${nSame} รายการ</h2><p>ของยังพอ ไม่ได้แก้จำนวน</p></div><button type="button" id="sysT" class="chip" aria-expanded="false" aria-controls="sysL">ดู ${nSame} รายการ</button></div><div id="sysL" hidden>${sys}<button type="button" id="sysB" class="ux-sysend">ซ่อน ${nSame} รายการ</button></div></section>` : ""));
+    + (nSame ? `<section class="ux-sys" aria-labelledby="sysH"><div class="ux-sysh"><div class="grow"><h2 id="sysH">ของยังพอ ${nSame} รายการ</h2><p>ไม่ได้แก้จำนวน</p></div><button type="button" id="sysT" class="chip" aria-expanded="false" aria-controls="sysL">ดู ${nSame} รายการ</button></div><div id="sysL" hidden>${sys}<button type="button" id="sysB" class="ux-sysend">ซ่อน ${nSame} รายการ</button></div></section>` : ""));
   // impeccable: a long open box gets a second "ซ่อน" at its end · folding from there brings the box header back into view
   const fold = (open, back) => { $("sysL").hidden = !open; $("sysT").setAttribute("aria-expanded", open); $("sysT").textContent = open ? "ซ่อน" : `ดู ${nSame} รายการ`; if (back) document.querySelector(".ux-sys").scrollIntoView({ block: "center" }); };
   if (nSame) { $("sysT").onclick = () => fold($("sysL").hidden); $("sysB").onclick = () => fold(false, true); }
   const qv = (i) => Math.max(0, Number(document.querySelector(`[data-i="${i}"]`).value) || 0);
   const cur = () => rows.map((r, i) => ({ product_id: r.product_id, qty_final: qv(i), r }));
   // ง3: how far the owner moved from what the system proposed (order_review qty_proposed)
-  const label = () => { const e = rows.filter((r, i) => qv(i) !== Number(r.qty_proposed)).length; $("chg").textContent = e ? `แก้จากที่ระบบเสนอ ${e} รายการ` : "ตามที่ระบบเสนอ";
+  const label = () => { const e = rows.filter((r, i) => qv(i) !== Number(r.qty_proposed)).length; $("chg").textContent = e ? `แก้จำนวน ${e} รายการ` : "";
     const k = cur().filter((x) => x.qty_final > 0).length; $("send").disabled = k === 0; $("send").textContent = k === 0 ? "ไม่มีของที่จะสั่ง" : `ส่งใบสั่งให้เซลล์${order.status === "sent" ? "อีกครั้ง" : ""} ${k} รายการ`; };
   const mark = (i) => { const q = qv(i), r = rows[i], row = $("r" + i); row.classList.toggle("chg", q !== Number(r.qty_proposed)); row.querySelector(".meta").innerHTML = meta(r, q); };
   rows.forEach((_, i) => mark(i));
