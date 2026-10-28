@@ -114,8 +114,9 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   $("d").textContent = `${day(order.for_date)}${plan ? ` ${plan.deliver_at} น.` : ""}`; $("sd").textContent = day(cutDay);
   if (plan && plan.opening) $("cdl").textContent = "ใบสั่งแรก กดส่งให้เซลล์เอง";
   // 0035 weekly holiday night: the order uses the last open day's sales (same line as the card)
+  // 0036: the night after a no-order night (Sat → Mon no delivery) uses that day's sales
   const salesDay = plan && plan.sales_day ? new Date(plan.sales_day + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "long", timeZone: "UTC" }) : "";
-  if (salesDay) $("cdl").textContent = `ร้านปิดวันนี้ ใช้ยอดขาย${salesDay}`;
+  if (salesDay) $("cdl").textContent = plan.sales_why === "prev_none" ? `ใช้ยอดขาย${salesDay} (คืน${salesDay}ไม่มีใบสั่ง)` : `ร้านปิดวันนี้ ใช้ยอดขาย${salesDay}`;
   // ×2 lot (a no-delivery / closed day in between): one red strip · no "ร้านเปิดไหม" (0034: the weekly holiday is a setting)
   const mult = plan ? Number(plan.mult || 1) : 1;
   // Mos 26 ต.ค. (iPhone): no formula text anywhere · the strip says the time the way people say it
