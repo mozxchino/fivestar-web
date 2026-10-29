@@ -30,9 +30,9 @@ a.cell{text-decoration:none;color:inherit}
   </section>
   <section id="sys" hidden></section>
 </div>
-<dialog id="ps" class="bsheet" aria-labelledby="psh"><div class="body"><div class="grab"></div>
-  <div class="hd"><b id="psh"></b><button class="x" type="button" aria-label="ปิด" autofocus>✕</button></div><div id="psb"></div></div>
-  <div class="foot"><button class="btn primary" id="pss"></button><p id="psm" class="err"></p></div></dialog>
+<dialog id="ps" class="bsheet full" role="dialog" aria-modal="true" aria-labelledby="psh"><div class="hd"><button class="txt-btn" type="button" data-close>ยกเลิก</button><b id="psh"></b><span aria-hidden="true"></span></div>
+  <div class="body" id="psb"></div>
+  <div class="foot"><button class="btn primary" id="pss">บันทึก</button><p id="psm" class="err" role="alert"></p></div></dialog>
 <dialog id="us" class="bsheet" aria-labelledby="ush"><div class="body"><div class="grab"></div>
   <div class="hd"><b id="ush"></b><button class="x" type="button" aria-label="ปิด">✕</button></div><p id="usm" class="meta ux-usm"></p><div id="usb" class="ux-4" aria-live="polite"></div></div>
   <div class="foot ux-2b"><a class="btn tonal" href="history.html">ดูประวัติ</a><a class="btn" href="holiday.html">ดูวันลา</a></div></dialog>
@@ -168,105 +168,105 @@ a.cell{text-decoration:none;color:inherit}
 
   if (MGR) return staff(); // the product and shop tabs never load for a manager
 
-  // ---- สินค้า: ค้นหา + ชิปกรอง + แถวสั้น → แผงล่างแก้ · + เพิ่มสินค้า
-  const KIND = { cpf: "ของขาย (CPF)", self: "ซื้อเอง", consumable: "ของใช้ในร้าน" };
-  // เพิ่มสินค้า: one choice sets kind + supplier together (the DB needs both)
-  const ADDK = [["cpf|cpf", "ของขาย (CPF)"], ["self|self", "ของขาย (ซื้อเอง)"], ["consumable|cpf", "ของใช้ในร้าน (สั่ง CPF)"], ["consumable|self", "ของใช้ในร้าน (ซื้อเอง)"]];
+  // ---- สินค้า: ค้นหา + ชิปกรอง + แถวสั้น → หน้าต่างเต็มจอ (เพิ่ม และ แก้ ใช้ฟอร์มเดียวกัน · Mos 29 ต.ค. ถามครบในครั้งเดียว)
   const { data: ps0, error: psErr } = await supabase.from("products").select("*").order("sort");
-  let ps = ps0 || [], cur = null;
+  let ps = ps0 || [], cur = null, touched = false;
   const isCons = (p) => p.kind === "consumable";
   const noCost = (p) => p.active && !isCons(p) && p.cost_price == null;
   const FIL = { sell: ["ของขาย", (p) => p.active && !isCons(p)], cons: ["ของใช้ในร้าน", (p) => p.active && isCons(p)], nocost: ["ยังไม่ใส่ทุน", noCost], off: ["ปิดใช้แล้ว", (p) => !p.active] };
   let pf = FIL[qs.get("f")] ? qs.get("f") : "sell";
-  // 0043 (Mos 29 ต.ค.): นับเป็น (unit) / ซื้อทีละ (buy_unit) / 1 หน่วยซื้อมีกี่หน่วยนับ (pack_size) · same unit or none = nothing to convert
+  // 0043 (Mos 29 ต.ค.): หน่วยใช้ (unit) / หน่วยซื้อ (buy_unit) / 1 หน่วยซื้อมีกี่หน่วยใช้ (pack_size) · same unit or none = nothing to convert
   const same = (u, b) => !b || b === u;
   // same unit + pack > 1 (foil 2 ม้วน, carry bags 5 แพ็ค) = the usual order quantity, so the row still shows it
   const buyTxt = (p) => { const u = E(UXM.unit(p.unit)), pk = Number(p.pack_size) || 1;
     return same(p.unit, p.buy_unit) ? (pk > 1 ? `ซื้อทีละ ${pk} ${u}` : `ซื้อทีละ${u}`) : `ซื้อทีละ${E(p.buy_unit)}${pk > 1 ? ` (${pk} ${u})` : ""}`; };
-  const pmeta = (p) => isCons(p) ? `${KIND.consumable} · ${p.supplier === "cpf" ? "สั่ง CPF" : "ซื้อเอง"} · ${buyTxt(p)}`
-    : `${(p.par_weekday || 0) + (p.par_weekend || 0) === 0 ? "ไม่สั่ง (ควรมี 0)" : `ควรมี ${p.par_weekday} / ${p.par_weekend}`} · ${p.cost_price == null ? '<b class="err">ยังไม่ใส่ทุน</b>' : `ทุน ${money(p.cost_price)} บาท`}${p.kind === "self" ? " · ซื้อเอง" : ""}<br>หน่วยใช้ ${E(UXM.unit(p.unit))} · ${buyTxt(p)}`;
+  // ของขาย/ของใช้ + ซื้อจากไหน → kind / supplier / made_here · ตอนปิดร้าน → count_mode (0045, default from kind)
+  const SRC = { cpf: "CPF", self: "ซื้อเอง", made: "ทำในร้าน" };
+  const srcOf = (p) => p.made_here ? "made" : p.supplier === "cpf" ? "cpf" : "self";
+  const modeOf = (p) => p.count_mode || (isCons(p) ? "tick" : "count");
+  const pmeta = (p) => [isCons(p) ? "ของใช้" : "ของขาย", SRC[srcOf(p)], ...(isCons(p) ? [] : [`หน่วยใช้ ${E(UXM.unit(p.unit))}`]), buyTxt(p),
+    ...(isCons(p) ? [] : [p.cost_price == null ? '<b class="err">ยังไม่ใส่ทุน</b>' : `ทุน ${money(p.cost_price)} บาท`]), modeOf(p) === "tick" ? "ติ๊กใกล้หมด" : "นับจำนวน"].join(" · ");
   function drawProd() {
     const q = $("q").value.trim().toLowerCase();
     $("pf").innerHTML = Object.entries(FIL).map(([k, [t, f]]) => { const c = ps.filter(f).length; return k === "off" && !c ? "" : `<button type="button" class="chip${k === "nocost" ? " bad" : ""}${!q && k === pf ? " on" : ""}" data-f="${k}" aria-pressed="${!q && k === pf}">${t} <b>${c}</b></button>`; }).join("");
     // ponytail: search looks through every product (ignores the chip) so a hit is never hidden by the wrong filter
     const list = q ? ps.filter((p) => p.name.toLowerCase().includes(q)) : ps.filter(FIL[pf][1]);
-    $("plist").innerHTML = list.map((p) => `<button type="button" class="prow${p.active ? "" : " off"}" data-id="${p.id}"><div class="grow"><div class="nm">${E(p.name)}</div><div class="meta">${pmeta(p)}</div></div><span class="go" aria-hidden="true">›</span></button>`).join("")
+    $("plist").innerHTML = list.map((p) => `<button type="button" class="prow${p.active ? "" : " off"}" data-id="${p.id}" aria-haspopup="dialog"><div class="grow"><div class="nm">${E(p.name)}</div><div class="meta">${pmeta(p)}</div></div><span class="go" aria-hidden="true">›</span></button>`).join("")
       || `<p class="${psErr ? "err" : "muted"}">${psErr ? "เปิดรายการสินค้าไม่ขึ้น ลองเปิดหน้าใหม่" : q ? "ไม่เจอสินค้าชื่อนี้" : pf === "nocost" ? "ใส่ราคาทุนครบแล้ว ✓" : "ไม่มีสินค้า"}</p>`;
   }
   $("q").oninput = () => drawProd();
   $("pf").onclick = (ev) => { const b = ev.target.closest("[data-f]"); if (!b) return; pf = b.dataset.f; $("q").value = ""; drawProd(); };
   const sheet = UXD.sheet($("ps"));
-  const num = (f, label, v, int) => `<label>${label}<input type="number" inputmode="${int ? "numeric" : "decimal"}" min="0" step="${int ? 1 : "any"}" name="${f}" value="${v ?? ""}"></label>`;
-  const packLabel = (u, b) => `1 ${b || UXM.unit(u) || "หน่วยซื้อ"} มีกี่ ${UXM.unit(u) || "หน่วยใช้"}`;
-  const unitFields = (p) => `<div class="g"><label>หน่วยใช้ (ที่น้องนับ)<input type="text" name="unit" list="units" placeholder="ชิ้น" value="${E(p.unit ?? "")}" required></label>
-      <label>หน่วยซื้อ<input type="text" name="buy_unit" list="buys" placeholder="ถุง" value="${E(p.buy_unit ?? "")}"></label></div>
-    <div class="g"><label><span id="pkl">${E(packLabel(p.unit, p.buy_unit))}</span><input type="number" inputmode="numeric" min="1" step="1" name="pack_size" value="${E(p.pack_size ?? 1)}" data-v="${E(p.pack_size ?? 1)}"></label></div>
-    <datalist id="units"><option value="ตัว"><option value="ชิ้น"><option value="แพ็ค"><option value="ขวด"><option value="กก."><option value="ม้วน"><option value="ซอง"></datalist>
-    <datalist id="buys"><option value="ถุง"><option value="แพ็ค"><option value="ลัง"><option value="ม้วน"><option value="กระสอบ"><option value="ขวด"></datalist>`;
-  // label follows the two text fields · same unit (or no ซื้อทีละ) → "1" locked, the typed number comes back if they differ again
-  function syncPack() {
-    const q = (n) => $("psb").querySelector(`[name=${n}]`), k = q("pack_size"); if (!k) return;
-    const u = q("unit").value.trim(), b = q("buy_unit").value.trim();
-    $("pkl").textContent = packLabel(u, b);
-    if (same(u, b)) { if (!k.disabled) { k.dataset.v = k.value; k.value = "1"; k.disabled = true; } }
+  const F = (n) => $("psb").querySelector(`[name=${n}]`);
+  const num = (id, f, v, int) => `<input type="number" id="${id}" inputmode="${int ? "numeric" : "decimal"}" min="${int ? 1 : 0}" step="${int ? 1 : "any"}" name="${f}" value="${E(v ?? "")}" placeholder="ยังไม่ใส่">`;
+  // one question per row · segmented = the .tabs track, the hidden input carries the value for save
+  const seg = (f, label, opts, v) => `<p class="field" id="ql-${f}">${label}</p><div class="tabs" role="radiogroup" aria-labelledby="ql-${f}" data-seg="${f}">${opts.map(([k, t]) => `<button type="button" role="radio" data-v="${k}" aria-checked="${k === v}"${k === v ? ' class="on"' : ""}>${t}</button>`).join("")}</div><input type="hidden" name="${f}" value="${v}">`;
+  const packLabel = (u, b) => `1 ${b || UXM.unit(u) || "หน่วยซื้อ"} มี กี่ ${UXM.unit(u) || "หน่วยใช้"}`;
+  function form(p) {
+    const sell = !isCons(p), src = srcOf(p);
+    return `<label class="field" for="pn">ชื่อสินค้า</label><input type="text" id="pn" name="name" value="${E(p.name ?? "")}" autocomplete="off" required>
+      ${seg("sell", "ของขาย หรือ ของใช้", [["sell", "ของขาย"], ["use", "ของใช้"]], sell ? "sell" : "use")}
+      ${seg("src", "ซื้อจากไหน", [["cpf", "CPF"], ["self", "ซื้อเอง"], ["made", "ทำในร้าน"]], src)}
+      <label class="field" for="pu">หน่วยใช้ <small>(ที่น้องนับ)</small></label><input type="text" id="pu" name="unit" list="units" placeholder="ชิ้น" value="${E(p.unit ?? "")}" required>
+      <label class="field" for="pb">หน่วยซื้อ</label><input type="text" id="pb" name="buy_unit" list="buys" placeholder="ถุง" value="${E(p.buy_unit ?? "")}">
+      <label class="field" for="pk" id="pkl"></label><input type="number" id="pk" inputmode="numeric" min="1" step="1" name="pack_size" value="${E(p.pack_size ?? 1)}" data-v="${E(p.pack_size ?? 1)}">
+      <label class="field" for="pc"><span id="pcl"></span><small class="h" id="pch">ว่างได้ ใส่ทีหลังจากใบเสร็จ</small></label>${num("pc", "cost_price", p.cost_price)}
+      <div data-q="sell"><label class="field" for="psp">ขายหน้าร้าน (บาท)</label>${num("psp", "store_price", p.store_price)}
+        <label class="field" for="pdp">ขายเดลิเวอรี (บาท)</label>${num("pdp", "delivery_price", p.delivery_price)}</div>
+      ${seg("count_mode", "ตอนปิดร้าน", [["count", "นับจำนวน"], ["tick", "ติ๊กใกล้หมด"]], modeOf(p))}
+      <div data-q="low"><label class="field" for="pl"><span id="pll"></span><small class="h">ปิดร้านแล้วเหลือต่ำกว่านี้ ขึ้นในรายการ ของต้องซื้อเอง</small></label>${num("pl", "low_at", p.low_at)}</div>
+      ${cur ? `<label class="chk"><input type="checkbox" role="switch" name="active" ${p.active ? "checked" : ""}>ยังใช้อยู่ (เอาติ๊กออก = ปิดใช้)</label>` : ""}
+      <datalist id="units"><option value="ตัว"><option value="ชิ้น"><option value="แพ็ค"><option value="ขวด"><option value="กก."><option value="ม้วน"><option value="ซอง"></datalist>
+      <datalist id="buys"><option value="ถุง"><option value="แพ็ค"><option value="ลัง"><option value="ม้วน"><option value="กระสอบ"><option value="ขวด"></datalist>`;
+  }
+  const setSeg = (f, v) => { F(f).value = v; $("psb").querySelectorAll(`[data-seg=${f}] [data-v]`).forEach((x) => { const on = x.dataset.v === v; x.classList.toggle("on", on); x.setAttribute("aria-checked", on); }); };
+  // labels follow the answers · ของใช้ hides ทำในร้าน and the sale prices · เตือนเมื่อเหลือ only where night_plan reads it (ของขาย ซื้อเอง/ทำในร้าน, นับจำนวน)
+  function syncForm() {
+    const sell = F("sell").value === "sell", src = F("src").value, u = F("unit").value.trim(), b = F("buy_unit").value.trim(), un = UXM.unit(u) || "หน่วยใช้", k = F("pack_size");
+    $("psb").querySelector("[data-seg=src] [data-v=made]").hidden = !sell;
+    $("psb").querySelector("[data-q=sell]").hidden = !sell;
+    $("psb").querySelector("[data-q=low]").hidden = !(sell && src !== "cpf" && F("count_mode").value === "count");
+    $("pcl").textContent = `ราคาทุน ต่อ 1 ${un} (บาท)`; $("pch").hidden = sell; $("pll").textContent = `เตือนเมื่อเหลือต่ำกว่า (${un})`;
+    // 0043: same unit → 1 locked (the typed number comes back if they differ again) · a CPF ของใช้ with one unit = how many per order (foil 2 ม้วน)
+    const order = !sell && src === "cpf" && same(u, b);
+    $("pkl").textContent = order ? `สั่ง CPF ทีละกี่ ${un}` : packLabel(u, b);
+    if (same(u, b) && !order) { if (!k.disabled) { k.dataset.v = k.value; k.value = "1"; k.disabled = true; } }
     else if (k.disabled) { k.disabled = false; k.value = k.dataset.v || "1"; }
   }
-  $("psb").oninput = (ev) => { if (ev.target.name === "unit" || ev.target.name === "buy_unit") syncPack(); };
-  const chk = (p) => `<label class="chk"><input type="checkbox" name="active" ${p.active ? "checked" : ""}>ยังใช้อยู่ (เอาติ๊กออก = ปิดใช้)</label>`;
-  function openEdit(p) {
-    cur = p; $("psm").textContent = "";
-    $("psh").textContent = p.name;
-    $("psb").innerHTML = `<p class="meta" style="margin:2px 0 0">${KIND[p.kind] || E(p.kind)}${isCons(p) ? ` · ${p.supplier === "cpf" ? "สั่ง CPF" : "ซื้อเอง"}` : ""}</p>` + (isCons(p)
-      // 0033 (Mos 26 ต.ค.): where it comes from decides the order: CPF = ticked low/out goes into the CPF order (1 bag), ซื้อเอง = ของใช้ต้องซื้อเอง
-      ? `<label class="field" for="psup">ซื้อจากไหน</label><select id="psup" name="supplier"><option value="cpf" ${p.supplier === "cpf" ? "selected" : ""}>สั่ง CPF (อยู่ในใบสั่ง)</option><option value="self" ${p.supplier === "self" ? "selected" : ""}>ซื้อเอง (ช้อปปี้ แม็คโคร)</option></select>
-         ${unitFields(p)}${chk(p)}`
-      : `<div class="g">${num("par_weekday", "ควรมี จ.–พฤ.", p.par_weekday, 1)}${num("par_weekend", "ควรมี ศ.–อา.", p.par_weekend, 1)}
-         ${num("cost_price", "ราคาทุน (บาท)", p.cost_price)}${num("store_price", "ขายหน้าร้าน (บาท)", p.store_price)}</div>
-         ${unitFields(p)}
-         <details class="fold"><summary>ราคาเดลิเวอรี และปิดใช้<span class="chip">เปิดดู</span></summary>
-         <div class="g">${num("delivery_price", "ขายเดลิเวอรี (บาท)", p.delivery_price)}</div>${chk(p)}</details>`);
-    syncPack();
-    $("pss").textContent = "บันทึก " + p.name;
-    sheet.open();
+  $("psb").oninput = (ev) => { if (ev.target.name === "unit" || ev.target.name === "buy_unit") syncForm(); };
+  $("psb").onclick = (ev) => {
+    const b = ev.target.closest("[data-seg] [data-v]"); if (!b) return;
+    const f = b.parentElement.dataset.seg, v = b.dataset.v; setSeg(f, v);
+    if (f === "count_mode") touched = true;
+    if (f === "sell") { if (!touched) setSeg("count_mode", v === "sell" ? "count" : "tick"); if (v === "use" && F("src").value === "made") setSeg("src", "self"); }
+    syncForm();
+  };
+  function openForm(p) {
+    cur = p; touched = !!p; $("psm").textContent = "";
+    $("psh").textContent = p ? p.name : "เพิ่มสินค้า";
+    $("psb").innerHTML = form(p || { kind: "cpf", supplier: "cpf", unit: "", buy_unit: "", pack_size: 1 });
+    syncForm(); sheet.open();
   }
-  function openAdd() {
-    cur = null; $("psm").textContent = "";
-    $("psh").textContent = "เพิ่มสินค้า";
-    $("psb").innerHTML = `<label class="field" for="an">ชื่อสินค้า</label><input type="text" id="an" name="name" required>
-      <label class="field" for="ak">เป็นของแบบไหน</label><select id="ak" name="kk">${ADDK.map(([v, t]) => `<option value="${v}">${t}</option>`).join("")}</select>
-      ${unitFields({ unit: "", buy_unit: "", pack_size: 1 })}
-      <p class="muted">ควรมี กับ ราคาทุน ใส่ต่อได้หลังเพิ่ม</p>`;
-    syncPack();
-    $("pss").textContent = "เพิ่มสินค้า";
-    sheet.open();
-  }
-  $("plist").onclick = (ev) => { const b = ev.target.closest(".prow"); if (b) openEdit(ps.find((p) => p.id === b.dataset.id)); };
-  $("add").onclick = openAdd;
+  $("plist").onclick = (ev) => { const b = ev.target.closest(".prow"); if (b) openForm(ps.find((p) => p.id === b.dataset.id)); };
+  $("add").onclick = () => openForm(null);
   $("pss").onclick = async () => {
     const f = Object.fromEntries([...$("psb").querySelectorAll("[name]")].map((el) => [el.name, el.type === "checkbox" ? el.checked : el.value.trim()]));
-    const bad = (t) => { $("psm").textContent = t; };
+    const bad = (t, k) => { $("psm").textContent = t; if (k) UXM.shake(F(k)); }; // ก5: jump to the field and shake it
     const n = (k, int) => { if (f[k] === "" || f[k] == null) return null; const v = Number(f[k]); return Number.isFinite(v) && v >= 0 && (!int || Number.isInteger(v)) ? v : NaN; };
-    let row;
-    if (cur) {
-      row = { active: f.active };
-      for (const [k, int] of [["par_weekday", 1], ["par_weekend", 1], ["pack_size", 1], ["cost_price"], ["store_price"], ["delivery_price"]]) if (k in f) row[k] = n(k, int);
-      if (Object.values(row).some(Number.isNaN)) return bad("ตัวเลขไม่ถูก\nใส่เลข 0 ขึ้นไป (ควรมี กับ แพ็ค ใช้เลขเต็ม)");
-      for (const k of ["par_weekday", "par_weekend"]) if (k in row && row[k] == null) row[k] = 0;   // not null in the DB
-      if (!f.unit) { UXM.shake($("psb").querySelector("[name=unit]")); return bad("ใส่ หน่วยใช้ ก่อน เช่น ชิ้น"); }
-      row.unit = f.unit; row.buy_unit = f.buy_unit || null;
-      // same unit: locked "1" is saved only when the units were just changed · untouched rows keep their order quantity (foil 2 ม้วน)
-      if (same(f.unit, f.buy_unit)) { if (f.unit === cur.unit && (f.buy_unit || null) === (cur.buy_unit || null)) delete row.pack_size; else row.pack_size = 1; }
-      else if (!(row.pack_size >= 1)) return bad(`${packLabel(f.unit, f.buy_unit)} ต้องเป็นเลขเต็ม 1 ขึ้นไป`);
-      if (f.supplier === "cpf" || f.supplier === "self") row.supplier = f.supplier;
-    } else {
-      const [kind, supplier] = f.kk.split("|"), pk = same(f.unit, f.buy_unit) ? 1 : n("pack_size", 1);
-      const need = (n) => UXM.shake($("psb").querySelector(`[name=${n}]`)); // ก5: jump to the empty field and shake it
-      if (!f.name) { need("name"); return bad("ใส่ชื่อสินค้าก่อน"); }
-      if (ps.some((p) => p.name === f.name)) return bad("มีสินค้าชื่อนี้แล้ว");
-      if (!f.unit) { need("unit"); return bad("ใส่ หน่วยใช้ ก่อน เช่น ชิ้น"); }
-      if (!(pk >= 1)) return bad(`${packLabel(f.unit, f.buy_unit)} ต้องเป็นเลขเต็ม 1 ขึ้นไป`);
-      row = { name: f.name, kind, supplier, unit: f.unit, buy_unit: f.buy_unit || null, pack_size: pk, sort: Math.max(0, ...ps.map((p) => p.sort)) + 1, par_weekday: 0, par_weekend: 0, active: true };
+    const sell = f.sell === "sell", src = f.src, un = UXM.unit(f.unit) || "หน่วยใช้", active = cur ? f.active : true;
+    if (!f.name) return bad("ใส่ชื่อสินค้าก่อน", "name");
+    if (ps.some((p) => p.name === f.name && p !== cur)) return bad("มีสินค้าชื่อนี้แล้ว", "name");
+    if (!f.unit) return bad("ใส่ หน่วยใช้ ก่อน เช่น ชิ้น", "unit");
+    const row = { name: f.name, kind: !sell ? "consumable" : src === "cpf" ? "cpf" : "self", supplier: src === "cpf" ? "cpf" : "self", made_here: src === "made",
+      unit: f.unit, buy_unit: f.buy_unit || null, count_mode: f.count_mode, active };
+    for (const [k, int] of [["pack_size", 1], ["cost_price"], ["store_price"], ["delivery_price"], ["low_at"]]) {
+      row[k] = n(k, int); if (Number.isNaN(row[k])) return bad(k === "pack_size" ? `${$("pkl").textContent} ต้องเป็นเลขเต็ม 1 ขึ้นไป` : "ตัวเลขไม่ถูก\nใส่เลข 0 ขึ้นไป", k);
     }
+    if (!(row.pack_size >= 1)) return bad(`${$("pkl").textContent} ต้องเป็นเลขเต็ม 1 ขึ้นไป`, "pack_size");
+    if (cur && F("pack_size").disabled && f.unit === cur.unit && (f.buy_unit || null) === (cur.buy_unit || null)) delete row.pack_size; // locked "1" saves only when the units just changed
+    if (sell && active && row.cost_price == null) return bad(`ใส่ ราคาทุน ต่อ 1 ${un} ก่อน`, "cost_price");
+    if ($("psb").querySelector("[data-q=low]").hidden) row.low_at = null; // ponytail: night_plan reads low_at only for ของขาย ซื้อเอง (kind self) counted rows
+    if (!cur) Object.assign(row, { sort: Math.max(0, ...ps.map((p) => p.sort)) + 1, par_weekday: 0, par_weekend: 0 });
     $("pss").disabled = true;
     const r = cur ? await supabase.from("products").update(row).eq("id", cur.id).select().single() : await supabase.from("products").insert(row).select().single();
     $("pss").disabled = false;

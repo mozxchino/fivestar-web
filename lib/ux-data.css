@@ -78,7 +78,18 @@ dialog.bsheet[open]::backdrop { animation: dim-in 200ms ease-out; }
 .bsheet .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 @media (max-width: 359px) { .bsheet .g3 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 .bsheet .chk { display: flex; align-items: center; gap: 10px; min-height: 48px; font-size: 16px; }
-@media (prefers-reduced-motion: reduce) { dialog.bsheet[open], details.fold[open] > :not(summary) { animation: dim-in 150ms ease-out; } }
+/* 0045 full-screen form (สินค้า): same <dialog>, covers the screen · header ยกเลิก | title, scrolling body, footer one red save */
+dialog.bsheet.full { inset: 0; height: 100%; max-height: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; box-shadow: none; background: var(--color-background); }
+html:has(dialog.bsheet.full[open]), html:has(dialog.bsheet.full[open]) body { overflow: hidden; }   /* the page behind does not scroll */
+.bsheet.full > .hd { display: grid; grid-template-columns: 80px minmax(0, 1fr) 80px; padding: calc(4px + env(safe-area-inset-top)) 8px 4px; min-height: 52px; background: var(--color-card); border-bottom: .5px solid var(--color-separator); }
+.bsheet.full > .hd b { text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bsheet.full > .hd .txt-btn { justify-self: start; min-height: 44px; min-width: 44px; padding: 0 8px; border: 0; background: none; cursor: pointer; font: 500 17px/1 var(--font-body); color: var(--color-primary); }
+.bsheet.full > .hd .txt-btn:active { opacity: .55; }
+.bsheet.full > .body { flex: 1; padding: 4px 16px 24px; }
+.bsheet.full .body .tabs { margin: 0; }
+.bsheet.full .field small.h { display: block; font-weight: 400; font-size: 14px; color: var(--color-muted-foreground); }
+.bsheet.full .chk { margin-top: var(--space-md); }
+@media (prefers-reduced-motion: reduce) { dialog.bsheet[open], dialog.bsheet.full[open], details.fold[open] > :not(summary) { animation: dim-in 150ms ease-out; } }
 
 /* costs: month picker (the summary is a bento in ui.css) */
 .monthnav { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; }

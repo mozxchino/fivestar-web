@@ -51,11 +51,12 @@
   const stop = (t) => { blocked.hidden = false; blocked.innerHTML = t + '<br><a class="btn" href="index.html">กลับหน้าหลัก</a>'; };
   // qa2: a failed read must not show an empty form · after closing the server refuses new waste, so say so up front
   const [{ data: prods, error: pErr }, { data: day, error: dErr }] = await Promise.all([
-    supabase.from("products").select("id,name,unit,kind").eq("active", true).order("sort"),
+    supabase.from("products").select("id,name,unit,kind,count_mode").eq("active", true).order("sort"),
     supabase.from("shop_days").select("status").eq("date", new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10)).maybeSingle()]);
   if (pErr || dErr) return stop("เปิดไม่ขึ้น ลองเปิดหน้าใหม่");
   if (day && ["sent", "closed"].includes(day.status)) return stop("วันนี้ปิดร้านแล้ว<br>บันทึกของเสียเพิ่มไม่ได้");
-  const stock = (prods || []).filter((p) => p.kind !== "consumable").map((p) => ({ ...p, unit: UXM.unit(p.unit) })), P = Object.fromEntries(stock.map((p) => [p.id, p]));
+  const stock = (prods || []).filter((p) => (p.count_mode || (p.kind === "consumable" ? "tick" : "count")) === "count") // 0045: only counted rows have a เสีย box at close
+   .map((p) => ({ ...p, unit: UXM.unit(p.unit) })), P = Object.fromEntries(stock.map((p) => [p.id, p]));
   prod.innerHTML = `<option value="">เลือกสินค้า</option>` + stock.map((p) => `<option value="${p.id}">${p.name}</option>`).join("");
   prod.onchange = () => { unit2.textContent = P[prod.value]?.unit || "ชิ้น"; };
   const scale = [], bin = [];

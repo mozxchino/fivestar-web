@@ -75,7 +75,7 @@
   if (pend && pend.order_items.some((i) => i.qty_received == null && i.received_at == null)) {
     const b = document.getElementById("blocked"); b.hidden = false; b.innerHTML = 'ต้องกดรับของก่อน ถึงจะปิดร้านได้<br><a class="btn primary" href="receive.html">ไปรับของ</a>'; return;
   }
-  const { data: prods, error: pErr } = await supabase.from("products").select("id,sort,name,unit,kind,made_here").eq("active", true).order("sort");
+  const { data: prods, error: pErr } = await supabase.from("products").select("id,sort,name,unit,kind,made_here,count_mode").eq("active", true).order("sort");
   const { data: lines, error: lErr } = await supabase.from("stock_lines").select("product_id,open_fresh,open_cooked,received").eq("date", today);
   if (pErr || lErr || !prods) { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดรายการของไม่ขึ้น\n" + App.errText(pErr || lErr || "no products"); return; }
   prods.forEach((p) => { p.unit = UXM.unit(p.unit); }); // EA / PC → ตัว / ชิ้น // qa: never show 0s from a failed read
@@ -83,13 +83,15 @@
   // 0030: what was thrown away during the day (waste.html) starts the "เสีย" box and is its floor
   const { data: wl } = await supabase.from("waste_logs").select("product_id,qty").eq("date", today);
   const W = {}; (wl || []).forEach((w) => { W[w.product_id] = (W[w.product_id] || 0) + +w.qty; });
-  const stock = prods.filter((p) => p.kind !== "consumable"), cons = prods.filter((p) => p.kind === "consumable");
+  // 0045: ตอนปิดร้าน นับจำนวน (count row) or ติ๊กใกล้หมด (ของใช้ step) comes from count_mode · default from kind for rows saved before it
+  const tick = (p) => (p.count_mode || (p.kind === "consumable" ? "tick" : "count")) === "tick";
+  const stock = prods.filter((p) => !tick(p)), cons = prods.filter(tick);
   // nothing carried over + nothing received → folded, pre-filled 0 (Mos 23 ต.ค.: submitted as 0, still openable)
   const zero = (p) => { const l = L[p.id] || {}; return !+l.open_fresh && !+l.open_cooked && !+l.received && !W[p.id]; };
-  // 0042: kind self (น้ำดื่ม · ข้าวเหนียวดิบ กก. · ข้าวเหนียวห่อ) has one number, no สุก box (kept invisible so the grid stays aligned)
+  // 0042: kind self (น้ำดื่ม · ข้าวเหนียวดิบ กก. · ข้าวเหนียวห่อ) and (0045) counted ของใช้ have one number, no สุก box (kept invisible so the grid stays aligned)
   const row = (p, z) => { const l = L[p.id] || {}; return `
     <div class="grid${z ? " ux-zero" : ""}" data-id="${p.id}"${z ? " hidden" : ""}><div class="nm">${p.name}<div class="meta"><span>ยกมา ${(+l.open_fresh || 0) + (+l.open_cooked || 0)}</span> · <span>${p.made_here ? "ห่อวันนี้" : "รับเข้า"} ${+l.received || 0} ${p.unit || ""}</span>${W[p.id] ? ` · <span>ทิ้งแล้ว ${W[p.id]}</span>` : ""}</div></div>
-    <input type="number" inputmode="decimal" enterkeyhint="next" class="rf" placeholder="ใส่" aria-label="${p.name} เหลือสด"${z ? ' value="0"' : ""}><input type="number" inputmode="decimal" enterkeyhint="next" class="rc" placeholder="0" aria-label="${p.name} เหลือสุก"${p.kind === "self" ? ' disabled tabindex="-1" aria-hidden="true" style="visibility:hidden"' : ""}><input type="number" inputmode="decimal" enterkeyhint="next" class="w" placeholder="0" aria-label="${p.name} เสีย"${W[p.id] ? ` value="${W[p.id]}" min="${W[p.id]}"` : ""}></div>`; };
+    <input type="number" inputmode="decimal" enterkeyhint="next" class="rf" placeholder="ใส่" aria-label="${p.name} เหลือสด"${z ? ' value="0"' : ""}><input type="number" inputmode="decimal" enterkeyhint="next" class="rc" placeholder="0" aria-label="${p.name} เหลือสุก"${p.kind !== "cpf" ? ' disabled tabindex="-1" aria-hidden="true" style="visibility:hidden"' : ""}><input type="number" inputmode="decimal" enterkeyhint="next" class="w" placeholder="0" aria-label="${p.name} เสีย"${W[p.id] ? ` value="${W[p.id]}" min="${W[p.id]}"` : ""}></div>`; };
   const live = stock.filter((p) => !zero(p)), zeros = stock.filter(zero);
   document.getElementById("lines").innerHTML = live.map((p) => row(p, false)).join("") + zeros.map((p) => row(p, true)).join("");
   if (zeros.length) { fold.hidden = false; foldT.textContent = `ไม่มีของค้าง ${zeros.length} อย่าง`; }
