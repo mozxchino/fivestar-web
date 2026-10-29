@@ -31,7 +31,7 @@
   const today = Photo.todayPrefix().slice(0, 10).replaceAll("/", "-");
   const plus = (n) => new Date(Date.parse(today + "T00:00:00Z") + n * 864e5).toISOString().slice(0, 10);
   UXM.dateTh($("d")); // Mos 26 ต.ค.: Thai day over the native picker (an English iPhone showed "Oct 26, 2026")
-  $("d").value = today; $("d").min = today; $("d").max = plus(7);
+  $("d").value = plus(1); $("d").min = today; $("d").max = plus(7);   // 0041: tonight's count = ยกมา of tomorrow (29 ต.ค. the default today picked yesterday's carry-over)
   const { data: prods, error } = await supabase.from("products").select("id,name,unit").eq("active", true).in("kind", ["cpf", "self"]).order("sort");
   if (error) throw error;
   $("lines").innerHTML = prods.map((p) => `<div class="grid" data-id="${p.id}"><div class="nm">${E(p.name)}<div class="meta">${E(UXM.unit(p.unit))}</div></div>
