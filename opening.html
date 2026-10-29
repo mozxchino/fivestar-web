@@ -3,7 +3,7 @@
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="lib/ui.css">
+<link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-data.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-motion.js"></script>
@@ -32,10 +32,11 @@
   const plus = (n, from = today) => new Date(Date.parse(from + "T00:00:00Z") + n * 864e5).toISOString().slice(0, 10);
   UXM.dateTh($("d")); // Mos 26 ต.ค.: Thai day over the native picker (an English iPhone showed "Oct 26, 2026")
   $("d").value = plus(1); $("d").min = today; $("d").max = plus(7);   // 0041: tonight's count = ยกมา of tomorrow (29 ต.ค. the default today picked yesterday's carry-over)
-  const { data: prods, error } = await supabase.from("products").select("id,name,unit").eq("active", true).in("kind", ["cpf", "self"]).order("sort");
+  const { data: prods, error } = await supabase.from("products").select("id,name,unit,buy_unit,pack_size").eq("active", true).or("kind.in.(cpf,self),count_mode.eq.count").order("sort");
   if (error) throw error;
   $("lines").innerHTML = prods.map((p) => `<div class="grid" data-id="${p.id}"><div class="nm">${E(p.name)}<div class="meta">${E(UXM.unit(p.unit))}</div></div>
     <input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rf" placeholder="ใส่" aria-label="${E(p.name)} สด"><input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rc" placeholder="0" aria-label="${E(p.name)} สุก"></div>`).join("");
+  UXM.bags($("lines"), prods); // 0046: ถุงเต็ม + เศษ
   // a re-count shows what was saved for that day; a day with no rows yet starts blank
   const load = async () => {
     const { data: ls } = await supabase.from("stock_lines").select("product_id,open_fresh,open_cooked").eq("date", $("d").value);
