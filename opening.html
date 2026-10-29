@@ -16,6 +16,7 @@
   <div class="card steps"><p>1. นับของในตู้ทุกอย่างก่อนเปิดร้าน</p><p>2. กรอกจำนวนสดและสุก</p><p>3. กด บันทึกยอดนับ</p><p>4. กดปุ่มแดง สร้างใบสั่งของ แล้วกดส่งให้เซลล์</p><p class="muted">นับของในตู้คืนนี้ ใส่ตัวเลข ระบบใช้คิดใบสั่งใบแรก</p><p class="muted">ใช้ครั้งเดียวตอนเริ่มใช้แอป หลังจากนั้นระบบรู้จากหน้าปิดร้านเอง</p></div>
   <label class="cell"><span class="k">ของในตู้ตอนนี้ ไว้ขายวันที่</span> <input type="date" id="d"></label>
   <p id="dS" class="muted"></p>
+  <div id="lE" hidden><p class="err"></p><button type="button" id="retry" class="btn primary">ลองอีกครั้ง</button></div>
   <div class="sheet">
     <div class="grid meta sheet-head"><div>สินค้า</div><div>สด</div><div>สุก</div></div>
     <div id="lines"></div>
@@ -31,18 +32,29 @@
   const today = Photo.todayPrefix().slice(0, 10).replaceAll("/", "-");
   const plus = (n, from = today) => new Date(Date.parse(from + "T00:00:00Z") + n * 864e5).toISOString().slice(0, 10);
   UXM.dateTh($("d")); // Mos 26 ต.ค.: Thai day over the native picker (an English iPhone showed "Oct 26, 2026")
-  $("d").value = plus(1); $("d").min = today; $("d").max = plus(7);   // 0041: tonight's count = ยกมา of tomorrow (29 ต.ค. the default today picked yesterday's carry-over)
+  // Mos 30 ต.ค. (review): same cut-off as night_plan (setting cpf_cutoff_at, 13:00 BKK) · before it an order made today lands tomorrow → count defaults to today · after it → tomorrow (Fri 30 evening = Sat 31)
+  const { data: co } = await supabase.from("settings").select("value").eq("key", "cpf_cutoff_at").maybeSingle();
+  const cut = /^\d{1,2}:\d{2}/.test(String(co?.value)) ? String(co.value).slice(0, 5).padStart(5, "0") : "13:00";
+  $("d").value = new Date(Date.now() + 7 * 36e5).toISOString().slice(11, 16) < cut ? today : plus(1); $("d").min = today; $("d").max = plus(7);   // 0041: tonight's count = ยกมา of tomorrow
   const { data: prods, error } = await supabase.from("products").select("id,name,unit,buy_unit,pack_size").eq("active", true).or("kind.in.(cpf,self),count_mode.eq.count").order("sort");
   if (error) throw error;
   $("lines").innerHTML = prods.map((p) => `<div class="grid" data-id="${p.id}"><div class="nm">${E(p.name)}<div class="meta">${E(UXM.unit(p.unit))}</div></div>
     <input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rf" placeholder="ใส่" aria-label="${E(p.name)} สด"><input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rc" placeholder="0" aria-label="${E(p.name)} สุก"></div>`).join("");
   UXM.bags($("lines"), prods); // 0046: ถุงเต็ม + เศษ
   // a re-count shows what was saved for that day; a day with no rows yet starts blank
+  // Mos 30 ต.ค. (audit 10): a failed read must not look like an empty count · error + retry, and no save / no order button until a read worked
+  let seq = 0;
   const load = async () => {
-    const { data: ls } = await supabase.from("stock_lines").select("product_id,open_fresh,open_cooked").eq("date", $("d").value);
+    const my = ++seq; $("lE").hidden = true; $("go").disabled = true; $("first").disabled = true; // saving while a read is in flight would write the old date's boxes
+    const { data: ls, error: lErr } = await supabase.from("stock_lines").select("product_id,open_fresh,open_cooked").eq("date", $("d").value);
+    if (my !== seq) return; // a newer date was picked meanwhile
     const L = Object.fromEntries((ls || []).map((l) => [l.product_id, l]));
-    document.querySelectorAll("#lines .grid").forEach((g) => { const l = L[g.dataset.id];
-      g.querySelector(".rf").value = l ? +l.open_fresh : ""; g.querySelector(".rc").value = l && +l.open_cooked ? +l.open_cooked : ""; });
+    document.querySelectorAll("#lines .grid").forEach((g) => { const l = lErr ? null : L[g.dataset.id], rf = g.querySelector(".rf");
+      rf.value = l ? +l.open_fresh : ""; g.querySelector(".rc").value = l && +l.open_cooked ? +l.open_cooked : "";
+      delete rf.dataset.b; delete rf.dataset.l; const bs = g.querySelector(".bagsay"); if (bs) bs.textContent = ""; }); // item 38: the bag sheet's memory belongs to the date it was typed for
+    if (lErr) { $("lE").hidden = false; $("lE").querySelector(".err").textContent = "โหลดยอดนับไม่ขึ้น\n" + App.errText(lErr); $("dS").textContent = "";
+      $("go").hidden = $("first").hidden = $("fh").hidden = $("fnewP").hidden = true; return; }
+    $("go").hidden = false; $("go").disabled = false; $("first").disabled = false;
     $("dS").textContent = ls?.length ? "มีตัวเลขของวันนี้แล้ว ตรวจแล้วกดบันทึกได้เลย" : "";
     firstReady(!!ls?.length);
   };
@@ -72,7 +84,7 @@
   };
   $("first").onclick = () => ex ? (location.href = "approve.html?order=" + ex.id) : make();
   $("fnew").onclick = (e) => { e.preventDefault(); if (confirm(`มีใบสั่งของ ${day(ex.for_date)} ที่ยังไม่ส่งอยู่แล้ว สร้างใบใหม่แทนไหม?`)) make(); };
-  $("d").onchange = load; await load();
+  $("d").onchange = load; $("retry").onclick = load; await load();
   document.querySelector(".sk").remove(); $("form").hidden = false;
   $("go").onclick = async () => {
     const rows = [...document.querySelectorAll("#lines .grid")];

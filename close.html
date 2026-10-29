@@ -67,6 +67,7 @@
 </div>
 <script>
 (async () => {
+  addEventListener("pageshow", (e) => { if (e.persisted) location.reload(); }); // back from waste.html restores the page from cache → reload so the waste column and guards read the new waste_logs (the draft brings สด/สุก back)
   const { supabase, me } = await App.ready();
   if (UXS.only(me, ["staff", "owner"], "หน้านี้สำหรับพนักงานในร้าน", "ผู้จัดการดูงานของร้านได้ที่หน้าวันนี้", "owner.html", "ไปหน้าวันนี้")) return;
   const today = Photo.todayPrefix().slice(0, 10).replaceAll("/", "-");
@@ -154,13 +155,13 @@
   try { Object.keys(localStorage).filter((k) => k.startsWith("fs_close_draft_") && k !== KEY).forEach((k) => localStorage.removeItem(k)); } catch (_) {}
   const showDraft = (t) => { draftT.textContent = t ? `ร่างเก็บไว้ ${UXS.hm(t)} น.` : ""; };
   const save = () => {
-    const rows = {}; document.querySelectorAll("#lines .grid").forEach((g) => { rows[g.dataset.id] = [g.querySelector(".rf").value, g.querySelector(".rc").value, g.querySelector(".w").value]; });
+    const rows = {}; document.querySelectorAll("#lines .grid").forEach((g) => { rows[g.dataset.id] = [g.querySelector(".rf").value, g.querySelector(".rc").value]; }); // .w (เสีย) is never saved · it always comes from waste_logs (W)
     const at = Date.now();
     if (store.set(KEY, JSON.stringify({ at, rows, cons: state, pick, ce: cashExp.value, cc: cashCnt.value, note: note.value, step: cur, reached }))) showDraft(at);
   };
   let draft = null; try { draft = JSON.parse(store.get(KEY) || "null"); } catch (_) { draft = null; }
   if (draft) {
-    document.querySelectorAll("#lines .grid").forEach((g) => { const v = draft.rows?.[g.dataset.id]; if (v) [".rf", ".rc", ".w"].forEach((c, i) => { const x = g.querySelector(c); if (!x.disabled) x.value = v[i] ?? ""; }); });
+    document.querySelectorAll("#lines .grid").forEach((g) => { const v = draft.rows?.[g.dataset.id]; if (v) [".rf", ".rc"].forEach((c, i) => { const x = g.querySelector(c); if (!x.disabled) x.value = v[i] ?? ""; }); });
     Object.entries(draft.cons || {}).forEach(([id, v]) => { if (id in state && SAY[v]) state[id] = v; });
     document.querySelectorAll("#cons .ux-cchip").forEach(paint);
     setPick(Object.values(state).some((v) => v !== "ok") ? "low" : (draft.pick === "all" || draft.pick === "low" ? draft.pick : ""));
@@ -223,6 +224,9 @@
     const bad = [1, 2, 3].find(gap); if (bad) { show(bad); go(bad + 1); return; } // ponytail: forward moves already check · this only guards odd resumes
     const rows = [...document.querySelectorAll("#lines .grid")].map((g) => ({ product_id: g.dataset.id, remain_fresh: g.querySelector(".rf").value === "" ? null : +g.querySelector(".rf").value, remain_cooked: +g.querySelector(".rc").value || 0, waste: +g.querySelector(".w").value || 0 })).filter((r) => r.remain_fresh !== null);
     if (!rows.length) { msg.textContent = "กรอกช่อง เหลือสด อย่างน้อย 1 อย่าง"; msg.className = "err"; return; }
+    // Mos 30 ต.ค.: the two photos are the timestamp → closing needs both (the server checks the same)
+    const shot = !photos.length ? ["ยังไม่ได้ถ่ายรูปตู้และถาด", phFridge] : !pos.length ? ["ยังไม่ได้ถ่ายรูปจอ POS", phPos] : null;
+    if (shot) { say(shot[0], true); UXM.shake(shot[1].closest("label")); return; }
     const under = underRows()[0];
     if (under) { const p = stock.find((x) => x.id === under.dataset.id); go(1); say(`${p.name} ทิ้งไปแล้ว ${W[p.id]} ${p.unit || ""}\nช่องเสียใส่น้อยกว่านี้ไม่ได้`, true); UXM.shake(under.querySelector(".w")); under.querySelector(".w").focus(); return; } // qa2: say after go(), show() clears the message
     if (wasteRows().length) {
