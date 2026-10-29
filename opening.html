@@ -13,8 +13,8 @@
 <p id="blocked" class="err" hidden></p>
 <div class="sk"><span class="vh">กำลังเปิด…</span><i class="sk-b" style="--w:100%;--h:52px;--r:14px;margin:12px 0"></i><i class="sk-b" style="--w:100%;--h:68px"></i><i class="sk-b" style="--w:100%;--h:68px"></i><i class="sk-b" style="--w:100%;--h:68px"></i></div>
 <div id="form" class="ld" hidden>
-  <div class="card steps"><p>1. นับของในตู้ทุกอย่างก่อนเปิดร้าน</p><p>2. กรอกจำนวนสดและสุก</p><p>3. กด บันทึกยอดนับ</p><p>4. กดปุ่มแดง สร้างใบสั่งของ แล้วกดส่งให้เซลล์</p><p class="muted">ตัวเลขนี้เป็น ยกมา ของวันที่เลือก แทนใบเก่าของเจ้าของเดิม</p><p class="muted">ใบปิดร้านคืนก่อนรับร้านของเจ้าของเดิม = ยกมาของวันรับร้าน</p></div>
-  <label class="cell"><span class="k">ยกมาของวันที่</span> <input type="date" id="d"></label>
+  <div class="card steps"><p>1. นับของในตู้ทุกอย่างก่อนเปิดร้าน</p><p>2. กรอกจำนวนสดและสุก</p><p>3. กด บันทึกยอดนับ</p><p>4. กดปุ่มแดง สร้างใบสั่งของ แล้วกดส่งให้เซลล์</p><p class="muted">นับของในตู้คืนนี้ ใส่ตัวเลข ระบบใช้คิดใบสั่งใบแรก</p><p class="muted">ใช้ครั้งเดียวตอนเริ่มใช้แอป หลังจากนั้นระบบรู้จากหน้าปิดร้านเอง</p></div>
+  <label class="cell"><span class="k">ของในตู้ตอนนี้ ไว้ขายวันที่</span> <input type="date" id="d"></label>
   <p id="dS" class="muted"></p>
   <div class="sheet">
     <div class="grid meta sheet-head"><div>สินค้า</div><div>สด</div><div>สุก</div></div>
@@ -42,7 +42,7 @@
     const L = Object.fromEntries((ls || []).map((l) => [l.product_id, l]));
     document.querySelectorAll("#lines .grid").forEach((g) => { const l = L[g.dataset.id];
       g.querySelector(".rf").value = l ? +l.open_fresh : ""; g.querySelector(".rc").value = l && +l.open_cooked ? +l.open_cooked : ""; });
-    $("dS").textContent = ls?.length ? "มียกมาแล้ว บันทึกใหม่จะแทนของเดิม" : "";
+    $("dS").textContent = ls?.length ? "มีตัวเลขของวันนี้แล้ว ตรวจแล้วกดบันทึกได้เลย" : "";
     firstReady(!!ls?.length);
   };
   // 0033 ใบสั่งแรก (Mos 26 ต.ค.): once the count is saved, one big red button "สร้างใบสั่งของ <delivery day>" makes the first CPF order
