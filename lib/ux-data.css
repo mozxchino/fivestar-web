@@ -166,6 +166,8 @@ button.cell.ux-who:active { background: var(--color-fill-pressed); }
 #bagS .field { margin-top: 10px; }
 #bagS .bag-total { margin: 16px 0 12px; text-align: center; font: 500 17px/1.3 var(--font-head); color: var(--color-ink-soft); }
 #bagS .bag-total b { font-size: 30px; color: var(--color-foreground); margin: 0 4px; }
+#wasteGo .hd b, #wasteGo .bag-hint { text-align: center; }
+#wasteGo .hd { justify-content: center; } #wasteGo .hd b { flex: 1; padding-left: 44px; } /* title stays centred under the × */
 #bagS .btn.primary, #wasteGo .btn.primary { width: 100%; margin-bottom: max(8px, env(safe-area-inset-bottom)); }
 .grid .rf[readonly] { cursor: pointer; }
 .bagsay { display: block; }
