@@ -184,7 +184,7 @@ a.cell{text-decoration:none;color:inherit}
   const buyTxt = (p) => { const u = E(UXM.unit(p.unit)), pk = Number(p.pack_size) || 1;
     return same(p.unit, p.buy_unit) ? (pk > 1 ? `ซื้อทีละ ${pk} ${u}` : `ซื้อทีละ${u}`) : `ซื้อทีละ${E(p.buy_unit)}${pk > 1 ? ` (${pk} ${u})` : ""}`; };
   const pmeta = (p) => isCons(p) ? `${KIND.consumable} · ${p.supplier === "cpf" ? "สั่ง CPF" : "ซื้อเอง"} · ${buyTxt(p)}`
-    : `${(p.par_weekday || 0) + (p.par_weekend || 0) === 0 ? "ไม่สั่ง (ควรมี 0)" : `ควรมี ${p.par_weekday} / ${p.par_weekend}`} · ${p.cost_price == null ? '<b class="err">ยังไม่ใส่ทุน</b>' : `ทุน ${money(p.cost_price)} บาท`}${p.kind === "self" ? " · ซื้อเอง" : ""}<br>นับเป็น ${E(UXM.unit(p.unit))} · ${buyTxt(p)}`;
+    : `${(p.par_weekday || 0) + (p.par_weekend || 0) === 0 ? "ไม่สั่ง (ควรมี 0)" : `ควรมี ${p.par_weekday} / ${p.par_weekend}`} · ${p.cost_price == null ? '<b class="err">ยังไม่ใส่ทุน</b>' : `ทุน ${money(p.cost_price)} บาท`}${p.kind === "self" ? " · ซื้อเอง" : ""}<br>หน่วยใช้ ${E(UXM.unit(p.unit))} · ${buyTxt(p)}`;
   function drawProd() {
     const q = $("q").value.trim().toLowerCase();
     $("pf").innerHTML = Object.entries(FIL).map(([k, [t, f]]) => { const c = ps.filter(f).length; return k === "off" && !c ? "" : `<button type="button" class="chip${k === "nocost" ? " bad" : ""}${!q && k === pf ? " on" : ""}" data-f="${k}" aria-pressed="${!q && k === pf}">${t} <b>${c}</b></button>`; }).join("");
@@ -197,9 +197,9 @@ a.cell{text-decoration:none;color:inherit}
   $("pf").onclick = (ev) => { const b = ev.target.closest("[data-f]"); if (!b) return; pf = b.dataset.f; $("q").value = ""; drawProd(); };
   const sheet = UXD.sheet($("ps"));
   const num = (f, label, v, int) => `<label>${label}<input type="number" inputmode="${int ? "numeric" : "decimal"}" min="0" step="${int ? 1 : "any"}" name="${f}" value="${v ?? ""}"></label>`;
-  const packLabel = (u, b) => `1 ${b || UXM.unit(u) || "หน่วยซื้อ"} มีกี่ ${UXM.unit(u) || "หน่วยนับ"}`;
-  const unitFields = (p) => `<div class="g"><label>นับเป็น<input type="text" name="unit" list="units" placeholder="ชิ้น" value="${E(p.unit ?? "")}" required></label>
-      <label>ซื้อทีละ<input type="text" name="buy_unit" list="buys" placeholder="ถุง" value="${E(p.buy_unit ?? "")}"></label></div>
+  const packLabel = (u, b) => `1 ${b || UXM.unit(u) || "หน่วยซื้อ"} มีกี่ ${UXM.unit(u) || "หน่วยใช้"}`;
+  const unitFields = (p) => `<div class="g"><label>หน่วยใช้ (ที่น้องนับ)<input type="text" name="unit" list="units" placeholder="ชิ้น" value="${E(p.unit ?? "")}" required></label>
+      <label>หน่วยซื้อ<input type="text" name="buy_unit" list="buys" placeholder="ถุง" value="${E(p.buy_unit ?? "")}"></label></div>
     <div class="g"><label><span id="pkl">${E(packLabel(p.unit, p.buy_unit))}</span><input type="number" inputmode="numeric" min="1" step="1" name="pack_size" value="${E(p.pack_size ?? 1)}" data-v="${E(p.pack_size ?? 1)}"></label></div>
     <datalist id="units"><option value="ตัว"><option value="ชิ้น"><option value="แพ็ค"><option value="ขวด"><option value="กก."><option value="ม้วน"><option value="ซอง"></datalist>
     <datalist id="buys"><option value="ถุง"><option value="แพ็ค"><option value="ลัง"><option value="ม้วน"><option value="กระสอบ"><option value="ขวด"></datalist>`;
@@ -252,7 +252,7 @@ a.cell{text-decoration:none;color:inherit}
       for (const [k, int] of [["par_weekday", 1], ["par_weekend", 1], ["pack_size", 1], ["cost_price"], ["store_price"], ["delivery_price"]]) if (k in f) row[k] = n(k, int);
       if (Object.values(row).some(Number.isNaN)) return bad("ตัวเลขไม่ถูก\nใส่เลข 0 ขึ้นไป (ควรมี กับ แพ็ค ใช้เลขเต็ม)");
       for (const k of ["par_weekday", "par_weekend"]) if (k in row && row[k] == null) row[k] = 0;   // not null in the DB
-      if (!f.unit) { UXM.shake($("psb").querySelector("[name=unit]")); return bad("ใส่ นับเป็น ก่อน เช่น ชิ้น"); }
+      if (!f.unit) { UXM.shake($("psb").querySelector("[name=unit]")); return bad("ใส่ หน่วยใช้ ก่อน เช่น ชิ้น"); }
       row.unit = f.unit; row.buy_unit = f.buy_unit || null;
       // same unit: locked "1" is saved only when the units were just changed · untouched rows keep their order quantity (foil 2 ม้วน)
       if (same(f.unit, f.buy_unit)) { if (f.unit === cur.unit && (f.buy_unit || null) === (cur.buy_unit || null)) delete row.pack_size; else row.pack_size = 1; }
@@ -263,7 +263,7 @@ a.cell{text-decoration:none;color:inherit}
       const need = (n) => UXM.shake($("psb").querySelector(`[name=${n}]`)); // ก5: jump to the empty field and shake it
       if (!f.name) { need("name"); return bad("ใส่ชื่อสินค้าก่อน"); }
       if (ps.some((p) => p.name === f.name)) return bad("มีสินค้าชื่อนี้แล้ว");
-      if (!f.unit) { need("unit"); return bad("ใส่ นับเป็น ก่อน เช่น ชิ้น"); }
+      if (!f.unit) { need("unit"); return bad("ใส่ หน่วยใช้ ก่อน เช่น ชิ้น"); }
       if (!(pk >= 1)) return bad(`${packLabel(f.unit, f.buy_unit)} ต้องเป็นเลขเต็ม 1 ขึ้นไป`);
       row = { name: f.name, kind, supplier, unit: f.unit, buy_unit: f.buy_unit || null, pack_size: pk, sort: Math.max(0, ...ps.map((p) => p.sort)) + 1, par_weekday: 0, par_weekend: 0, active: true };
     }
