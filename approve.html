@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-data.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-motion.js"></script>
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-motion.js"></script><script src="lib/ux-data.js"></script>
 <style>
 #items{margin-top:0}
 #pill{flex:none;align-self:center;font-size:15px;padding:6px 12px 6px 10px}
@@ -18,6 +18,16 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
 .ux-lot b{font:600 16px/1.35 var(--font-head);text-wrap:balance;font-variant-numeric:tabular-nums}.ux-lot span{font-size:14px;color:var(--color-ink-soft)}
 .ux-nopack{margin:0 0 12px;padding:10px 14px;border-radius:14px;background:var(--tint-wait);color:var(--on-wait);font-size:14px;line-height:1.5;text-wrap:pretty}.ux-nopack a{color:inherit;font-weight:600}
 .ux-2l{display:flex;flex-direction:column}.ux-2l b{color:var(--color-foreground);font-weight:600;font-variant-numeric:tabular-nums}
+/* 0044 packs first: under the stepper "ถุง = 10 ตัว" · remove an added row · the add sheet rows */
+.ux-stepw{display:flex;flex-direction:column;align-items:center;gap:2px;flex:none}
+.ux-eq{font-size:13px;line-height:1.3;color:var(--color-ink-soft);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ux-rm{min-height:44px;margin:0 0 -8px;padding:0;border:0;background:none;color:var(--color-primary-dark);font:500 15px/1.2 var(--font-body);text-decoration:underline;cursor:pointer;touch-action:manipulation}
+.ux-add{margin:12px 0 0}
+.ux-addr{display:flex;align-items:center;gap:12px;min-height:56px;padding:6px 0;border-bottom:.5px solid var(--color-separator);cursor:pointer}
+.ux-addr:last-child{border-bottom:0}.ux-addr input{flex:none;width:22px;height:22px;margin:0;accent-color:var(--color-primary)}
+.ux-addr .nm{display:block;font-weight:600}.ux-addr .meta{display:block;font-size:13px;color:var(--color-ink-soft)}.ux-addr .chip{flex:none;min-height:0;padding:4px 10px;font-size:13px;box-shadow:none;background:var(--color-fill);color:var(--color-ink-soft)}
+.ux-addq{display:flex;align-items:center;gap:12px;margin:0 0 10px}.ux-addq .in{flex:1;margin:0}#addEq{flex:none;font-variant-numeric:tabular-nums}
+#okT{margin:4px 0 0;font:600 18px/1.45 var(--font-head);text-wrap:balance}
 </style></head><body class="grouped" ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1 id="ttl">อนุมัติใบสั่ง</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div><div class="sk"><i class="sk-b" style="--w:150px;--h:12px;margin:3px 0"></i></div><div id="when" class="ld" hidden><div class="sub ux-2l"><span>สั่ง <span id="sd"></span></span><b>ของถึง <span id="d"></span></b></div><div class="sub" id="cdl">ถ้าไม่กด แอปส่งตอน <span id="cd"></span></div><div class="sub"><a href="order-rules.html" style="color:var(--color-primary);text-decoration:underline">กติกาใบสั่ง อ่าน 2 นาที</a></div></div></div></header>
 <p id="blocked" class="err" hidden></p>
@@ -33,12 +43,21 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   <div id="lot"></div>
   <p id="nopack" class="ux-nopack" role="note" hidden></p>
   <div id="items"></div>
+  <button id="addB" class="btn ux-add" type="button" aria-haspopup="dialog" hidden>+ เพิ่มรายการ</button>
   <div id="buy"></div>
   <details class="fold"><summary>ข้อความที่เซลล์จะเห็น<span class="chip">เปิดดู</span></summary>
     <div class="card preview"><pre id="prev"></pre></div></details>
   <div class="sticky"><p id="chg" class="ux-chg" aria-live="polite"></p><button id="send" class="btn primary">ส่งใบสั่งให้เซลล์</button>
     <p id="msg" class="muted"></p><button id="copy" class="btn" hidden>คัดลอกไปส่งเอง</button></div>
 </div>
+<dialog id="addS" class="bsheet" aria-labelledby="addH"><div class="body"><div class="grab"></div>
+  <div class="hd"><b id="addH">เพิ่มรายการ</b><button class="x" type="button" aria-label="ปิด">✕</button></div>
+  <p class="muted">ของ CPF ที่ยังไม่อยู่ในใบนี้</p><div id="addL" role="radiogroup" aria-labelledby="addH"></div></div>
+  <div class="foot"><div class="ux-addq"><div class="in"><input id="addQ" type="number" inputmode="numeric" min="1" step="1" value="1" enterkeyhint="done" aria-label="จำนวนที่เพิ่ม"><span class="sfx" id="addU">ถุง</span></div><span id="addEq" class="muted"></span></div>
+  <p id="addM" class="err" role="alert"></p><button id="addGo" class="btn primary" type="button" disabled>เลือกสินค้าก่อน</button></div></dialog>
+<dialog id="okS" class="bsheet" aria-labelledby="okT"><div class="body"><div class="grab"></div>
+  <div class="hd"><b>ใบสั่งแรก</b><button class="x" type="button" aria-label="ปิด">✕</button></div><p id="okT"></p></div>
+  <div class="foot"><button id="okGo" class="btn primary" type="button">ใช่ ส่งเลย</button><button id="okBack" class="btn" type="button" style="margin-top:8px">กลับไปแก้</button></div></dialog>
 <script>
 (async () => {
   const $ = (i) => document.getElementById(i);
@@ -52,7 +71,7 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   const day = (iso) => new Date(iso + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
   const dayLong = (iso) => new Date(iso + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "long", timeZone: "UTC" }).replace(/^วัน/, "") + " " + new Date(iso + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
   const ST = { proposed: "รอส่ง", approved: "รอส่ง", sent: "ส่งแล้ว", failed: "ส่งไม่ออก" };
-  let orderId = q.get("order"), order = null, rows = [], step = {}, shop = "", autoAt = "21:00";
+  let orderId = q.get("order"), order = null, rows = [], shop = "", autoAt = "21:00";
 
   async function findOrder() {
     // 0033: tonight's order is for its arrival day (lead 2 → day after tomorrow) · without ?order = the newest one still to come
@@ -102,7 +121,6 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   // items without a bag size go to the sales group as a plain qty: ask the owner to set ถุงละ (pack_size 1 on a non-chicken item)
   const nop = rows.filter((r) => Number(r.pack_size || 1) <= 1);
   if (nop.length) { $("nopack").hidden = false; $("nopack").innerHTML = `ยังไม่ได้ใส่ถุงละ ${nop.length} รายการ เซลล์จะเห็นแค่จำนวน<br>${nop.map((r) => E(r.name || r.label)).join(" ")}<br><a href="settings.html?tab=prod">ไปใส่ถุงละในหน้าสินค้า</a>`; }
-  step = Object.fromEntries(rows.map((r) => [r.product_id, r.pack_size || 1]));
   const plan = order.plan;
   // 0033: ของใช้ต้องซื้อเอง = ticked ใกล้หมด/หมด at close · own section under the order, never sent to CPF
   const sb = plan ? plan.self_buy || [] : ((await supabase.from("self_buy_today").select("name,status")).data || []);
@@ -131,34 +149,29 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   const base = (r) => r.kind === "consumable" ? `ของใช้ CPF ติ๊กใกล้หมดตอนปิดร้าน 1 ถุง` : r.daily_use != null
     ? `${left(r)}${Number(r.incoming) > 0 ? `กำลังมา ${n(r.incoming)} · ` : ""}ขายวันละ ${r.daily_use < 1 ? n(r.daily_use) : Math.round(r.daily_use)}${r.use_src === "seed" ? " (ค่าตั้งต้น)" : ""}${r.par != null ? ` · ควรมี ${n(r.par)}` : ""}`
     : `เหลือ ${r.remaining == null ? "-" : n(r.remaining)} · ควรมี ${r.par == null ? "-" : n(r.par)} ${E(r.unit_th)}`;
-  const meta = (r, q) => base(r) + (r.sets != null ? ` · ${Math.round(q / r.pack_size)} เซ็ต` : "") + (q !== Number(r.qty_proposed) ? `<br><b>ระบบเสนอ ${n(r.qty_proposed)} ตามกติกา แก้เป็น ${n(q)}</b>` : "");   // 0038 Mos: say what the rule proposed and what the owner changed it to
-  const rowH = (r, i) => `<div class="orow" id="r${i}"><div class="grow"><div class="nm">${E(r.label)}</div><div class="meta"></div></div>
-    <div class="step"><button type="button" data-d="-1" data-s="${i}" aria-label="ลด ${E(r.label)}">−</button><input type="number" inputmode="decimal" min="0" step="${step[r.product_id]}" value="${Number(r.qty)}" data-i="${i}" aria-label="${E(r.label)} จำนวนสั่ง (${E(r.unit_th)})"><button type="button" data-d="1" data-s="${i}" aria-label="เพิ่ม ${E(r.label)}">+</button></div></div>`;
-  // round 6 (Mos 23 ต.ค.): "ต้องดู" (edited / low / no stock figure) = white card on top · "ตามที่ระบบเสนอ" (at the proposal and เหลือ ≥ ควรมี)
-  // = its own grey box after a clear gap, folded by default ("ดู N รายการ"); opened rows render inside that box and stay editable
-  // ponytail: the split is decided once per render (stored qty), so a row edited here never jumps under the finger; it moves after reload
-  // every row keeps its input (data-i), folded rows only hide, cur() still walks rows in order → the same send payload
-  const same = (r) => Number(r.qty) === Number(r.qty_proposed) && r.remaining != null && r.par != null && Number(r.remaining) >= Number(r.par);
-  const top = rows.map((r, i) => same(r) ? "" : rowH(r, i)).join(""), sys = rows.map((r, i) => same(r) ? rowH(r, i) : "").join(""), nSame = rows.filter(same).length, nTop = rows.length - nSame;
-  $("items").innerHTML = (!rows.length ? '<div class="card"><p class="muted">ใบนี้ไม่มีของต้องสั่ง</p></div>'
-    : (nTop ? `<h2 class="ux-gh" data-tone="wait">ต้องดู<span class="n">${nTop} รายการ</span></h2><div class="card list">${top}</div>` : "")
-    + (nSame ? `<section class="ux-sys" aria-labelledby="sysH"><div class="ux-sysh"><div class="grow"><h2 id="sysH">ของยังพอ ${nSame} รายการ</h2><p>ไม่ได้แก้จำนวน</p></div><button type="button" id="sysT" class="chip" aria-expanded="false" aria-controls="sysL">ดู ${nSame} รายการ</button></div><div id="sysL" hidden>${sys}<button type="button" id="sysB" class="ux-sysend">ซ่อน ${nSame} รายการ</button></div></section>` : ""));
-  // impeccable: a long open box gets a second "ซ่อน" at its end · folding from there brings the box header back into view
-  const fold = (open, back) => { $("sysL").hidden = !open; $("sysT").setAttribute("aria-expanded", open); $("sysT").textContent = open ? "ซ่อน" : `ดู ${nSame} รายการ`; if (back) document.querySelector(".ux-sys").scrollIntoView({ block: "center" }); };
-  if (nSame) { $("sysT").onclick = () => fold($("sysL").hidden); $("sysB").onclick = () => fold(false, true); }
-  const qv = (i) => Math.max(0, Number(document.querySelector(`[data-i="${i}"]`).value) || 0);
+  // Mos 29 ต.ค.: packs first · a row with a bag size edits bags (เซ็ต for the chicken set) · qty_final stays in ตัว/ชิ้น, so send-order and the sales text are unchanged
+  // ponytail: a stored qty that is not whole bags (an old order) keeps the plain count, so a reload never changes a number under the owner's thumb
+  const pkOf = (r) => Number(r.pack_size) > 1 && Number(r.qty) % r.pack_size === 0 ? Number(r.pack_size) : 1;
+  const word = (r) => r.sets != null ? "เซ็ต" : "ถุง";
+  const inU = (r, x) => pkOf(r) > 1 ? `${n(x / r.pack_size)} ${word(r)}` : n(x);
+  // 0044: a row the rule did not propose (owner/manager added it with "เพิ่มรายการ") · can be taken out again
+  const planned = new Set(((plan && plan.items) || []).filter((x) => Number(x.qty) > 0).map((x) => x.product_id));
+  const added = (r) => !!plan && !planned.has(r.product_id);
+  const edited = (r, q) => !added(r) && q !== Number(r.qty_proposed);
+  const meta = (r, q) => (added(r) ? "เพิ่มเอง ไม่ได้มาจากกติกา" : base(r)) + (r.sets != null && pkOf(r) === 1 ? ` · ${Math.round(q / r.pack_size)} เซ็ต` : "")
+    + (edited(r, q) ? `<br><b>ระบบเสนอ ${inU(r, r.qty_proposed)} ตามกติกา แก้เป็น ${inU(r, q)}</b>` : "");   // 0038 Mos: say what the rule proposed and what the owner changed it to
+  const vals = {};   // product_id → qty typed so far (kept across a re-render after เพิ่มรายการ / เอาออก)
+  const rowH = (r, i) => { const pk = pkOf(r), v = Number(vals[r.product_id] ?? r.qty), u = pk > 1 ? word(r) : E(r.unit_th);
+    return `<div class="orow" id="r${i}"><div class="grow"><div class="nm">${E(r.label)}</div><div class="meta"></div>${added(r) && order.status !== "sent" ? `<button type="button" class="ux-rm" data-rm="${i}">เอาออก</button>` : ""}</div>
+    <div class="ux-stepw"><div class="step"><button type="button" data-d="-1" data-s="${i}" aria-label="ลด ${E(r.label)} 1 ${u}">−</button><input type="number" inputmode="${pk > 1 ? "numeric" : "decimal"}" min="0" step="${pk > 1 ? 1 : r.pack_size || 1}" value="${pk > 1 ? Math.round(v / pk) : v}" data-i="${i}" aria-label="${E(r.label)} จำนวนสั่ง (${u})"><button type="button" data-d="1" data-s="${i}" aria-label="เพิ่ม ${E(r.label)} 1 ${u}">+</button></div>${pk > 1 ? `<span class="ux-eq" id="eq${i}" aria-hidden="true"></span>` : ""}</div></div>`; };
+  const qv = (i) => { const v = Math.max(0, Number(document.querySelector(`[data-i="${i}"]`).value) || 0), pk = pkOf(rows[i]); return pk > 1 ? Math.round(v) * pk : v; };
   const cur = () => rows.map((r, i) => ({ product_id: r.product_id, qty_final: qv(i), r }));
   // ง3: how far the owner moved from what the system proposed (order_review qty_proposed)
-  const label = () => { const e = rows.filter((r, i) => qv(i) !== Number(r.qty_proposed)).length; $("chg").textContent = e ? `แก้จำนวน ${e} รายการ` : "";
-    const k = cur().filter((x) => x.qty_final > 0).length; $("send").disabled = k === 0; $("send").textContent = k === 0 ? "ไม่มีของที่จะสั่ง" : `ส่งใบสั่งให้เซลล์${order.status === "sent" ? "อีกครั้ง" : ""} ${k} รายการ`; };
-  const mark = (i) => { const q = qv(i), r = rows[i], row = $("r" + i); row.classList.toggle("chg", q !== Number(r.qty_proposed)); row.querySelector(".meta").innerHTML = meta(r, q); };
-  rows.forEach((_, i) => mark(i));
-  $("items").onclick = (ev) => {
-    const b = ev.target.closest("button[data-d]"); if (!b) return;
-    const i = +b.dataset.s, s = step[rows[i].product_id], inp = document.querySelector(`[data-i="${i}"]`);
-    const was = qv(i); inp.value = Math.max(0, Math.round((was + s * +b.dataset.d) / s) * s);
-    UXM.roll(inp, Math.sign(qv(i) - was)); inp.dispatchEvent(new Event("input", { bubbles: true })); // ก3: the number slides, never jumps
-  };
+  const label = () => { const e = rows.filter((r, i) => edited(r, qv(i))).length; $("chg").textContent = e ? `แก้จำนวน ${e} รายการ` : "";
+    const k = cur().filter((x) => x.qty_final > 0).length; $("send").disabled = k === 0; $("send").textContent = k === 0 ? "ไม่มีของที่จะสั่ง" : `ส่งใบสั่งให้เซลล์${order.status === "sent" ? "อีกครั้ง" : ""} ${k} รายการ`;
+    $("addB").hidden = order.status === "sent"; };   // 0044: order_item_add refuses a sent order
+  const mark = (i) => { const q = qv(i), r = rows[i], row = $("r" + i); row.classList.toggle("chg", edited(r, q)); row.querySelector(".meta").innerHTML = meta(r, q);
+    if ($("eq" + i)) $("eq" + i).textContent = `${word(r)} = ${n(q)} ${r.unit_th}`; };
   // the sales text = the previous owner's format (same as message.ts buildOrderMessage, Mos 26 ต.ค.)
   const dmy = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
   const wd = (iso) => new Date(iso + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "long", timeZone: "UTC" });
@@ -166,18 +179,87 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   const text = (edit) => [...(edit ? ["แก้ไขใบสั่ง"] : []), shop, `สั่งของประจำ${wd(cut)} ${dmy(cut)}`, `(มาส่ง${wd(order.for_date)} ${dmy(order.for_date)})`, "",
     ...cur().filter((x) => x.qty_final > 0).map(({ r, qty_final: n }, i) => `${i + 1}. ${r.name || r.label} ${n} ${r.unit || r.unit_th}${r.pack_size > 1 ? ` (${Math.ceil(n / r.pack_size)}ถุง)` : ""}`), ...(mention ? [mention] : [])].join("\n");
   const prev = () => { $("prev").textContent = text(!!order.sent_at); };
-  $("items").oninput = (ev) => { if (ev.target.dataset.i !== undefined) mark(+ev.target.dataset.i); prev(); label(); }; prev(); label();
+  // round 6 (Mos 23 ต.ค.): "ต้องดู" (edited / low / no stock figure) = white card on top · "ตามที่ระบบเสนอ" (at the proposal and เหลือ ≥ ควรมี)
+  // = its own grey box after a clear gap, folded by default ("ดู N รายการ"); opened rows render inside that box and stay editable
+  // ponytail: the split is decided once per render (stored qty), so a row edited here never jumps under the finger; it moves after reload
+  // every row keeps its input (data-i), folded rows only hide, cur() still walks rows in order → the same send payload
+  const render = () => {
+    const same = (r) => !added(r) && Number(r.qty) === Number(r.qty_proposed) && r.remaining != null && r.par != null && Number(r.remaining) >= Number(r.par);
+    const top = rows.map((r, i) => same(r) ? "" : rowH(r, i)).join(""), sys = rows.map((r, i) => same(r) ? rowH(r, i) : "").join(""), nSame = rows.filter(same).length, nTop = rows.length - nSame;
+    $("items").innerHTML = (!rows.length ? '<div class="card"><p class="muted">ใบนี้ไม่มีของต้องสั่ง</p></div>'
+      : (nTop ? `<h2 class="ux-gh" data-tone="wait">ต้องดู<span class="n">${nTop} รายการ</span></h2><div class="card list">${top}</div>` : "")
+      + (nSame ? `<section class="ux-sys" aria-labelledby="sysH"><div class="ux-sysh"><div class="grow"><h2 id="sysH">ของยังพอ ${nSame} รายการ</h2><p>ไม่ได้แก้จำนวน</p></div><button type="button" id="sysT" class="chip" aria-expanded="false" aria-controls="sysL">ดู ${nSame} รายการ</button></div><div id="sysL" hidden>${sys}<button type="button" id="sysB" class="ux-sysend">ซ่อน ${nSame} รายการ</button></div></section>` : ""));
+    // impeccable: a long open box gets a second "ซ่อน" at its end · folding from there brings the box header back into view
+    const fold = (open, back) => { $("sysL").hidden = !open; $("sysT").setAttribute("aria-expanded", open); $("sysT").textContent = open ? "ซ่อน" : `ดู ${nSame} รายการ`; if (back) document.querySelector(".ux-sys").scrollIntoView({ block: "center" }); };
+    if (nSame) { $("sysT").onclick = () => fold($("sysL").hidden); $("sysB").onclick = () => fold(false, true); }
+    rows.forEach((_, i) => mark(i)); prev(); label();
+  };
+  // 0044: re-read the rows after an add / remove · typed numbers stay (vals) · a row taken out (qty 0, not from the rule) disappears
+  const reload = async () => {
+    rows.forEach((r, i) => { vals[r.product_id] = qv(i); });
+    const { data, error } = await supabase.rpc("order_review", { oid: orderId });
+    if (error) throw error;
+    rows = (data || []).filter((r) => !(added(r) && Number(r.qty) === 0)).sort((a, b) => a.sort - b.sort);
+    render();
+  };
+  rows = rows.filter((r) => !(added(r) && Number(r.qty) === 0));
+  render();
+  $("items").onclick = async (ev) => {
+    const rm = ev.target.closest("button[data-rm]");
+    if (rm) {
+      const r = rows[+rm.dataset.rm]; rm.disabled = true;
+      const { error } = await supabase.rpc("order_item_remove", { oid: orderId, pid: r.product_id });
+      if (error) { rm.disabled = false; UXM.toast("เอาออกไม่ได้ " + App.errText(error)); return; }
+      delete vals[r.product_id]; await reload(); UXM.toast(`เอา ${r.label} ออกแล้ว`); return;
+    }
+    const b = ev.target.closest("button[data-d]"); if (!b) return;
+    const i = +b.dataset.s, inp = document.querySelector(`[data-i="${i}"]`), s = Number(inp.step) || 1;
+    const was = Math.max(0, Number(inp.value) || 0); inp.value = Math.max(0, Math.round((was + s * +b.dataset.d) / s) * s);
+    UXM.roll(inp, Math.sign(Number(inp.value) - was)); inp.dispatchEvent(new Event("input", { bubbles: true })); // ก3: the number slides, never jumps
+  };
+  $("items").oninput = (ev) => { if (ev.target.dataset.i !== undefined) mark(+ev.target.dataset.i); prev(); label(); };
+  // 0044 "เพิ่มรายการ": CPF items + CPF consumables not in the order (inactive ones too, labelled ปิดใช้อยู่) · count in bags
+  const addS = UXD.sheet($("addS")); let pick = null, choices = [];
+  const addW = () => pick ? (pick.pack_size > 1 ? (pick.sets ? "เซ็ต" : "ถุง") : pick.unit_th) : "ถุง";
+  const addEq = () => { const k = Math.max(0, Math.round(Number($("addQ").value) || 0)); $("addU").textContent = addW();
+    $("addEq").textContent = pick && pick.pack_size > 1 ? `= ${n(k * pick.pack_size)} ${pick.unit_th}` : "";
+    $("addGo").disabled = !pick || k < 1; $("addGo").textContent = pick ? `เพิ่ม ${pick.name}` : "เลือกสินค้าก่อน"; };
+  $("addB").onclick = async () => {
+    $("addB").disabled = true;
+    const { data, error } = await supabase.rpc("order_add_list", { oid: orderId });
+    $("addB").disabled = false;
+    if (error) { UXM.toast("เปิดรายการไม่ได้ " + App.errText(error)); return; }
+    choices = data || []; pick = null; $("addQ").value = 1; $("addM").textContent = "";
+    $("addL").innerHTML = choices.length ? choices.map((c, i) => `<label class="ux-addr"><input type="radio" name="addP" value="${i}"><span class="grow"><span class="nm">${E(c.name)}</span>${c.pack_size > 1 ? `<span class="meta">${c.sets ? "เซ็ตละ" : "ถุงละ"} ${c.pack_size} ${E(c.unit_th)}</span>` : ""}</span>${c.active ? "" : '<span class="chip">ปิดใช้อยู่</span>'}</label>`).join("")
+      : '<p class="muted">สินค้า CPF ทุกอย่างอยู่ในใบนี้แล้ว</p>';
+    addEq(); addS.open();
+  };
+  $("addL").onchange = (ev) => { pick = choices[+ev.target.value]; addEq(); };
+  $("addQ").oninput = addEq;
+  $("addGo").onclick = async () => {
+    const k = Math.round(Number($("addQ").value) || 0); if (!pick || k < 1) return;
+    $("addGo").disabled = true; $("addM").textContent = "";
+    const { error } = await supabase.rpc("order_item_add", { oid: orderId, pid: pick.product_id, qty: k * pick.pack_size });
+    if (error) { $("addM").textContent = App.errText(error); addEq(); return; }
+    const nm = pick.name; addS.close(); await reload(); UXM.toast(`เพิ่ม ${nm} แล้ว ✓`);
+  };
   const tick = () => { const [h, m] = String(autoAt).split(":").map(Number); const t = new Date(Date.now() + 7 * 3600e3); let s = (h * 60 + m) * 60 - (t.getUTCHours() * 3600 + t.getUTCMinutes() * 60 + t.getUTCSeconds()); if (s < 0) s += 86400; $("cd").textContent = `${autoAt} น. (อีก ${Math.floor(s / 3600)}:${String(Math.floor(s % 3600 / 60)).padStart(2, "0")} ชม.)`; };
   if (!(plan && plan.opening)) { tick(); setInterval(tick, 30000); }
   show("form"); show("when"); document.querySelector(".topbar .sub").hidden = true;
-  $("send").onclick = async () => {
+  const doSend = async () => {
     $("send").disabled = true; $("copy").hidden = true; $("msg").className = "muted"; $("msg").textContent = "กำลังส่ง…";
     try {
       const r = await App.fn("send-order", { order_id: orderId, mode: "manual", items: cur().map(({ product_id, qty_final }) => ({ product_id, qty_final })) });
-      if (r.ok) { $("msg").className = "muted"; $("msg").textContent = ""; UXM.toast("ส่งใบสั่งให้เซลล์แล้ว ✓"); $("pill").textContent = "ส่งแล้ว"; $("pill").dataset.tone = "ok"; order.status = "sent"; order.sent_at = order.sent_at || new Date().toISOString(); prev(); label(); }
+      if (r.ok) { $("msg").className = "muted"; $("msg").textContent = ""; UXM.toast("ส่งใบสั่งให้เซลล์แล้ว ✓"); $("pill").textContent = "ส่งแล้ว"; $("pill").dataset.tone = "ok"; order.status = "sent"; order.sent_at = order.sent_at || new Date().toISOString(); render(); }
       else { $("msg").className = "err"; $("msg").textContent = "ส่งไม่ออก\nกดคัดลอก แล้วไปวางในกลุ่มสั่งของเอง"; $("pill").textContent = "ส่งไม่ออก"; $("pill").dataset.tone = "bad"; $("copy").hidden = false; $("copy").onclick = async () => { await navigator.clipboard.writeText(r.message || text(false)); $("copy").textContent = "คัดลอกแล้ว"; }; }
     } catch (e) { $("msg").className = "err"; $("msg").textContent = "ส่งไม่ออก ลองกดอีกครั้ง\n" + App.errText(e); }
     label();
   };
+  // Mos 29 ต.ค.: the first order sent as proposed (nothing edited, nothing added) asks once · the proposal covers plan.cover days
+  const okS = UXD.sheet($("okS"));
+  $("okT").textContent = `ยังไม่ได้แก้ตัวเลข ระบบเสนอเผื่อ ${n((plan && plan.cover) || 2.5)} วัน ส่งเลยไหม`;
+  $("send").onclick = () => plan && plan.opening && order.status !== "sent" && !rows.some((r, i) => added(r) || qv(i) !== Number(r.qty_proposed)) ? okS.open() : doSend();
+  $("okGo").onclick = () => { okS.close(); doSend(); };
+  $("okBack").onclick = () => okS.close();
 })().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น: " + App.errText(e); } });
 </script></body></html>

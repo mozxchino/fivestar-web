@@ -20,7 +20,7 @@
     <div class="grid meta sheet-head"><div>สินค้า</div><div>สด</div><div>สุก</div></div>
     <div id="lines"></div>
   </div>
-  <div class="sticky"><p id="fh" class="muted" hidden></p><button id="first" class="btn primary" hidden>สร้างใบสั่งของ</button><button id="go" class="btn primary">บันทึกยอดนับ</button><p id="msg" class="muted"></p></div>
+  <div class="sticky"><p id="fh" class="muted" hidden></p><button id="first" class="btn primary" hidden>สร้างใบสั่งของ</button><p id="fnewP" class="muted" hidden style="text-align:center;margin:0"><a href="#" id="fnew" style="display:inline-block;min-height:44px;line-height:44px;color:var(--color-primary-dark);text-decoration:underline">สร้างใบใหม่แทน</a></p><button id="go" class="btn primary">บันทึกยอดนับ</button><p id="msg" class="muted"></p></div>
 </div>
 <script>
 (async () => {
@@ -29,7 +29,7 @@
   const { supabase, me } = await App.ready();
   if (me.role !== "owner") { document.querySelector(".back").href = "index.html"; $("blocked").hidden = false; $("blocked").textContent = "หน้านี้สำหรับเจ้าของ"; return; }
   const today = Photo.todayPrefix().slice(0, 10).replaceAll("/", "-");
-  const plus = (n) => new Date(Date.parse(today + "T00:00:00Z") + n * 864e5).toISOString().slice(0, 10);
+  const plus = (n, from = today) => new Date(Date.parse(from + "T00:00:00Z") + n * 864e5).toISOString().slice(0, 10);
   UXM.dateTh($("d")); // Mos 26 ต.ค.: Thai day over the native picker (an English iPhone showed "Oct 26, 2026")
   $("d").value = plus(1); $("d").min = today; $("d").max = plus(7);   // 0041: tonight's count = ยกมา of tomorrow (29 ต.ค. the default today picked yesterday's carry-over)
   const { data: prods, error } = await supabase.from("products").select("id,name,unit").eq("active", true).in("kind", ["cpf", "self"]).order("sort");
@@ -48,22 +48,29 @@
   // 0033 ใบสั่งแรก (Mos 26 ต.ค.): once the count is saved, one big red button "สร้างใบสั่งของ <delivery day>" makes the first CPF order
   // from it (the old owner's average × days until the next lot) · re-saving the count stays possible as a plain button under it
   const day = (iso) => new Date(iso + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+  // Mos 29 ต.ค. guard: a first order for this count already waiting (not sent) → the red button opens it instead of making a second one
+  let ex = null;
   const firstReady = async (on) => {
-    $("first").hidden = !on; $("fh").hidden = !on;
+    $("first").hidden = !on; $("fh").hidden = !on; $("fnewP").hidden = true; ex = null;
     $("go").className = on ? "btn" : "btn primary"; $("go").textContent = on ? "บันทึกยอดนับใหม่" : "บันทึกยอดนับ";
     if (!on) return;
     const { data: pl } = await supabase.rpc("night_plan", { d: $("d").value, opening: true });
     if (!pl || pl.none || !pl.arrive) { $("fh").textContent = "สร้างใบสั่งจากยอดนับนี้"; return; }
     $("first").textContent = `สร้างใบสั่งของ ${day(pl.arrive)}`;
+    const { data: o } = await supabase.from("orders").select("id,for_date").eq("plan->>opening", "true").eq("plan->>night", plus(-1, $("d").value))
+      .in("status", ["proposed", "approved", "failed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (o) { ex = o; $("first").textContent = `เปิดใบสั่งของ ${day(o.for_date)}`; $("fnewP").hidden = false; }
     $("fh").textContent = Number(pl.mult) > 1 ? `ของถึง ${pl.deliver_at} น. ต้องพอถึง ${day(pl.until)} ใช้ค่าเฉลี่ยใบเดิม × ${pl.mult}` : `ของถึง ${pl.deliver_at} น. ใช้ค่าเฉลี่ยใบเดิม`;
   };
-  $("first").onclick = async () => {
+  const make = async () => {
     $("first").disabled = true; $("msg").className = "muted"; $("msg").textContent = "กำลังทำใบสั่ง…";
     const { data, error } = await supabase.rpc("first_order", { d: $("d").value });
     $("first").disabled = false;
     if (error || !data?.order_id) { $("msg").className = "err"; $("msg").textContent = "ทำใบสั่งไม่ได้\n" + App.errText(error || new Error("ไม่มีใบสั่ง")); return; }
     location.href = "approve.html?order=" + data.order_id;
   };
+  $("first").onclick = () => ex ? (location.href = "approve.html?order=" + ex.id) : make();
+  $("fnew").onclick = (e) => { e.preventDefault(); if (confirm(`มีใบสั่งของ ${day(ex.for_date)} ที่ยังไม่ส่งอยู่แล้ว สร้างใบใหม่แทนไหม?`)) make(); };
   $("d").onchange = load; await load();
   document.querySelector(".sk").remove(); $("form").hidden = false;
   $("go").onclick = async () => {
