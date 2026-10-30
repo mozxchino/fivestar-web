@@ -55,7 +55,7 @@
   // 0030 (Mos 23 ต.ค.): proof is taken when the thing is thrown away · close_day starts "เสีย" from these rows
   const stop = (t) => { blocked.hidden = false; blocked.innerHTML = t + '<br><a class="btn" href="index.html">กลับหน้าหลัก</a>'; };
   // qa2: a failed read must not show an empty form · after closing the server refuses new waste, so say so up front
-  const bday = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10); // 0047: the shop day runs until 05:00 (Bangkok − 5 h)
+  const bday = new Date(Date.now() + 2 * 3600e3).toISOString().slice(0, 10); // 0047: the shop day runs until 05:00 (Bangkok − 5 h)
   const [{ data: prods, error: pErr }, { data: day, error: dErr }, { data: lines, error: sErr }] = await Promise.all([
     supabase.from("products").select("id,name,unit,kind,made_here,count_mode").eq("active", true).order("sort"),
     supabase.from("shop_days").select("status").eq("date", bday).maybeSingle(),

@@ -81,7 +81,7 @@
   const { supabase, me } = await App.ready();
   if (UXS.only(me, ["staff", "owner"], "หน้านี้สำหรับพนักงานในร้าน", "ผู้จัดการดูงานของร้านได้ที่หน้าวันนี้", "owner.html", "ไปหน้าวันนี้")) return;
   // 0047 (Mos 30 ต.ค.): the shop day runs until 05:00 (Bangkok − 5 h = UTC + 2 h) · ?d=<yesterday> from open.html = close the day nobody closed (server checks it is that day)
-  const bday = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10), qd = new URLSearchParams(location.search).get("d");
+  const bday = new Date(Date.now() + 2 * 3600e3).toISOString().slice(0, 10), qd = new URLSearchParams(location.search).get("d");
   const late = /^\d{4}-\d{2}-\d{2}$/.test(qd || "") && qd < bday, today = late ? qd : bday;
   const dayTh = new Date(today + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" }); // a forgotten close can be 1 or 2 days back (0050) → say the date, never "เมื่อวาน"
   document.getElementById("d").textContent = (late ? " · ปิดร้านของ " : " · ") + dayTh;
