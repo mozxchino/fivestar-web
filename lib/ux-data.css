@@ -171,8 +171,13 @@ button.cell.ux-who:active { background: var(--color-fill-pressed); }
 #wasteGo .hd b, #wasteGo .bag-hint { text-align: center; }
 #wasteGo .hd { justify-content: center; } #wasteGo .hd b { flex: 1; padding-left: 44px; } /* title stays centred under the × */
 #bagS .btn.primary, #wasteGo .btn.primary { width: 100%; margin-bottom: max(8px, env(safe-area-inset-bottom)); }
-.grid .rf[readonly] { cursor: pointer; }
-.bagsay { display: block; }
+.grid .rf[readonly], .grid .rc[readonly] { cursor: pointer; }
+.bagsay, .cooksay { display: block; }
+/* Mos 30 ต.ค.: sheet for the สุก box (UXM.bags) · same look as #bagS: one field with the unit, "+ ครึ่ง" under it, red ตกลง */
+#cookS .bag-hint { margin: 2px 0 12px; font-size: 14px; color: var(--color-ink-soft); }
+#cookS .in { margin-top: 0; }
+#cookS #cookHalf { margin: 12px 0 0; }
+#cookS #cookOK { position: sticky; bottom: 8px; width: 100%; margin: 16px 0 max(8px, env(safe-area-inset-bottom)); }
 /* 0052 close.html: red sheet (tone bad) "ตรวจอีกรอบ นับน้อยกว่าปกติ" · red title, the items in a red-tint box (name, then the numbers in red) */
 .bsheet.bad .hd b { color: var(--color-destructive); }
 .bsheet.bad .low-l { list-style: none; margin: 8px 0 12px; padding: 2px 14px; border-radius: var(--radius-sm); background: var(--tint-destructive); box-shadow: inset 0 0 0 1px var(--border-bad); }
