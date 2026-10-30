@@ -185,17 +185,19 @@ td+td{font-weight:600}
     const nLow = cc.filter((x) => x.status === "low").length, nOut = cc.filter((x) => x.status === "out").length;
     const photos = [sd.open_photo, ...(sd.photos || []), sd.pos_photo].filter(Boolean);
     // 0030: proof for the day's waste = each waste.html log (2 photos + kg) and any extra found at close
-    const { data: wlog } = await supabase.from("waste_logs").select("qty,kg,photos").eq("date", sd.date);
+    const { data: wlog } = await supabase.from("waste_logs").select("id,product_id,qty,kg,photos,created_at").eq("date", sd.date).order("created_at");
     const wKg = (wlog || []).reduce((a, w) => a + +w.kg, 0) + (+sd.waste_kg || 0);
     const wPics = await thumbs([...(wlog || []).flatMap((w) => w.photos), ...(sd.waste_photos || [])]);
     // visual hierarchy rule 3: label left, value right, one line · the value carries the tone (bad act · wait check · ok fine)
     const fv = (tone, v) => `<span class="fv"${tone ? ` data-tone="${tone}"` : ""}>${v}</span>`;
+    // 0047 (Mos 30 ต.ค.): the owner deletes a mistyped waste log so the staff can close · only before the day is sent
+    const wl = wlog || [], wDel = !MGR && sd.status !== "sent" && wl.length ? `<p class="muted">พิมพ์ผิด ลบได้จนกว่าจะปิดร้าน</p>` + wl.map((w) => `<div class="ln">${esc(prods[w.product_id])} ${+w.qty} ${esc(unit[w.product_id])} <span class="muted">ทิ้ง ${hm(w.created_at)} น.</span> <button class="btn sm" type="button" data-a="wdel" data-i="${w.id}" data-n="${esc(prods[w.product_id])} ${+w.qty} ${esc(unit[w.product_id])}">ลบรายการนี้</button></div>`).join("") : "";
     const fold = (id, head, body) => `<button class="fold" aria-expanded="false" data-f="${id}">${head}</button><div class="fold-body"><div id="f-${id}">${body}</div></div>`;
     $("out").innerHTML = bento(c) + todo
       + (sd.note ? `<div class="card"><div class="k muted">พนักงานฝากบอก</div>${esc(sd.note)}</div>` : "")
       + `<div class="card folds">`
       + fold("recv", items.length ? `<b>รับของ</b>${fv(nShort ? "bad" : "ok", nShort ? `ขาด ${nShort} จาก ${items.length}` : `ครบ ${items.length} รายการ`)}` : `<b>ใบสั่ง</b>${fv("", "ไม่มี")}`, recv || `<p class="muted">ไม่มีใบสั่ง</p>`)
-      + (waste.length ? fold("waste", `<b>ของเสีย</b>${fv("wait", `${waste.length} รายการ`)}`, waste.map((l) => `<div class="ln">${esc(prods[l.product_id])} ${l.waste} ${esc(unit[l.product_id])}</div>`).join("") + (wKg ? `<div class="ln">หนักรวม ${Math.round(wKg * 100) / 100} กก.</div>` : "") + (wPics ? `<div>${wPics}</div>` : `<p class="muted">ไม่มีรูปของเสีย</p>`)) : "")
+      + (waste.length || wDel ? fold("waste", `<b>ของเสีย</b>${fv("wait", waste.length ? `${waste.length} รายการ` : `ทิ้งแล้ว ${wl.length} ครั้ง`)}`, waste.map((l) => `<div class="ln">${esc(prods[l.product_id])} ${l.waste} ${esc(unit[l.product_id])}</div>`).join("") + wDel + (wKg ? `<div class="ln">หนักรวม ${Math.round(wKg * 100) / 100} กก.</div>` : "") + (wPics ? `<div>${wPics}</div>` : `<p class="muted">ไม่มีรูปของเสีย</p>`)) : "")
       + fold("cons", `<b>ของใช้ในร้าน</b>${!cc.length ? fv("ok", "มีครบ") : nOut && nLow ? fv("bad", `หมด/ใกล้หมด ${nOut + nLow} อย่าง`) : nOut ? fv("bad", `หมด ${nOut} อย่าง`) : fv("wait", `ใกล้หมด ${nLow} อย่าง`)}`,
         cc.map((c) => `<div class="ln">${esc(prods[c.product_id])} <span class="pill" data-tone="${c.status === "out" ? "bad" : "wait"}">${CS[c.status] || esc(c.status)}</span></div>`).join("") || `<p class="muted">มีครบ</p>`)
       + (photos.length ? fold("pics", `<b>รูปจากร้าน</b>${fv("", `${photos.length} รูป`)}`, `<div class="sk-row" style="flex-wrap:wrap;gap:8px;padding:8px 0 12px">${sb("72px", 72, ";--r:10px").repeat(photos.length)}</div>`) : "")
@@ -222,6 +224,13 @@ td+td{font-weight:600}
     const b = e.target.closest("button[data-a]"); if (!b) return;
     const card = b.closest(".todo"), a = b.dataset.a;
     if (a === "go") return go(b.dataset.d);
+    if (a === "wdel") {
+      if (!confirm(`ลบของเสียรายการนี้ไหม?\n${b.dataset.n}\nพนักงานบันทึกใหม่ได้`)) return;
+      b.disabled = true;
+      const { error } = await supabase.rpc("waste_delete", { wid: b.dataset.i });
+      if (error) { b.disabled = false; UXM.toast("ลบไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error), { ms: 4000 }); return; }
+      UXM.toast("ลบของเสียแล้ว"); return dayView();
+    }
     if (a === "recv") { const f = document.querySelector('.fold[data-f="recv"]'); if (f && f.getAttribute("aria-expanded") !== "true") f.click(); f?.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
     if (a === "photos") {
       const i = ctx.iss.find((x) => String(x.id) === b.dataset.i); b.disabled = true;
@@ -245,6 +254,10 @@ td+td{font-weight:600}
       <div class="panel-body"><div class="colhead"><span>สินค้า</span><span>เหลือสด</span><span>เหลือสุก</span><span>เสีย</span></div>
       ${sl.map((l) => `<div class="row" data-p="${l.product_id}"><div class="grow">${esc(prods[l.product_id])}</div>
         <input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เหลือสด" data-f="remain_fresh" value="${l.remain_fresh ?? ""}"><input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เหลือสุก" data-f="remain_cooked" value="${l.remain_cooked ?? ""}"><input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เสีย" data-f="waste" value="${l.waste ?? ""}"></div>`).join("") || `<p class="muted">ไม่มีตัวเลขสินค้าของวันนี้</p>`}
+      ${["open", "closed"].includes(sd.status) && sl.length ? `<h2>ยอดรับเข้า</h2><p class="muted">CPF ส่งมาเกินที่บันทึก<br>แก้ทีละอย่าง</p>
+      <div class="row"><select id="rp" class="grow" aria-label="สินค้าที่จะแก้ยอดรับเข้า">${sl.map((l) => `<option value="${l.product_id}" data-r="${+l.received || 0}">${esc(prods[l.product_id])} (ตอนนี้ ${+l.received || 0} ${esc(unit[l.product_id])})</option>`).join("")}</select>
+      <input id="rq" class="ed" type="number" inputmode="decimal" aria-label="รับเข้าที่ถูก" value="${+sl[0].received || 0}"></div>
+      <button class="btn" id="rs" type="button">บันทึกยอดรับเข้า</button><p id="rm" class="muted"></p>` : ""}
       <h2>เงินสด</h2>
       <div class="row"><label class="grow" for="ce">เงินสดควรมี (บาท)</label><input id="ce" class="ed cash" type="number" inputmode="decimal" value="${sd.cash_expected ?? ""}"></div>
       <div class="row"><label class="grow" for="cn">เงินสดนับได้ (บาท)</label><input id="cn" class="ed cash" type="number" inputmode="decimal" value="${sd.cash_counted ?? ""}"></div>
@@ -254,6 +267,20 @@ td+td{font-weight:600}
     requestAnimationFrame(() => requestAnimationFrame(() => pn.classList.add("on")));
     const close = () => { pn.classList.remove("on"); document.body.style.overflow = ""; setTimeout(() => { pn.hidden = true; pn.innerHTML = ""; }, 200); };
     $("px").onclick = close;
+    // review r2 (item 6 exit): รับเข้า of one product · confirm, then rpc set_received (owner only, day not closed, audit_log keeps old → new)
+    if ($("rs")) {
+      $("rp").onchange = () => { $("rq").value = $("rp").selectedOptions[0].dataset.r; };
+      $("rs").onclick = async () => {
+        const o = $("rp").selectedOptions[0], q = $("rq").value;
+        if (q === "" || +q < 0) { $("rm").className = "err"; $("rm").textContent = "ใส่ยอดรับเข้าเป็นตัวเลข"; return; }
+        if (!confirm(`แก้ยอดรับเข้าไหม?\n${prods[o.value]}\nจาก ${o.dataset.r} เป็น ${+q} ${unit[o.value] || ""}`)) return;
+        $("rs").disabled = true;
+        const { error } = await supabase.rpc("set_received", { pid: o.value, qty: +q, d });
+        $("rs").disabled = false;
+        if (error) { $("rm").className = "err"; $("rm").textContent = "บันทึกไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error); return; }
+        close(); UXM.toast("แก้ยอดรับเข้าแล้ว ✓"); if (TAB === "day") dayView();
+      };
+    }
     $("sv").onclick = async () => {
       const num = (v) => v === "" ? null : +v; let err = null;
       $("sv").disabled = true; $("sm").className = "muted"; $("sm").textContent = "กำลังบันทึก…";

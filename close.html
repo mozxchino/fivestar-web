@@ -4,6 +4,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-staff.css"><link rel="stylesheet" href="lib/ux-data.css">
+<style>
+/* 0047: a row above what the shop had (or with a minus) stays red like an empty one (ux-miss) and loses its ✓ until it is fixed */
+.sheet .grid.ux-over .rf, .sheet .grid.ux-over .rc { background-color: var(--tint-destructive); box-shadow: inset 0 0 0 1.5px var(--color-destructive); }
+.sheet .grid.ux-over:has(.rf)::after { opacity: 0; }
+</style>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script>
@@ -70,14 +75,19 @@
   addEventListener("pageshow", (e) => { if (e.persisted) location.reload(); }); // back from waste.html restores the page from cache → reload so the waste column and guards read the new waste_logs (the draft brings สด/สุก back)
   const { supabase, me } = await App.ready();
   if (UXS.only(me, ["staff", "owner"], "หน้านี้สำหรับพนักงานในร้าน", "ผู้จัดการดูงานของร้านได้ที่หน้าวันนี้", "owner.html", "ไปหน้าวันนี้")) return;
-  const today = Photo.todayPrefix().slice(0, 10).replaceAll("/", "-");
-  document.getElementById("d").textContent = " · " + new Date(today + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
-  await supabase.rpc("ensure_day", { d: today });
+  // 0047 (Mos 30 ต.ค.): the shop day runs until 05:00 (Bangkok − 5 h = UTC + 2 h) · ?d=<yesterday> from open.html = close the day nobody closed (server checks it is that day)
+  const bday = new Date(Date.now() + 2 * 3600e3).toISOString().slice(0, 10), qd = new URLSearchParams(location.search).get("d");
+  const late = /^\d{4}-\d{2}-\d{2}$/.test(qd || "") && qd < bday, today = late ? qd : bday;
+  document.getElementById("d").textContent = (late ? " · ปิดร้านของ " : " · ") + new Date(today + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
+  // review r2: opened from the menu while yesterday is still open → straight to yesterday's close, before counting anything
+  if (!late) { const { data: un } = await supabase.rpc("unclosed_day"); if (un && un < bday) return location.replace("close.html?d=" + un); }
+  if (!late) await supabase.rpc("ensure_day", { d: today }); // a late day was opened, its rows exist
   const { data: day } = await supabase.from("shop_days").select("status").eq("date", today).maybeSingle();
+  if (day?.status === "sent" && late) { doneT.textContent = "ปิดร้านของเมื่อวานแล้ว"; doneS.textContent = "เปิดร้านวันนี้ได้เลย"; next.innerHTML = '<a class="btn primary" href="open.html">เปิดร้านวันนี้</a>'; document.getElementById("done").hidden = false; return; }
   if (day?.status === "sent") { doneT.textContent = "วันนี้ปิดร้านแล้ว"; doneS.textContent = "กรอกผิด บอกเจ้าของที่แจ้งปัญหา"; next.innerHTML = '<a class="btn" href="issue.html">แจ้งปัญหา</a>'; document.getElementById("done").hidden = false; return; }
   const { data: pend } = await supabase.from("orders").select("id, order_items(qty_received, received_at)").eq("for_date", today).in("status", ["sent", "failed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (pend && pend.order_items.some((i) => i.qty_received == null && i.received_at == null)) {
-    const b = document.getElementById("blocked"); b.hidden = false; b.innerHTML = 'ต้องกดรับของก่อน ถึงจะปิดร้านได้<br><a class="btn primary" href="receive.html">ไปรับของ</a>'; return;
+    const b = document.getElementById("blocked"); b.hidden = false; b.innerHTML = late ? 'ของเมื่อวานยังไม่ได้กดรับ<br>บอกเจ้าของก่อน แล้วค่อยปิดร้าน' : 'ต้องกดรับของก่อน ถึงจะปิดร้านได้<br><a class="btn primary" href="receive.html">ไปรับของ</a>'; return;
   }
   const { data: prods, error: pErr } = await supabase.from("products").select("id,sort,name,unit,buy_unit,pack_size,kind,made_here,count_mode").eq("active", true).order("sort");
   const { data: lines, error: lErr } = await supabase.from("stock_lines").select("product_id,open_fresh,open_cooked,received").eq("date", today);
@@ -101,6 +111,7 @@
   UXM.bags(document.getElementById("lines"), stock);
   // 0046 (Mos 30 ต.ค.): ช่องเสียล็อก · ของเสียลงได้ที่หน้าทิ้งของเสียเท่านั้น (ชั่ง + รูป) · แตะช่อง → sheet บอกและพาไป (ร่างเก็บไว้แล้ว กลับมานับต่อได้)
   document.getElementById("lines").addEventListener("click", (e) => { if (e.target.closest(".w")) wasteGo.showModal(); });
+  if (late) { wasteGo.querySelector(".bag-hint").innerHTML = "ของเสียของเมื่อวานใส่เพิ่มไม่ได้แล้ว<br>ของที่ทิ้งเช้านี้ บันทึกหลังปิดร้านเมื่อวาน"; wasteGo.querySelector("a.btn").remove(); }
   wasteGo.addEventListener("click", (e) => { if (e.target === wasteGo || e.target.closest(".x")) wasteGo.close(); }); // 0046: ถุงเต็ม + เศษ for anything packed (ไก่ จ๊อ เป๊ปซี่ น้ำ)
   if (zeros.length) { fold.hidden = false; foldT.textContent = `ไม่มีของค้าง ${zeros.length} อย่าง`; }
   foldB.onclick = () => { const open = foldB.getAttribute("aria-expanded") !== "true"; foldB.setAttribute("aria-expanded", open); foldB.textContent = open ? "ซ่อน" : "เปิดดู";
@@ -141,12 +152,19 @@
   const leftRows = () => liveRows().filter((g) => g.querySelector(".rf").value === "");
   // what stops step n · null = ok to leave (only step 1 was required before · ข adds "pick one")
   const gap = (n) => {
-    if (n === 1) { const l = leftRows(); return l.length ? { say: `ยังไม่ได้นับ เหลือสด ${l.length} อย่าง`, el: l[0].querySelector(".rf") } : null; }
+    if (n === 1) { const l = leftRows(); return l.length ? { say: `ยังไม่ได้นับ เหลือสด ${l.length} อย่าง`, el: l[0].querySelector(".rf") } : over(); }
     if (n === 2 && cons.length) { if (!pick) return { say: "เลือก ของใช้ครบ หรือ มีของใกล้หมด ก่อน", el: consAll };
       if (pick === "low" && !Object.values(state).some((v) => v !== "ok")) return { say: "แตะของที่ใกล้หมดหรือหมด อย่างน้อย 1 อย่าง", el: document.querySelector("#cons .ux-cchip") }; }
     return null;
   };
   const say = (t, bad) => { msg.textContent = t || ""; msg.className = bad ? "err" : "muted"; };
+  // 0047 (Mos 30 ต.ค., server checks the same): no minus · เหลือสด + เหลือสุก + เสีย never above ยกมา + รับเข้า
+  const over = () => { for (const g of document.querySelectorAll("#lines .grid")) {
+    const p = stock.find((x) => x.id === g.dataset.id), l = L[g.dataset.id] || {}, f = [".rf", ".rc", ".w"].map((c) => g.querySelector(c)), v = f.map((x) => +x.value || 0);
+    const i = v.findIndex((x) => x < 0); if (i >= 0) return { say: `${p.name} ใส่เลขติดลบไม่ได้`, el: f[i], row: g };
+    const has = (+l.open_fresh || 0) + (+l.open_cooked || 0) + (+l.received || 0), sum = v[0] + v[1] + v[2];
+    if ((p.kind === "cpf" || p.made_here) && sum > has) return { say: `${p.name} มี ${has} ${p.unit || ""} นับได้ ${sum} ${p.unit || ""}\nนับใหม่อีกครั้ง\n${p.made_here ? "ถ้าห่อเพิ่ม กดห่อข้าวเหนียวเสร็จก่อน" : "ถ้าของมีจริง ทักเจ้าของให้แก้ยอดรับเข้า"}`, el: f[0], row: g }; }
+    return null; };
 
   // ---- draft: every input saved to this phone, per day (LINE can close the page any time) ----
   // ponytail: photos aren't in the draft (they're already uploaded; thumbnails would need signed URLs) · re-shoot after reopening
@@ -196,7 +214,7 @@
     for (let s = cur; s < n; s++) { const g = gap(s); if (g) {
       if (s !== cur) show(s);
       if (!quiet) { say(g.say, true); document.querySelectorAll("#lines .grid").forEach((r) => r.classList.toggle("ux-miss", s === 1 && !r.classList.contains("ux-zero") && r.querySelector(".rf").value === ""));
-        UXM.shake(g.el); }
+        if (g.row) { g.row.hidden = false; g.row.classList.add("ux-over"); g.el.scrollIntoView({ block: "center" }); } UXM.shake(g.el); }
       return false; } }
     show(n); return true;
   }
@@ -217,7 +235,7 @@
   });
   cashExp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); cashCnt.focus(); } });
   cashCnt.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); cashCnt.blur(); } });
-  document.getElementById("form").addEventListener("input", (e) => { e.target.closest(".ux-miss")?.classList.remove("ux-miss"); if (msg.className === "err") say(""); save(); update(); });
+  document.getElementById("form").addEventListener("input", (e) => { e.target.closest(".ux-miss")?.classList.remove("ux-miss"); e.target.closest(".ux-over")?.classList.remove("ux-over"); if (msg.className === "err") say(""); save(); update(); });
 
   send.onclick = async () => {
     if (cur < 4) { go(cur + 1); return; }
@@ -235,7 +253,7 @@
     }
     if (!confirm(`ปิดร้านเลยไหม?\nนับของแล้ว ${rows.length} จาก ${stock.length} อย่าง${cashDiff.textContent ? "\n" + cashDiff.textContent : ""}\nกดแล้วแก้ตัวเลขไม่ได้`)) return;
     send.disabled = true; back.hidden = true; msg.textContent = "กำลังปิดร้าน…";
-    const payload = { lines: rows, consumables: Object.entries(state).filter(([, v]) => v !== "ok").map(([product_id, status]) => ({ product_id, status })), cash_expected: cashExp.value === "" ? null : +cashExp.value, cash_counted: cashCnt.value === "" ? null : +cashCnt.value, note: note.value || null, pos_photo: pos[0] ?? null, photos, ...(wasteRows().length ? { waste_photos: [...scale, ...bin], waste_kg: Math.round(+wasteKg.value) / 1000 } /* Mos 26 ต.ค.: staff type grams, the server keeps kg */ : {}) };
+    const payload = { date: today, lines: rows, consumables: Object.entries(state).filter(([, v]) => v !== "ok").map(([product_id, status]) => ({ product_id, status })), cash_expected: cashExp.value === "" ? null : +cashExp.value, cash_counted: cashCnt.value === "" ? null : +cashCnt.value, note: note.value || null, pos_photo: pos[0] ?? null, photos, ...(wasteRows().length ? { waste_photos: [...scale, ...bin], waste_kg: Math.round(+wasteKg.value) / 1000 } /* Mos 26 ต.ค.: staff type grams, the server keeps kg */ : {}) };
     const { error } = await supabase.rpc("close_day", { p: payload });
     if (error) { msg.textContent = "ยังปิดร้านไม่ได้\n" + App.errText(error); msg.className = "err"; send.disabled = false; back.hidden = false; return; }
     store.del(KEY); showDraft(null);
@@ -243,6 +261,7 @@
     // done: the wizard gives way to the mascot screen + next task · first line = how the day ended
     doneS.textContent = [`นับของแล้ว ${rows.length} จาก ${stock.length} อย่าง`, cashDiff.textContent].filter(Boolean).join("\n");
     document.getElementById("form").hidden = true; document.getElementById("done").hidden = false; scrollTo(0, 0);
+    if (late) { doneT.textContent = "ปิดร้านของเมื่อวานแล้ว"; next.innerHTML = '<a class="btn primary" href="open.html">เปิดร้านวันนี้</a>'; return; }
     await UXS.showNext(supabase, next);
   };
   document.getElementById("form").hidden = false;

@@ -3,7 +3,7 @@
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="lib/ui.css">
+<link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-data.css">
 <style>
 /* Mos 26 ต.ค.: two tabs at the top, form right under them, the red button in the bottom bar (.pg-fill in ui.css) · plain page class, no :has() (iPhone LINE) */
 .pg-waste .tabs button b { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 6px; padding: 0 6px; border-radius: 10px; font: 600 12px/1 var(--font-head); font-variant-numeric: tabular-nums; color: #fff; background: var(--color-primary); }
@@ -19,7 +19,7 @@
 </style>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script>
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script><script src="lib/ux-data.js"></script>
 </head><body class="pg-waste pg-fill" ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ทิ้งของเสีย</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
 <p id="blocked" class="err" hidden></p>
@@ -40,6 +40,11 @@
   <p id="phS" class="muted"></p>
   </div>
   <div id="pList" role="tabpanel" hidden></div>
+  <dialog id="okS" class="bsheet" aria-labelledby="okH"><div class="body"><div class="grab"></div>
+    <div class="hd"><b id="okH">ตรวจก่อนบันทึก</b><button class="x" type="button" aria-label="ปิด">✕</button></div>
+    <div class="kv"><span>ทิ้งอะไร</span><b id="okP"></b></div><div class="kv"><span>จำนวน</span><b id="okQ"></b></div><div class="kv"><span>น้ำหนัก</span><b id="okG"></b></div>
+    <p class="muted">บันทึกแล้วแก้เองไม่ได้<br>ถ้าผิดบอกเจ้าของ</p></div>
+    <div class="foot"><button id="okGo" class="btn primary" type="button">บันทึกของเสีย</button><button id="okBack" class="btn" type="button" style="margin-top:8px">กลับไปแก้</button></div></dialog>
   <div class="sticky"><button id="send" class="btn primary">บันทึกของเสีย</button><button id="more" type="button" class="btn primary" hidden>บันทึกของเสียอีก</button>
   <p id="msg" class="muted"></p></div>
 </div>
@@ -50,10 +55,14 @@
   // 0030 (Mos 23 ต.ค.): proof is taken when the thing is thrown away · close_day starts "เสีย" from these rows
   const stop = (t) => { blocked.hidden = false; blocked.innerHTML = t + '<br><a class="btn" href="index.html">กลับหน้าหลัก</a>'; };
   // qa2: a failed read must not show an empty form · after closing the server refuses new waste, so say so up front
-  const [{ data: prods, error: pErr }, { data: day, error: dErr }] = await Promise.all([
-    supabase.from("products").select("id,name,unit,kind,count_mode").eq("active", true).order("sort"),
-    supabase.from("shop_days").select("status").eq("date", new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10)).maybeSingle()]);
-  if (pErr || dErr) return stop("เปิดไม่ขึ้น ลองเปิดหน้าใหม่");
+  const bday = new Date(Date.now() + 2 * 3600e3).toISOString().slice(0, 10); // 0047: the shop day runs until 05:00 (Bangkok − 5 h)
+  const [{ data: prods, error: pErr }, { data: day, error: dErr }, { data: lines, error: sErr }] = await Promise.all([
+    supabase.from("products").select("id,name,unit,kind,made_here,count_mode").eq("active", true).order("sort"),
+    supabase.from("shop_days").select("status").eq("date", bday).maybeSingle(),
+    supabase.from("stock_lines").select("product_id,open_fresh,open_cooked,received").eq("date", bday)]);
+  if (pErr || dErr || sErr) return stop("เปิดไม่ขึ้น ลองเปิดหน้าใหม่");
+  // 0047: what the shop has today per product (ยกมา + รับเข้า), minus what is already logged = the most one log can throw away (server checks the same)
+  const HAS = Object.fromEntries((lines || []).map((l) => [l.product_id, (+l.open_fresh || 0) + (+l.open_cooked || 0) + (+l.received || 0)])), LOGGED = {};
   if (day && ["sent", "closed"].includes(day.status)) return stop("วันนี้ปิดร้านแล้ว<br>บันทึกของเสียเพิ่มไม่ได้");
   const stock = (prods || []).filter((p) => (p.count_mode || (p.kind === "consumable" ? "tick" : "count")) === "count") // 0045: only counted rows have a เสีย box at close
    .map((p) => ({ ...p, unit: UXM.unit(p.unit) })), P = Object.fromEntries(stock.map((p) => [p.id, p]));
@@ -70,9 +79,10 @@
   tabs.onclick = (e) => { const b = e.target.closest("[data-t]"); if (b) tab(b.dataset.t); };
   more.onclick = () => tab("new");
   const list = async () => {
-    const { data, error } = await supabase.from("waste_logs").select("product_id,qty,kg,photos,created_at").eq("date", new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10)).order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("waste_logs").select("product_id,qty,kg,photos,created_at").eq("date", bday).order("created_at", { ascending: false });
     if (error) { pList.innerHTML = `<p class="err">เปิดรายการไม่ขึ้น ลองเปิดหน้าใหม่</p>`; return; }
     const rows = data || [];
+    Object.keys(LOGGED).forEach((k) => delete LOGGED[k]); rows.forEach((w) => { LOGGED[w.product_id] = (LOGGED[w.product_id] || 0) + +w.qty; });
     cnt.textContent = rows.length || ""; more.textContent = rows.length ? "บันทึกของเสียอีก" : "บันทึกของเสีย";
     pList.innerHTML = rows.length ? `<div class="card wl">` + rows.map((w, i) => `<div class="wr"><button type="button" class="see" data-i="${i}" aria-label="ดูรูป ${UXS.esc(P[w.product_id]?.name ?? "")} เต็มจอ"></button><div class="grow"><b>${UXS.esc(P[w.product_id]?.name ?? "")} ${+w.qty} ${UXS.esc(P[w.product_id]?.unit ?? "")}</b><small>${gram(w.kg)} กรัม · ${hm(w.created_at)} น.</small></div></div>`).join("") + `</div>`
       : `<div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>วันนี้ยังไม่มีของเสีย</p></div>`;
@@ -83,11 +93,21 @@
   send.onclick = async () => {
     if (!prod.value) return bad("เลือกก่อนว่าทิ้งอะไร", prod);
     if (!(+qty.value > 0)) return bad("ใส่จำนวนที่ทิ้ง", qty);
+    const p = P[prod.value], left = Math.max((HAS[prod.value] || 0) - (LOGGED[prod.value] || 0), 0);
+    if ((p.kind === "cpf" || p.made_here) && +qty.value > left) return bad(`${p.name} มีในร้านวันนี้ ${left} ${p.unit || ""}\nทิ้งได้ไม่เกินนี้\n${p.made_here ? "ถ้าห่อเพิ่ม กดห่อข้าวเหนียวเสร็จก่อน" : "ถ้าของมีจริง ทักเจ้าของให้แก้ยอดรับเข้า"}`, qty);
     if (!scale.length) return bad("ยังไม่ได้ถ่ายรูปบนตาชั่ง");
     const g = Math.round(+g_.value);
     if (!(g > 0)) return bad("ใส่น้ำหนักเป็นกรัม", g_);
     if (g < 10) return bad("น้ำหนักน้อยสุด 10 กรัม", g_); // kg is stored with 2 decimals (10 g steps)
+    if (g > 50000) return bad("น้ำหนักเกิน 50 กก. ตรวจตัวเลขอีกครั้ง", g_);
     if (!bin.length) return bad("ยังไม่ได้ถ่ายรูปตอนทิ้งลงถัง");
+    // 0047 (Mos 30 ต.ค.): a typo used to block closing · say back what will be saved first
+    okP.textContent = p.name; okQ.textContent = `${+qty.value} ${p.unit || ""}`; okG.textContent = `${g.toLocaleString("th-TH")} กรัม`; okS.open();
+  };
+  const okS = UXD.sheet(document.getElementById("okS"));
+  okBack.onclick = () => okS.close();
+  okGo.onclick = async () => {
+    okS.close(); const g = Math.round(+g_.value);
     send.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
     const { error } = await supabase.from("waste_logs").insert({ product_id: prod.value, qty: +qty.value, kg: g / 1000, photos: [...scale, ...bin], created_by: me.userId });
     send.disabled = false;
