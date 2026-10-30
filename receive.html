@@ -72,15 +72,17 @@
   if (oErr) return cant(oErr);
   // round 3 (item 17): CPF came with no order → the form opens empty, staff add what came (receive_order(null) makes today's order)
   if (!o) { none.hidden = false; if (day !== today) { none.querySelector("p").textContent = `ไม่มีใบสั่ง ${fmt(day)}`; return; } noneX.hidden = false; await new Promise((r) => { noneX.onclick = r; }); none.hidden = true; }
-  const { data: items, error } = o ? await supabase.from("order_items").select("product_id,qty_proposed,qty_final,qty_received,received_at,products(name,unit,pack_size,sort)").eq("order_id", o.id) : { data: [] };
+  const { data: items, error } = o ? await supabase.from("order_items").select("product_id,qty_proposed,qty_final,qty_received,received_at,products(name,unit,pack_size,buy_unit,sort)").eq("order_id", o.id) : { data: [] };
   if (error) return cant(error);
   items.sort((a, b) => (a.products?.sort ?? 0) - (b.products?.sort ?? 0));
   items.forEach((i) => { if (i.products) i.products.unit = UXM.unit(i.products.unit); }); // EA / PC → ตัว / ชิ้น
   const got = items.some((i) => i.received_at);
   if (got) { st.textContent = "รับของแล้ว\nแก้ตัวเลขได้จนกว่าจะกดปิดร้าน"; }
   const row = (i) => { const ord = i.qty_final ?? i.qty_proposed; const v = got ? (i.qty_received ?? 0) : ord;
-    return `<div class="it${+ord ? "" : " x"}" data-id="${i.product_id}"><div class="nm">${i.products?.name ?? ""}<div class="meta">นับเป็น${i.products?.unit ?? ""}</div><span class="ux-short" data-u="${i.products?.unit ?? ""}"></span></div><div class="ord">${+ord}</div><input type="number" inputmode="decimal" step="any" min="0" value="${+v}"></div>`; };
+    return `<div class="it${+ord ? "" : " x"}" data-id="${i.product_id}"><div class="nm">${i.products?.name ?? ""}<div class="meta">${+i.products?.pack_size > 1 ? `1 ${UXS.esc(i.products.buy_unit || "ถุง")} = ${+i.products.pack_size} ${i.products.unit ?? ""}` : `นับเป็น${i.products?.unit ?? ""}`}</div><span class="ux-short" data-u="${i.products?.unit ?? ""}"></span></div><div class="ord">${+ord}</div><input class="rf" type="number" inputmode="decimal" step="any" min="0" value="${+v}"></div>`; };
   lines.innerHTML = items.map(row).join("");
+  // Mos 31 ต.ค.: a product sold by the bag (ซอส 1 ถุง = 250 ซอง) → tapping its box opens the bag card: whole bags + loose pieces, either way · the box still saves pieces
+  UXM.bags(lines, items.map((i) => ({ id: i.product_id, name: i.products?.name ?? "", unit: i.products?.unit, pack_size: i.products?.pack_size, buy_unit: i.products?.buy_unit })), { sel: ".it[data-id]", title: "ได้รับจริง", pre: "" });
   // round 2 (Mos 26 ต.ค.): what was ordered, read-only, fills the screen while the staff checks the delivery note (hidden once ขาด opens the editable rows)
   ordN.textContent = `${items.length} อย่าง`;
   if (day !== today) ordH.firstChild.textContent = `ใบสั่ง ${fmt(day)}`;
