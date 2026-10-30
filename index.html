@@ -64,10 +64,13 @@
     await home(); return;
     // 0042: "ห่อข้าวเหนียวเสร็จ" while the shop is open (opened, not sent) · extra tile: a failed read (or 0042 not live yet) just leaves it out
     async function made(day, put, kind) {
+      // 0050: add_made / made_logs follow the business day (before 05:00 = yesterday) · the hub's day row is the calendar day, so after midnight read the business day's row
+      const bd = UXS.bizDay();
+      if (bd !== UXS.today()) { const r = await supabase.from("shop_days").select("opened_at,closed_at,status").eq("date", bd).maybeSingle(); if (r.error) return; day = r.data; }
       if (!day?.opened_at || day.closed_at || day.status === "sent") return;
       const [p, m] = await Promise.all([
         supabase.from("products").select("id,name,unit").eq("made_here", true).eq("active", true).order("sort").limit(1).maybeSingle(),
-        supabase.from("made_logs").select("qty").eq("date", UXS.today()),
+        supabase.from("made_logs").select("qty").eq("date", bd),
       ]);
       if (p.error || m.error || !p.data) return;
       const P = p.data, u = UXS.esc(P.unit || "ห่อ"), say = (n) => `วันนี้ห่อแล้ว ${n.toLocaleString("th-TH")} ${u}`;

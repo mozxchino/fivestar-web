@@ -42,6 +42,13 @@ h3.sec { font: 600 17px/1.35 var(--font-head); color: var(--color-foreground); m
 .fold-body > div { overflow: hidden; min-height: 0; }
 .fold-body > div > :last-child { margin-bottom: 12px; }
 .fold-body .ln { padding: 3px 0; }
+/* 30 ต.ค.: owner cancels a staff pack entry · name + meta left, a dark-red text button right (secondary destructive, no card) */
+.fold-body .ln.mk { display: flex; align-items: center; gap: 12px; padding: 0; }
+.ln.mk > span { flex: 1; min-width: 0; }
+.ln.mk small { display: block; font-size: 14px; color: var(--color-ink-soft); }
+.ux-cancel { flex: none; min-height: 44px; padding: 0 4px; border: 0; background: none; font: 500 15px/1.3 var(--font-body); color: var(--color-primary-dark); cursor: pointer; touch-action: manipulation; }
+.ux-cancel:active { opacity: .6; }
+.ux-cancel:disabled { opacity: .4; }
 
 /* chips (issue filter) */
 .chips { display: flex; gap: 8px; margin: -2px -16px 6px; padding: 2px 16px 6px; overflow-x: auto; scrollbar-width: none; }

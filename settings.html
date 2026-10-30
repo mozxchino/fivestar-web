@@ -53,7 +53,8 @@ a.cell{text-decoration:none;color:inherit}
   const money = (n) => Number(n).toLocaleString("th-TH", { maximumFractionDigits: 2 }); // qa: openSum (manager too) needs it before the manager return
 
   // M9: pay boxes show 15,000 · digits only while the cursor is in the box, so the saved number is plain
-  document.addEventListener("focusin", (e) => { if (e.target.classList?.contains("money-in")) e.target.value = e.target.value.replace(/,/g, ""); });
+  // the box is type=text (number can't show 15,000), so ux-motion's select-on-focus skips it: select here, or typing appends (iOS sim: 15000 → 150001)
+  document.addEventListener("focusin", (e) => { const el = e.target; if (!el.classList?.contains("money-in")) return; el.value = el.value.replace(/,/g, ""); try { el.select(); } catch (_) {} });
   document.addEventListener("input", (e) => { if (e.target.classList?.contains("money-in")) e.target.value = e.target.value.replace(/[^\d.]/g, ""); });
   document.addEventListener("focusout", (e) => { const el = e.target; if (el.classList?.contains("money-in") && el.value !== "" && !isNaN(el.value)) el.value = money(el.value); });
   // generic save-on-blur for any input with data-t/data-id/data-f

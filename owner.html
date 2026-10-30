@@ -197,12 +197,17 @@ td+td{font-weight:600}
     const fv = (tone, v) => `<span class="fv"${tone ? ` data-tone="${tone}"` : ""}>${v}</span>`;
     // 0047 (Mos 30 ต.ค.): the owner deletes a mistyped waste log so the staff can close · only before the day is sent
     const wl = wlog || [], wDel = !MGR && sd.status !== "sent" && wl.length ? `<p class="muted">พิมพ์ผิด ลบได้จนกว่าจะปิดร้าน</p>` + wl.map((w) => `<div class="ln">${esc(prods[w.product_id])} ${+w.qty} ${esc(unit[w.product_id])} <span class="muted">ทิ้ง ${hm(w.created_at)} น.</span> <button class="btn sm" type="button" data-a="wdel" data-i="${w.id}" data-n="${esc(prods[w.product_id])} ${+w.qty} ${esc(unit[w.product_id])}">ลบรายการนี้</button></div>`).join("") : "";
+    // 0050 (Mos 30 ต.ค.): the owner takes back a staff ห่อข้าวเหนียว entry · only the open business day (undo_made reads business_day) · manager: the rpc allows own entries only, so no button
+    const mk = !MGR && sd.status !== "sent" && sd.date === U.bizDay() ? ((await supabase.from("made_logs").select("id,product_id,qty,created_by,created_at").eq("date", sd.date).order("created_at")).data || []) : [];
+    const mkBody = `<p class="muted">กดผิด ยกเลิกได้จนกว่าจะปิดร้าน</p>` + mk.map((m) => { const n = `${esc(prods[m.product_id])} ${+m.qty} ${esc(unit[m.product_id])}`;
+      return `<div class="ln mk"><span>${n}<small>${esc(names[m.created_by] || "-")} ${hm(m.created_at)} น.</small></span><button class="ux-cancel" type="button" data-a="mdel" data-i="${m.id}" data-n="${n}">ยกเลิกรายการนี้</button></div>`; }).join("");
     const fold = (id, head, body) => `<button class="fold" aria-expanded="false" data-f="${id}">${head}</button><div class="fold-body"><div id="f-${id}">${body}</div></div>`;
     $("out").innerHTML = bento(c) + todo
       + (sd.note ? `<div class="card"><div class="k muted">พนักงานฝากบอก</div>${esc(sd.note)}</div>` : "")
       + `<div class="card folds">`
       + fold("recv", items.length ? `<b>รับของ</b>${fv(nShort ? "bad" : "ok", nShort ? `ขาด ${nShort} จาก ${items.length}` : `ครบ ${items.length} รายการ`)}` : `<b>ใบสั่ง</b>${fv("", "ไม่มี")}`, recv || `<p class="muted">ไม่มีใบสั่ง</p>`)
       + (waste.length || wDel ? fold("waste", `<b>ของเสีย</b>${fv("wait", waste.length ? `${waste.length} รายการ` : `ทิ้งแล้ว ${wl.length} ครั้ง`)}`, waste.map((l) => `<div class="ln">${esc(prods[l.product_id])} ${l.waste} ${esc(unit[l.product_id])}</div>`).join("") + wDel + (wKg ? `<div class="ln">หนักรวม ${Math.round(wKg * 100) / 100} กก.</div>` : "") + (wPics ? `<div>${wPics}</div>` : `<p class="muted">ไม่มีรูปของเสีย</p>`)) : "")
+      + (mk.length ? fold("made", `<b>ห่อข้าวเหนียว</b>${fv("", `${mk.length} ครั้ง`)}`, mkBody) : "")
       + fold("cons", `<b>ของใช้ในร้าน</b>${!cc.length ? fv("ok", "มีครบ") : nOut && nLow ? fv("bad", `หมด/ใกล้หมด ${nOut + nLow} อย่าง`) : nOut ? fv("bad", `หมด ${nOut} อย่าง`) : fv("wait", `ใกล้หมด ${nLow} อย่าง`)}`,
         cc.map((c) => `<div class="ln">${esc(prods[c.product_id])} <span class="pill" data-tone="${c.status === "out" ? "bad" : "wait"}">${CS[c.status] || esc(c.status)}</span></div>`).join("") || `<p class="muted">มีครบ</p>`)
       + (photos.length ? fold("pics", `<b>รูปจากร้าน</b>${fv("", `${photos.length} รูป`)}`, `<div class="sk-row" style="flex-wrap:wrap;gap:8px;padding:8px 0 12px">${sb("72px", 72, ";--r:10px").repeat(photos.length)}</div>`) : "")
@@ -234,6 +239,13 @@ td+td{font-weight:600}
       const { error } = await supabase.rpc("waste_delete", { wid: b.dataset.i });
       if (error) { b.disabled = false; UXM.toast("ลบไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error), { ms: 4000 }); return; }
       UXM.toast("ลบของเสียแล้ว\nให้น้องปิดหน้าปิดร้านแล้วเปิดใหม่", { ms: 5000 }); return dayView();
+    }
+    if (a === "mdel") {
+      if (!confirm(`ยกเลิกรายการห่อนี้ไหม?\n${b.dataset.n}\nพนักงานบันทึกใหม่ได้`)) return;
+      b.disabled = true;
+      const { error } = await supabase.rpc("undo_made", { log_id: b.dataset.i });
+      if (error) { b.disabled = false; UXM.toast("ยกเลิกไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error), { ms: 4000 }); return; }
+      UXM.toast("ยกเลิกรายการห่อแล้ว", { ms: 4000 }); return dayView();
     }
     if (a === "recv") { const f = document.querySelector('.fold[data-f="recv"]'); if (f && f.getAttribute("aria-expanded") !== "true") f.click(); f?.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
     if (a === "photos") {
