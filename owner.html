@@ -4,10 +4,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="lib/ui.css">
+<link rel="stylesheet" href="lib/ux-data.css">
 <link rel="stylesheet" href="lib/ux-owner.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-owner.js"></script><script src="lib/ux-motion.js"></script>
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-owner.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js"></script>
 <style>
 @media (min-width:360px){.tabs button{font-size:15px}}
 .th{width:72px;height:72px;object-fit:cover;border-radius:10px;margin:8px 8px 0 0;background:var(--color-muted);border:1px solid var(--color-border);cursor:zoom-in}
@@ -29,6 +30,11 @@ td+td{font-weight:600}
   <div id="bar"><div class="daynav"><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i><div class="d"><i class="sk-b" style="--w:56%;--h:22px;margin:2px auto 0"></i><i class="sk-b" style="--w:40%;--h:13px;margin:6px auto 0"></i></div><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i></div></div><button id="upd" class="ux-upd" type="button" hidden></button><div id="out"><span class="vh">กำลังเปิด…</span><div class="bento trio"><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div></div><h3 class="sec"><i class="sk-b" style="--w:38%;--h:15px"></i></h3><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div></div>
 </div>
 <div id="panel" class="panel" role="dialog" aria-modal="true" aria-labelledby="ph" hidden></div>
+<dialog id="posS" class="bsheet" aria-labelledby="posT"><div class="body"><div class="grab"></div><div class="hd"><b id="posT">แก้ยอดขาย WE POS</b><button type="button" class="x" aria-label="ปิด">✕</button></div>
+  <p class="muted" id="posD"></p>
+  <label class="field" for="posV">ยอดขายรวม</label><div class="in"><input id="posV" type="number" inputmode="decimal" enterkeyhint="done" min="0" max="100000" step="any" placeholder="0"><span class="sfx">บาท</span></div>
+  <p class="muted">ดูจากรูปจอ WE POS<br>โบนัสพนักงานคิดใหม่จากยอดนี้</p></div>
+  <div class="foot"><button type="button" class="btn primary" id="posOK">บันทึกยอดขาย</button><p id="posM" class="muted" role="status" style="white-space:pre-line"></p></div></dialog>
 <script>
 (async () => {
   const $ = (i) => document.getElementById(i);
@@ -201,7 +207,11 @@ td+td{font-weight:600}
     const mk = !MGR && sd.status !== "sent" && sd.date === U.bizDay() ? ((await supabase.from("made_logs").select("id,product_id,qty,created_by,created_at").eq("date", sd.date).order("created_at")).data || []) : [];
     const mkBody = `<p class="muted">กดผิด ยกเลิกได้จนกว่าจะปิดร้าน</p>` + mk.map((m) => { const n = `${esc(prods[m.product_id])} ${+m.qty} ${esc(unit[m.product_id])}`;
       return `<div class="ln mk"><span>${n}<small>${esc(names[m.created_by] || "-")} ${hm(m.created_at)} น.</small></span><button class="ux-cancel" type="button" data-a="mdel" data-i="${m.id}" data-n="${n}">ยกเลิกรายการนี้</button></div>`; }).join("");
+    // pb-review M2 (Mos 30 ต.ค.): ยอดขาย WE POS the staff typed at close (sets the bonus) · beside the POS screen photo · the owner corrects it (set_pos_total, audit_log)
+    const posAmt = sd.pos_total == null ? null : money(sd.pos_total);
+    const posBody = `<div class="ln mk"><span>รูปจอ POS<small>เทียบยอดกับรูปนี้</small></span>${MGR ? "" : `<button class="ux-cancel" type="button" data-a="pos">แก้ยอดขาย</button>`}</div><div id="posPic">${sd.pos_photo ? sb("72px", 72, ";--r:10px") : `<p class="muted">ไม่มีรูปจอ POS</p>`}</div>`;
     const fold = (id, head, body) => `<button class="fold" aria-expanded="false" data-f="${id}">${head}</button><div class="fold-body"><div id="f-${id}">${body}</div></div>`;
+    const posFold = sd.closed_at ? fold("pos", `<b>ยอดขาย WE POS</b>${fv(posAmt == null ? "wait" : "", posAmt == null ? "ไม่ได้ใส่" : `${posAmt} บาท`)}`, posBody) : "";
     $("out").innerHTML = bento(c) + todo
       + (sd.note ? `<div class="card"><div class="k muted">พนักงานฝากบอก</div>${esc(sd.note)}</div>` : "")
       + `<div class="card folds">`
@@ -210,13 +220,15 @@ td+td{font-weight:600}
       + (mk.length ? fold("made", `<b>ห่อข้าวเหนียว</b>${fv("", `${mk.length} ครั้ง`)}`, mkBody) : "")
       + fold("cons", `<b>ของใช้ในร้าน</b>${!cc.length ? fv("ok", "มีครบ") : nOut && nLow ? fv("bad", `หมด/ใกล้หมด ${nOut + nLow} อย่าง`) : nOut ? fv("bad", `หมด ${nOut} อย่าง`) : fv("wait", `ใกล้หมด ${nLow} อย่าง`)}`,
         cc.map((c) => `<div class="ln">${esc(prods[c.product_id])} <span class="pill" data-tone="${c.status === "out" ? "bad" : "wait"}">${CS[c.status] || esc(c.status)}</span></div>`).join("") || `<p class="muted">มีครบ</p>`)
+      + posFold
       + (photos.length ? fold("pics", `<b>รูปจากร้าน</b>${fv("", `${photos.length} รูป`)}`, `<div class="sk-row" style="flex-wrap:wrap;gap:8px;padding:8px 0 12px">${sb("72px", 72, ";--r:10px").repeat(photos.length)}</div>`) : "")
       + `</div>`
       + links(c, !MGR);
     if (!MGR) $("edit").onclick = () => openEdit(c);
     U.folds($("out").querySelector(".folds"), async (b) => {
-      if (b.dataset.f !== "pics" || b.dataset.done) return;
-      b.dataset.done = 1; $("f-pics").innerHTML = (await thumbs(photos)) || `<p class="muted">เปิดรูปไม่ขึ้น</p>`;
+      if (b.dataset.done) return;
+      if (b.dataset.f === "pics") { b.dataset.done = 1; $("f-pics").innerHTML = (await thumbs(photos)) || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
+      if (b.dataset.f === "pos" && sd.pos_photo) { b.dataset.done = 1; $("posPic").innerHTML = (await thumbs([sd.pos_photo])) || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
     });
   }
   const go = async (d) => { await UXM.flush(); D = d; sync(); await dayView(); stamp(); };
@@ -233,12 +245,13 @@ td+td{font-weight:600}
     const b = e.target.closest("button[data-a]"); if (!b) return;
     const card = b.closest(".todo"), a = b.dataset.a;
     if (a === "go") return go(b.dataset.d);
+    if (a === "pos") return openPos(ctx);
     if (a === "wdel") {
       if (!confirm(`ลบของเสียรายการนี้ไหม?\n${b.dataset.n}\nพนักงานบันทึกใหม่ได้`)) return;
       b.disabled = true;
       const { error } = await supabase.rpc("waste_delete", { wid: b.dataset.i });
       if (error) { b.disabled = false; UXM.toast("ลบไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error), { ms: 4000 }); return; }
-      UXM.toast("ลบของเสียแล้ว\nให้น้องปิดหน้าปิดร้านแล้วเปิดใหม่", { ms: 5000 }); return dayView();
+      UXM.toast("ลบของเสียแล้ว\nให้พนักงานปิดหน้าปิดร้านแล้วเปิดใหม่", { ms: 5000 }); return dayView();
     }
     if (a === "mdel") {
       if (!confirm(`ยกเลิกรายการห่อนี้ไหม?\n${b.dataset.n}\nพนักงานบันทึกใหม่ได้`)) return;
@@ -273,7 +286,7 @@ td+td{font-weight:600}
       ${["open", "closed"].includes(sd.status) && sl.length ? `<h2>ยอดรับเข้า</h2><p class="muted">CPF ส่งมาเกินที่บันทึก<br>แก้ทีละอย่าง</p>
       <div class="row"><select id="rp" class="grow" aria-label="สินค้าที่จะแก้ยอดรับเข้า">${sl.map((l) => `<option value="${l.product_id}" data-r="${+l.received || 0}">${esc(prods[l.product_id])} (ตอนนี้ ${+l.received || 0} ${esc(unit[l.product_id])})</option>`).join("")}</select>
       <input id="rq" class="ed" type="number" inputmode="decimal" aria-label="รับเข้าที่ถูก" value="${+sl[0].received || 0}"></div>
-      <p class="muted">แก้หลังน้องกดรับของแล้ว</p>
+      <p class="muted">แก้หลังพนักงานกดรับของแล้ว</p>
       <button class="btn" id="rs" type="button">บันทึกยอดรับเข้า</button><p id="rm" class="muted"></p>` : ""}
       <h2>เงินสด</h2>
       <div class="row"><label class="grow" for="ce">เงินสดควรมี (บาท)</label><input id="ce" class="ed cash" type="number" inputmode="decimal" value="${sd.cash_expected ?? ""}"></div>
@@ -313,6 +326,30 @@ td+td{font-weight:600}
       if (!(err || error)) { close(); UXM.toast("บันทึกแล้ว ✓"); if (TAB === "day") dayView(); }
     };
   }
+
+  // ---- pb-review M2: sheet that corrects a closed day's ยอดขาย WE POS · select on focus (ux-motion focusin) · same 0..100,000 rule as close, the server checks again ----
+  const posS = $("posS"), posSh = UXD.sheet(posS), posV = $("posV"), vv = window.visualViewport;
+  const fitPos = () => { if (!posS.open || !vv) return; posS.style.bottom = Math.max(0, innerHeight - vv.height - vv.offsetTop) + "px"; posS.style.maxHeight = Math.max(260, vv.height - 12) + "px"; }; // keep the save button above the iPhone keyboard (like the bag sheet)
+  if (vv) { vv.addEventListener("resize", fitPos); vv.addEventListener("scroll", fitPos); }
+  posS.addEventListener("close", () => { posS.style.bottom = ""; posS.style.maxHeight = ""; });
+  posV.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $("posOK").click(); } });
+  let posDay = null;
+  function openPos(c) {
+    posDay = c.d; const v = c.sd?.pos_total;
+    $("posD").innerHTML = `${U.dayName(c.d)}<br>${v == null ? "ยังไม่ได้ใส่ยอด" : `ตอนนี้ ${baht(v)}`}`;
+    posV.value = v == null ? "" : String(+v); $("posM").className = "muted"; $("posM").textContent = "";
+    posSh.open(); setTimeout(() => { posV.focus(); fitPos(); }, 60);
+  }
+  $("posOK").onclick = async () => {
+    const v = posV.value, say = (t) => { $("posM").className = "err"; $("posM").textContent = t; };
+    if (v === "") return say("ยังไม่ได้ใส่ยอดขาย\nดูจากรูปจอ WE POS");
+    if (+v < 0 || +v > 100000) return say("ยอดขายรวมต้องอยู่ระหว่าง 0 ถึง 100,000 บาท\nดูจอ WE POS อีกครั้ง");
+    $("posOK").disabled = true;
+    const { error } = await supabase.rpc("set_pos_total", { d: posDay, amount: +v });
+    $("posOK").disabled = false;
+    if (error) return say("บันทึกไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error));
+    posSh.close(); UXM.toast("แก้ยอดขายแล้ว ✓"); if (TAB === "day") dayView();
+  };
 
   // ---- issues (P2-6): chips ใหม่ · รับทราบ · ปิดแล้ว · date taps through to that day ----
   async function issView() {

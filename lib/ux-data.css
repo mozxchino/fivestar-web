@@ -165,9 +165,11 @@ button.cell.ux-who:active { background: var(--color-fill-pressed); }
 #bagS .bag-hint, #wasteGo .bag-hint { margin: 2px 0 12px; font-size: 14px; color: var(--color-ink-soft); }
 #bagS .bag-hint { white-space: pre-line; }
 #bagS #bagOK { position: sticky; bottom: 8px; }   /* stays in view when the sheet is short (keyboard up) */
-#bagS .field { margin-top: 10px; }
-#bagS .bag-total { margin: 16px 0 12px; text-align: center; font: 500 17px/1.3 var(--font-head); color: var(--color-ink-soft); }
-#bagS .bag-total b { font-size: 30px; color: var(--color-foreground); margin: 0 4px; }
+#bagS .field, #cookS .field { margin-top: 10px; }
+#cookKw .field:first-child { margin-top: 0; }
+#bagS .field small.h { display: block; font-weight: 400; font-size: 14px; color: var(--color-ink-soft); }   /* 0055: "1 ไม้ = 5 ชิ้น" under ไม้ */
+#bagS .bag-total, #cookS .bag-total { margin: 16px 0 12px; text-align: center; font: 500 17px/1.3 var(--font-head); color: var(--color-ink-soft); }
+#bagS .bag-total b, #cookS .bag-total b { font-size: 30px; color: var(--color-foreground); margin: 0 4px; }
 #wasteGo .hd b, #wasteGo .bag-hint { text-align: center; }
 #wasteGo .hd { justify-content: center; } #wasteGo .hd b { flex: 1; padding-left: 44px; } /* title stays centred under the × */
 #bagS .btn.primary, #wasteGo .btn.primary { width: 100%; margin-bottom: max(8px, env(safe-area-inset-bottom)); }

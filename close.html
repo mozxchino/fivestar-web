@@ -8,6 +8,8 @@
 /* 0047: a row above what the shop had (or with a minus) stays red like an empty one (ux-miss) and loses its ✓ until it is fixed */
 .sheet .grid.ux-over .rf, .sheet .grid.ux-over .rc { background-color: var(--tint-destructive); box-shadow: inset 0 0 0 1.5px var(--color-destructive); }
 .sheet .grid.ux-over:has(.rf)::after { opacity: 0; }
+/* 0054: hint line under a field label (ยอดขายรวมวันนี้) */
+.field small.h { display: block; margin-top: 2px; font-size: 14px; font-weight: 400; color: var(--color-muted-foreground); }
 </style>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -54,6 +56,9 @@
   </section>
   <section id="s3" class="ux-step" hidden>
   <div class="card">
+  <label class="field" for="posTot">ยอดขายรวมวันนี้<small class="h">ดูจอ WE POS ยอดรวมทุกช่องทาง</small></label><div class="in"><input id="posTot" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0" min="0" max="100000"><span class="sfx">บาท</span></div>
+  </div>
+  <div class="card">
   <label class="field" for="cashExp">ควรมี <small>(ดูจอ POS)</small></label><div class="in"><input id="cashExp" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0"><span class="sfx">บาท</span></div>
   <label class="field" for="cashCnt">นับได้</label><div class="in"><input id="cashCnt" type="number" inputmode="decimal" enterkeyhint="done" placeholder="0"><span class="sfx">บาท</span></div>
   </div>
@@ -90,7 +95,7 @@
   if (pend && pend.order_items.some((i) => i.qty_received == null && i.received_at == null)) {
     const b = document.getElementById("blocked"); b.hidden = false; b.innerHTML = late ? 'ของวันนั้นยังไม่ได้กดรับ<br>บอกเจ้าของก่อน แล้วค่อยปิดร้าน' : 'ต้องกดรับของก่อน ถึงจะปิดร้านได้<br><a class="btn primary" href="receive.html">ไปรับของ</a>'; return;
   }
-  const { data: prods, error: pErr } = await supabase.from("products").select("id,sort,name,unit,buy_unit,pack_size,kind,made_here,count_mode").eq("active", true).order("sort");
+  const { data: prods, error: pErr } = await supabase.from("products").select("id,sort,name,unit,buy_unit,pack_size,stick_size,kind,made_here,count_mode").eq("active", true).order("sort");
   const { data: lines, error: lErr } = await supabase.from("stock_lines").select("product_id,open_fresh,open_cooked,received").eq("date", today);
   if (pErr || lErr || !prods) { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดรายการของไม่ขึ้น\n" + App.errText(pErr || lErr || "no products"); return; }
   prods.forEach((p) => { p.unit = UXM.unit(p.unit); }); // EA / PC → ตัว / ชิ้น // qa: never show 0s from a failed read
@@ -144,7 +149,7 @@
   const underRows = () => [...document.querySelectorAll("#lines .grid")].filter((g) => +g.querySelector(".w").value < (W[g.dataset.id] || 0));
 
   // ---- wizard: 4 steps, one on screen · the red button walks forward, a step with gaps stops it ----
-  const NAME = { 1: "นับของเหลือ", 2: "ของใช้ในร้าน", 3: "นับเงินสด", 4: "ถ่ายรูปและส่ง" };
+  const NAME = { 1: "นับของเหลือ", 2: "ของใช้ในร้าน", 3: "ยอดขายและเงินสด", 4: "ถ่ายรูปและส่ง" };
   const GO = { 2: "ไปเช็กของใช้", 3: "ไปนับเงินสด", 4: "ไปถ่ายรูปและส่ง" }; // red button = verb + thing
   let cur = 1, reached = 1;
   const liveRows = () => [...document.querySelectorAll("#lines .grid:not(.ux-zero)")];
@@ -154,6 +159,9 @@
     if (n === 1) { const l = leftRows(); return l.length ? { say: `ยังไม่ได้นับ เหลือสด ${l.length} อย่าง`, el: l[0].querySelector(".rf") } : over(); }
     if (n === 2 && cons.length) { if (!pick) return { say: "เลือก ของใช้ครบ หรือ มีของใกล้หมด ก่อน", el: consAll };
       if (pick === "low" && !Object.values(state).some((v) => v !== "ok")) return { say: "แตะของที่ใกล้หมดหรือหมด อย่างน้อย 1 อย่าง", el: document.querySelector("#cons .ux-cchip") }; }
+    // 0054 (Mos 30 ต.ค.): ยอดขายรวม WE POS is required (staff bonus) · the server checks 0 to 100,000 too
+    if (n === 3) { if (posTot.value === "") return { say: "ยังไม่ได้ใส่ยอดขายรวมวันนี้\nดูจอ WE POS ยอดรวมทุกช่องทาง", el: posTot };
+      if (+posTot.value < 0 || +posTot.value > 100000) return { say: "ยอดขายรวมต้องอยู่ระหว่าง 0 ถึง 100,000 บาท\nดูจอ WE POS อีกครั้ง", el: posTot }; }
     return null;
   };
   // 0052: counted (สด + สุก) below ควรเหลือ − max(ครึ่งถุง, ขายปกติ 1 วัน) → "ตรวจอีกรอบ" before leaving step 1 · same numbers kept once = not asked again
@@ -186,7 +194,7 @@
   const save = () => {
     const rows = {}; document.querySelectorAll("#lines .grid").forEach((g) => { rows[g.dataset.id] = [g.querySelector(".rf").value, g.querySelector(".rc").value]; }); // .w (เสีย) is never saved · it always comes from waste_logs (W)
     const at = Date.now();
-    if (store.set(KEY, JSON.stringify({ at, rows, cons: state, pick, ce: cashExp.value, cc: cashCnt.value, note: note.value, step: cur, reached, wq, lo: kept }))) showDraft(at);
+    if (store.set(KEY, JSON.stringify({ at, rows, cons: state, pick, pt: posTot.value, ce: cashExp.value, cc: cashCnt.value, note: note.value, step: cur, reached, wq, lo: kept }))) showDraft(at);
   };
   let draft = null; try { draft = JSON.parse(store.get(KEY) || "null"); } catch (_) { draft = null; }
   if (draft) {
@@ -194,7 +202,7 @@
     Object.entries(draft.cons || {}).forEach(([id, v]) => { if (id in state && SAY[v]) state[id] = v; });
     document.querySelectorAll("#cons .ux-cchip").forEach(paint);
     setPick(Object.values(state).some((v) => v !== "ok") ? "low" : (draft.pick === "all" || draft.pick === "low" ? draft.pick : ""));
-    cashExp.value = draft.ce || ""; cashCnt.value = draft.cc || ""; note.value = draft.note || ""; diff(); showDraft(draft.at);
+    posTot.value = draft.pt || ""; cashExp.value = draft.ce || ""; cashCnt.value = draft.cc || ""; note.value = draft.note || ""; diff(); showDraft(draft.at);
     reached = Math.min(Math.max(+draft.reached || 1, +draft.step || 1), 4);
     wq = draft.wq || 0; kept = draft.lo || "";
   }
@@ -234,7 +242,8 @@
     cur = n; reached = Math.max(reached, n);
     document.querySelectorAll(".ux-step").forEach((el) => el.hidden = el.id !== "s" + n);
     say(""); scrollTo(0, 0); update(); save();
-    if (n === 3 && !cashExp.value) cashExp.focus({ preventScroll: true }); else stepT.focus({ preventScroll: true });
+    const f3 = n === 3 && [posTot, cashExp].find((x) => !x.value);
+    if (f3) f3.focus({ preventScroll: true }); else stepT.focus({ preventScroll: true });
   }
   sum4.onclick = (e) => { const b = e.target.closest("[data-s]"); if (b) go(+b.dataset.s); };
   steps.onclick = (e) => { const b = e.target.closest("button"); if (b && +b.dataset.s <= reached && +b.dataset.s !== cur) go(+b.dataset.s); };
@@ -245,6 +254,7 @@
     const rs = [...document.querySelectorAll("#lines .grid:not([hidden])")], i = rs.indexOf(e.target.closest(".grid"));
     if (rs[i + 1]) rs[i + 1].querySelector(".rf").focus(); else e.target.blur();
   });
+  posTot.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); cashExp.focus(); } });
   cashExp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); cashCnt.focus(); } });
   cashCnt.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); cashCnt.blur(); } });
   document.getElementById("form").addEventListener("input", (e) => { e.target.closest(".ux-miss")?.classList.remove("ux-miss"); e.target.closest(".ux-over")?.classList.remove("ux-over"); if (msg.className === "err") say(""); save(); update(); });
@@ -259,9 +269,9 @@
     if (shot) { say(shot[0], true); UXM.shake(shot[1].closest("label")); return; }
     const under = underRows()[0];
     if (under) { const p = stock.find((x) => x.id === under.dataset.id); go(1); say(`${p.name} ทิ้งไปแล้ว ${W[p.id]} ${p.unit || ""}\nช่องเสียใส่น้อยกว่านี้ไม่ได้`, true); UXM.shake(under.querySelector(".w")); under.querySelector(".w").focus(); return; } // qa2: say after go(), show() clears the message
-    if (!confirm(`ปิดร้านเลยไหม?\nนับของแล้ว ${rows.length} จาก ${stock.length} อย่าง${cashDiff.textContent ? "\n" + cashDiff.textContent : ""}\nกดแล้วแก้ตัวเลขไม่ได้`)) return;
+    if (!confirm(`ปิดร้านเลยไหม?\nนับของแล้ว ${rows.length} จาก ${stock.length} อย่าง\nยอดขายรวม ${(+posTot.value).toLocaleString("th-TH")} บาท${cashDiff.textContent ? "\n" + cashDiff.textContent : ""}\nกดแล้วแก้ตัวเลขไม่ได้`)) return;
     send.disabled = true; back.hidden = true; msg.textContent = "กำลังปิดร้าน…";
-    const payload = { date: today, lines: rows, consumables: Object.entries(state).filter(([, v]) => v !== "ok").map(([product_id, status]) => ({ product_id, status })), cash_expected: cashExp.value === "" ? null : +cashExp.value, cash_counted: cashCnt.value === "" ? null : +cashCnt.value, note: note.value || null, pos_photo: pos[0] ?? null, photos };
+    const payload = { date: today, lines: rows, consumables: Object.entries(state).filter(([, v]) => v !== "ok").map(([product_id, status]) => ({ product_id, status })), pos_total: +posTot.value, cash_expected: cashExp.value === "" ? null : +cashExp.value, cash_counted: cashCnt.value === "" ? null : +cashCnt.value, note: note.value || null, pos_photo: pos[0] ?? null, photos };
     const { error } = await supabase.rpc("close_day", { p: payload });
     if (error) { msg.textContent = "ยังปิดร้านไม่ได้\n" + App.errText(error); msg.className = "err"; send.disabled = false; back.hidden = false; return; }
     store.del(KEY); showDraft(null);
@@ -278,7 +288,7 @@
   for (let s = 1; s < to; s++) if (gap(s)) { to = s; break; }
   document.querySelectorAll(".ux-step").forEach((el) => el.hidden = el.id !== "s" + to); cur = to; update();
   // 0052 (Mos 30 ต.ค.): waste is logged before counting → ask first, on a day with no waste log and no answer yet
-  // "ไม่มี" is kept on the day (close card: ของเสีย ไม่มี (น้องยืนยัน)) · a late close can't log that day's waste any more (waste.html logs today) → write it in the note
+  // "ไม่มี" is kept on the day (close card: ของเสีย ไม่มี (พนักงานยืนยัน)) · a late close can't log that day's waste any more (waste.html logs today) → write it in the note
   if (cc && !cc.waste_none && !+cc.waste_logs && !wq && cur === 1) {
     if (late) { wasteQT.textContent = `วันที่ ${dayTh} มีของเสียไหม`; wqYes.removeAttribute("href"); wqYes.setAttribute("role", "button"); wqYes.tabIndex = 0; wqYes.textContent = "มีของเสีย";
       wasteQ.querySelector(".bag-hint").textContent = "ของเสียวันนั้นลงในแอปไม่ได้แล้ว\nถ้ามี เขียนในช่องฝากบอกเจ้าของ";

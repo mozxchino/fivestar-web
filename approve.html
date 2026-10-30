@@ -27,6 +27,8 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
 .ux-addr:last-child{border-bottom:0}.ux-addr input{flex:none;width:22px;height:22px;margin:0;accent-color:var(--color-primary)}
 .ux-addr .nm{display:block;font-weight:600}.ux-addr .meta{display:block;font-size:13px;color:var(--color-ink-soft)}.ux-addr .chip{flex:none;min-height:0;padding:4px 10px;font-size:13px;box-shadow:none;background:var(--color-fill);color:var(--color-ink-soft)}
 .ux-addq{display:flex;align-items:center;gap:12px;margin:0 0 10px}.ux-addq .in{flex:1;margin:0}#addEq{flex:none;font-variant-numeric:tabular-nums}
+/* 0053 ของกอง: small yellow tag under the row name · the note above the list reuses .ux-nopack */
+.ux-pile{display:inline-block;margin:2px 0 0;padding:2px 8px;border-radius:999px;background:var(--tint-wait);color:var(--on-wait);font-size:13px;line-height:1.4;font-weight:500;font-variant-numeric:tabular-nums}
 #okT,#skT{margin:4px 0 0;font:600 18px/1.45 var(--font-head);text-wrap:balance}
 /* L3: the skip action reads as a quiet dark-red text button, not a white card like "+ เพิ่มรายการ" (a confirm sheet still guards it) */
 body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-dark);min-height:44px}body.grouped #skipB:active{background:var(--tint-primary)}
@@ -44,6 +46,7 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
   <div class="chips"><span id="pill" class="pill"></span><span id="self" hidden></span></div>
   <div id="lot"></div>
   <p id="nopack" class="ux-nopack" role="note" hidden></p>
+  <p id="pile" class="ux-nopack" role="note" hidden></p>
   <div id="items"></div>
   <button id="addB" class="btn ux-add" type="button" aria-haspopup="dialog" hidden>+ เพิ่มรายการ</button>
   <div id="buy"></div>
@@ -166,12 +169,18 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
   // 0044: a row the rule did not propose (owner/manager added it with "เพิ่มรายการ") · can be taken out again
   const planned = new Set(((plan && plan.items) || []).filter((x) => Number(x.qty) > 0).map((x) => x.product_id));
   const added = (r) => !!plan && !planned.has(r.product_id);
+  // 0053 ของกอง: plan items whose stock left tonight lasts more than overstock_days (most order 0, so they are not rows) · plans before 0053 have no "over"
+  const piles = ((plan && plan.items) || []).filter((x) => x.over === true);
+  const pileOf = new Map(piles.map((x) => [x.product_id, x]));
+  const pileSay = (x) => x.days_left == null ? "ไม่มียอดขาย" : `เหลือพอ ${n(x.days_left)} วัน`;
+  if (piles.length) { $("pile").hidden = false; $("pile").innerHTML = `<b>ของกอง ${piles.length} รายการ</b>${piles.map((x) => `<br>${E(x.name)} ${pileSay(x)}`).join("")}`
+    + (piles.some((x) => x.days_left == null) ? (me.role === "owner" ? '<br><a href="settings.html?tab=prod">ตัวที่ไม่มียอดขาย ถ้าเลิกขายแล้ว เอาติ๊ก "ยังใช้อยู่" ออก</a>' : '<br>ตัวที่ไม่มียอดขาย ถ้าเลิกขายแล้ว ให้เจ้าของเอาติ๊ก "ยังใช้อยู่" ออก') : ""); }
   const edited = (r, q) => !added(r) && q !== Number(r.qty_proposed);
   const meta = (r, q) => (added(r) ? "เพิ่มเอง ไม่ได้มาจากกติกา" : base(r)) + (r.sets != null && pkOf(r) === 1 ? ` · ${Math.round(q / r.pack_size)} เซ็ต` : "")
     + (edited(r, q) ? `<br><b>ระบบเสนอ ${inU(r, r.qty_proposed)} ตามกติกา แก้เป็น ${inU(r, q)}</b>` : "");   // 0038 Mos: say what the rule proposed and what the owner changed it to
   const vals = {};   // product_id → qty typed so far (kept across a re-render after เพิ่มรายการ / เอาออก)
   const rowH = (r, i) => { const pk = pkOf(r), v = Number(vals[r.product_id] ?? r.qty), u = pk > 1 ? word(r) : E(r.unit_th);
-    return `<div class="orow" id="r${i}"><div class="grow"><div class="nm">${E(r.label)}</div><div class="meta"></div>${added(r) && live() ? `<button type="button" class="ux-rm" data-rm="${i}">เอาออก</button>` : ""}</div>
+    return `<div class="orow" id="r${i}"><div class="grow"><div class="nm">${E(r.label)}</div>${pileOf.has(r.product_id) ? `<span class="ux-pile">${pileSay(pileOf.get(r.product_id))}</span>` : ""}<div class="meta"></div>${added(r) && live() ? `<button type="button" class="ux-rm" data-rm="${i}">เอาออก</button>` : ""}</div>
     <div class="ux-stepw"><div class="step"><button type="button" data-d="-1" data-s="${i}" aria-label="ลด ${E(r.label)} 1 ${u}">−</button><input type="number" inputmode="${pk > 1 ? "numeric" : "decimal"}" min="0" step="${pk > 1 ? 1 : r.pack_size || 1}" value="${pk > 1 ? Math.round(v / pk) : v}" data-i="${i}" aria-label="${E(r.label)} จำนวนสั่ง (${u})"><button type="button" data-d="1" data-s="${i}" aria-label="เพิ่ม ${E(r.label)} 1 ${u}">+</button></div>${pk > 1 ? `<span class="ux-eq" id="eq${i}" aria-hidden="true"></span>` : ""}</div></div>`; };
   const qv = (i) => { const v = Math.max(0, Number(document.querySelector(`[data-i="${i}"]`).value) || 0), pk = pkOf(rows[i]); return pk > 1 ? Math.round(v) * pk : v; };
   const cur = () => rows.map((r, i) => ({ product_id: r.product_id, qty_final: qv(i), r }));
@@ -213,7 +222,7 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
   // ponytail: the split is decided once per render (stored qty), so a row edited here never jumps under the finger; it moves after reload
   // every row keeps its input (data-i), folded rows only hide, cur() still walks rows in order → the same send payload
   const render = () => {
-    const same = (r) => !added(r) && Number(r.qty) === Number(r.qty_proposed) && r.remaining != null && r.par != null && Number(r.remaining) >= Number(r.par);
+    const same = (r) => !added(r) && !pileOf.has(r.product_id) && Number(r.qty) === Number(r.qty_proposed) && r.remaining != null && r.par != null && Number(r.remaining) >= Number(r.par);
     const top = rows.map((r, i) => same(r) ? "" : rowH(r, i)).join(""), sys = rows.map((r, i) => same(r) ? rowH(r, i) : "").join(""), nSame = rows.filter(same).length, nTop = rows.length - nSame;
     $("items").innerHTML = (!rows.length ? '<div class="card"><p class="muted">ใบนี้ไม่มีของต้องสั่ง</p></div>'
       : (nTop ? `<h2 class="ux-gh" data-tone="wait">ต้องดู<span class="n">${nTop} รายการ</span></h2><div class="card list">${top}</div>` : "")

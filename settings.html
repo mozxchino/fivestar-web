@@ -16,6 +16,8 @@ a.cell{text-decoration:none;color:inherit}
 .dow .chip{justify-content:center;padding:0;box-shadow:none;background:var(--color-fill)}
 .dow .chip.on{background:var(--color-foreground)} /* qa: the add-holiday field sits in a plain row (not a label), so the field itself is the tap target */
 .g label.chk{display:flex;align-items:center;gap:10px;min-height:var(--field);margin:0;align-self:end;font-size:16px;color:var(--fg)}
+/* 0054: staff bonus row under the 4 month tiles (owner only), full width */
+.ux-4 .ux-bonus{grid-column:1/-1;min-height:0}
 </style></head><body class="grouped" ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ตั้งค่า</h1><div class="sub">สำหรับเจ้าของ</div></div>
   <div class="tabs sk" aria-hidden="true"><button class="on" tabindex="-1">พนักงาน</button><button tabindex="-1">สินค้า</button><button tabindex="-1">ร้าน</button></div><div class="tabs ld" id="tabs" hidden><button data-t="staff" class="on">พนักงาน</button><button data-t="prod">สินค้า</button><button data-t="sys">ร้าน</button></div></header>
@@ -158,9 +160,11 @@ a.cell{text-decoration:none;color:inherit}
     const sk = `<div><i class="sk-b" style="--w:46%;--h:26px"></i><i class="sk-b" style="--w:70%;--h:13px;--gap:6px"></i></div>`;
     $("ush").textContent = name; $("usm").textContent = new Date(ym + "-01T00:00:00Z").toLocaleDateString("th-TH", { month: "long", year: "numeric", timeZone: "UTC" }) + " ถึงวันนี้";
     $("usb").innerHTML = sk.repeat(4); sumS.open();
-    const [d, l] = await Promise.all([
+    const [d, l, bo] = await Promise.all([
       supabase.from("shop_days").select("date,opened_by,closed_by,ot_hours,cash_expected,cash_counted").gte("date", ym + "-01").lte("date", today),
-      supabase.from("leave_requests").select("date,status").eq("user_id", id).eq("status", "approved").gte("date", ym + "-01").lt("date", nextM)]);
+      supabase.from("leave_requests").select("date,status").eq("user_id", id).eq("status", "approved").gte("date", ym + "-01").lt("date", nextM),
+      // 0054: bonus is pay → owner only (staff_bonus refuses a manager, like salary)
+      MGR ? { data: null } : supabase.rpc("staff_bonus", { p_user_id: id, y: +ym.slice(0, 4), m: +ym.slice(5, 7) })]);
     if (d.error || l.error) { $("usb").innerHTML = `<p class="err">เปิดไม่ขึ้น ลองแตะชื่ออีกครั้ง\n${E(App.errText(d.error || l.error))}</p>`; return; }
     const days = (d.data || []).filter((x) => x.date.slice(0, 7) === ym && x.date <= today), closed = days.filter((x) => x.closed_by === id);
     const worked = days.filter((x) => x.opened_by === id || x.closed_by === id).length;
@@ -168,7 +172,9 @@ a.cell{text-decoration:none;color:inherit}
     const ot = closed.reduce((a, x) => a + (+x.ot_hours || 0), 0);
     const short = closed.reduce((a, x) => a + (x.cash_expected != null && x.cash_counted != null ? Math.max(0, x.cash_expected - x.cash_counted) : 0), 0);
     const c = (v, u, k, bad) => `<div><b class="${bad ? "err" : ""}">${money(v)}<small> ${u}</small></b><span>${k}</span></div>`;
-    $("usb").innerHTML = c(worked, "วัน", "วันทำงาน") + c(off, "วัน", "วันหยุด/ลา") + c(+ot.toFixed(1), "ชม.", "โอที") + c(short, "บาท", "เงินสดขาดรวม", short > 0);
+    // 0054: โบนัสยอดเกิน <threshold> · N วัน × <per day> · a failed read (before 0054) = no row
+    const b = bo.data, bonus = b ? `<div class="ux-bonus"><b>${money(b.amount)}<small> บาท</small></b><span>โบนัสยอดเกิน ${money(b.threshold)}</span><span>${money(b.days)} วัน × ${money(b.per_day)} บาท</span></div>` : "";
+    $("usb").innerHTML = c(worked, "วัน", "วันทำงาน") + c(off, "วัน", "วันหยุด/ลา") + c(+ot.toFixed(1), "ชม.", "โอที") + c(short, "บาท", "เงินสดขาดรวม", short > 0) + bonus;
   }
 
   if (MGR) return staff(); // the product and shop tabs never load for a manager
@@ -214,9 +220,10 @@ a.cell{text-decoration:none;color:inherit}
     return `<label class="field" for="pn">ชื่อสินค้า</label><input type="text" id="pn" name="name" value="${E(p.name ?? "")}" autocomplete="off" required>
       ${seg("sell", "ของขาย หรือ ของใช้", [["sell", "ของขาย"], ["use", "ของใช้"]], sell ? "sell" : "use")}
       ${seg("src", "ซื้อจากไหน", [["cpf", "CPF"], ["self", "ซื้อเอง"], ["made", "ทำในร้าน"]], src)}
-      <label class="field" for="pu">หน่วยใช้ <small>(ที่น้องนับ)</small></label><input type="text" id="pu" name="unit" list="units" placeholder="ชิ้น" value="${E(UXM.unit(p.unit))}" required>
+      <label class="field" for="pu">หน่วยใช้ <small>(ที่พนักงานนับ)</small></label><input type="text" id="pu" name="unit" list="units" placeholder="ชิ้น" value="${E(UXM.unit(p.unit))}" required>
       <label class="field" for="pb">หน่วยซื้อ</label><input type="text" id="pb" name="buy_unit" list="buys" placeholder="ถุง" value="${E(UXM.unit(p.buy_unit))}">
       <label class="field" for="pk" id="pkl"></label><input type="number" id="pk" inputmode="numeric" min="1" step="1" name="pack_size" value="${E(p.pack_size ?? 1)}" data-v="${E(p.pack_size ?? 1)}">
+      <div data-q="stick"><label class="field" for="pst">ชิ้นต่อไม้<small class="h">ว่าง = ไม่มีไม้</small></label>${num("pst", "stick_size", p.stick_size, 1).replace("ยังไม่ใส่", "ไม่มีไม้")}</div>
       <label class="field" for="pc"><span id="pcl"></span><small class="h" id="pch">ว่างได้ ใส่ทีหลังจากใบเสร็จ</small></label>${num("pc", "cost_price", p.cost_price)}
       <div data-q="sell"><label class="field" for="psp">ขายหน้าร้าน (บาท)</label>${num("psp", "store_price", p.store_price)}
         <label class="field" for="pdp">ขายเดลิเวอรี่ (บาท)</label>${num("pdp", "delivery_price", p.delivery_price)}</div>
@@ -232,6 +239,7 @@ a.cell{text-decoration:none;color:inherit}
     const sell = F("sell").value === "sell", src = F("src").value, u = F("unit").value.trim(), b = F("buy_unit").value.trim(), un = UXM.unit(u) || "หน่วยใช้", k = F("pack_size");
     $("psb").querySelector("[data-seg=src] [data-v=made]").hidden = !sell;
     $("psb").querySelector("[data-q=sell]").hidden = !sell;
+    $("psb").querySelector("[data-q=stick]").hidden = !sell; // 0055: ไม้ only on ของขาย (ไก่จ๊อ) · ของใช้ saves none
     // round 3 (item 18): ของขาย is always counted, the question shows only for ของใช้
     $("psb").querySelector("[data-seg=count_mode]").style.display = $("ql-count_mode").style.display = sell ? "none" : "";
     if (sell) setSeg("count_mode", "count");
@@ -273,9 +281,11 @@ a.cell{text-decoration:none;color:inherit}
     // round 3 (item 18): ติ๊กใกล้หมด only for ของใช้ (a tick never reaches the order · DB check products_tick_consumable)
     const row = { name: f.name, kind: !sell ? "consumable" : src === "cpf" ? "cpf" : "self", supplier: src === "cpf" ? "cpf" : "self", made_here: src === "made",
       unit, buy_unit: buyU, count_mode: sell ? "count" : f.count_mode, active };
-    for (const [k, int] of [["pack_size", 1], ["cost_price"], ["store_price"], ["delivery_price"], ["low_at"]]) {
-      row[k] = n(k, int); if (Number.isNaN(row[k])) return bad(k === "pack_size" ? `${$("pkl").textContent} ต้องเป็นเลขเต็ม 1 ขึ้นไป` : "ตัวเลขไม่ถูก\nใส่เลข 0 ขึ้นไป", k);
+    for (const [k, int] of [["pack_size", 1], ["stick_size", 1], ["cost_price"], ["store_price"], ["delivery_price"], ["low_at"]]) {
+      row[k] = n(k, int); if (Number.isNaN(row[k])) return bad(k === "pack_size" ? `${$("pkl").textContent} ต้องเป็นเลขเต็ม 1 ขึ้นไป` : k === "stick_size" ? "ชิ้นต่อไม้ ต้องเป็นเลขเต็ม 1 ขึ้นไป\nไม่มีไม้ ให้เว้นว่าง" : "ตัวเลขไม่ถูก\nใส่เลข 0 ขึ้นไป", k);
     }
+    if (row.stick_size === 0) return bad("ชิ้นต่อไม้ ต้องเป็นเลขเต็ม 1 ขึ้นไป\nไม่มีไม้ ให้เว้นว่าง", "stick_size");
+    if (!sell) row.stick_size = null;
     if (!(row.pack_size >= 1)) return bad(`${$("pkl").textContent} ต้องเป็นเลขเต็ม 1 ขึ้นไป`, "pack_size");
     if (cur && F("pack_size").disabled && unit === cur.unit && buyU === (cur.buy_unit || null)) delete row.pack_size; // locked "1" saves only when the units just changed
     if (sell && active && row.cost_price == null) return bad(`ใส่ ราคาทุน ต่อ 1 ${un} ก่อน`, "cost_price");
@@ -305,6 +315,8 @@ a.cell{text-decoration:none;color:inherit}
   // 0034 (Mos 26 ต.ค.): the shop is closed every Monday · one toggle row per weekday set, same look as "CPF ไม่ส่งของวัน"
   let cld = Array.isArray(S.shop_closed_dow) ? [...S.shop_closed_dow] : [1];
   const buf = Number.isFinite(Number(S.order_buffer_pct)) ? Number(S.order_buffer_pct) : 35;   // 0038: เผื่อวันขายดี %
+  const ovd = Number(S.overstock_days) > 0 ? Number(S.overstock_days) : 3;   // 0053: ของกอง = เหลือพอขายเกินกี่วัน
+  const bth = Number.isFinite(Number(S.bonus_threshold)) ? Number(S.bonus_threshold) : 7000, bpd = Number.isFinite(Number(S.bonus_per_day)) ? Number(S.bonus_per_day) : 100;   // 0054
   const dowRow = (id, on, aria) => `<div class="dow" id="${id}" role="group" aria-label="${aria}">${["จ", "อ", "พ", "พฤ", "ศ", "ส", "อา"].map((w, i) => `<button type="button" class="chip${on.includes(i + 1) ? " on" : ""}" data-d="${i + 1}" aria-pressed="${on.includes(i + 1)}">${w}</button>`).join("")}</div>`;
   const sel = (id, cur) => `<select id="${id}"><option value="">ยังไม่เลือก</option>${(gs || []).map((g) => `<option value="${E(g.source_id)}" ${g.source_id === cur ? "selected" : ""}>${E(g.display_name || g.source_id)}</option>`).join("")}</select>`;
   const chev = `<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>`;
@@ -322,14 +334,18 @@ a.cell{text-decoration:none;color:inherit}
       <label class="cell"><span class="k">ของถึงกี่โมง</span><input type="time" id="dlv" value="${E(S.delivery_at ?? "14:00")}"></label>
       <label class="cell"><span class="k">แท็กเซลล์ท้ายใบสั่ง<small>ข้อความนี้ไม่ใช่การแท็กจริง บอกเซลล์ครั้งเดียวว่าใบสั่งมาจากร้านเรา</small></span><input type="text" id="tag" value="${E(S.sales_mention ?? "@new")}" placeholder="@new" style="max-width:9em"></label>
       <div class="cell" style="flex-wrap:wrap"><span class="k">CPF ไม่ส่งของวัน</span>${dowRow("nod", nod, "วันที่ CPF ไม่ส่งของ")}</div>
-      <label class="cell"><span class="k">เผื่อวันขายดี<small>เป้า = ขายเฉลี่ย 7 วัน × 2.5 วัน + เผื่อ</small></span><input type="number" id="buf" inputmode="numeric" min="0" max="100" step="5" value="${buf}" style="width:5.5em;text-align:right"> %</label></div>
+      <label class="cell"><span class="k">เผื่อวันขายดี<small>เป้า = ขายเฉลี่ย 7 วัน × 2.5 วัน + เผื่อ</small></span><input type="number" id="buf" inputmode="numeric" min="0" max="100" step="5" value="${buf}" style="width:5.5em;flex:none;text-align:right"> %</label>
+      <label class="cell"><span class="k">เตือนของกอง<small>ของเหลือพอขายเกินกี่วัน ขึ้นในใบสั่ง</small></span><input type="number" id="ovd" inputmode="decimal" min="1" max="14" step="0.5" value="${ovd}" style="width:5.5em;flex:none;text-align:right"> วัน</label></div>
     <div class="gl"><a class="cell nav" href="order-rules.html"><span class="k">กติกาใบสั่ง<small>ดูแบบเห็นภาพ พร้อมตัวอย่างตัวเลข</small></span>${chev}</a></div>
     <h2>กลุ่ม LINE</h2><div class="gl"><label class="cell nav"><span class="k">กลุ่มสั่งของ<small>มีเซลล์อยู่</small></span><span class="v" data-for="sg"></span>${chev}${sel("sg", S.sales_group_id)}</label>
       <label class="cell nav"><span class="k">กลุ่มพนักงาน</span><span class="v" data-for="fg"></span>${chev}${sel("fg", S.staff_group_id)}</label>
       <button class="cell act" type="button" id="claim"><span class="ic">${send}</span><span class="k">ส่งการ์ดยืนยันตัวตนเข้ากลุ่มพนักงาน</span></button></div>
     <p id="cmsg" class="muted" aria-live="polite"></p>
-    <p class="gf"><span>ใช้เมื่อ: น้องยังไม่ได้กด หรือการ์ดจมไปแล้ว</span><span>กดปุ่มนี้ → การ์ดเด้งในกลุ่มพนักงาน</span><span>น้องกด 'ฉันเป็นพนักงาน' ในกลุ่ม → ใช้แอปได้เลย</span></p>
+    <p class="gf"><span>ใช้เมื่อ: พนักงานยังไม่ได้กด หรือการ์ดจมไปแล้ว</span><span>กดปุ่มนี้ → การ์ดเด้งในกลุ่มพนักงาน</span><span>พนักงานกด 'ฉันเป็นพนักงาน' ในกลุ่ม → ใช้แอปได้เลย</span></p>
     <h2>ค่าคอมแอปส่งอาหาร</h2><div class="gl">${gp("lineman_gp", "LINE MAN")}${gp("grab_gp", "Grab")}${gp("shopee_gp", "Shopee")}</div><p class="gf">หน้าต้นทุน/กำไรใช้ตัวเลขนี้คิดค่าคอมแอปส่ง</p>
+    <h2>โบนัสพนักงาน</h2><div class="gl"><label class="cell"><span class="k">ยอดขายเกิน<small>ยอดรวม WE POS ที่พนักงานใส่ตอนปิดร้าน</small></span><input class="num-in" type="number" inputmode="numeric" min="0" max="100000" step="100" id="bth" value="${bth}"><span class="unit">บาท</span></label>
+      <label class="cell"><span class="k">โบนัสวันละ</span><input class="num-in" type="number" inputmode="numeric" min="0" max="10000" step="10" id="bpd" value="${bpd}"><span class="unit">บาท</span></label></div>
+    <p class="gf"><span>วันไหนยอดขายเกินนี้ พนักงานได้โบนัสวันนั้น</span><span>ดูยอดในสรุปเดือน แตะชื่อพนักงานในแท็บพนักงาน</span></p>
     <h2>วันหยุดร้าน</h2><div class="gl"><div class="cell" style="flex-wrap:wrap"><span class="k">หยุดทุกสัปดาห์</span>${dowRow("cld", cld, "วันหยุดร้านประจำ")}</div></div>
     <p class="gf"><span>วันหยุดประจำ ไม่มีเตือนปิดร้าน</span><span>คืนนั้นแอปสั่งของจากยอดขายวันเปิดล่าสุด</span><span>หน้าหลักพนักงานขึ้น วันนี้ร้านหยุด</span></p>
     <div class="gl"><div class="cell"><span class="k" style="white-space:nowrap">เฉพาะวัน</span><input type="date" id="hd" aria-label="วันหยุดที่จะเพิ่ม"><button class="txt-btn" type="button" id="ha">เพิ่มวันหยุด</button></div></div>
@@ -356,6 +372,9 @@ a.cell{text-decoration:none;color:inherit}
       ["sales_group_id", $("sg").value || ""], ["staff_group_id", $("fg").value || ""], ["holidays", hol],
       // 0033 รอบสั่ง CPF · out-of-range numbers fall back to the defaults instead of saving nonsense
       ["order_lead_days", Number($("lead").value) || 2], ["delivery_at", $("dlv").value || "14:00"], ["sales_mention", $("tag").value.trim()], ["cpf_no_delivery_dow", nod], ["shop_closed_dow", cld], ["order_buffer_pct", Math.min(100, Math.max(0, Number($("buf").value) || 0))],
+      ["overstock_days", Math.min(14, Math.max(1, Number($("ovd").value) || 3))],
+      // 0054 โบนัส · blank = the default, out of range is clamped
+      ["bonus_threshold", $("bth").value === "" ? 7000 : Math.min(100000, Math.max(0, Number($("bth").value) || 0))], ["bonus_per_day", $("bpd").value === "" ? 100 : Math.min(10000, Math.max(0, Number($("bpd").value) || 0))],
       // GP: blank = keep what is saved (never write 0 by accident)
       ...["lineman_gp", "grab_gp", "shopee_gp"].filter((k) => $(k).value !== "").map((k) => [k, Number($(k).value)])].map(([key, value]) => ({ key, value }));
     const { error } = await supabase.from("settings").upsert(rows);
