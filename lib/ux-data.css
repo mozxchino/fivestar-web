@@ -192,3 +192,17 @@ button.cell.ux-who:active { background: var(--color-fill-pressed); }
 #wasteQ .hd b, #wasteQ .bag-hint { text-align: center; }
 #wasteQ .bag-hint { white-space: pre-line; }
 @media (max-width: 359px) { #wasteQ .foot.ux-2b { grid-template-columns: minmax(0, 1fr); } #wasteQ .foot .primary { order: -1; } }   /* 320px: "มี ไปลงของเสีย" never splits, red on top */
+
+/* Mos 31 ต.ค.: bag / สุก card · product name big, what is counted small under it · label and box on one row (shorter card, less thumb travel) */
+#bagT, #cookT { display: flex; flex-direction: column; gap: 2px; }
+#bagT .bn, #cookT .bn { font: 600 24px/1.25 var(--font-head); color: var(--color-foreground); }
+#bagT small, #cookT small { font: 500 15px/1.3 var(--font-body); color: var(--color-ink-soft); }
+#bagS .body { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-items: center; }
+#bagS .body > * { grid-column: 1 / -1; }
+#bagS .body > .field, #bagS .body > .in, #bagKw > * { grid-column: auto; }
+#bagKw:not([hidden]) { display: contents; }
+#bagS .body > .field, #bagKw > .field { margin: 10px 0 0; }
+#bagS .body > .in, #bagKw > .in { margin-top: 10px; }
+#cookKw:not([hidden]) { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-items: center; }
+#cookKw > .field, #cookKw > .in { margin: 10px 0 0; }
+#cookKw > .bag-total { grid-column: 1 / -1; }
