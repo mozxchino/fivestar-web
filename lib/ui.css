@@ -491,6 +491,9 @@ body.grouped .sk-b:not(:is(.card, .gl, .bt, .sheet, .todo) *) { background-color
 }
 .sheet .grid:has(.rf:not(:placeholder-shown))::after { opacity: 1; transform: none; }
 .grid:has(.rf:not(:placeholder-shown)) .rf { background-color: var(--tint-filled); box-shadow: inset 0 -1.5px 0 var(--color-success); }
+/* 0057: a สุกอย่างเดียว row (ข้าวเหนียวห่อ) is filled by its สุก box */
+.sheet .grid[data-cols=cooked]:has(.rc:not(:placeholder-shown))::after { opacity: 1; transform: none; }
+.grid[data-cols=cooked]:has(.rc:not(:placeholder-shown)) .rc { background-color: var(--tint-filled); box-shadow: inset 0 -1.5px 0 var(--color-success); }
 
 /* consumables: name on its own line, 3-way segmented status under it */
 .row.cons { flex-wrap: wrap; gap: 8px; padding: 12px 0; }

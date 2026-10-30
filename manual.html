@@ -54,7 +54,7 @@
   .bad-note b { display: block; font: 600 16px/1.35 var(--font-head); color: var(--color-primary-dark); }
   .good b { display: block; font: 600 16px/1.35 var(--font-head); color: var(--color-success); }
   figure.shot { position: relative; margin: 12px auto 0; max-width: 300px; border-radius: 22px; overflow: hidden; border: 6px solid #201818; background: #201818; }
-  figure.shot img { display: block; width: 100%; height: auto; border-radius: 16px; }
+  figure.shot img { display: block; width: 100%; height: auto; aspect-ratio: 780 / 1688; border-radius: 16px; } /* iOS LIFF: no lazy load inside <details> · box keeps its size before load */
   figure.shot i { position: absolute; transform: translate(-50%, -50%); width: 30px; height: 30px; border-radius: 50%; background: var(--color-primary); color: #fff; font: 600 14px/30px var(--font-head); font-style: normal; text-align: center; box-shadow: 0 0 0 4px rgba(200, 33, 40, .28), 0 2px 6px rgba(0, 0, 0, .3); }
   .steps { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 8px; counter-reset: s; }
   .steps li { counter-increment: s; display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; }
@@ -110,7 +110,7 @@
       <div class="bad"><b>21:00 น.</b>ยังไม่ปิดร้าน ไม่มีใบสั่ง CPF ของอาจขาด</div>
     </div>
     <div class="good"><b>ไม่ต้องสั่งของเอง</b>แอปคิดใบสั่งจากของเหลือที่เรานับ<br>นับให้ตรง ของมาพอดี</div>
-    <figure class="shot"><img src="img/manual/index.png" alt="หน้าแรกของแอป" loading="lazy"><i style="left:62%;top:27%">1</i><i style="left:30%;top:35.7%">2</i><i style="left:5%;top:57.2%">3</i></figure>
+    <figure class="shot"><img src="img/manual/index.png" alt="หน้าแรกของแอป" width="780" height="1688"><i style="left:62%;top:27%">1</i><i style="left:30%;top:35.7%">2</i><i style="left:5%;top:57.2%">3</i></figure>
     <ol class="steps">
       <li>กล่องใหญ่บอกงานถัดไป แตะแล้วไปหน้านั้นเลย</li>
       <li>กล่องเล็กบอกว่าวันนี้ทำอะไรไปแล้ว</li>
@@ -129,7 +129,7 @@
 <details class="sec">
   <summary><span class="n">2</span><h2>เปิดร้าน</h2><span class="ux-go" aria-hidden="true">›</span></summary>
   <div class="mn-in">
-    <figure class="shot"><img src="img/manual/open.png" alt="หน้าเปิดร้าน" loading="lazy"><i style="left:9%;top:89%">1</i></figure>
+    <figure class="shot"><img src="img/manual/open.png" alt="หน้าเปิดร้าน" width="780" height="1688"><i style="left:9%;top:89%">1</i></figure>
     <ol class="steps">
       <li>กดปุ่มแดง "ถ่ายรูปหน้าร้าน" ต้องถ่ายตอนนั้น เลือกจากอัลบั้มไม่ได้ ไม่มีรูปเปิดร้านไม่ได้</li>
       <li>ได้รูปแล้ว ปุ่มแดงเปลี่ยนเป็น "เปิดร้าน" กดแล้วเห็นไก่มาสคอตกับติ๊กเขียว คือเสร็จ</li>
@@ -141,7 +141,7 @@
 <details class="sec">
   <summary><span class="n">3</span><h2>รับของ</h2><span class="ux-go" aria-hidden="true">›</span></summary>
   <div class="mn-in">
-    <figure class="shot"><img src="img/manual/receive.png" alt="หน้ารับของ" loading="lazy"><i style="left:13%;top:22.7%">1</i><i style="left:13%;top:35%">2</i></figure>
+    <figure class="shot"><img src="img/manual/receive.png" alt="หน้ารับของ" width="780" height="1688"><i style="left:13%;top:22.7%">1</i><i style="left:13%;top:35%">2</i></figure>
     <div class="pick">
       <div><b>1 ของมาครบ</b>กด "ของมาครบตามใบสั่ง"<br>กด "ถ่ายใบส่งของ"<br>กด "บันทึก ของมาครบ"</div>
       <div><b>2 ของมาไม่ครบ</b>กด "มีของขาด / ไม่ตรง"<br>แก้จำนวนแถวที่ไม่ตรง แถวนั้นขึ้น "ขาด N" หรือ "เกิน N"<br>ถ่ายใบส่งของ แล้วกดบันทึก</div>
@@ -155,10 +155,10 @@
 <details class="sec">
   <summary><span class="n">4</span><h2>ปิดร้าน 4 ขั้น</h2><span class="ux-go" aria-hidden="true">›</span></summary>
   <div class="mn-in">
-    <figure class="shot"><img src="img/manual/close.png" alt="หน้าปิดร้าน ขั้นนับของเหลือ" loading="lazy"><i style="left:15.5%;top:16.4%">1</i><i style="left:51.5%;top:31.6%">2</i><i style="left:9%;top:93.6%">3</i></figure>
+    <figure class="shot"><img src="img/manual/close.png" alt="หน้าปิดร้าน ขั้นนับของเหลือ" width="780" height="1688"><i style="left:15.5%;top:16.4%">1</i><i style="left:51.5%;top:31.6%">2</i><i style="left:9%;top:93.6%">3</i></figure>
     <ol class="steps">
       <li>แถบบนบอกว่าอยู่ขั้นไหน จาก 4 ขั้น</li>
-      <li>ใส่จำนวนที่เหลือจริง แยกสดกับสุก ช่อง "เสีย" แตะไม่ได้ แอปใส่ยอดจากหน้าทิ้งของเสียให้</li>
+      <li>ใส่จำนวนที่เหลือจริง แยกสดกับสุก ช่อง "เสีย" แตะไม่ได้ แอปใส่ยอดจากหน้าทิ้งของเสียให้<br>ข้าวเหนียวห่อมีแค่ช่องสุก ข้าวเหนียวดิบและน้ำดื่มมีแค่ช่องสด</li>
       <li>กดปุ่มแดงด้านล่าง ไปขั้นถัดไป</li>
     </ol>
     <h3>4 ขั้น</h3>
@@ -168,12 +168,20 @@
       <li><span><b>ยอดขายและเงินสด</b> ใส่ "ยอดขายรวมวันนี้" ตามจอ WE POS ยอดรวมทุกช่องทาง (ต้องใส่)<br>ใส่ "ควรมี" ตามจอ POS<br>แล้วใส่ "นับได้" ตามเงินในลิ้นชัก</span></li>
       <li><span><b>ถ่ายรูปและส่ง</b> "รูปตู้และถาด" กับ "รูปจอ POS"<br>ต้องมีทั้ง 2 รูป รูปบอกเวลาที่ปิดร้าน<br>แล้วกด "ปิดร้าน"</span></li>
     </ol>
+    <p class="hint">ปิดร้านแล้ว การ์ดปิดร้านเข้ากลุ่มพนักงาน<br>ของใช้ที่ต้องซื้อเองที่ใกล้หมดหรือหมด มีการ์ด "ของใช้ต้องซื้อเอง" แยกอีกใบในกลุ่มพนักงาน</p>
     <h3>ของที่นับเป็นถุง</h3>
     <ol class="steps">
       <li>แถวที่ช่อง "เหลือสด" ขึ้นคำว่า "แตะ" ให้แตะช่องนั้น</li>
       <li>ใส่ "ถุงเต็ม" กี่ถุง และ "นอกถุง (เศษ)" กี่ชิ้น<br>เป๊ปซี่และน้ำดื่มนับเป็นแพ็ค ช่องจะขึ้น "แพ็คเต็ม" กับ "นอกแพ็ค (เศษ)"</li>
       <li>แอปบวกให้เอง ดูยอดรวมแล้วกด "ตกลง"</li>
-      <li>ไก่จ๊อนับเป็นไม้ได้ 1 ไม้ = 5 ชิ้น</li>
+      <li>ไก่จ๊อมีช่อง "ไม้" เพิ่ม 1 ไม้ = 5 ชิ้น<br>ใส่ "ถุงเต็ม" กับ "ไม้" แล้วใส่ชิ้นที่ "นอกถุง ไม่ได้เสียบไม้"</li>
+    </ol>
+    <h3>ช่องเหลือสุก</h3>
+    <ol class="steps">
+      <li>แถวเดียวกัน ช่อง "เหลือสุก" ขึ้น "แตะ" ให้แตะช่องนั้น</li>
+      <li>ใส่จำนวนที่เหลือสุก<br>มีครึ่งตัว กด "+ ครึ่ง" หรือพิมพ์ .5 เช่น 2.5</li>
+      <li>ไก่จ๊อใส่ "ไม้" กับ "ชิ้น" แอปรวมให้</li>
+      <li>กด "ตกลง" แอปเปิดช่องถัดไปให้เอง</li>
     </ol>
     <h3>ถาม "วันนี้มีของเสียไหม"</h3>
     <ol class="steps">
@@ -183,7 +191,7 @@
     </ol>
     <p class="hint">ตอบแล้ว แอปไม่ถามซ้ำวันนั้น<br>ปิดร้านย้อนหลัง ของเสียวันนั้นลงในแอปไม่ได้แล้ว<br>ถ้ามี เขียนในช่อง "ฝากบอกเจ้าของ"</p>
     <h3>นับน้อยกว่าปกติ</h3>
-    <figure class="shot"><img src="img/manual/close-low.png" alt="แผ่นเตือนตรวจอีกรอบ นับน้อยกว่าปกติ" loading="lazy"><i style="left:91%;top:69%">1</i><i style="left:9%;top:88.1%">2</i><i style="left:9%;top:95.2%">3</i></figure>
+    <figure class="shot"><img src="img/manual/close-low.png" alt="แผ่นเตือนตรวจอีกรอบ นับน้อยกว่าปกติ" width="780" height="1688"><i style="left:91%;top:69%">1</i><i style="left:9%;top:88.1%">2</i><i style="left:9%;top:95.2%">3</i></figure>
     <ol class="steps">
       <li>กดปุ่มแดงไปขั้นถัดไป ถ้านับน้อยกว่าที่ควรเหลือมาก แผ่นแดง "ตรวจอีกรอบ นับน้อยกว่าปกติ" ขึ้น พร้อมรายการของ</li>
       <li>นับผิด กด "กลับไปนับใหม่" แถวนั้นขึ้นสีแดง</li>
@@ -198,7 +206,7 @@
 <details class="sec">
   <summary><span class="n">5</span><h2>แจ้งปัญหา</h2><span class="ux-go" aria-hidden="true">›</span></summary>
   <div class="mn-in">
-    <figure class="shot"><img src="img/manual/issue.png" alt="หน้าแจ้งปัญหา" loading="lazy"><i style="left:7.9%;top:11.7%">1</i><i style="left:7.9%;top:24.8%">2</i><i style="left:7.9%;top:45.5%">3</i><i style="left:9%;top:89%">4</i></figure>
+    <figure class="shot"><img src="img/manual/issue.png" alt="หน้าแจ้งปัญหา" width="780" height="1688"><i style="left:7.9%;top:11.7%">1</i><i style="left:7.9%;top:24.8%">2</i><i style="left:7.9%;top:45.5%">3</i><i style="left:9%;top:89%">4</i></figure>
     <ol class="steps">
       <li>เลือกเรื่อง: เครื่องพัง, ลูกค้าร้องเรียน, ของ CPF มาผิด, กรอกผิด ขอแก้, เรื่องอื่น</li>
       <li>เขียนสั้น ๆ ว่าเกิดอะไร</li>
@@ -212,7 +220,7 @@
 <details class="sec">
   <summary><span class="n">6</span><h2>ทิ้งของเสีย</h2><span class="ux-go" aria-hidden="true">›</span></summary>
   <div class="mn-in">
-    <figure class="shot"><img src="img/manual/waste.png" alt="หน้าทิ้งของเสีย" loading="lazy"><i style="left:7.9%;top:24.4%">1</i><i style="left:7.9%;top:37.4%">2</i><i style="left:7.9%;top:50.5%">3</i><i style="left:7.9%;top:70.6%">4</i><i style="left:9%;top:89%">5</i></figure>
+    <figure class="shot"><img src="img/manual/waste.png" alt="หน้าทิ้งของเสีย" width="780" height="1688"><i style="left:7.9%;top:24.4%">1</i><i style="left:7.9%;top:37.4%">2</i><i style="left:7.9%;top:50.5%">3</i><i style="left:7.9%;top:70.6%">4</i><i style="left:9%;top:89%">5</i></figure>
     <ol class="steps">
       <li>เลือกสินค้า</li>
       <li>ใส่จำนวน</li>
@@ -228,7 +236,7 @@
 <details class="sec">
   <summary><span class="n">7</span><h2>ขอหยุด/ลา</h2><span class="ux-go" aria-hidden="true">›</span></summary>
   <div class="mn-in">
-    <figure class="shot"><img src="img/manual/holiday.png" alt="หน้าขอหยุดหรือลา" loading="lazy"><i style="left:92%;top:28%">1</i><i style="left:92%;top:39.6%">2</i><i style="left:9%;top:73.3%">3</i></figure>
+    <figure class="shot"><img src="img/manual/holiday.png" alt="หน้าขอหยุดหรือลา" width="780" height="1688"><i style="left:92%;top:28%">1</i><i style="left:92%;top:39.6%">2</i><i style="left:9%;top:73.3%">3</i></figure>
     <ol class="steps">
       <li>เลือกว่าขออะไร</li>
       <li>เลือกวัน</li>

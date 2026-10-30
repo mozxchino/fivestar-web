@@ -53,7 +53,7 @@ body:has(> #form:not([hidden])) { display: flex; flex-direction: column; min-hei
 .ux-step, #consBox { transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out); }
 @starting-style { .ux-step, #consBox { opacity: 0; transform: translateY(6px); } }
 /* a live row left empty when the red button was pressed */
-.grid.ux-miss .rf { background-color: var(--tint-destructive); box-shadow: inset 0 0 0 1.5px var(--color-destructive); }
+.grid.ux-miss .rf, .grid.ux-miss[data-cols=cooked] .rc { background-color: var(--tint-destructive); box-shadow: inset 0 0 0 1.5px var(--color-destructive); }
 
 .sheet .grid .meta span { white-space: nowrap; }
 

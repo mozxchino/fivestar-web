@@ -46,6 +46,7 @@
   $("app").hidden = false;
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const money = (n) => n == null ? "-" : Number(n).toLocaleString("th-TH", { maximumFractionDigits: 0 });
+  const money2 = (n) => n == null ? "-" : Number(n).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); // 0057: the fee in satang (58.32)
   const IN = ["store_sales", "lineman_sales", "grab_sales", "shopee_sales", "rent", "wages", "utilities", "gas", "misc"];
   const now = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 7);
   const qm = new URLSearchParams(location.search).get("m"); // round 4: owner สรุปเดือน links here with ?m=YYYY-MM
@@ -72,11 +73,14 @@
     $("open").onclick = nc ? () => { location.href = "settings.html?tab=prod&f=nocost"; } : editM;
     // bento (Mos 23 ต.ค.): กำไร across the top · ยอดขาย | GP · ต้นทุน across (tap = ต้นทุนรายสินค้า)
     const t = (cls, k, v, m) => `<div class="bt ${cls}"><span class="k">${k}</span><span class="v">${money(v)} <small>บาท</small></span>${m ? `<span class="m">${m}</span>` : ""}</div>`;
+    // 0057: CPF bill = goods + CPF ของใช้ (sauces, foil, bags) + ค่าการตลาด 1.5% on both (the app works it out, nobody types it)
+    const cpfAll = (+r.cpf_cost || 0) + (+r.cpf_consumable_cost || 0) + (+r.cpf_fee || 0), pct = Number(r.cpf_fee_pct ?? 1.5);
+    const cons = r.cpf_consumables || [];
     $("sum").className = "bento";
     $("sum").innerHTML = `<div class="bt wide hero${r.net >= 0 ? " calm" : ""}"><span class="k">กำไรสุทธิ ${mname(ym())}</span><span class="v"><span class="big">${money(r.net)}</span> <small>บาท</small></span>`
       + (r.has_inputs ? "" : '<span class="m">ยังไม่กรอกยอดเดือนนี้<br>ค่าเช่า ค่าแรง ใช้ตัวเลขประมาณไปก่อน</span>') + `</div>`
       + t("", "ยอดขายรวม", r.revenue) + t("", "ค่าคอมแอปส่ง", r.gp_cost)
-      + `<button type="button" class="bt wide" id="costT"><span class="k">ต้นทุน</span><span class="v">${money((+r.cpf_cost || 0) + (+r.fixed || 0))} <small>บาท</small></span><span class="m">ค่าของ CPF ${money(r.cpf_cost)} · ค่าใช้จ่ายประจำ ${money(r.fixed)} บาท</span><svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>`;
+      + `<button type="button" class="bt wide" id="costT"><span class="k">ต้นทุน</span><span class="v">${money(cpfAll + (+r.fixed || 0))} <small>บาท</small></span><span class="m">ค่าของ CPF ${money(r.cpf_cost)} บาท<br>ของใช้ CPF ${money(r.cpf_consumable_cost)} บาท<br>ค่าการตลาด CPF ${pct}% ${money(r.cpf_fee)} บาท<br>ค่าใช้จ่ายประจำ ${money(r.fixed)} บาท</span><svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>`;
     $("costT").onclick = () => { $("prodf").open = true; $("prodf").scrollIntoView({ behavior: "smooth", block: "start" }); };
     // ต้องทำ: things only the owner can fix
     const apps = ["lineman_sales", "grab_sales", "shopee_sales"].reduce((a, k) => a + (+r.inputs[k] || 0), 0);
@@ -89,9 +93,11 @@
     const after = [["ของเสีย (รวมอยู่ในค่าของ CPF แล้ว)", money(r.waste_cost), "บาท"], ["เปิดร้าน", r.days_open, "วัน"], ["ยอดขายเฉลี่ยต่อวัน", money(r.avg_daily_sales), "บาท"], ["ยอดขายคิดจากสต็อก (ประมาณ)", money(r.stock_sales_est), "บาท"]];
     $("more").innerHTML = `<table>${after.map(([k, v, u]) => `<tr><td>${k}</td><td class="n">${v ?? 0} ${u}</td></tr>`).join("")}</table>`
       + (diff == null ? "" : `<p class="muted">ยอดขายคิดจากสต็อก ต่างจากยอดขายรวม ${diff > 0 ? "+" : ""}${diff}%</p>`);
-    $("pc").textContent = r.per_product.length ? `(${r.per_product.length} ตัว)` : "";
+    $("pc").textContent = r.per_product.length + cons.length ? `(${r.per_product.length + cons.length} ตัว)` : "";
     $("prod").innerHTML = r.per_product.length ? r.per_product.map((p) => `<div class="row"><div class="grow"><div class="nm">${esc(p.name)}</div><div class="meta">รับ ${money(p.received)} · ขาย ${money(p.sold)} · เสีย ${money(p.waste)}<br>${p.cost_price == null ? '<b class="err">ยังไม่ใส่ราคาทุน</b>' : "ทุนต่อหน่วย " + money(p.cost_price) + " บาท"}</div></div><b>${money(p.cost)} บาท</b></div>`).join("")
-      : '<p class="muted">เดือนนี้ยังไม่มีการนับของ</p>';
+      : cons.length ? "" : '<p class="muted">เดือนนี้ยังไม่มีการนับของ</p>';
+    $("prod").innerHTML += cons.map((c) => `<div class="row"><div class="grow"><div class="nm">${esc(c.name)}</div><div class="meta">ของใช้ CPF · รับ ${money(c.qty)}<br>${c.cost_price == null ? '<b class="err">ยังไม่ใส่ราคาทุน</b>' : "ทุนต่อหน่วย " + (Number.isInteger(+c.cost_price) ? money : money2)(c.cost_price) + " บาท"}</div></div><b>${money(c.cost)} บาท</b></div>`).join("")
+      + (cpfAll > 0 ? `<div class="row"><div class="grow"><div class="nm">ค่าการตลาด CPF ${pct}%</div><div class="meta">ท้ายบิล CPF คิดจากค่าของและของใช้ CPF</div></div><b>${money2(r.cpf_fee)} บาท</b></div>` : "");
   }
   $("save").onclick = async () => {
     const row = { ym: ym(), note: $("note").value.trim() || null, updated_at: new Date().toISOString() };

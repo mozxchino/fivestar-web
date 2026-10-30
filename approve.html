@@ -49,7 +49,6 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
   <p id="pile" class="ux-nopack" role="note" hidden></p>
   <div id="items"></div>
   <button id="addB" class="btn ux-add" type="button" aria-haspopup="dialog" hidden>+ เพิ่มรายการ</button>
-  <div id="buy"></div>
   <details class="fold"><summary>ข้อความที่เซลล์จะเห็น<span class="chip">เปิดดู</span></summary>
     <div class="card preview"><pre id="prev"></pre></div></details>
   <button id="skipB" class="btn" type="button" aria-haspopup="dialog" hidden>คืนนี้ไม่สั่ง</button>
@@ -134,11 +133,7 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
   const nop = rows.filter((r) => Number(r.pack_size || 1) <= 1);
   if (nop.length) { $("nopack").hidden = false; $("nopack").innerHTML = `ยังไม่ได้ใส่ถุงละ ${nop.length} รายการ เซลล์จะเห็นแค่จำนวน<br>${nop.map((r) => E(r.name || r.label)).join(" ")}${me.role === "owner" ? '<br><a href="settings.html?tab=prod">ไปใส่ถุงละในหน้าสินค้า</a>' : "<br>ให้เจ้าของใส่ถุงละในหน้าสินค้า"}`; }
   const plan = order.plan;
-  // 0033: ของใช้ต้องซื้อเอง = ticked ใกล้หมด/หมด at close · own section under the order, never sent to CPF
-  const sb = plan ? plan.self_buy || [] : ((await supabase.from("self_buy_today").select("name,status")).data || []);
-  if (sb.length) $("buy").innerHTML = `<h2 class="ux-gh" data-tone="${sb.some((s) => s.status === "out") ? "bad" : "wait"}">ของใช้ต้องซื้อเอง<span class="n">${sb.length} รายการ</span></h2>
-    <div class="card list">${sb.map((s) => `<div class="orow"><div class="grow"><div class="nm">${E(s.name)}</div></div><span class="chip ${s.status === "out" ? "bad" : "wait"}">${s.status === "out" ? "หมดแล้ว" : "ใกล้หมด"}</span></div>`).join("")}</div>
-    <p class="gf">ไม่อยู่ในใบสั่ง CPF ซื้อเองที่ช้อปปี้หรือแม็คโคร</p>`;
+  // fin (Mos 31 ต.ค.): ของใช้ต้องซื้อเอง lives only on its own LINE card in the staff group (0057) · not on this page
   const cutDay = new Date(Date.parse(order.for_date + "T00:00:00Z") - 864e5).toISOString().slice(0, 10);
   $("ttl").textContent = "ใบสั่งของ"; document.title = `ใบสั่งของ ${day(order.for_date)}`;
   $("d").textContent = `${day(order.for_date)}${plan ? ` ${plan.deliver_at} น.` : ""}`; $("sd").textContent = day(cutDay);

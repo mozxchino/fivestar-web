@@ -39,10 +39,13 @@
   const { data: co } = await supabase.from("settings").select("value").eq("key", "cpf_cutoff_at").maybeSingle();
   const cut = /^\d{1,2}:\d{2}/.test(String(co?.value)) ? String(co.value).slice(0, 5).padStart(5, "0") : "13:00";
   $("d").value = new Date(Date.now() + 7 * 36e5).toISOString().slice(11, 16) < cut ? today : plus(1); $("d").min = today; $("d").max = plus(7);   // 0041: tonight's count = ยกมา of tomorrow
-  const { data: prods, error } = await supabase.from("products").select("id,name,unit,buy_unit,pack_size,stick_size,kind").eq("active", true).or("kind.in.(cpf,self),count_mode.eq.count").order("sort");
+  const { data: prods, error } = await supabase.from("products").select("id,name,unit,buy_unit,pack_size,stick_size,kind,count_cols").eq("active", true).or("kind.in.(cpf,self),count_mode.eq.count").order("sort");
   if (error) throw error;
-  const row = (p) => `<div class="grid" data-id="${p.id}"><div class="nm">${E(p.name)}<div class="meta">${E(UXM.unit(p.unit))}</div></div>
-    <input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rf" placeholder="ใส่" aria-label="${E(p.name)} สด"><input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rc" placeholder="0" aria-label="${E(p.name)} สุก"></div>`;
+  // 0057: count_cols → only the boxes the product uses (ข้าวเหนียวห่อ สุก · ข้าวเหนียวดิบ น้ำดื่ม สด) · the other stays invisible, the grid stays aligned
+  const off = ' disabled tabindex="-1" aria-hidden="true" style="visibility:hidden"', cols = (p) => p.count_cols || "both";
+  const row = (p) => `<div class="grid" data-id="${p.id}" data-cols="${cols(p)}"><div class="nm">${E(p.name)}<div class="meta">${E(UXM.unit(p.unit))}</div></div>
+    <input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rf" placeholder="ใส่" aria-label="${E(p.name)} สด"${cols(p) === "cooked" ? off : ""}><input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rc" placeholder="${cols(p) === "cooked" ? "ใส่" : "0"}" aria-label="${E(p.name)} สุก"${cols(p) === "fresh" ? off : ""}></div>`;
+  const req = (g) => g.querySelector(g.dataset.cols === "cooked" ? ".rc" : ".rf");
   // Mos 30 ต.ค. (M3): products first, then a headed shop-supplies group with its count · no "สินค้า" heading (the table header already says it)
   const head = (t, n) => `<h2 class="sh">${t}<span class="n">${n} อย่าง</span></h2>`, goods = prods.filter((p) => p.kind !== "consumable"), supp = prods.filter((p) => p.kind === "consumable");
   $("lines").innerHTML = goods.map(row).join("") + (supp.length ? head("ของใช้ในร้าน", supp.length) + supp.map(row).join("") : "");
@@ -57,7 +60,7 @@
     const L = Object.fromEntries((ls || []).map((l) => [l.product_id, l]));
     document.querySelectorAll("#lines .grid").forEach((g) => { const l = lErr ? null : L[g.dataset.id], rf = g.querySelector(".rf");
       const rc = g.querySelector(".rc"); delete rc.dataset.k; delete rc.dataset.l; // 0055: the สุก card's ไม้/ชิ้น too
-      rf.value = l ? +l.open_fresh : ""; rc.value = l && +l.open_cooked ? +l.open_cooked : "";
+      const ck = g.dataset.cols === "cooked"; rf.value = l && !ck ? +l.open_fresh : ""; rc.value = l && (ck || +l.open_cooked) ? +l.open_cooked : "";
       delete rf.dataset.b; delete rf.dataset.k; delete rf.dataset.l; const bs = g.querySelector(".bagsay"); if (bs) bs.textContent = ""; }); // item 38: the bag sheet's memory belongs to the date it was typed for
     if (lErr) { $("lE").hidden = false; $("lE").querySelector(".err").textContent = "เปิดยอดนับไม่ขึ้น\n" + App.errText(lErr); $("dS").textContent = "";
       $("go").hidden = $("first").hidden = $("fh").hidden = $("fnewP").hidden = true; return; }
@@ -96,8 +99,8 @@
   document.querySelector(".sk").remove(); $("form").hidden = false;
   $("go").onclick = async () => {
     const rows = [...document.querySelectorAll("#lines .grid")];
-    const left = rows.filter((g) => g.querySelector(".rf").value === "").length;
-    if (left && !confirm(`ยังไม่ได้กรอกสด ${left} อย่าง บันทึกเป็น 0 เลยไหม?`)) return;
+    const left = rows.filter((g) => req(g).value === "").length;
+    if (left && !confirm(`ยังไม่ได้กรอก ${left} อย่าง บันทึกเป็น 0 เลยไหม?`)) return;
     const items = rows.map((g) => ({ product_id: g.dataset.id, fresh: +g.querySelector(".rf").value || 0, cooked: +g.querySelector(".rc").value || 0 }));
     $("go").disabled = true; $("msg").className = "muted"; $("msg").textContent = "กำลังบันทึก…";
     const { error } = await supabase.rpc("set_opening_stock", { d: $("d").value, items });

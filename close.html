@@ -95,7 +95,7 @@
   if (pend && pend.order_items.some((i) => i.qty_received == null && i.received_at == null)) {
     const b = document.getElementById("blocked"); b.hidden = false; b.innerHTML = late ? 'ของวันนั้นยังไม่ได้กดรับ<br>บอกเจ้าของก่อน แล้วค่อยปิดร้าน' : 'ต้องกดรับของก่อน ถึงจะปิดร้านได้<br><a class="btn primary" href="receive.html">ไปรับของ</a>'; return;
   }
-  const { data: prods, error: pErr } = await supabase.from("products").select("id,sort,name,unit,buy_unit,pack_size,stick_size,kind,made_here,count_mode").eq("active", true).order("sort");
+  const { data: prods, error: pErr } = await supabase.from("products").select("id,sort,name,unit,buy_unit,pack_size,stick_size,kind,made_here,count_mode,count_cols").eq("active", true).order("sort");
   const { data: lines, error: lErr } = await supabase.from("stock_lines").select("product_id,open_fresh,open_cooked,received").eq("date", today);
   if (pErr || lErr || !prods) { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดรายการของไม่ขึ้น\n" + App.errText(pErr || lErr || "no products"); return; }
   prods.forEach((p) => { p.unit = UXM.unit(p.unit); }); // EA / PC → ตัว / ชิ้น // qa: never show 0s from a failed read
@@ -111,10 +111,13 @@
   const stock = prods.filter((p) => !tick(p)), cons = prods.filter(tick);
   // nothing carried over + nothing received → folded, pre-filled 0 (Mos 23 ต.ค.: submitted as 0, still openable)
   const zero = (p) => { const l = L[p.id] || {}; return !+l.open_fresh && !+l.open_cooked && !+l.received && !W[p.id]; };
-  // 0042: kind self (น้ำดื่ม · ข้าวเหนียวดิบ กก. · ข้าวเหนียวห่อ) and (0045) counted ของใช้ have one number, no สุก box (kept invisible so the grid stays aligned)
-  const row = (p, z) => { const l = L[p.id] || {}; return `
-    <div class="grid${z ? " ux-zero" : ""}" data-id="${p.id}"${z ? " hidden" : ""}><div class="nm">${p.name}<div class="meta"><span>ยกมา ${(+l.open_fresh || 0) + (+l.open_cooked || 0)}</span> · <span>${p.made_here ? "ห่อวันนี้" : "รับเข้า"} ${+l.received || 0} ${p.unit || ""}</span>${W[p.id] ? ` · <span>ทิ้งแล้ว ${W[p.id]}</span>` : ""}</div></div>
-    <input type="number" inputmode="decimal" enterkeyhint="next" class="rf" placeholder="ใส่" aria-label="${p.name} เหลือสด"${z ? ' value="0"' : ""}><input type="number" inputmode="decimal" enterkeyhint="next" class="rc" placeholder="0" aria-label="${p.name} เหลือสุก"${p.kind !== "cpf" ? ' disabled tabindex="-1" aria-hidden="true" style="visibility:hidden"' : ""}><input type="number" inputmode="decimal" enterkeyhint="next" class="w" placeholder="0" aria-label="${p.name} เสีย แตะเพื่อไปหน้าทิ้งของเสีย" readonly inputmode="none"${W[p.id] ? ` value="${W[p.id]}"` : ""}></div>`; };
+  // 0057: count_cols says which boxes a product has (ข้าวเหนียวห่อ สุกอย่างเดียว · ข้าวเหนียวดิบ น้ำดื่ม สดอย่างเดียว) · the unused box stays invisible so the grid stays aligned
+  // a สุกอย่างเดียว row is saved as เหลือสด 0 + เหลือสุก n · rows saved before 0057 had สุก only on CPF
+  const cols = (p) => p.count_cols || (p.kind === "cpf" ? "both" : "fresh");
+  const off = ' disabled tabindex="-1" aria-hidden="true" style="visibility:hidden"';
+  const row = (p, z) => { const l = L[p.id] || {}, c = cols(p); return `
+    <div class="grid${z ? " ux-zero" : ""}" data-id="${p.id}" data-cols="${c}"${z ? " hidden" : ""}><div class="nm">${p.name}<div class="meta"><span>ยกมา ${(+l.open_fresh || 0) + (+l.open_cooked || 0)}</span> · <span>${p.made_here ? "ห่อวันนี้" : "รับเข้า"} ${+l.received || 0} ${p.unit || ""}</span>${W[p.id] ? ` · <span>ทิ้งแล้ว ${W[p.id]}</span>` : ""}</div></div>
+    <input type="number" inputmode="decimal" enterkeyhint="next" class="rf" placeholder="ใส่" aria-label="${p.name} เหลือสด"${c === "cooked" ? off : z ? ' value="0"' : ""}><input type="number" inputmode="decimal" enterkeyhint="next" class="rc" placeholder="${c === "cooked" ? "ใส่" : "0"}" aria-label="${p.name} เหลือสุก"${c === "fresh" ? off : c === "cooked" && z ? ' value="0"' : ""}><input type="number" inputmode="decimal" enterkeyhint="next" class="w" placeholder="0" aria-label="${p.name} เสีย แตะเพื่อไปหน้าทิ้งของเสีย" readonly inputmode="none"${W[p.id] ? ` value="${W[p.id]}"` : ""}></div>`; };
   const live = stock.filter((p) => !zero(p)), zeros = stock.filter(zero);
   document.getElementById("lines").innerHTML = live.map((p) => row(p, false)).join("") + zeros.map((p) => row(p, true)).join("");
   UXM.bags(document.getElementById("lines"), stock);
@@ -153,10 +156,12 @@
   const GO = { 2: "ไปเช็กของใช้", 3: "ไปนับเงินสด", 4: "ไปถ่ายรูปและส่ง" }; // red button = verb + thing
   let cur = 1, reached = 1;
   const liveRows = () => [...document.querySelectorAll("#lines .grid:not(.ux-zero)")];
-  const leftRows = () => liveRows().filter((g) => g.querySelector(".rf").value === "");
+  // 0057: the box a row must have filled · เหลือสุก on a สุกอย่างเดียว row
+  const req = (g) => g.querySelector(g.dataset.cols === "cooked" ? ".rc" : ".rf");
+  const leftRows = () => liveRows().filter((g) => req(g).value === "");
   // what stops step n · null = ok to leave (only step 1 was required before · ข adds "pick one")
   const gap = (n) => {
-    if (n === 1) { const l = leftRows(); return l.length ? { say: `ยังไม่ได้นับ เหลือสด ${l.length} อย่าง`, el: l[0].querySelector(".rf") } : over(); }
+    if (n === 1) { const l = leftRows(); return l.length ? { say: `ยังไม่ได้นับ ${l.length} อย่าง`, el: req(l[0]) } : over(); }
     if (n === 2 && cons.length) { if (!pick) return { say: "เลือก ของใช้ครบ หรือ มีของใกล้หมด ก่อน", el: consAll };
       if (pick === "low" && !Object.values(state).some((v) => v !== "ok")) return { say: "แตะของที่ใกล้หมดหรือหมด อย่างน้อย 1 อย่าง", el: document.querySelector("#cons .ux-cchip") }; }
     // 0054 (Mos 30 ต.ค.): ยอดขายรวม WE POS is required (staff bonus) · the server checks 0 to 100,000 too
@@ -166,14 +171,14 @@
   };
   // 0052: counted (สด + สุก) below ควรเหลือ − max(ครึ่งถุง, ขายปกติ 1 วัน) → "ตรวจอีกรอบ" before leaving step 1 · same numbers kept once = not asked again
   let kept = "", lowTo = 2, lows = [];
-  const lowList = () => [...document.querySelectorAll("#lines .grid")].map((g) => { const e = EXP[g.dataset.id], f = g.querySelector(".rf").value;
-    if (!e || f === "") return null; const n = +f + (+g.querySelector(".rc").value || 0); return n < +e.min ? { g, n, e } : null; }).filter(Boolean);
+  const lowList = () => [...document.querySelectorAll("#lines .grid")].map((g) => { const e = EXP[g.dataset.id];
+    if (!e || req(g).value === "") return null; const n = (+g.querySelector(".rf").value || 0) + (+g.querySelector(".rc").value || 0); return n < +e.min ? { g, n, e } : null; }).filter(Boolean);
   const lowSig = (l) => l.map((x) => x.g.dataset.id + ":" + x.n).join();
   const showLow = (l, n) => { lows = l; lowTo = n;
     lowL.innerHTML = l.map((x) => `<li><b>${UXS.esc(x.e.name)}</b><span>นับ ${x.n} ควรเหลือราว ${+x.e.expected} ${UXS.esc(x.e.unit || "")}</span></li>`).join("");
     lowS.showModal(); lowS.querySelector(".body").scrollTop = 0; };
   lowS.addEventListener("click", (e) => { if (e.target === lowS || e.target.closest(".x")) lowS.close(); });
-  lowBack.onclick = () => { lowS.close(); lows.forEach((x) => { x.g.hidden = false; x.g.classList.add("ux-miss"); }); const f = lows[0].g.querySelector(".rf"); f.scrollIntoView({ block: "center" }); f.focus({ preventScroll: true }); };
+  lowBack.onclick = () => { lowS.close(); lows.forEach((x) => { x.g.hidden = false; x.g.classList.add("ux-miss"); }); const f = req(lows[0].g); f.scrollIntoView({ block: "center" }); f.focus({ preventScroll: true }); };
   lowKeep.onclick = () => { kept = lowSig(lows); lowS.close(); go(lowTo); };
   const say = (t, bad) => { msg.textContent = t || ""; msg.className = bad ? "err" : "muted"; };
   // 0047 (Mos 30 ต.ค., server checks the same): no minus · เหลือสด + เหลือสุก + เสีย never above ยกมา + รับเข้า
@@ -232,7 +237,7 @@
   function go(n, quiet) {
     for (let s = cur; s < n; s++) { const g = gap(s); if (g) {
       if (s !== cur) show(s);
-      if (!quiet) { say(g.say, true); document.querySelectorAll("#lines .grid").forEach((r) => r.classList.toggle("ux-miss", s === 1 && !r.classList.contains("ux-zero") && r.querySelector(".rf").value === ""));
+      if (!quiet) { say(g.say, true); document.querySelectorAll("#lines .grid").forEach((r) => r.classList.toggle("ux-miss", s === 1 && !r.classList.contains("ux-zero") && req(r).value === ""));
         if (g.row) { g.row.hidden = false; g.row.classList.add("ux-over"); g.el.scrollIntoView({ block: "center" }); } UXM.shake(g.el); }
       return false; }
       if (s === 1 && !quiet) { const l = lowList(); if (l.length && lowSig(l) !== kept) { showLow(l, n); return false; } } }
@@ -248,11 +253,11 @@
   sum4.onclick = (e) => { const b = e.target.closest("[data-s]"); if (b) go(+b.dataset.s); };
   steps.onclick = (e) => { const b = e.target.closest("button"); if (b && +b.dataset.s <= reached && +b.dataset.s !== cur) go(+b.dataset.s); };
   back.onclick = () => go(cur - 1);
-  // P3-3: "ถัดไป" on the keyboard → next row's เหลือสด · last row closes the keyboard
+  // P3-3: "ถัดไป" on the keyboard → next row's box (เหลือสด, or เหลือสุก on a สุกอย่างเดียว row) · last row closes the keyboard
   document.getElementById("lines").addEventListener("keydown", (e) => {
     if (e.key !== "Enter") return; e.preventDefault();
     const rs = [...document.querySelectorAll("#lines .grid:not([hidden])")], i = rs.indexOf(e.target.closest(".grid"));
-    if (rs[i + 1]) rs[i + 1].querySelector(".rf").focus(); else e.target.blur();
+    if (rs[i + 1]) req(rs[i + 1]).focus(); else e.target.blur();
   });
   posTot.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); cashExp.focus(); } });
   cashExp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); cashCnt.focus(); } });
@@ -262,8 +267,8 @@
   send.onclick = async () => {
     if (cur < 4) { go(cur + 1); return; }
     const bad = [1, 2, 3].find(gap); if (bad) { show(bad); go(bad + 1); return; } // ponytail: forward moves already check · this only guards odd resumes
-    const rows = [...document.querySelectorAll("#lines .grid")].map((g) => ({ product_id: g.dataset.id, remain_fresh: g.querySelector(".rf").value === "" ? null : +g.querySelector(".rf").value, remain_cooked: +g.querySelector(".rc").value || 0, waste: +g.querySelector(".w").value || 0 })).filter((r) => r.remain_fresh !== null);
-    if (!rows.length) { msg.textContent = "กรอกช่อง เหลือสด อย่างน้อย 1 อย่าง"; msg.className = "err"; return; }
+    const rows = [...document.querySelectorAll("#lines .grid")].map((g) => ({ product_id: g.dataset.id, remain_fresh: req(g).value === "" ? null : +g.querySelector(".rf").value || 0, remain_cooked: +g.querySelector(".rc").value || 0, waste: +g.querySelector(".w").value || 0 })).filter((r) => r.remain_fresh !== null);
+    if (!rows.length) { msg.textContent = "นับของเหลือ อย่างน้อย 1 อย่าง"; msg.className = "err"; return; }
     // Mos 30 ต.ค.: the two photos are the timestamp → closing needs both (the server checks the same)
     const shot = !photos.length ? ["ยังไม่ได้ถ่ายรูปตู้และถาด", phFridge] : !pos.length ? ["ยังไม่ได้ถ่ายรูปจอ POS", phPos] : null;
     if (shot) { say(shot[0], true); UXM.shake(shot[1].closest("label")); return; }

@@ -195,6 +195,8 @@ a.cell{text-decoration:none;color:inherit}
   const SRC = { cpf: "CPF", self: "ซื้อเอง", made: "ทำในร้าน" };
   const srcOf = (p) => p.made_here ? "made" : p.supplier === "cpf" ? "cpf" : "self";
   const modeOf = (p) => p.count_mode || (isCons(p) ? "tick" : "count");
+  // 0057: which count boxes opening / close show (ข้าวเหนียวห่อ สุกอย่างเดียว) · a new product starts with both
+  const colsOf = (p) => p.count_cols || (p.id && p.kind !== "cpf" ? "fresh" : "both");
   const pmeta = (p) => [isCons(p) ? "ของใช้" : "ของขาย", SRC[srcOf(p)], ...(isCons(p) ? [] : [`หน่วยใช้ ${E(UXM.unit(p.unit))}`]), buyTxt(p),
     ...(isCons(p) ? [] : [p.cost_price == null ? '<b class="err">ยังไม่ใส่ทุน</b>' : `ทุน ${money(p.cost_price)} บาท`]), modeOf(p) === "tick" ? "ติ๊กใกล้หมด" : "นับจำนวน"].join(" · ");
   function drawProd() {
@@ -228,6 +230,7 @@ a.cell{text-decoration:none;color:inherit}
       <div data-q="sell"><label class="field" for="psp">ขายหน้าร้าน (บาท)</label>${num("psp", "store_price", p.store_price)}
         <label class="field" for="pdp">ขายเดลิเวอรี่ (บาท)</label>${num("pdp", "delivery_price", p.delivery_price)}</div>
       ${seg("count_mode", "ตอนปิดร้าน", [["count", "นับจำนวน"], ["tick", "ติ๊กใกล้หมด"]], modeOf(p))}
+      ${seg("count_cols", "ช่องนับ", [["both", "สด และ สุก"], ["fresh", "สดอย่างเดียว"], ["cooked", "สุกอย่างเดียว"]], colsOf(p))}
       <div data-q="low"><label class="field" for="pl"><span id="pll"></span><small class="h">ปิดร้านแล้วเหลือต่ำกว่านี้ ขึ้นในรายการ ของต้องซื้อเอง</small></label>${num("pl", "low_at", p.low_at)}</div>
       ${cur ? `<label class="chk"><input type="checkbox" role="switch" name="active" ${p.active ? "checked" : ""}>ยังใช้อยู่ (เอาติ๊กออก = ปิดใช้)</label>` : ""}
       <datalist id="units"><option value="ตัว"><option value="ชิ้น"><option value="แพ็ค"><option value="ขวด"><option value="กก."><option value="ม้วน"><option value="ซอง"></datalist>
@@ -244,6 +247,7 @@ a.cell{text-decoration:none;color:inherit}
     $("psb").querySelector("[data-seg=count_mode]").style.display = $("ql-count_mode").style.display = sell ? "none" : "";
     if (sell) setSeg("count_mode", "count");
     $("psb").querySelector("[data-q=low]").hidden = !(sell && src !== "cpf" && F("count_mode").value === "count");
+    $("psb").querySelector("[data-seg=count_cols]").style.display = $("ql-count_cols").style.display = F("count_mode").value === "count" ? "" : "none"; // a ticked ของใช้ has no boxes
     $("pcl").textContent = `ราคาทุน ต่อ 1 ${un} (บาท)`; $("pch").hidden = sell; $("pll").textContent = `เตือนเมื่อเหลือต่ำกว่า (${un})`;
     // 0043: same unit → 1 locked (the typed number comes back if they differ again) · a CPF ของใช้ with one unit = how many per order (foil 2 ม้วน)
     const order = !sell && src === "cpf" && same(u, b);
@@ -280,7 +284,7 @@ a.cell{text-decoration:none;color:inherit}
     const unit = back(f.unit, cur?.unit), buyU = back(f.buy_unit, cur?.buy_unit) || null;
     // round 3 (item 18): ติ๊กใกล้หมด only for ของใช้ (a tick never reaches the order · DB check products_tick_consumable)
     const row = { name: f.name, kind: !sell ? "consumable" : src === "cpf" ? "cpf" : "self", supplier: src === "cpf" ? "cpf" : "self", made_here: src === "made",
-      unit, buy_unit: buyU, count_mode: sell ? "count" : f.count_mode, active };
+      unit, buy_unit: buyU, count_mode: sell ? "count" : f.count_mode, count_cols: f.count_cols, active };
     for (const [k, int] of [["pack_size", 1], ["stick_size", 1], ["cost_price"], ["store_price"], ["delivery_price"], ["low_at"]]) {
       row[k] = n(k, int); if (Number.isNaN(row[k])) return bad(k === "pack_size" ? `${$("pkl").textContent} ต้องเป็นเลขเต็ม 1 ขึ้นไป` : k === "stick_size" ? "ชิ้นต่อไม้ ต้องเป็นเลขเต็ม 1 ขึ้นไป\nไม่มีไม้ ให้เว้นว่าง" : "ตัวเลขไม่ถูก\nใส่เลข 0 ขึ้นไป", k);
     }
