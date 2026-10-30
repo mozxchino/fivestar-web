@@ -121,7 +121,8 @@
     // [status words, tone, rank when something waits for the owner] · failed order first, then new issues, then the order to send, then leave
     // 0033: named by the delivery day ("ใบสั่งของ ศ. 6 พ.ย. รอส่ง")
     const dd = od.data ? ` ${thd(od.data.for_date, { weekday: "short" })}` : "";
-    const ord = { proposed: [`รอส่ง ก่อน ${esc(S.auto_send_at || "21:00")} น.`, "wait", 2], approved: [`รอส่ง ก่อน ${esc(S.auto_send_at || "21:00")} น.`, "wait", 2], failed: ["ส่งไม่ออก", "bad", 0], sent: ["ส่งแล้ว", "ok"], skipped: ["ไม่สั่ง", ""] }[od.data?.status] || ["คืนนี้ยังไม่มี", ""];
+    const sendBy = `รอส่ง ก่อน ${esc(S.auto_send_at || "12:30")} น. ${od.data && od.data.for_date <= new Date(Date.parse(today + "T00:00:00Z") + 864e5).toISOString().slice(0, 10) ? "วันนี้" : "พรุ่งนี้"}`; // auto-send is the day after the order's night: an order landing tomorrow was made last night
+    const ord = { proposed: [sendBy, "wait", 2], approved: [sendBy, "wait", 2], failed: ["ส่งไม่ออก", "bad", 0], sent: ["ส่งแล้ว", "ok"], skipped: ["ไม่สั่ง", ""] }[od.data?.status] || ["คืนนี้ยังไม่มี", ""];
     const shop = shut ? ["หยุด", ""] : d.closed_at ? [`ปิดแล้ว ${hm(d.closed_at)} น.`, "ok"] : d.opened_at ? [`เปิดอยู่ ตั้งแต่ ${hm(d.opened_at)} น.`, "ok"] : ["ยังไม่เปิด", ""];
     const R = [ // href, name, icon, status line, tone, rank (null = nothing waits)
       ["owner.html", "วันนี้", "today", `ร้านวันนี้ ${shop[0]}`, shop[1], null],

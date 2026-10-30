@@ -7,7 +7,7 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-motion.js"></script>
-<style>.sheet .grid { grid-template-columns: minmax(0, 1fr) 64px 64px; } #dS { margin: 8px 0 0; }</style>
+<style>.sheet .grid { grid-template-columns: minmax(0, 1fr) 64px 64px; } #dS { margin: 8px 0 0; } #first:not([hidden]) ~ #go { margin-top: 8px; } #lines > .sh { margin: 0; padding: 14px 12px 8px; }</style>
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="settings.html?tab=sys" aria-label="กลับตั้งค่า"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>นับสต็อกตั้งต้น</h1><div class="sub">สำหรับเจ้าของ</div></div></header>
 <p id="blocked" class="err" hidden></p>
@@ -36,10 +36,13 @@
   const { data: co } = await supabase.from("settings").select("value").eq("key", "cpf_cutoff_at").maybeSingle();
   const cut = /^\d{1,2}:\d{2}/.test(String(co?.value)) ? String(co.value).slice(0, 5).padStart(5, "0") : "13:00";
   $("d").value = new Date(Date.now() + 7 * 36e5).toISOString().slice(11, 16) < cut ? today : plus(1); $("d").min = today; $("d").max = plus(7);   // 0041: tonight's count = ยกมา of tomorrow
-  const { data: prods, error } = await supabase.from("products").select("id,name,unit,buy_unit,pack_size").eq("active", true).or("kind.in.(cpf,self),count_mode.eq.count").order("sort");
+  const { data: prods, error } = await supabase.from("products").select("id,name,unit,buy_unit,pack_size,kind").eq("active", true).or("kind.in.(cpf,self),count_mode.eq.count").order("sort");
   if (error) throw error;
-  $("lines").innerHTML = prods.map((p) => `<div class="grid" data-id="${p.id}"><div class="nm">${E(p.name)}<div class="meta">${E(UXM.unit(p.unit))}</div></div>
-    <input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rf" placeholder="ใส่" aria-label="${E(p.name)} สด"><input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rc" placeholder="0" aria-label="${E(p.name)} สุก"></div>`).join("");
+  const row = (p) => `<div class="grid" data-id="${p.id}"><div class="nm">${E(p.name)}<div class="meta">${E(UXM.unit(p.unit))}</div></div>
+    <input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rf" placeholder="ใส่" aria-label="${E(p.name)} สด"><input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rc" placeholder="0" aria-label="${E(p.name)} สุก"></div>`;
+  // Mos 30 ต.ค. (M3): two headed groups · products, then shop supplies, each with its count on the right
+  const head = (t, n) => `<h2 class="sh">${t}<span class="n">${n} อย่าง</span></h2>`, goods = prods.filter((p) => p.kind !== "consumable"), supp = prods.filter((p) => p.kind === "consumable");
+  $("lines").innerHTML = (goods.length ? head("สินค้า", goods.length) + goods.map(row).join("") : "") + (supp.length ? head("ของใช้ในร้าน", supp.length) + supp.map(row).join("") : "");
   UXM.bags($("lines"), prods); // 0046: ถุงเต็ม + เศษ
   // a re-count shows what was saved for that day; a day with no rows yet starts blank
   // Mos 30 ต.ค. (audit 10): a failed read must not look like an empty count · error + retry, and no save / no order button until a read worked
@@ -62,10 +65,11 @@
   // from it (the old owner's average × days until the next lot) · re-saving the count stays possible as a plain button under it
   const day = (iso) => new Date(iso + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
   // Mos 29 ต.ค. guard: a first order for this count already waiting (not sent) → the red button opens it instead of making a second one
-  let ex = null;
+  let ex = null, saved = false; // M2: the red button is the step to do next · save first, and after a save made on this page, create the order
+  const paint = () => { $("go").className = saved ? "btn" : "btn primary"; $("first").className = saved ? "btn primary" : "btn"; };
   const firstReady = async (on) => {
     $("first").hidden = !on; $("fh").hidden = !on; $("fnewP").hidden = true; ex = null;
-    $("go").className = on ? "btn" : "btn primary"; $("go").textContent = on ? "บันทึกยอดนับใหม่" : "บันทึกยอดนับ";
+    saved = on; paint(); $("go").textContent = on ? "บันทึกยอดนับใหม่" : "บันทึกยอดนับ"; // a saved count with no edits → create is next
     if (!on) return;
     const { data: pl } = await supabase.rpc("night_plan", { d: $("d").value, opening: true });
     if (!pl || pl.none || !pl.arrive) { $("fh").textContent = "สร้างใบสั่งจากยอดนับนี้"; return; }
@@ -84,7 +88,7 @@
   };
   $("first").onclick = () => ex ? (location.href = "approve.html?order=" + ex.id) : make();
   $("fnew").onclick = (e) => { e.preventDefault(); if (confirm(`มีใบสั่งของ ${day(ex.for_date)} ที่ยังไม่ส่งอยู่แล้ว สร้างใบใหม่แทนไหม?`)) make(); };
-  $("d").onchange = load; $("retry").onclick = load; await load();
+  $("d").onchange = () => { saved = false; load(); }; $("lines").addEventListener("input", () => { if (saved) { saved = false; paint(); } }); $("retry").onclick = load; await load();
   document.querySelector(".sk").remove(); $("form").hidden = false;
   $("go").onclick = async () => {
     const rows = [...document.querySelectorAll("#lines .grid")];
@@ -95,7 +99,7 @@
     const { error } = await supabase.rpc("set_opening_stock", { d: $("d").value, items });
     $("go").disabled = false;
     if (error) { $("msg").className = "err"; $("msg").textContent = "บันทึกไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error); return; }
-    $("msg").textContent = ""; UXM.toast("บันทึกยอดนับแล้ว ✓"); load();
+    $("msg").textContent = ""; UXM.toast("บันทึกยอดนับแล้ว ✓"); saved = true; load();
   };
 })().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น: " + App.errText(e); } });
 </script></body></html>

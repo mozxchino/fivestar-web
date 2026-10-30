@@ -75,7 +75,7 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
   const day = (iso) => new Date(iso + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
   const dayLong = (iso) => new Date(iso + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "long", timeZone: "UTC" }).replace(/^วัน/, "") + " " + new Date(iso + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
   const ST = { proposed: "รอส่ง", approved: "รอส่ง", sent: "ส่งแล้ว", failed: "ส่งไม่ออก", skipped: "ไม่สั่ง" };
-  let orderId = q.get("order"), order = null, rows = [], shop = "", autoAt = "21:00";
+  let orderId = q.get("order"), order = null, rows = [], shop = "", autoAt = "12:30";
 
   async function findOrder() {
     // 0033: tonight's order is for its arrival day (lead 2 → day after tomorrow) · without ?order = the newest one still to come

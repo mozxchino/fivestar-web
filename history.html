@@ -49,8 +49,8 @@
       if (d.status === "holiday") return "";
       // at most 2 short parts (middle-dot rule): the most important problem first, the rest shows when the day is opened
       const g = gapOf(d), probs = [];
-      if (g) probs.push(`<span class="${g < 0 ? "err" : ""}">เงินสด${g < 0 ? "ขาด" : "เกิน"} ${baht(g)}</span>`);
-      if (shortD.has(d.date)) probs.push('<span class="err">ของมาไม่ครบ</span>');
+      if (g) probs.push(`<span class="pill" data-tone="${g < 0 ? "bad" : "wait"}">เงินสด${g < 0 ? "ขาด" : "เกิน"} ${baht(g)}</span>`); // M6: icon + word, not red text alone (ขาด = bad, เกิน = wait)
+      if (shortD.has(d.date)) probs.push('<span class="pill" data-tone="bad">ของมาไม่ครบ</span>');
       if (waste[d.date]) probs.push(`ของเสีย ${waste[d.date]} อย่าง`);
       if (probs.length) return probs.length > 1 ? `${probs[0]} <b>อีก ${probs.length - 1} เรื่อง</b>` : probs[0];
       const t = d.closed_at ? `ปิด ${hm(d.closed_at)}` : d.opened_at ? `เปิด ${hm(d.opened_at)}` : "";
@@ -60,9 +60,10 @@
     const inRange = () => data.filter((d) => R === 30 || d.date > back(7));
     function draw() {
       const base = inRange(), nFlag = base.filter(flagged).length, rows = only ? base.filter(flagged) : base, show = rows.slice(0, N);
-      tools.innerHTML = `<div class="ux-tools"><div class="tabs ux-range" role="radiogroup" aria-label="ช่วงวัน">
-        <button type="button" role="radio" data-r="7" class="${R === 7 && !pickD ? "on" : ""}" aria-checked="${R === 7 && !pickD}">7 วัน</button><button type="button" role="radio" data-r="30" class="${R === 30 && !pickD ? "on" : ""}" aria-checked="${R === 30 && !pickD}">30 วัน</button><label class="ux-date${pickD ? " on" : ""}"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>${pickD ? thd(pickD) : "เลือกวัน"}</span><input id="pick" type="date" min="${back(30)}" max="${today}" value="${pickD}" aria-label="เลือกวัน"></label></div>
-        <button type="button" id="flag" class="chip${only ? " on" : ""}" aria-pressed="${only}">วันที่มีเรื่อง <b>${nFlag}</b></button></div>`;
+      // M5: range = chips, exactly one .on · the "วันที่มีเรื่อง" filter sits on its own row so it never reads as a 4th range
+      tools.innerHTML = `<div class="ux-tools" role="radiogroup" aria-label="ช่วงวัน">
+        <button type="button" role="radio" data-r="7" class="chip${R === 7 && !pickD ? " on" : ""}" aria-checked="${R === 7 && !pickD}">7 วัน</button><button type="button" role="radio" data-r="30" class="chip${R === 30 && !pickD ? " on" : ""}" aria-checked="${R === 30 && !pickD}">30 วัน</button><label class="chip ux-date${pickD ? " on" : ""}"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>${pickD ? thd(pickD) : "เลือกวัน"}</span><input id="pick" type="date" min="${back(30)}" max="${today}" value="${pickD}" aria-label="เลือกวัน"></label></div>
+      <div class="ux-tools ux-filter"><button type="button" id="flag" class="chip${only ? " on" : ""}" aria-pressed="${only}">วันที่มีเรื่อง <b>${nFlag}</b></button></div>`;
       const weeks = new Map(); show.forEach((d) => { const k = monday(d.date); if (!weeks.has(k)) weeks.set(k, []); weeks.get(k).push(d); });
       list.innerHTML = (show.length ? [...weeks].map(([k, days]) => `<h2 class="ux-week">สัปดาห์ ${thd(k, { month: undefined })}–${thd(plus(k, 6))}</h2><div class="card list">${days.map((d) => `
         <details class="ux-day" data-d="${d.date}"><summary><span class="d">${thd(d.date, { weekday: "short", month: undefined })}</span><span class="m">${lineOf(d)}</span>${d.status in TONE ? `<span class="pill" data-tone="${TONE[d.status]}">${ST[d.status]}</span>` : ""}</summary><div class="ux-body"></div></details>`).join("")}</div>`).join("")
@@ -94,7 +95,7 @@
       // 1 เรื่อง 1 บรรทัด · cash to compare on 2 lines (ควรมี / นับได้)
       let h = kv("เปิด", `${hm(d.opened_at) || "-"} น.`) + kv("ปิด", `${hm(d.closed_at) || "-"} น.`) + kv("โอที", `${+d.ot_hours || 0} ชม.`)
         + (d.cash_expected != null || d.cash_counted != null ? kv("เงินสดควรมี", `${d.cash_expected?.toLocaleString("th-TH") ?? "-"} บาท`) + kv("นับได้", `${d.cash_counted?.toLocaleString("th-TH") ?? "-"} บาท`) : "")
-        + (g ? kv("", `<span class="${g < 0 ? "err" : ""}">เงินสด${g < 0 ? "ขาด" : "เกิน"} ${baht(g)}</span>`) : "")
+        + (g ? kv("", `<span class="pill" data-tone="${g < 0 ? "bad" : "wait"}">เงินสด${g < 0 ? "ขาด" : "เกิน"} ${baht(g)}</span>`) : "")
         + (d.note ? `<p class="muted">ฝากบอกเจ้าของ: ${esc(d.note)}</p>` : "");
       body.innerHTML = h + `<div style="padding-top:8px">${'<i class="sk-b" style="--h:14px;--gap:12px"></i>'.repeat(4)}</div>`;
       try {

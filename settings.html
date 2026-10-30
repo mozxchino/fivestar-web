@@ -52,6 +52,10 @@ a.cell{text-decoration:none;color:inherit}
   const fail = (e) => alert("บันทึกไม่ได้\n" + App.errText(e));
   const money = (n) => Number(n).toLocaleString("th-TH", { maximumFractionDigits: 2 }); // qa: openSum (manager too) needs it before the manager return
 
+  // M9: pay boxes show 15,000 · digits only while the cursor is in the box, so the saved number is plain
+  document.addEventListener("focusin", (e) => { if (e.target.classList?.contains("money-in")) e.target.value = e.target.value.replace(/,/g, ""); });
+  document.addEventListener("input", (e) => { if (e.target.classList?.contains("money-in")) e.target.value = e.target.value.replace(/[^\d.]/g, ""); });
+  document.addEventListener("focusout", (e) => { const el = e.target; if (el.classList?.contains("money-in") && el.value !== "" && !isNaN(el.value)) el.value = money(el.value); });
   // generic save-on-blur for any input with data-t/data-id/data-f
   document.addEventListener("change", async (ev) => {
     const el = ev.target, { t, id, f } = el.dataset;
@@ -75,7 +79,7 @@ a.cell{text-decoration:none;color:inherit}
     if (e1 || e2) { $("staff").innerHTML = `<p class="err">เปิดรายชื่อไม่ขึ้น ลองเปิดหน้าใหม่\n${E(App.errText(e1 || e2))}</p>`; return; }
     // owner row: name + เจ้าของ only (no pay fields, can't be switched off · DB guard 0024)
     // mock ก: one grouped list per person · label left, value right, unit after the number · save on change (toast at the bottom)
-    const ci = (id, f, val, label, unit, type = "number") => `<label class="cell"><span class="k">${label}</span><input class="${type === "number" ? "num-in" : ""}" type="${type}" ${type === "number" ? 'inputmode="decimal" step="any" placeholder="ยังไม่ใส่"' : ""} value="${E(val)}" data-t="users" data-id="${id}" data-f="${f}" aria-label="${label}">${unit ? `<span class="unit">${unit}</span>` : ""}</label>`;
+    const ci = (id, f, val, label, unit, type = "number") => `<label class="cell"><span class="k">${label}</span><input class="${type === "number" ? "num-in" : type === "money" ? "num-in money-in" : ""}" type="${type === "money" ? "text" : type}" ${type === "number" ? 'inputmode="decimal" step="any" placeholder="ยังไม่ใส่"' : type === "money" ? 'inputmode="decimal" placeholder="ยังไม่ใส่"' : ""} value="${E(type === "money" && val != null && val !== "" ? money(val) : val)}" data-t="users" data-id="${id}" data-f="${f}" aria-label="${label}">${unit ? `<span class="unit">${unit}</span>` : ""}</label>`;
     const av = (x) => `<span class="av${x.active ? "" : " off"}" aria-hidden="true">${E((x.name || "?").slice(0, 1).toUpperCase())}</span>`;
     const head = (x, pill) => `<div class="cell has-av${x.active ? "" : " dim"}">${av(x)}<span class="k name">${E(x.name)}</span>${pill}</div>`;
     // round 4: a working staff member's name row opens this month's summary (bottom sheet)
@@ -86,8 +90,8 @@ a.cell{text-decoration:none;color:inherit}
     const u = (x) => x.role === "owner" ? `<div class="gl">${head(x, '<span class="pill">เจ้าของ</span>')}</div>`
       : !x.active ? `<div class="gl">${head(x, `<button class="txt-btn" type="button" data-on="${x.id}" data-n="${E(x.name)}">เปิดสิทธิ์คืน</button>`)}</div>`
       : `<div class="person"><div class="gl">${who(x)}
-      ${ci(x.id, "salary_month", x.salary_month, "เงินเดือน", "บาท")}${ci(x.id, "off_days_per_month", x.off_days_per_month, "หยุดได้", "วัน/เดือน")}
-      ${ci(x.id, "std_hours_per_day", x.std_hours_per_day, "ทำงาน", "ชม./วัน")}${ci(x.id, "ot_rate_hour", x.ot_rate_hour, "โอที", "บาท/ชม.")}
+      ${ci(x.id, "salary_month", x.salary_month, "เงินเดือน", "บาท", "money")}${ci(x.id, "off_days_per_month", x.off_days_per_month, "หยุดได้", "วัน/เดือน")}
+      ${ci(x.id, "std_hours_per_day", x.std_hours_per_day, "ทำงาน", "ชม./วัน")}${ci(x.id, "ot_rate_hour", x.ot_rate_hour, "โอที", "บาท/ชม.", "money")}
       ${ci(x.id, "started_at", x.started_at, "เริ่มงานวันที่", "", "date")}
       ${mgr(x)}
       <button class="cell act danger" type="button" data-off="${x.id}" data-n="${E(x.name)}">ปิดสิทธิ์ใช้แอป</button></div></div>`;
@@ -309,15 +313,14 @@ a.cell{text-decoration:none;color:inherit}
   $("sys").innerHTML = `<h2>ร้าน</h2><div class="gl"><label class="cell"><span class="k">ชื่อร้าน</span><input type="text" id="shop" value="${E(S.shop_name)}"></label></div><p class="gf">ชื่อนี้ขึ้นหัวใบสั่ง</p>
     <h2>วันรับร้าน</h2><div class="gl"><a class="cell nav" href="opening.html"><span class="k">นับสต็อกตั้งต้น<small>กรอกของที่นับได้ เป็นยกมาของวันแรก</small></span>${chev}</a></div>
     <h2>เวลา</h2><div class="gl"><label class="cell"><span class="k">เตือนปิดร้านตอน</span><input type="time" id="rem" value="${E(S.remind_at)}"></label><label class="cell"><span class="k">กันพลาด ส่งให้เองวันถัดไปตอน<small>ถ้าเจ้าของยังไม่กดส่ง</small></span><input type="time" id="auto" value="${E(S.auto_send_at)}"></label></div>
-    <p class="gf">เจ้าของกดส่งเองทุกคืน แอปเตือน 21:30 / 09:00 / 12:00 แล้วส่งให้เองตามเวลานี้ถ้ายังไม่กด (ตัดรอบ CPF 13:00)</p>
+    <p class="gf">เจ้าของกดส่งเองทุกคืน แอปเตือน 21:30 / 09:00 / 12:00 แล้วส่งให้เองพรุ่งนี้ตามเวลานี้ ถ้ายังไม่กด (ตัดรอบ CPF 13:00)</p>
     <h2>รอบสั่ง CPF</h2><div class="gl">
       <label class="cell nav"><span class="k">สั่งคืนนี้ ของมากี่วัน<small>CPF ตัดรอบบ่ายโมง</small></span><span class="v" data-for="lead"></span>${chev}<select id="lead">${[1, 2, 3].map((n) => `<option value="${n}" ${Number(S.order_lead_days ?? 2) === n ? "selected" : ""}>${n === 1 ? "พรุ่งนี้" : n === 2 ? "มะรืน (2 วัน)" : "3 วัน"}</option>`).join("")}</select></label>
       <label class="cell"><span class="k">ของถึงกี่โมง</span><input type="time" id="dlv" value="${E(S.delivery_at ?? "14:00")}"></label>
       <label class="cell"><span class="k">แท็กเซลล์ท้ายใบสั่ง<small>ข้อความนี้ไม่ใช่การแท็กจริง บอกเซลล์ครั้งเดียวว่าใบสั่งมาจากร้านเรา</small></span><input type="text" id="tag" value="${E(S.sales_mention ?? "@new")}" placeholder="@new" style="max-width:9em"></label>
       <div class="cell" style="flex-wrap:wrap"><span class="k">CPF ไม่ส่งของวัน</span>${dowRow("nod", nod, "วันที่ CPF ไม่ส่งของ")}</div>
       <label class="cell"><span class="k">เผื่อวันขายดี<small>เป้า = ขายเฉลี่ย 7 วัน × 2.5 วัน + เผื่อ</small></span><input type="number" id="buf" inputmode="numeric" min="0" max="100" step="5" value="${buf}" style="width:5.5em;text-align:right"> %</label></div>
-    <h2>กติกาใบสั่ง</h2>
-    <p class="gf"><span>ทุกคืนที่ปิดร้าน แอปทำใบสั่งให้ ของถึงมะรืน 14:00 (เข้ารอบตัด CPF 13:00 พรุ่งนี้)</span><span>เป้าต่อสินค้า = ขายเฉลี่ย 7 วันล่าสุด × 2.5 วัน + เผื่อ% (7 วันแรกใช้ค่าเฉลี่ยใบเจ้าของเดิม)</span><span>สั่ง = เป้า − เหลือคืนนี้ − ของที่กำลังมา ปัดเป็นถุงใกล้สุด ติดลบ = ไม่สั่ง</span><span>ของที่ยังขายอยู่ แต่หมดและไม่มีของกำลังมา สั่งอย่างน้อย 1 ถุง</span><span>คืนเสาร์ไม่มีใบ (ของจะถึงจันทร์ CPF ไม่ส่ง) ล็อตอาทิตย์เลยนับแค่ อ. + พ.เช้า</span><span>คืนจันทร์ร้านปิด แอปทำใบของพุธเองจากของเหลือวันอาทิตย์</span><span>เจ้าของกดส่งเองทุกใบ แอปเตือน 21:30, 09:00, 12:00 ถ้ายังไม่กด แอปส่งให้ตามเวลากันพลาด</span><span>สินค้าที่ไม่ขาย เอาติ๊ก "ยังใช้อยู่" ออกในแท็บสินค้า</span><span><a href="order-rules.html" style="color:var(--color-primary);text-decoration:underline">ดูกติกาแบบเห็นภาพ พร้อมตัวอย่างตัวเลข</a></span></p>
+    <div class="gl"><a class="cell nav" href="order-rules.html"><span class="k">กติกาใบสั่ง<small>ดูแบบเห็นภาพ พร้อมตัวอย่างตัวเลข</small></span>${chev}</a></div>
     <h2>กลุ่ม LINE</h2><div class="gl"><label class="cell nav"><span class="k">กลุ่มสั่งของ<small>มีเซลล์อยู่</small></span><span class="v" data-for="sg"></span>${chev}${sel("sg", S.sales_group_id)}</label>
       <label class="cell nav"><span class="k">กลุ่มพนักงาน</span><span class="v" data-for="fg"></span>${chev}${sel("fg", S.staff_group_id)}</label>
       <button class="cell act" type="button" id="claim"><span class="ic">${send}</span><span class="k">ส่งการ์ดยืนยันตัวตนเข้ากลุ่มพนักงาน</span></button></div>

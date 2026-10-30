@@ -39,7 +39,8 @@
   .day .w { font-size: 13px; color: var(--color-ink-soft); grid-column: 1; }
   .day li.hot .w { color: var(--color-primary); font-weight: 700; }
   .day .t { font: 600 16px/1.35 var(--font-head); grid-column: 1; }
-  .day .b { grid-column: 2; grid-row: 1 / span 2; font: 500 13px/1 var(--font-head); color: #fff; background: var(--color-primary); border-radius: var(--radius-pill); padding: 8px 12px; white-space: nowrap; }
+  .day .b { grid-column: 2; grid-row: 1 / span 2; font: 500 13px/1 var(--font-head); color: var(--color-primary-dark); background: var(--tint-primary); border-radius: var(--radius-pill); padding: 8px 12px; white-space: nowrap; box-shadow: inset 0 0 0 1px rgba(200, 33, 40, .18); } /* M11: tonal like .btn.tonal, the solid red is only the 20:30 banner */
+  .day li.hot .b { background: var(--color-card); }
   .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
   .duo div { border-radius: 14px; padding: 10px 12px; font-size: 14px; line-height: 1.45; }
   .duo b { display: block; font: 600 16px/1.3 var(--font-head); }
