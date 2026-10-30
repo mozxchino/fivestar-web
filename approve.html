@@ -167,8 +167,8 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
   // 0053 ของกอง: plan items whose stock left tonight lasts more than overstock_days (most order 0, so they are not rows) · plans before 0053 have no "over"
   const piles = ((plan && plan.items) || []).filter((x) => x.over === true);
   const pileOf = new Map(piles.map((x) => [x.product_id, x]));
-  const pileSay = (x) => x.days_left == null ? "ไม่มียอดขาย" : `เหลือพอ ${n(x.days_left)} วัน`;
-  if (piles.length) { $("pile").hidden = false; $("pile").innerHTML = `<b>ของกอง ${piles.length} รายการ</b>${piles.map((x) => `<br>${E(x.name)} ${pileSay(x)}`).join("")}`
+  const pileSay = (x) => x.days_left == null ? "ไม่มียอดขาย" : `ขายได้อีก ${n(x.days_left)} วัน`;
+  if (piles.length) { $("pile").hidden = false; $("pile").innerHTML = `<b>ของค้างเยอะ ${piles.length} รายการ</b>${piles.map((x) => `<br>${E(x.name)} ${pileSay(x)}`).join("")}`
     + (piles.some((x) => x.days_left == null) ? (me.role === "owner" ? '<br><a href="settings.html?tab=prod">ตัวที่ไม่มียอดขาย ถ้าเลิกขายแล้ว เอาติ๊ก "ยังใช้อยู่" ออก</a>' : '<br>ตัวที่ไม่มียอดขาย ถ้าเลิกขายแล้ว ให้เจ้าของเอาติ๊ก "ยังใช้อยู่" ออก') : ""); }
   const edited = (r, q) => !added(r) && q !== Number(r.qty_proposed);
   const meta = (r, q) => (added(r) ? "เพิ่มเอง ไม่ได้มาจากกติกา" : base(r)) + (r.sets != null && pkOf(r) === 1 ? ` · ${Math.round(q / r.pack_size)} เซ็ต` : "")
