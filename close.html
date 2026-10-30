@@ -10,6 +10,8 @@
 .sheet .grid.ux-over:has(.rf)::after { opacity: 0; }
 /* 0054: hint line under a field label (ยอดขายรวมวันนี้) */
 .field small.h { display: block; margin-top: 2px; font-size: 14px; font-weight: 400; color: var(--color-muted-foreground); }
+/* Mos 31 ต.ค.: the alert under the button reads centred, not packed to the left */
+#msg.err:not(:empty) { text-align: center; padding-right: 44px; }
 </style>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -67,7 +69,7 @@
   <section id="s4" class="ux-step" hidden>
   <div id="sum4" class="cl-sum" aria-label="สรุปที่จะส่ง"></div>
   <div class="cl-shots">
-    <div class="cl-shot"><label class="btn cl-frame" data-again="แตะถ่ายเพิ่ม"><svg class="cl-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6Z"/><path d="M5 10h14"/><path d="M15 7v6"/></svg><b>รูปตู้และถาด</b><small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>แตะเพื่อถ่าย</small><input id="phFridge" type="file" accept="image/*" capture="environment" hidden></label><p id="phStatus" class="muted"></p></div>
+    <div class="cl-shot"><label class="btn cl-frame" data-again="แตะถ่ายเพิ่ม"><svg class="cl-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6Z"/><path d="M5 10h14"/><path d="M15 7v6"/></svg><b>รูปตู้และถาด</b><small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>แตะเพื่อถ่าย ได้หลายรูป</small><input id="phFridge" type="file" accept="image/*" capture="environment" hidden></label><p id="phStatus" class="muted"></p></div>
     <div class="cl-shot"><label class="btn cl-frame" data-again="แตะถ่ายใหม่"><svg class="cl-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg><b>รูปจอ POS</b><small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>แตะเพื่อถ่าย</small><input id="phPos" type="file" accept="image/*" capture="environment" hidden></label></div>
   </div>
   <label class="field" for="note">ฝากบอกเจ้าของ <small>(ไม่มีก็ข้ามได้)</small></label>

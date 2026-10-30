@@ -38,8 +38,10 @@
     const { data, error } = await supabase.from("issues").insert({ type: type.value, text: text.value.trim(), photos, created_by: me.userId }).select("id").single();
     if (error) { msg.textContent = "ส่งไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error); msg.className = "err"; send.disabled = false; return; }
     await App.fn("issue-notify", { issue_id: data.id }).catch(() => {});
-    msg.textContent = "ส่งให้เจ้าของแล้ว ขอบคุณ"; msg.className = "ok big"; text.disabled = ph.disabled = true;
+    msg.textContent = "ส่งให้เจ้าของแล้ว ขอบคุณ"; msg.className = "ok"; text.disabled = ph.disabled = true; // Mos 31 ต.ค.: one green line (ok big overlapped the tick here)
     send.hidden = true; await UXS.showNext(supabase, msg, true, "afterend");
+    // Mos 31 ต.ค.: staff always gets a way home, not only the next task
+    if (!document.querySelector('.ux-next[href="index.html"]')) msg.parentElement.insertAdjacentHTML("beforeend", '<a class="btn" href="index.html" style="margin-top:10px">กลับหน้าหลัก</a>');
   };
   form.hidden = false;
   } catch (e) { if (e.message !== "denied") failed(e); }
