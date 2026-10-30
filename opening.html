@@ -7,14 +7,17 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-motion.js"></script>
-<style>.sheet .grid { grid-template-columns: minmax(0, 1fr) 64px 64px; } #dS { margin: 8px 0 0; } #first:not([hidden]) ~ #go { margin-top: 8px; } #lines > .sh { margin: 0; padding: 14px 12px 8px; }</style>
+<style>.sheet .grid { grid-template-columns: minmax(0, 1fr) 64px 64px; } #dS { margin: 8px 0 0; } #first:not([hidden]) ~ #go { margin-top: 8px; } #lines > .sh { margin: 0; padding: 14px 12px 8px; }
+/* L1: the grey notes get air above, one idea per line (no one-word last line) · the date row sits inside the same card */
+.steps p { text-wrap: pretty; } .steps p:not(.muted) + p.muted { margin-top: 12px; }
+.steps .cell { margin: 14px -16px -16px; border-radius: 0 0 var(--radius-card) var(--radius-card); box-shadow: inset 0 .5px 0 var(--color-separator); }</style>
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="settings.html?tab=sys" aria-label="กลับตั้งค่า"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>นับสต็อกตั้งต้น</h1><div class="sub">สำหรับเจ้าของ</div></div></header>
 <p id="blocked" class="err" hidden></p>
 <div class="sk"><span class="vh">กำลังเปิด…</span><i class="sk-b" style="--w:100%;--h:52px;--r:14px;margin:12px 0"></i><i class="sk-b" style="--w:100%;--h:68px"></i><i class="sk-b" style="--w:100%;--h:68px"></i><i class="sk-b" style="--w:100%;--h:68px"></i></div>
 <div id="form" class="ld" hidden>
-  <div class="card steps"><p>1. นับของในตู้ทุกอย่างก่อนเปิดร้าน</p><p>2. กรอกจำนวนสดและสุก</p><p>3. กด บันทึกยอดนับ</p><p>4. กดปุ่มแดง สร้างใบสั่งของ แล้วกดส่งให้เซลล์</p><p class="muted">นับของในตู้คืนนี้ ใส่ตัวเลข ระบบใช้คิดใบสั่งใบแรก</p><p class="muted">ใช้ครั้งเดียวตอนเริ่มใช้แอป หลังจากนั้นระบบรู้จากหน้าปิดร้านเอง</p></div>
-  <label class="cell"><span class="k">ของในตู้ตอนนี้ ไว้ขายวันที่</span> <input type="date" id="d"></label>
+  <div class="card steps"><p>1. นับของในตู้ทุกอย่างก่อนเปิดร้าน</p><p>2. กรอกจำนวนสดและสุก</p><p>3. กด บันทึกยอดนับ</p><p>4. กดปุ่มแดง สร้างใบสั่งของ แล้วกดส่งให้เซลล์</p><p class="muted">นับของในตู้คืนนี้ ใส่ตัวเลข ระบบใช้คิดใบสั่งใบแรก</p><p class="muted">ใช้ครั้งเดียวตอนเริ่มใช้แอป</p><p class="muted">หลังจากนั้นระบบรู้จากหน้าปิดร้านเอง</p>
+  <label class="cell"><span class="k">ของในตู้ตอนนี้ ไว้ขายวันที่</span> <input type="date" id="d"></label></div>
   <p id="dS" class="muted"></p>
   <div id="lE" hidden><p class="err"></p><button type="button" id="retry" class="btn primary">ลองอีกครั้ง</button></div>
   <div class="sheet">
@@ -55,7 +58,7 @@
     document.querySelectorAll("#lines .grid").forEach((g) => { const l = lErr ? null : L[g.dataset.id], rf = g.querySelector(".rf");
       rf.value = l ? +l.open_fresh : ""; g.querySelector(".rc").value = l && +l.open_cooked ? +l.open_cooked : "";
       delete rf.dataset.b; delete rf.dataset.l; const bs = g.querySelector(".bagsay"); if (bs) bs.textContent = ""; }); // item 38: the bag sheet's memory belongs to the date it was typed for
-    if (lErr) { $("lE").hidden = false; $("lE").querySelector(".err").textContent = "โหลดยอดนับไม่ขึ้น\n" + App.errText(lErr); $("dS").textContent = "";
+    if (lErr) { $("lE").hidden = false; $("lE").querySelector(".err").textContent = "เปิดยอดนับไม่ขึ้น\n" + App.errText(lErr); $("dS").textContent = "";
       $("go").hidden = $("first").hidden = $("fh").hidden = $("fnewP").hidden = true; return; }
     $("go").hidden = false; $("go").disabled = false; $("first").disabled = false;
     $("dS").textContent = ls?.length ? "มีตัวเลขของวันนี้แล้ว ตรวจแล้วกดบันทึกได้เลย" : "";

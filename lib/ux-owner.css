@@ -104,6 +104,7 @@ button.daylink:active, .cal-nav button:active, .daynav .d:active { opacity: .7; 
 .ux-mrow small { display: block; font-size: 13px; color: var(--color-ink-soft); }
 .ux-mrow .v { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ux-mrow .v.bad { color: var(--color-destructive); }
+.ux-mrow .v.bad::before { content: ""; display: inline-block; width: 8px; height: 8px; margin: 0 7px 2px 0; border-radius: 50%; background: var(--color-destructive); vertical-align: middle; } /* L11: a status dot, red is never the only signal */
 .ux-mrow .go, .ux-mday .go { flex: none; color: var(--color-chevron); font-size: 20px; line-height: 1; }
 a.ux-mrow, button.ux-mrow, .ux-mday { cursor: pointer; touch-action: manipulation; transition: background-color 160ms var(--ease-out); }
 a.ux-mrow:active, button.ux-mrow:active, .ux-mday:active { background: var(--color-fill-pressed); }

@@ -318,7 +318,9 @@ body.grouped .btn:not(.primary, .tonal, .go):not(:is(.card, .bsheet, .panel) *):
   font: 400 17px/1.35 var(--font-body); color: var(--color-secondary); text-align: right;
 }
 .cell input.num-in { flex: none; width: 84px; }
-.cell input[type=text]:focus, .cell input[type=number]:focus { background: transparent; box-shadow: none; color: var(--color-foreground); }
+/* L10: every value edited in the row sits on the field fill like the date and time boxes, so it reads as editable */
+.cell input[type=text], .cell input[type=number] { min-height: 36px; padding: 5px 12px; border-radius: 8px; background: var(--color-fill); }
+.cell input[type=text]:focus, .cell input[type=number]:focus { background: var(--tint-primary); box-shadow: none; color: var(--color-foreground); }
 .cell:has(input:focus-visible, select:focus-visible) { box-shadow: inset 3px 0 0 var(--color-primary); }
 .cell input[type=time], .cell input[type=date] {
   flex: none; width: auto; min-height: 36px; padding: 5px 12px; border: 0; border-radius: 8px; background: var(--color-fill); box-shadow: none;

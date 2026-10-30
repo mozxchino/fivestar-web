@@ -29,9 +29,9 @@
 <h2 id="listh" class="sh">วันที่ขอไว้</h2>
 <div id="list" class="card list"><div class="row"><span class="grow"><i class="sk-b" style="--w:58%;--h:17px"></i></span><i class="sk-b" style="--w:72px;--h:24px;--r:999px"></i></div><div class="row"><span class="grow"><i class="sk-b" style="--w:58%;--h:17px"></i></span><i class="sk-b" style="--w:72px;--h:24px;--r:999px"></i></div></div>
 <script>
-// audit 27: a failed read shows โหลดไม่ขึ้น + retry, never the form on blank data
+// audit 27: a failed read shows เปิดไม่ขึ้น + retry, never the form on blank data
 const failed = (e, again = () => location.reload()) => { form.hidden = cnt.hidden = listh.hidden = list.hidden = true; lE.hidden = false;
-  lE.querySelector(".err").textContent = "โหลดไม่ขึ้น\n" + App.errText(e); retry.disabled = false; retry.onclick = () => { retry.disabled = true; again(); }; };
+  lE.querySelector(".err").textContent = "เปิดไม่ขึ้น\n" + App.errText(e); retry.disabled = false; retry.onclick = () => { retry.disabled = true; again(); }; };
 (async () => {
   const TYPE = { off: "หยุดประจำสัปดาห์", sick: "ลาป่วย", personal: "ลากิจ", special: "หยุดพิเศษ" };
   const ST = { pending: "รออนุมัติ", approved: "อนุมัติแล้ว", rejected: "ไม่อนุมัติ", cancelled: "ยกเลิกแล้ว" };

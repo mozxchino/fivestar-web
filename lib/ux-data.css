@@ -36,7 +36,7 @@ button.chip { appearance: none; -webkit-appearance: none; }
 /* fold: a quiet row that opens a detail block */
 details.fold > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; color: var(--color-foreground); font-weight: 500; }
 details.fold > summary::-webkit-details-marker { display: none; }
-details.fold > summary .chip { min-height: 36px; padding: 4px 12px; font-size: 14px; }
+details.fold > summary .chip { min-height: 44px; padding: 4px 12px; font-size: 14px; }
 details.fold[open] > summary .chip { background: var(--color-fill); box-shadow: none; }
 details.fold[open] > :not(summary) { animation: fold-in 200ms var(--ease-out); }
 @keyframes fold-in { from { opacity: 0; transform: translateY(-4px); } }

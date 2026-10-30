@@ -14,9 +14,10 @@
 input.ed{width:58px;min-height:44px;padding:6px 2px;font-size:18px;font-weight:500;text-align:center;flex:none}
 input.ed.cash{width:120px;text-align:right;padding-right:10px}
 td+td{font-weight:600}
-#bar input{margin-bottom:12px}
+#bar input{margin-bottom:12px}#bar .th-date input{margin-bottom:0}#bar .th-date{margin-bottom:12px!important}
 #out{font-variant-numeric:tabular-nums}
 #out .row .grow,.panel .row .grow{text-wrap:balance}
+.dayrows{margin-top:12px}a.cell.nav{text-decoration:none}button.cell.nav{width:100%;border:0;border-radius:0;text-align:left;cursor:pointer;touch-action:manipulation}
 .iss .day-head{margin-bottom:2px}
 .iss .who{font-size:14px;color:var(--color-ink-soft);display:flex;flex-wrap:wrap;align-items:center;gap:0 6px}
 </style></head><body class="grouped" ontouchstart="">
@@ -87,12 +88,13 @@ td+td{font-weight:600}
       supabase.from("shop_days").select("*").gte("date", U.plus(d, -7)).lte("date", d).order("date", { ascending: false }),
       supabase.from("stock_lines").select("*").eq("date", d),
       supabase.from("consumable_checks").select("product_id,status").eq("date", d).neq("status", "ok"),
-      supabase.from("orders").select("order_items(product_id,qty_proposed,qty_final,qty_received,received_at)").eq("for_date", d).eq("status", "sent").maybeSingle(),
+      supabase.from("orders").select("plan,order_items(product_id,qty_proposed,qty_final,qty_received,received_at)").eq("for_date", d).eq("status", "sent").order("created_at", { ascending: false }).limit(5), // item 17: an extra order + a real one on the same day gave 2 rows to maybeSingle → error
       supabase.from("issues").select("id,date,type,text,photos,created_by,created_at,status").eq("status", "open").order("created_at", { ascending: false }),
       isToday ? supabase.from("leave_requests").select("id,user_id,date,type,note,status,users:user_public(name)").gte("date", TODAY.slice(0, 8) + "01").lte("date", U.plus(TODAY, 31)).order("date") : Promise.resolve({ data: [] }),
     ]);
     const bad = res.find((r) => r.error); if (bad) throw bad.error; // qa: a failed read must not read as "ไม่มีเรื่องต้องจัดการ"
-    const [{ data: days }, { data: sl }, { data: cc }, { data: od }, { data: iss }, { data: lv }] = res;
+    const [{ data: days }, { data: sl }, { data: cc }, { data: odAll }, { data: iss }, { data: lv }] = res;
+    const od = (odAll || []).find((o) => !(o.plan && (o.plan.extra === true || o.plan.extra === "true"))) || (odAll || [])[0] || null; // the real order wins over an extra (off-order delivery) one
     const byDate = Object.fromEntries((days || []).map((x) => [x.date, x]));
     return { d, isToday, sd: byDate[d] || null, yday: byDate[U.plus(d, -1)] || null, days: days || [], sl: sl || [], cc: cc || [], items: od?.order_items || [],
       iss: (iss || []).filter((i) => i.status === "open" && (isToday || (i.date || "").slice(0, 10) === d)), lv: lv || [] };
@@ -170,8 +172,11 @@ td+td{font-weight:600}
     const todo = `<h3 class="sec" id="todoh"${T.length ? ` data-tone="${T.some((x) => x.bad) ? "bad" : "wait"}"` : ' data-tone="ok"'}>ต้องจัดการ<span class="n">${T.length ? `${T.length} เรื่อง` : "ไม่มี"}</span></h3>` + (T.length
       ? T.map((x) => `<div class="card todo${x.bad ? " bad" : ""}" data-k="${x.key}"><div class="t">${x.t}</div>${x.b ? `<div class="b">${x.b}</div>` : ""}<div class="s">${x.s}</div>${x.a ? `<div class="acts">${x.a}</div>` : ""}</div>`).join("")
       : ALLDONE);
+    // L4: the two ways on from the day are rows in one group (like รับของ / ของเสีย above), not loose white chips · edit only where the page binds it
+    const chev = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
+    const links = (c, edit) => (c.isToday || edit) ? `<div class="gl dayrows">${c.isToday ? `<a class="cell nav" href="approve.html"><span class="k">ดูใบสั่ง</span><span class="v"></span>${chev}</a>` : ""}${edit ? `<button type="button" class="cell nav" id="edit"><span class="k">แก้ตัวเลข${c.isToday ? "วันนี้" : "วันนั้น"}</span><span class="v"></span>${chev}</button>` : ""}</div>` : "";
     if (!sd) {
-      $("out").innerHTML = bento(c) + todo + `<div class="card muted">ไม่มีบันทึกของ${when(d)}</div>` + (c.isToday ? `<a class="btn sm" href="approve.html">ดูใบสั่ง</a>` : "");
+      $("out").innerHTML = bento(c) + todo + `<div class="card muted">ไม่มีบันทึกของ${when(d)}</div>` + (c.isToday ? links(c, false) : "");
       return;
     }
     const waste = sl.filter((l) => +l.waste > 0);
@@ -202,8 +207,7 @@ td+td{font-weight:600}
         cc.map((c) => `<div class="ln">${esc(prods[c.product_id])} <span class="pill" data-tone="${c.status === "out" ? "bad" : "wait"}">${CS[c.status] || esc(c.status)}</span></div>`).join("") || `<p class="muted">มีครบ</p>`)
       + (photos.length ? fold("pics", `<b>รูปจากร้าน</b>${fv("", `${photos.length} รูป`)}`, `<div class="sk-row" style="flex-wrap:wrap;gap:8px;padding:8px 0 12px">${sb("72px", 72, ";--r:10px").repeat(photos.length)}</div>`) : "")
       + `</div>`
-      + (c.isToday ? `<a class="btn sm" href="approve.html">ดูใบสั่ง</a>` : "")
-      + (MGR ? "" : `<button class="btn sm" id="edit">แก้ตัวเลข${c.isToday ? "วันนี้" : "วันนั้น"}</button>`);
+      + links(c, !MGR);
     if (!MGR) $("edit").onclick = () => openEdit(c);
     U.folds($("out").querySelector(".folds"), async (b) => {
       if (b.dataset.f !== "pics" || b.dataset.done) return;
@@ -344,7 +348,8 @@ td+td{font-weight:600}
     iss: issView,
     // round 4: every number that has days behind it opens them · a day opens the day view · ร้านหยุด → holiday · ต้นทุน/กำไร of the same month
     async mon() {
-      $("bar").innerHTML = `<input id="pm" type="month" value="${TODAY.slice(0, 7)}" max="${TODAY.slice(0, 7)}" aria-label="เลือกเดือน">`;
+      $("bar").innerHTML = `<input id="pm" type="month" lang="th" value="${TODAY.slice(0, 7)}" max="${TODAY.slice(0, 7)}" aria-label="เลือกเดือน">`;
+      UXM.dateTh($("pm")); // L5: the box shows the Thai month (ตุลาคม 2569) whatever language the phone is set to, the native picker stays
       const go = async () => {
         const ym = $("pm").value, [y, m] = ym.split("-").map(Number); if (!y) return;
         const first = ym + "-01", next = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, "0")}-01`, inM = (d) => String(d || "").slice(0, 7) === ym;

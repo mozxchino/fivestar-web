@@ -196,7 +196,9 @@ a.cell{text-decoration:none;color:inherit}
     // ponytail: search looks through every product (ignores the chip) so a hit is never hidden by the wrong filter
     const list = q ? ps.filter((p) => p.name.toLowerCase().includes(q)) : ps.filter(FIL[pf][1]);
     $("plist").innerHTML = list.map((p) => `<button type="button" class="prow${p.active ? "" : " off"}" data-id="${p.id}" aria-haspopup="dialog"><div class="grow"><div class="nm">${E(p.name)}</div><div class="meta">${pmeta(p)}</div></div><span class="go" aria-hidden="true">›</span></button>`).join("")
-      || `<p class="${psErr ? "err" : "muted"}">${psErr ? "เปิดรายการสินค้าไม่ขึ้น ลองเปิดหน้าใหม่" : q ? "ไม่เจอสินค้าชื่อนี้" : pf === "nocost" ? "ใส่ราคาทุนครบแล้ว ✓" : "ไม่มีสินค้า"}</p>`;
+      || (!psErr && !q && pf !== "nocost" ? `<div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>ยังไม่มีสินค้า</p><p class="muted">เพิ่มสินค้าที่ขายหรือใช้ในร้านก่อน</p><button type="button" class="btn sm" data-add-empty>เพิ่มสินค้า</button></div>`
+      : `<p class="${psErr ? "err" : "muted"}">${psErr ? "เปิดรายการสินค้าไม่ขึ้น ลองเปิดหน้าใหม่" : q ? "ไม่เจอสินค้าชื่อนี้" : "ใส่ราคาทุนครบแล้ว ✓"}</p>`);
+    $("plist").querySelector("[data-add-empty]")?.addEventListener("click", () => $("add").click()); // L10: the empty list has its own add button, same sheet as the one above
   }
   $("q").oninput = () => drawProd();
   $("pf").onclick = (ev) => { const b = ev.target.closest("[data-f]"); if (!b) return; pf = b.dataset.f; $("q").value = ""; drawProd(); };

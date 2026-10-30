@@ -322,6 +322,7 @@ details.ux-day summary .m b { font-weight: 500; color: var(--color-ink-soft); }
 .rc-pick[data-pick=short] #recAll small, .rc-pick[data-pick=all] #recShort small { display: none; }
 .rc-pick[data-pick=short] #recAll::before, .rc-pick[data-pick=all] #recShort::before { left: 18px; width: 22px; height: 22px; margin-top: -11px; }
 #sum { font-variant-numeric: tabular-nums; }
+#sum.rc-why { white-space: pre-line; } /* receive: "แก้แล้ว / ขาด / เกิน / ของนอกใบสั่ง" one idea per line */
 
 /* ---------- close step 4 round 2b (Mos 26 ต.ค.): what is being sent on top, the two photos as big frames (same idea as the open frame) ---------- */
 .cl-sum { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 14px; }

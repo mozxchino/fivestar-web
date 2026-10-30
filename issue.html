@@ -24,8 +24,8 @@
 </div>
 <script>
 (async () => {
-  // audit 27: a failed read shows โหลดไม่ขึ้น + retry, never the form on blank data
-  const failed = (e) => { form.hidden = true; lE.hidden = false; lE.querySelector(".err").textContent = "โหลดไม่ขึ้น\n" + App.errText(e);
+  // audit 27: a failed read shows เปิดไม่ขึ้น + retry, never the form on blank data
+  const failed = (e) => { form.hidden = true; lE.hidden = false; lE.querySelector(".err").textContent = "เปิดไม่ขึ้น\n" + App.errText(e);
     retry.onclick = () => { retry.disabled = true; location.reload(); }; };
   try {
   const { supabase, me } = await App.ready();

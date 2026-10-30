@@ -11,7 +11,7 @@
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>เปิดร้าน</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3<span id="d"></span></div></div></header>
 <div class="sk"><span class="vh">กำลังเปิด…</span><i class="sk-b" style="--w:100%;--h:44px;--r:14px"></i><i class="sk-b" style="--w:52%;--h:26px;--gap:18px"></i><i class="sk-b op-frame-sk" style="--w:100%;--r:20px;--gap:12px"></i><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
 <section id="done" class="done ld" hidden aria-live="polite"><span class="mascot ok-badge"><img src="img/mascot-240.png" alt="" width="80" height="80"></span><h2 id="doneT">เปิดร้านแล้ว</h2><p id="doneS"></p><p class="warm" id="doneW">ขอให้ขายดีทั้งวัน</p><div class="acts"><a class="btn primary" href="index.html">กลับหน้าหลัก</a></div></section>
-<section id="late" class="done ld" hidden aria-live="polite"><span class="mascot"><img src="img/mascot-240.png" alt="" width="80" height="80"></span><h2>เมื่อวานยังไม่ได้ปิดร้าน</h2><p id="lateS"></p><p class="muted">ปิดเสร็จแล้วค่อยเปิดร้านวันนี้</p><div class="acts"><a id="lateGo" class="btn primary" href="close.html">ปิดร้านของเมื่อวานก่อน</a></div></section>
+<section id="late" class="done ld" hidden aria-live="polite"><span class="mascot"><img src="img/mascot-240.png" alt="" width="80" height="80"></span><h2>ยังไม่ได้ปิดร้านวันก่อน</h2><p id="lateS"></p><p class="muted">ปิดเสร็จแล้วค่อยเปิดร้านวันนี้</p><div class="acts"><a id="lateGo" class="btn primary" href="close.html">ปิดร้านที่ค้างก่อน</a></div></section>
 <div id="lE" class="ld" hidden><p class="err" role="alert"></p><button type="button" id="retry" class="btn primary">ลองอีกครั้ง</button></div>
 <div id="form" class="ld" hidden>
   <ol class="ux-steps op-steps" aria-label="ขั้นเปิดร้าน"><li id="st1" class="on" aria-current="step"><i>1</i>ถ่ายรูปหน้าร้าน</li><li id="st2"><i>2</i>กดเปิดร้าน</li></ol>
@@ -25,8 +25,8 @@
 </div>
 <script>
 (async () => {
-  // audit 27: a failed read shows โหลดไม่ขึ้น + retry, never the form on blank data
-  const failed = (e) => { form.hidden = true; lE.hidden = false; lE.querySelector(".err").textContent = "โหลดไม่ขึ้น\n" + App.errText(e);
+  // audit 27: a failed read shows เปิดไม่ขึ้น + retry, never the form on blank data
+  const failed = (e) => { form.hidden = true; lE.hidden = false; lE.querySelector(".err").textContent = "เปิดไม่ขึ้น\n" + App.errText(e);
     retry.onclick = () => { retry.disabled = true; location.reload(); }; };
   try {
   const { supabase, me } = await App.ready();

@@ -24,7 +24,7 @@
   <div id="todo" class="chips" style="margin-top:12px" hidden></div>
   <details class="fold" id="moref"><summary>ตัวเลขอื่นของเดือน<span class="chip">เปิดดู</span></summary><div id="more" class="card"></div></details>
   <details class="fold" id="prodf"><summary><span>ต้นทุนรายสินค้า <span id="pc" class="muted"></span></span><span class="chip">เปิดดู</span></summary><div id="prod" class="card list"></div></details>
-  <div class="sticky"><button class="btn primary" id="open">กรอกยอดเดือนนี้</button></div>
+  <div class="sticky"><button class="btn primary" id="open">กรอกยอดเดือนนี้</button><button class="btn" id="ed" style="margin-top:8px" hidden>กรอกยอดเดือนนี้</button></div>
 </div>
 <dialog id="fs" class="bsheet" aria-labelledby="fsh"><div class="body"><div class="grab"></div>
   <div class="hd"><b id="fsh">กรอกยอดขายและค่าใช้จ่าย</b><button class="x" type="button" aria-label="ปิด" autofocus>✕</button></div>
@@ -55,7 +55,8 @@
   const shift = (d) => { const [y, m] = cur.split("-").map(Number), t = new Date(Date.UTC(y, m - 1 + d, 1)); cur = t.toISOString().slice(0, 7); load(); };
   $("mp").onclick = () => shift(-1); $("mn").onclick = () => shift(1);
   const sheet = UXD.sheet($("fs"));
-  $("open").onclick = () => { $("smsg").className = "muted"; $("smsg").textContent = ""; sheet.open(); };
+  const editM = () => { $("smsg").className = "muted"; $("smsg").textContent = ""; sheet.open(); };
+  $("open").onclick = $("ed").onclick = editM;
 
   async function load() {
     const [y, m] = ym().split("-").map(Number);
@@ -65,7 +66,10 @@
     if (error) { $("sum").className = "card"; $("sum").innerHTML = `<p class="err">เปิดไม่ขึ้น: ${esc(App.errText(error))}</p>`; return; }
     IN.forEach((k) => $(k).value = r.inputs[k] ?? "");
     $("note").value = r.inputs.note || "";
-    $("open").textContent = (r.has_inputs ? "แก้ยอดเดือน " : "กรอกยอดเดือน ") + mname(ym());
+    // L6: with a missing cost price the red button is that job (the sheet of month numbers moves to the grey button under it)
+    const nc = r.missing_cost.length, editT = (r.has_inputs ? "แก้ยอดเดือน " : "กรอกยอดเดือน ") + mname(ym());
+    $("open").textContent = nc ? `ใส่ทุน ${nc} ตัว` : editT; $("ed").textContent = editT; $("ed").hidden = !nc;
+    $("open").onclick = nc ? () => { location.href = "settings.html?tab=prod&f=nocost"; } : editM;
     // bento (Mos 23 ต.ค.): กำไร across the top · ยอดขาย | GP · ต้นทุน across (tap = ต้นทุนรายสินค้า)
     const t = (cls, k, v, m) => `<div class="bt ${cls}"><span class="k">${k}</span><span class="v">${money(v)} <small>บาท</small></span>${m ? `<span class="m">${m}</span>` : ""}</div>`;
     $("sum").className = "bento";
@@ -80,7 +84,7 @@
     if (!r.has_inputs || apps === 0) todo.push(`<button type="button" class="chip wait" id="t-in">ยังไม่กรอกยอดแอป ›</button>`);
     if (r.missing_cost.length) todo.push(`<a class="chip bad" href="settings.html?tab=prod&amp;f=nocost">ยังไม่ใส่ทุน ${r.missing_cost.length} ตัว ›</a>`);
     $("todo").hidden = !todo.length; $("todo").innerHTML = todo.length ? `<span class="lbl">ต้องทำ</span>` + todo.join("") : "";
-    if ($("t-in")) $("t-in").onclick = $("open").onclick;
+    if ($("t-in")) $("t-in").onclick = editM;
     const diff = r.revenue > 0 && r.stock_sales_est > 0 ? Math.round((r.stock_sales_est - r.revenue) / r.revenue * 100) : null;
     const after = [["ของเสีย (รวมอยู่ในค่าของ CPF แล้ว)", money(r.waste_cost), "บาท"], ["เปิดร้าน", r.days_open, "วัน"], ["ยอดขายเฉลี่ยต่อวัน", money(r.avg_daily_sales), "บาท"], ["ยอดขายคิดจากสต็อก (ประมาณ)", money(r.stock_sales_est), "บาท"]];
     $("more").innerHTML = `<table>${after.map(([k, v, u]) => `<tr><td>${k}</td><td class="n">${v ?? 0} ${u}</td></tr>`).join("")}</table>`

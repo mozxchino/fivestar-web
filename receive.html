@@ -58,7 +58,7 @@
   const fmt = (x) => new Date(x + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
   // round 3 (r2 review): the owner receives an older order (?d=) · on today's page, yesterday not closed and its order not received → a link to it
   const qd = new URLSearchParams(location.search).get("d"), owner = me.role === "owner";
-  const day = owner && /^\d{4}-\d{2}-\d{2}$/.test(qd || "") ? qd : today;
+  const day = owner && /^\d{4}-\d{2}-\d{2}$/.test(qd || "") && qd <= today ? qd : today;   // item 17(2): ?d never opens a day after today (Bangkok), it falls back to today
   d.textContent = " · " + fmt(day);
   if (owner && day === today) {
     const { data: un } = await supabase.rpc("unclosed_day");
@@ -99,10 +99,10 @@
       sp.textContent = gap > 0 ? `ขาด ${+gap.toFixed(1)} ${sp.dataset.u}` : gap < 0 ? `เกิน ${+(-gap).toFixed(1)} ${sp.dataset.u}` : ""; r.classList.toggle("rc-chg", gap !== 0);
       if (gap > 0) { n++; miss[sp.dataset.u] = (miss[sp.dataset.u] || 0) + gap; } if (gap < 0) over++; if (gap) ch++; });
     sum.hidden = pick !== "short";
-    sum.textContent = ch ? [`แก้แล้ว ${ch} รายการ`, n ? "ขาด " + Object.entries(miss).map(([u, v]) => `${+v.toFixed(1)} ${u}`).join(" ") : "", over ? `เกิน ${over} รายการ` : ""].filter(Boolean).join(" ") : ex ? "" : "ยังไม่ได้แก้ แตะช่องที่ได้ไม่ตรง";
+    sum.textContent = ch ? [`แก้แล้ว ${ch} รายการ`, n ? "ขาด " + Object.entries(miss).map(([u, v]) => `${+v.toFixed(1)} ${u}`).join(" ") : "", over ? `เกิน ${over} รายการ` : ""].filter(Boolean).join("\n") : ex ? "" : "ยังไม่ได้แก้\nแตะช่องที่ได้ไม่ตรง"; // one idea per line (#sum is pre-line)
     if (ex) sum.textContent = [sum.textContent, `ของนอกใบสั่ง ${ex} อย่าง`].filter(Boolean).join("\n");
     const need = !!pick && !photos.length && !save.disabled;
-    shot.hidden = !need; save.hidden = need; shotT.textContent = n ? `ถ่ายรูปใบส่งของ (ขาด ${n} อย่าง)` : "ถ่ายใบส่งของ";
+    shot.hidden = !need; save.hidden = need; shotT.textContent = n ? "ถ่ายรูปใบส่งของ" : "ถ่ายใบส่งของ"; // the shortage is on the line above, not twice on the button
     phBox.hidden = !pick; phH.hidden = photos.length > 0; phMore.hidden = !photos.length || photos.length >= 3; // the red button takes the first photo, "ถ่ายรูปเพิ่ม" the 2nd and 3rd
   };
   lines.addEventListener("input", short);
