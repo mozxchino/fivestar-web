@@ -210,15 +210,6 @@ details.ux-day summary .m b { font-weight: 500; color: var(--color-ink-soft); }
 @starting-style { #phBox:not([hidden]) { opacity: 0; transform: translateY(6px); } }
 @media (prefers-reduced-motion: reduce) { @starting-style { #phBox:not([hidden]) { transform: none; } } }
 
-/* 0030 waste proof box (close step 4): a warning card, not another field label · title dark + bold, one muted how-to line, white controls inside */
-.ux-waste { margin: var(--space-lg) 0 var(--space-md); padding: 14px 16px 16px; border-radius: var(--radius-lg); background: var(--tint-wait); border: 1px solid var(--border-wait); }
-.ux-waste h2 { margin: 0; font: 600 17px/1.35 var(--font-head); color: var(--color-foreground); text-wrap: balance; }
-.ux-waste h2 span { color: var(--on-wait); font-variant-numeric: tabular-nums; }
-.ux-waste p { margin: 4px 0 12px; font-size: 14px; line-height: 1.5; color: var(--color-ink-soft); text-wrap: pretty; }
-.ux-waste .btn:not(.primary) { background: var(--color-card); }
-.ux-waste .nw { white-space: nowrap; } /* a phrase that must not split mid-way on 320px */
-.ux-waste .field { margin-top: 12px; }
-.ux-waste .in { background: var(--color-card); }
 
 /* open.html round 2 (Mos 26 ต.ค.): two steps, a big title, the photo frame is the focal point, who + the clock under it */
 .op-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0; }

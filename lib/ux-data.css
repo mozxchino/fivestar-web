@@ -173,3 +173,15 @@ button.cell.ux-who:active { background: var(--color-fill-pressed); }
 #bagS .btn.primary, #wasteGo .btn.primary { width: 100%; margin-bottom: max(8px, env(safe-area-inset-bottom)); }
 .grid .rf[readonly] { cursor: pointer; }
 .bagsay { display: block; }
+/* 0052 close.html: red sheet (tone bad) "ตรวจอีกรอบ นับน้อยกว่าปกติ" · red title, the items in a red-tint box (name, then the numbers in red) */
+.bsheet.bad .hd b { color: var(--color-destructive); }
+.bsheet.bad .low-l { list-style: none; margin: 8px 0 12px; padding: 2px 14px; border-radius: var(--radius-sm); background: var(--tint-destructive); box-shadow: inset 0 0 0 1px var(--border-bad); }
+.low-l li { padding: 10px 0; }
+.low-l li + li { border-top: .5px solid var(--border-bad); }
+.low-l b { display: block; font-weight: 600; }
+.low-l span { display: block; font-size: 15px; color: var(--color-destructive); font-variant-numeric: tabular-nums; }
+#lowS .bag-hint, #wasteQ .bag-hint { margin: 2px 0 12px; font-size: 15px; color: var(--color-ink-soft); }
+/* the waste question at the start of closing: centred, no ✕ (one of the two answers) */
+#wasteQ .hd b, #wasteQ .bag-hint { text-align: center; }
+#wasteQ .bag-hint { white-space: pre-line; }
+@media (max-width: 359px) { #wasteQ .foot.ux-2b { grid-template-columns: minmax(0, 1fr); } #wasteQ .foot .primary { order: -1; } }   /* 320px: "มี ไปลงของเสีย" never splits, red on top */
