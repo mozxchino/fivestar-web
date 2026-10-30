@@ -124,7 +124,9 @@ a.row { color: inherit; text-decoration: none; }
 a.row { transition: background-color 160ms var(--ease-out); }
 a.row:active { background: var(--color-muted); }
 .row .ux-t { display: block; font-weight: 500; }
-.row .ux-s { display: block; font-size: 14px; line-height: 1.4; color: var(--color-ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .ux-s { font-size: 14px; line-height: 1.4; color: var(--color-ink-soft); overflow: hidden; overflow-wrap: break-word; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; } /* r3 #20: wraps (max 3 lines) so the number at the end is never cut by … at big text sizes */
+.ux-undo { grid-column: 1 / -1; display: block; width: 100%; min-height: 44px; margin: 0; padding: 10px 0; border: 0; background: none; font: 500 15px/1.3 var(--font-body); color: var(--color-primary-dark); text-decoration: underline; text-align: center; cursor: pointer; touch-action: manipulation; } /* follow-up: undo the last ห่อข้าวเหนียว entry */
+.ux-undo[hidden] { display: none; }
 .row .ux-go { flex: none; color: var(--color-chevron); font-size: 20px; }
 
 /* ---------- history: month summary · week groups · one line per day ---------- */
@@ -138,8 +140,9 @@ details.ux-day:last-child { border-bottom: 0; }
 details.ux-day summary { list-style: none; gap: 10px; min-height: 52px; padding: 6px 0; font-variant-numeric: tabular-nums; }
 details.ux-day summary::-webkit-details-marker { display: none; }
 details.ux-day summary .d { flex: none; width: 72px; font-weight: 700; white-space: nowrap; }
-details.ux-day summary .m { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-ink-soft); }
-details.ux-day summary::after { content: "›"; flex: none; color: var(--color-chevron); font-size: 20px; transition: transform 200ms var(--ease-out); }
+details.ux-day summary { flex-wrap: wrap; position: relative; padding-right: 22px; } /* r3 #20: at big text the status pill drops under the day instead of squeezing the text to one letter per line */
+details.ux-day summary .m { flex: 1 1 6em; min-width: 0; overflow-wrap: break-word; color: var(--color-ink-soft); } /* r3 #20: wraps to the next line, never … on the amount */
+details.ux-day summary::after { content: "›"; position: absolute; right: 0; top: 50%; translate: 0 -50%; color: var(--color-chevron); font-size: 20px; transition: transform 200ms var(--ease-out); }
 details.ux-day[open] summary::after { transform: rotate(90deg); }
 .ux-body { padding: 0 0 12px; font-size: 15px; }
 .ux-body .kv { padding: 2px 0; }
@@ -330,7 +333,7 @@ details.ux-day summary .m b { font-weight: 500; color: var(--color-ink-soft); }
 .cl-cell:active { transform: scale(.97); }
 .cl-cell .k { display: flex; align-items: center; gap: 5px; font: 500 13px/1.3 var(--font-head); color: var(--color-ink-soft); white-space: nowrap; }
 .cl-cell .dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--color-chevron); }
-.cl-cell .v { max-width: 100%; font: 600 16px/1.25 var(--font-head); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.cl-cell .v { max-width: 100%; font: 600 16px/1.25 var(--font-head); overflow-wrap: break-word; font-variant-numeric: tabular-nums; } /* r3 #20: wraps, never … */
 .cl-cell .v small { font-size: 12px; font-weight: 500; }
 .cl-cell.ok .dot { background: var(--color-success); } .cl-cell.ok .v { color: var(--color-success); }
 .cl-cell.wait .dot { background: var(--color-wait-mark); } .cl-cell.wait .v { color: var(--on-wait); }

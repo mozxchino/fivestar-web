@@ -9,7 +9,7 @@
 <script>try { const r = (JSON.parse(sessionStorage.getItem("fs_session_v1") || "null") || {}).me?.role; if (r === "owner" || r === "manager") document.documentElement.classList.add("own"); } catch (_) {} /* skeleton shape only */</script>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-data.js"></script>
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js"></script>
 </head><body ontouchstart="">
 <header class="topbar home"><img class="logo" src="img/logo-96.png" alt="" width="52" height="52"><div><h1>ไก่ย่างห้าดาว</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
 <div class="sk sk-staff"><span class="vh">กำลังเปิด…</span><div class="ux-hello"><i class="sk-b" style="--w:48%;--h:26px"></i><i class="sk-b" style="--w:36%;--h:16px;--gap:6px"></i></div><div class="bento trio"><div class="bt wide lead"><i class="sk-b" style="--w:44px;--h:44px;--r:14px"></i><span class="tx"><i class="sk-b" style="--w:28%;--h:14px"></i><i class="sk-b" style="--w:50%;--h:32px;--gap:6px"></i><i class="sk-b" style="--w:72%;--h:14px;--gap:6px"></i></span></div><div class="bt"><i class="sk-b" style="--w:78%;--h:13px"></i><i class="sk-b" style="--w:58%;--h:20px;--gap:6px"></i></div><div class="bt"><i class="sk-b" style="--w:78%;--h:13px"></i><i class="sk-b" style="--w:58%;--h:20px;--gap:6px"></i></div><div class="bt"><i class="sk-b" style="--w:78%;--h:13px"></i><i class="sk-b" style="--w:58%;--h:20px;--gap:6px"></i></div><div class="bt wide list"><i class="sk-b" style="--w:28%;--h:15px;--gap:0px"></i><div><div class="row"><span class="grow"><i class="sk-b" style="--w:34%;--h:17px"></i><i class="sk-b" style="--w:68%;--h:14px;--gap:7px"></i></span></div><div class="row"><span class="grow"><i class="sk-b" style="--w:34%;--h:17px"></i><i class="sk-b" style="--w:68%;--h:14px;--gap:7px"></i></span></div><div class="row"><span class="grow"><i class="sk-b" style="--w:34%;--h:17px"></i><i class="sk-b" style="--w:68%;--h:14px;--gap:7px"></i></span></div></div></div></div></div>
@@ -24,7 +24,7 @@
   <div class="hd"><b id="madeH">ห่อข้าวเหนียวเสร็จ</b><button class="x" type="button" aria-label="ปิด">✕</button></div>
   <label class="fstep" for="madeQ">รอบนี้ห่อได้กี่ห่อ</label><div class="in"><input id="madeQ" type="number" inputmode="numeric" min="1" max="500" step="1" enterkeyhint="done" placeholder="0"><span class="sfx" id="madeU">ห่อ</span></div>
   <p id="madeM" class="err" role="alert"></p></div>
-  <div class="foot"><button id="madeGo" class="btn primary" type="button">บันทึก</button></div></dialog>
+  <div class="foot"><button id="madeGo" class="btn primary" type="button">บันทึกจำนวนห่อ</button></div></dialog>
 <script>
 (async () => {
   try {
@@ -79,14 +79,26 @@
       document.getElementById("madeU").textContent = P.unit || "ห่อ";
       document.getElementById("madeB").onclick = () => { q.value = ""; msg.textContent = ""; sheet.open(); q.focus(); };
       q.onkeydown = (e) => { if (e.key === "Enter") go.click(); };
+      // follow-up: after a save, "ยกเลิกรายการล่าสุด" stays 10 minutes (server rule in undo_made) or until used · a plain button, no 5 s toast
+      const ub = document.createElement("button"); ub.type = "button"; ub.className = "ux-undo"; ub.hidden = true; ub.textContent = "ยกเลิกรายการล่าสุด";
+      document.getElementById("madeB").insertAdjacentElement("afterend", ub);
+      let ut; const hideU = () => { clearTimeout(ut); ub.hidden = true; };
+      ub.onclick = async () => {
+        ub.disabled = true;
+        const r = await supabase.rpc("undo_made");
+        ub.disabled = false;
+        if (r.error) { UXM.toast(App.errText(r.error), { ms: 4000 }); return; }
+        n = +r.data; document.getElementById("madeN").textContent = say(n); hideU(); UXM.toast("ยกเลิกรายการล่าสุดแล้ว");
+      };
       go.onclick = async () => {
         const v = Number(q.value);
         if (!Number.isInteger(v) || v < 1 || v > 500) { msg.textContent = "ใส่จำนวน 1 ถึง 500 ห่อ"; q.focus(); return; }
         go.disabled = true; go.textContent = "กำลังบันทึก…"; msg.textContent = "";
         const r = await supabase.rpc("add_made", { p_product: P.id, p_qty: v });
-        go.disabled = false; go.textContent = "บันทึก";
+        go.disabled = false; go.textContent = "บันทึกจำนวนห่อ";
         if (r.error) { msg.textContent = App.errText(r.error); return; }
         n = +r.data; document.getElementById("madeN").textContent = say(n); sheet.close();
+        ub.hidden = false; clearTimeout(ut); ut = setTimeout(hideU, 10 * 60 * 1000);
       };
     }
     async function ownerHub() {

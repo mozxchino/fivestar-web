@@ -35,7 +35,7 @@
     <label>ค่าน้ำไฟ<span class="in"><input type="number" inputmode="decimal" id="utilities"><span class="sfx">บาท</span></span></label><label>ค่าแก๊ส<span class="in"><input type="number" inputmode="decimal" id="gas"><span class="sfx">บาท</span></span></label>
     <label>จิปาถะ<span class="in"><input type="number" inputmode="decimal" id="misc"><span class="sfx">บาท</span></span></label></div>
   <label class="field" for="note">โน้ต</label><textarea id="note" rows="2"></textarea>
-  <p class="muted">ค่า GP แอปส่ง แก้ได้ที่ <a href="settings.html?tab=sys">ตั้งค่า › ร้าน</a></p></div>
+  <p class="muted">ค่าคอมแอปส่ง แก้ได้ที่ <a href="settings.html?tab=sys">ตั้งค่า › ร้าน</a></p></div>
   <div class="foot"><button class="btn primary" id="save">บันทึกยอด</button><p id="smsg" class="muted"></p></div></dialog>
 <script>
 (async () => {
@@ -71,7 +71,7 @@
     $("sum").className = "bento";
     $("sum").innerHTML = `<div class="bt wide hero${r.net >= 0 ? " calm" : ""}"><span class="k">กำไรสุทธิ ${mname(ym())}</span><span class="v"><span class="big">${money(r.net)}</span> <small>บาท</small></span>`
       + (r.has_inputs ? "" : '<span class="m">ยังไม่กรอกยอดเดือนนี้<br>ค่าเช่า ค่าแรง ใช้ตัวเลขประมาณไปก่อน</span>') + `</div>`
-      + t("", "ยอดขายรวม", r.revenue) + t("", "ค่า GP แอปส่ง", r.gp_cost)
+      + t("", "ยอดขายรวม", r.revenue) + t("", "ค่าคอมแอปส่ง", r.gp_cost)
       + `<button type="button" class="bt wide" id="costT"><span class="k">ต้นทุน</span><span class="v">${money((+r.cpf_cost || 0) + (+r.fixed || 0))} <small>บาท</small></span><span class="m">ค่าของ CPF ${money(r.cpf_cost)} · ค่าใช้จ่ายประจำ ${money(r.fixed)} บาท</span><svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>`;
     $("costT").onclick = () => { $("prodf").open = true; $("prodf").scrollIntoView({ behavior: "smooth", block: "start" }); };
     // ต้องทำ: things only the owner can fix

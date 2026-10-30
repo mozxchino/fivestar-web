@@ -120,7 +120,7 @@ td+td{font-weight:600}
       const off = c.lv.filter((x) => x.user_id === l.user_id && x.status === "approved" && x.date.slice(0, 7) === l.date.slice(0, 7)).length;
       T.push({ r: 3, at: l.date, key: "l" + l.id, t: `${esc(l.users?.name || names[l.user_id] || "-")} ${U.LEAVE[l.type] || esc(l.type)} ${U.dayName(l.date)}`,
         b: l.note ? esc(l.note) : "", s: `เดือนนั้นหยุดแล้ว ${off} วัน`,
-        a: `<button class="btn sm" data-a="leave" data-ok="0" data-i="${l.id}">ไม่อนุมัติ</button><button class="btn sm" data-a="leave" data-ok="1" data-i="${l.id}">อนุมัติ</button>` });
+        a: `<button class="btn sm" data-a="leave" data-ok="0" data-i="${l.id}">ไม่อนุมัติลา</button><button class="btn sm" data-a="leave" data-ok="1" data-i="${l.id}">อนุมัติลา</button>` });
     }
     const ot = MGR ? [] : c.days.filter((s) => +s.ot_hours > 0 && !s.ot_approved_at && (c.isToday ? s.date >= U.plus(c.d, -7) && s.date <= c.d : s.date === c.d)).sort((a, b) => a.date.localeCompare(b.date));
     if (ot.length === 1) { const s = ot[0];
@@ -229,7 +229,7 @@ td+td{font-weight:600}
       b.disabled = true;
       const { error } = await supabase.rpc("waste_delete", { wid: b.dataset.i });
       if (error) { b.disabled = false; UXM.toast("ลบไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error), { ms: 4000 }); return; }
-      UXM.toast("ลบของเสียแล้ว"); return dayView();
+      UXM.toast("ลบของเสียแล้ว\nให้น้องปิดหน้าปิดร้านแล้วเปิดใหม่", { ms: 5000 }); return dayView();
     }
     if (a === "recv") { const f = document.querySelector('.fold[data-f="recv"]'); if (f && f.getAttribute("aria-expanded") !== "true") f.click(); f?.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
     if (a === "photos") {
@@ -257,6 +257,7 @@ td+td{font-weight:600}
       ${["open", "closed"].includes(sd.status) && sl.length ? `<h2>ยอดรับเข้า</h2><p class="muted">CPF ส่งมาเกินที่บันทึก<br>แก้ทีละอย่าง</p>
       <div class="row"><select id="rp" class="grow" aria-label="สินค้าที่จะแก้ยอดรับเข้า">${sl.map((l) => `<option value="${l.product_id}" data-r="${+l.received || 0}">${esc(prods[l.product_id])} (ตอนนี้ ${+l.received || 0} ${esc(unit[l.product_id])})</option>`).join("")}</select>
       <input id="rq" class="ed" type="number" inputmode="decimal" aria-label="รับเข้าที่ถูก" value="${+sl[0].received || 0}"></div>
+      <p class="muted">แก้หลังน้องกดรับของแล้ว</p>
       <button class="btn" id="rs" type="button">บันทึกยอดรับเข้า</button><p id="rm" class="muted"></p>` : ""}
       <h2>เงินสด</h2>
       <div class="row"><label class="grow" for="ce">เงินสดควรมี (บาท)</label><input id="ce" class="ed cash" type="number" inputmode="decimal" value="${sd.cash_expected ?? ""}"></div>

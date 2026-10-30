@@ -32,7 +32,7 @@ a.cell{text-decoration:none;color:inherit}
 </div>
 <dialog id="ps" class="bsheet full" role="dialog" aria-modal="true" aria-labelledby="psh"><div class="hd"><button class="txt-btn" type="button" data-close>ยกเลิก</button><b id="psh"></b><span aria-hidden="true"></span></div>
   <div class="body" id="psb"></div>
-  <div class="foot"><button class="btn primary" id="pss">บันทึก</button><p id="psm" class="err" role="alert"></p></div></dialog>
+  <div class="foot"><button class="btn primary" id="pss">บันทึกสินค้า</button><p id="psm" class="err" role="alert"></p></div></dialog>
 <dialog id="us" class="bsheet" aria-labelledby="ush"><div class="body"><div class="grab"></div>
   <div class="hd"><b id="ush"></b><button class="x" type="button" aria-label="ปิด">✕</button></div><p id="usm" class="meta ux-usm"></p><div id="usb" class="ux-4" aria-live="polite"></div></div>
   <div class="foot ux-2b"><a class="btn tonal" href="history.html">ดูประวัติ</a><a class="btn" href="holiday.html">ดูวันลา</a></div></dialog>
@@ -169,7 +169,7 @@ a.cell{text-decoration:none;color:inherit}
   if (MGR) return staff(); // the product and shop tabs never load for a manager
 
   // ---- สินค้า: ค้นหา + ชิปกรอง + แถวสั้น → หน้าต่างเต็มจอ (เพิ่ม และ แก้ ใช้ฟอร์มเดียวกัน · Mos 29 ต.ค. ถามครบในครั้งเดียว)
-  const { data: ps0, error: psErr } = await supabase.from("products").select("*").order("sort");
+  const { data: ps0, error: psErr } = await supabase.from("product_admin").select("*").order("sort");
   let ps = ps0 || [], cur = null, touched = false;
   const isCons = (p) => p.kind === "consumable";
   const noCost = (p) => p.active && !isCons(p) && p.cost_price == null;
@@ -179,7 +179,7 @@ a.cell{text-decoration:none;color:inherit}
   const same = (u, b) => !b || b === u;
   // same unit + pack > 1 (foil 2 ม้วน, carry bags 5 แพ็ค) = the usual order quantity, so the row still shows it
   const buyTxt = (p) => { const u = E(UXM.unit(p.unit)), pk = Number(p.pack_size) || 1;
-    return same(p.unit, p.buy_unit) ? (pk > 1 ? `ซื้อทีละ ${pk} ${u}` : `ซื้อทีละ${u}`) : `ซื้อทีละ${E(p.buy_unit)}${pk > 1 ? ` (${pk} ${u})` : ""}`; };
+    return same(p.unit, p.buy_unit) ? (pk > 1 ? `ซื้อทีละ ${pk} ${u}` : `ซื้อทีละ${u}`) : `ซื้อทีละ${E(UXM.unit(p.buy_unit))}${pk > 1 ? ` (${pk} ${u})` : ""}`; };
   // ของขาย/ของใช้ + ซื้อจากไหน → kind / supplier / made_here · ตอนปิดร้าน → count_mode (0045, default from kind)
   const SRC = { cpf: "CPF", self: "ซื้อเอง", made: "ทำในร้าน" };
   const srcOf = (p) => p.made_here ? "made" : p.supplier === "cpf" ? "cpf" : "self";
@@ -207,12 +207,12 @@ a.cell{text-decoration:none;color:inherit}
     return `<label class="field" for="pn">ชื่อสินค้า</label><input type="text" id="pn" name="name" value="${E(p.name ?? "")}" autocomplete="off" required>
       ${seg("sell", "ของขาย หรือ ของใช้", [["sell", "ของขาย"], ["use", "ของใช้"]], sell ? "sell" : "use")}
       ${seg("src", "ซื้อจากไหน", [["cpf", "CPF"], ["self", "ซื้อเอง"], ["made", "ทำในร้าน"]], src)}
-      <label class="field" for="pu">หน่วยใช้ <small>(ที่น้องนับ)</small></label><input type="text" id="pu" name="unit" list="units" placeholder="ชิ้น" value="${E(p.unit ?? "")}" required>
-      <label class="field" for="pb">หน่วยซื้อ</label><input type="text" id="pb" name="buy_unit" list="buys" placeholder="ถุง" value="${E(p.buy_unit ?? "")}">
+      <label class="field" for="pu">หน่วยใช้ <small>(ที่น้องนับ)</small></label><input type="text" id="pu" name="unit" list="units" placeholder="ชิ้น" value="${E(UXM.unit(p.unit))}" required>
+      <label class="field" for="pb">หน่วยซื้อ</label><input type="text" id="pb" name="buy_unit" list="buys" placeholder="ถุง" value="${E(UXM.unit(p.buy_unit))}">
       <label class="field" for="pk" id="pkl"></label><input type="number" id="pk" inputmode="numeric" min="1" step="1" name="pack_size" value="${E(p.pack_size ?? 1)}" data-v="${E(p.pack_size ?? 1)}">
       <label class="field" for="pc"><span id="pcl"></span><small class="h" id="pch">ว่างได้ ใส่ทีหลังจากใบเสร็จ</small></label>${num("pc", "cost_price", p.cost_price)}
       <div data-q="sell"><label class="field" for="psp">ขายหน้าร้าน (บาท)</label>${num("psp", "store_price", p.store_price)}
-        <label class="field" for="pdp">ขายเดลิเวอรี (บาท)</label>${num("pdp", "delivery_price", p.delivery_price)}</div>
+        <label class="field" for="pdp">ขายเดลิเวอรี่ (บาท)</label>${num("pdp", "delivery_price", p.delivery_price)}</div>
       ${seg("count_mode", "ตอนปิดร้าน", [["count", "นับจำนวน"], ["tick", "ติ๊กใกล้หมด"]], modeOf(p))}
       <div data-q="low"><label class="field" for="pl"><span id="pll"></span><small class="h">ปิดร้านแล้วเหลือต่ำกว่านี้ ขึ้นในรายการ ของต้องซื้อเอง</small></label>${num("pl", "low_at", p.low_at)}</div>
       ${cur ? `<label class="chk"><input type="checkbox" role="switch" name="active" ${p.active ? "checked" : ""}>ยังใช้อยู่ (เอาติ๊กออก = ปิดใช้)</label>` : ""}
@@ -225,6 +225,9 @@ a.cell{text-decoration:none;color:inherit}
     const sell = F("sell").value === "sell", src = F("src").value, u = F("unit").value.trim(), b = F("buy_unit").value.trim(), un = UXM.unit(u) || "หน่วยใช้", k = F("pack_size");
     $("psb").querySelector("[data-seg=src] [data-v=made]").hidden = !sell;
     $("psb").querySelector("[data-q=sell]").hidden = !sell;
+    // round 3 (item 18): ของขาย is always counted, the question shows only for ของใช้
+    $("psb").querySelector("[data-seg=count_mode]").style.display = $("ql-count_mode").style.display = sell ? "none" : "";
+    if (sell) setSeg("count_mode", "count");
     $("psb").querySelector("[data-q=low]").hidden = !(sell && src !== "cpf" && F("count_mode").value === "count");
     $("pcl").textContent = `ราคาทุน ต่อ 1 ${un} (บาท)`; $("pch").hidden = sell; $("pll").textContent = `เตือนเมื่อเหลือต่ำกว่า (${un})`;
     // 0043: same unit → 1 locked (the typed number comes back if they differ again) · a CPF ของใช้ with one unit = how many per order (foil 2 ม้วน)
@@ -257,18 +260,22 @@ a.cell{text-decoration:none;color:inherit}
     if (!f.name) return bad("ใส่ชื่อสินค้าก่อน", "name");
     if (ps.some((p) => p.name === f.name && p !== cur)) return bad("มีสินค้าชื่อนี้แล้ว", "name");
     if (!f.unit) return bad("ใส่ หน่วยใช้ ก่อน เช่น ชิ้น", "unit");
+    // round 3 (item 32): the form shows ตัว / ชิ้น for EA / PC · unchanged → the stored code goes back (message.ts, order_display map it)
+    const back = (v, was) => cur && was && v === UXM.unit(was) ? was : v;
+    const unit = back(f.unit, cur?.unit), buyU = back(f.buy_unit, cur?.buy_unit) || null;
+    // round 3 (item 18): ติ๊กใกล้หมด only for ของใช้ (a tick never reaches the order · DB check products_tick_consumable)
     const row = { name: f.name, kind: !sell ? "consumable" : src === "cpf" ? "cpf" : "self", supplier: src === "cpf" ? "cpf" : "self", made_here: src === "made",
-      unit: f.unit, buy_unit: f.buy_unit || null, count_mode: f.count_mode, active };
+      unit, buy_unit: buyU, count_mode: sell ? "count" : f.count_mode, active };
     for (const [k, int] of [["pack_size", 1], ["cost_price"], ["store_price"], ["delivery_price"], ["low_at"]]) {
       row[k] = n(k, int); if (Number.isNaN(row[k])) return bad(k === "pack_size" ? `${$("pkl").textContent} ต้องเป็นเลขเต็ม 1 ขึ้นไป` : "ตัวเลขไม่ถูก\nใส่เลข 0 ขึ้นไป", k);
     }
     if (!(row.pack_size >= 1)) return bad(`${$("pkl").textContent} ต้องเป็นเลขเต็ม 1 ขึ้นไป`, "pack_size");
-    if (cur && F("pack_size").disabled && f.unit === cur.unit && (f.buy_unit || null) === (cur.buy_unit || null)) delete row.pack_size; // locked "1" saves only when the units just changed
+    if (cur && F("pack_size").disabled && unit === cur.unit && buyU === (cur.buy_unit || null)) delete row.pack_size; // locked "1" saves only when the units just changed
     if (sell && active && row.cost_price == null) return bad(`ใส่ ราคาทุน ต่อ 1 ${un} ก่อน`, "cost_price");
     if ($("psb").querySelector("[data-q=low]").hidden) row.low_at = null; // ponytail: night_plan reads low_at only for ของขาย ซื้อเอง (kind self) counted rows
     if (!cur) Object.assign(row, { sort: Math.max(0, ...ps.map((p) => p.sort)) + 1, par_weekday: 0, par_weekend: 0 });
     $("pss").disabled = true;
-    const r = cur ? await supabase.from("products").update(row).eq("id", cur.id).select().single() : await supabase.from("products").insert(row).select().single();
+    const r = cur ? await supabase.from("product_admin").update(row).eq("id", cur.id).select().single() : await supabase.from("product_admin").insert(row).select().single();
     $("pss").disabled = false;
     if (r.error) return bad("บันทึกไม่ได้\n" + App.errText(r.error));
     const saved = r.data || { ...cur, ...row };
@@ -296,7 +303,7 @@ a.cell{text-decoration:none;color:inherit}
   const chev = `<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>`;
   const send = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>`;
   const thd = (d) => new Date(d + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
-  const drawHol = () => { $("hl").innerHTML = hol.map((d, i) => `<div class="cell"><span class="k num">${thd(d)}</span><button class="txt-btn" type="button" data-del="${i}">ลบ</button></div>`).join("") || `<div class="cell"><span class="k muted">ยังไม่มีวันหยุด</span></div>`; };
+  const drawHol = () => { $("hl").innerHTML = hol.map((d, i) => `<div class="cell"><span class="k num">${thd(d)}</span><button class="txt-btn" type="button" data-del="${i}">ลบวันหยุด</button></div>`).join("") || `<div class="cell"><span class="k muted">ยังไม่มีวันหยุด</span></div>`; };
   const gp = (id, label) => `<label class="cell"><span class="k">${label}</span><input class="num-in" type="number" inputmode="decimal" step="any" min="0" id="${id}" value="${E(S[id])}" placeholder="ยังไม่ใส่"><span class="unit">%</span></label>`;
   // mock ก (iOS grouped): every setting is a row · pickers open the native list · one red save in the glass bar
   $("sys").innerHTML = `<h2>ร้าน</h2><div class="gl"><label class="cell"><span class="k">ชื่อร้าน</span><input type="text" id="shop" value="${E(S.shop_name)}"></label></div><p class="gf">ชื่อนี้ขึ้นหัวใบสั่ง</p>
@@ -306,20 +313,20 @@ a.cell{text-decoration:none;color:inherit}
     <h2>รอบสั่ง CPF</h2><div class="gl">
       <label class="cell nav"><span class="k">สั่งคืนนี้ ของมากี่วัน<small>CPF ตัดรอบบ่ายโมง</small></span><span class="v" data-for="lead"></span>${chev}<select id="lead">${[1, 2, 3].map((n) => `<option value="${n}" ${Number(S.order_lead_days ?? 2) === n ? "selected" : ""}>${n === 1 ? "พรุ่งนี้" : n === 2 ? "มะรืน (2 วัน)" : "3 วัน"}</option>`).join("")}</select></label>
       <label class="cell"><span class="k">ของถึงกี่โมง</span><input type="time" id="dlv" value="${E(S.delivery_at ?? "14:00")}"></label>
-      <label class="cell"><span class="k">แท็กเซลล์ท้ายใบสั่ง<small>ข้อความนี้ไม่ใช่การแท็กจริง บอกเซลล์ครั้งเดียวว่าใบสั่งมาจาก 5STARCHICKEN</small></span><input type="text" id="tag" value="${E(S.sales_mention ?? "@new")}" placeholder="@new" style="max-width:9em"></label>
+      <label class="cell"><span class="k">แท็กเซลล์ท้ายใบสั่ง<small>ข้อความนี้ไม่ใช่การแท็กจริง บอกเซลล์ครั้งเดียวว่าใบสั่งมาจากร้านเรา</small></span><input type="text" id="tag" value="${E(S.sales_mention ?? "@new")}" placeholder="@new" style="max-width:9em"></label>
       <div class="cell" style="flex-wrap:wrap"><span class="k">CPF ไม่ส่งของวัน</span>${dowRow("nod", nod, "วันที่ CPF ไม่ส่งของ")}</div>
       <label class="cell"><span class="k">เผื่อวันขายดี<small>เป้า = ขายเฉลี่ย 7 วัน × 2.5 วัน + เผื่อ</small></span><input type="number" id="buf" inputmode="numeric" min="0" max="100" step="5" value="${buf}" style="width:5.5em;text-align:right"> %</label></div>
     <h2>กติกาใบสั่ง</h2>
-    <p class="gf"><span>ทุกคืนที่ปิดร้าน แอปทำใบสั่งให้ ของถึงมะรืน 14:00 (เข้ารอบตัด CPF 13:00 พรุ่งนี้)</span><span>เป้าต่อสินค้า = ขายเฉลี่ย 7 วันล่าสุด × 2.5 วัน + เผื่อ% (7 วันแรกใช้ค่าเฉลี่ยใบเจ้าของเดิม)</span><span>สั่ง = เป้า − เหลือคืนนี้ − ของที่กำลังมา ปัดเป็นถุงใกล้สุด ติดลบ = ไม่สั่ง</span><span>คืนเสาร์ไม่มีใบ (ของจะถึงจันทร์ CPF ไม่ส่ง) ล็อตอาทิตย์เลยนับแค่ อ. + พ.เช้า</span><span>คืนจันทร์ร้านปิด แอปทำใบของพุธเองจากของเหลือวันอาทิตย์</span><span>เจ้าของกดส่งเองทุกใบ แอปเตือน 21:30, 09:00, 12:00 ถ้ายังไม่กด แอปส่งให้ตามเวลากันพลาด</span><span>สินค้าที่ไม่ขาย เอาติ๊ก "ยังใช้อยู่" ออกในแท็บสินค้า</span><span><a href="order-rules.html" style="color:var(--color-primary);text-decoration:underline">ดูกติกาแบบเห็นภาพ พร้อมตัวอย่างตัวเลข</a></span></p>
+    <p class="gf"><span>ทุกคืนที่ปิดร้าน แอปทำใบสั่งให้ ของถึงมะรืน 14:00 (เข้ารอบตัด CPF 13:00 พรุ่งนี้)</span><span>เป้าต่อสินค้า = ขายเฉลี่ย 7 วันล่าสุด × 2.5 วัน + เผื่อ% (7 วันแรกใช้ค่าเฉลี่ยใบเจ้าของเดิม)</span><span>สั่ง = เป้า − เหลือคืนนี้ − ของที่กำลังมา ปัดเป็นถุงใกล้สุด ติดลบ = ไม่สั่ง</span><span>ของที่ยังขายอยู่ แต่หมดและไม่มีของกำลังมา สั่งอย่างน้อย 1 ถุง</span><span>คืนเสาร์ไม่มีใบ (ของจะถึงจันทร์ CPF ไม่ส่ง) ล็อตอาทิตย์เลยนับแค่ อ. + พ.เช้า</span><span>คืนจันทร์ร้านปิด แอปทำใบของพุธเองจากของเหลือวันอาทิตย์</span><span>เจ้าของกดส่งเองทุกใบ แอปเตือน 21:30, 09:00, 12:00 ถ้ายังไม่กด แอปส่งให้ตามเวลากันพลาด</span><span>สินค้าที่ไม่ขาย เอาติ๊ก "ยังใช้อยู่" ออกในแท็บสินค้า</span><span><a href="order-rules.html" style="color:var(--color-primary);text-decoration:underline">ดูกติกาแบบเห็นภาพ พร้อมตัวอย่างตัวเลข</a></span></p>
     <h2>กลุ่ม LINE</h2><div class="gl"><label class="cell nav"><span class="k">กลุ่มสั่งของ<small>มีเซลล์อยู่</small></span><span class="v" data-for="sg"></span>${chev}${sel("sg", S.sales_group_id)}</label>
       <label class="cell nav"><span class="k">กลุ่มพนักงาน</span><span class="v" data-for="fg"></span>${chev}${sel("fg", S.staff_group_id)}</label>
       <button class="cell act" type="button" id="claim"><span class="ic">${send}</span><span class="k">ส่งการ์ดยืนยันตัวตนเข้ากลุ่มพนักงาน</span></button></div>
     <p id="cmsg" class="muted" aria-live="polite"></p>
     <p class="gf"><span>ใช้เมื่อ: น้องยังไม่ได้กด หรือการ์ดจมไปแล้ว</span><span>กดปุ่มนี้ → การ์ดเด้งในกลุ่มพนักงาน</span><span>น้องกด 'ฉันเป็นพนักงาน' ในกลุ่ม → ใช้แอปได้เลย</span></p>
-    <h2>ค่า GP แอปส่งอาหาร</h2><div class="gl">${gp("lineman_gp", "LINE MAN")}${gp("grab_gp", "Grab")}${gp("shopee_gp", "Shopee")}</div><p class="gf">หน้าต้นทุน/กำไรใช้ตัวเลขนี้คิดค่า GP</p>
+    <h2>ค่าคอมแอปส่งอาหาร</h2><div class="gl">${gp("lineman_gp", "LINE MAN")}${gp("grab_gp", "Grab")}${gp("shopee_gp", "Shopee")}</div><p class="gf">หน้าต้นทุน/กำไรใช้ตัวเลขนี้คิดค่าคอมแอปส่ง</p>
     <h2>วันหยุดร้าน</h2><div class="gl"><div class="cell" style="flex-wrap:wrap"><span class="k">หยุดทุกสัปดาห์</span>${dowRow("cld", cld, "วันหยุดร้านประจำ")}</div></div>
     <p class="gf"><span>วันหยุดประจำ ไม่มีเตือนปิดร้าน</span><span>คืนนั้นแอปสั่งของจากยอดขายวันเปิดล่าสุด</span><span>หน้าหลักพนักงานขึ้น วันนี้ร้านหยุด</span></p>
-    <div class="gl"><div class="cell"><span class="k" style="white-space:nowrap">เฉพาะวัน</span><input type="date" id="hd" aria-label="วันหยุดที่จะเพิ่ม"><button class="txt-btn" type="button" id="ha">เพิ่ม</button></div></div>
+    <div class="gl"><div class="cell"><span class="k" style="white-space:nowrap">เฉพาะวัน</span><input type="date" id="hd" aria-label="วันหยุดที่จะเพิ่ม"><button class="txt-btn" type="button" id="ha">เพิ่มวันหยุด</button></div></div>
     <div class="gl" id="hl"></div><p class="gf">เพิ่มหรือลบแล้ว กด บันทึกตั้งค่าร้าน ด้านล่าง</p>
     <div class="sticky"><button class="btn primary" id="save">บันทึกตั้งค่าร้าน</button><p id="smsg" class="muted"></p></div>`;
   // picker rows show the chosen group's name as the value

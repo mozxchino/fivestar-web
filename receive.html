@@ -10,8 +10,9 @@
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>รับของ</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3<span id="d"></span></div></div></header>
 <div class="sk"><span class="vh">กำลังเปิด…</span><p></p><div class="sheet"><div class="it meta sheet-head"><i class="sk-b" style="--w:34%;--h:13px;margin:0"></i><i class="sk-b" style="--w:28px;--h:13px;margin:0 auto"></i><i class="sk-b" style="--w:64px;--h:13px;margin:0 auto"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div></div><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
+<div id="yday" class="card" hidden><p id="ydayT" class="err"></p><a id="ydayA" class="btn sm" href="#">รับของใบนั้น</a></div>
 <section id="done" class="done ld" hidden aria-live="polite"><span class="mascot ok-badge"><img src="img/mascot-240.png" alt="" width="80" height="80"></span><h2 id="doneT">รับของแล้ว</h2><p id="doneS"></p><p class="warm" id="doneW">ขอบคุณที่ช่วยนับของ</p><div class="acts"><div id="next"></div><a class="btn home" href="index.html">กลับหน้าหลัก</a></div></section>
-<div id="none" class="ld" hidden><div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>วันนี้ไม่มีของต้องรับ</p></div><a class="btn" href="close.html">ไปปิดร้าน</a></div>
+<div id="none" class="ld" hidden><div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>วันนี้ไม่มีของต้องรับ</p></div><button id="noneX" class="btn" type="button" hidden>บันทึกของที่ CPF มาส่ง</button><a class="btn" href="close.html">ไปปิดร้าน</a></div>
 <div id="form" class="ld" hidden>
   <p id="st" class="ok"></p>
   <h2 class="rc-q" id="rcQ">ของ CPF มาครบไหม</h2>
@@ -26,6 +27,7 @@
   <div id="lines"></div>
   </div>
   </div>
+  <button id="xB" class="btn" type="button" aria-haspopup="dialog">+ มีของอื่นมาด้วย</button>
   <div id="phBox" hidden>
   <h2 class="sh">รูปใบส่งของ</h2>
   <p id="phH" class="muted">ต้องถ่ายทุกวัน ได้ถึง 3 รูป</p>
@@ -41,26 +43,47 @@
   <p class="ux-nd">ถ้าแค่มาช้า ไม่ต้องกด รอรับของตามปกติ</p>
   <label class="chk ux-ndc"><input id="ndOk" type="checkbox"><span>ถามเซลล์ในกลุ่มสั่งของแล้ว<br>เซลล์ยืนยันว่าวันนี้ไม่มาส่ง</span></label></div>
   <div class="foot"><button id="ndGo" class="btn primary" disabled>บันทึก วันนี้ไม่มีของมา</button></div></dialog>
+<dialog id="xs" class="bsheet" aria-labelledby="xsH"><div class="body"><div class="grab"></div>
+  <div class="hd"><b id="xsH">มีของอื่นมาด้วย</b><button class="x" type="button" aria-label="ปิด">✕</button></div>
+  <p class="muted">ของ CPF ที่ไม่อยู่ในใบสั่ง หรือมาเกินจากที่สั่ง</p>
+  <label class="field" for="xp">สินค้า</label><select id="xp"></select>
+  <label class="field" for="xq">ได้มา</label><div class="in"><input id="xq" type="number" inputmode="decimal" step="any" min="0" placeholder="0"><span class="sfx" id="xu"></span></div>
+  <p id="xm" class="err" role="alert"></p></div>
+  <div class="foot"><button id="xGo" class="btn primary" type="button">เพิ่มของที่มา</button></div></dialog>
 <script>
 (async () => {
   const { supabase, me } = await App.ready();
   if (UXS.only(me, ["staff", "owner"], "หน้านี้สำหรับพนักงานในร้าน", "ผู้จัดการดูงานของร้านได้ที่หน้าวันนี้", "owner.html", "ไปหน้าวันนี้")) return;
   const today = Photo.todayPrefix().slice(0, 10).replaceAll("/", "-");
-  d.textContent = " · " + new Date(today + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
-  const { data: o, error: oErr } = await supabase.from("orders").select("id").eq("for_date", today).in("status", ["sent", "failed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const fmt = (x) => new Date(x + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
+  // round 3 (r2 review): the owner receives an older order (?d=) · on today's page, yesterday not closed and its order not received → a link to it
+  const qd = new URLSearchParams(location.search).get("d"), owner = me.role === "owner";
+  const day = owner && /^\d{4}-\d{2}-\d{2}$/.test(qd || "") ? qd : today;
+  d.textContent = " · " + fmt(day);
+  if (owner && day === today) {
+    const { data: un } = await supabase.rpc("unclosed_day");
+    if (un && un < today) {
+      const { data: yo } = await supabase.from("orders").select("id,order_items(received_at)").eq("for_date", un).in("status", ["sent", "failed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (yo && !yo.order_items.some((i) => i.received_at)) { ydayT.textContent = `ใบสั่ง ${fmt(un)} ยังไม่ได้รับของ\nวันนั้นยังไม่ได้ปิดร้าน`; ydayA.href = "receive.html?d=" + un; yday.hidden = false; }
+    }
+  }
+  const { data: o, error: oErr } = await supabase.from("orders").select("id").eq("for_date", day).in("status", ["sent", "failed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
   const cant = (e) => { none.hidden = false; const p = none.querySelector("p"); p.className = "err"; p.textContent = "เปิดใบสั่งไม่ขึ้น\n" + App.errText(e); none.querySelector("a").hidden = true; }; // qa: not "no delivery" when the read failed
   if (oErr) return cant(oErr);
-  if (!o) { none.hidden = false; return; }
-  const { data: items, error } = await supabase.from("order_items").select("product_id,qty_proposed,qty_final,qty_received,received_at,products(name,unit,pack_size,sort)").eq("order_id", o.id);
+  // round 3 (item 17): CPF came with no order → the form opens empty, staff add what came (receive_order(null) makes today's order)
+  if (!o) { none.hidden = false; if (day !== today) { none.querySelector("p").textContent = `ไม่มีใบสั่ง ${fmt(day)}`; return; } noneX.hidden = false; await new Promise((r) => { noneX.onclick = r; }); none.hidden = true; }
+  const { data: items, error } = o ? await supabase.from("order_items").select("product_id,qty_proposed,qty_final,qty_received,received_at,products(name,unit,pack_size,sort)").eq("order_id", o.id) : { data: [] };
   if (error) return cant(error);
   items.sort((a, b) => (a.products?.sort ?? 0) - (b.products?.sort ?? 0));
   items.forEach((i) => { if (i.products) i.products.unit = UXM.unit(i.products.unit); }); // EA / PC → ตัว / ชิ้น
   const got = items.some((i) => i.received_at);
   if (got) { st.textContent = "รับของแล้ว\nแก้ตัวเลขได้จนกว่าจะกดปิดร้าน"; }
-  lines.innerHTML = items.map((i) => { const ord = i.qty_final ?? i.qty_proposed; const v = got ? (i.qty_received ?? 0) : ord;
-    return `<div class="it" data-id="${i.product_id}"><div class="nm">${i.products?.name ?? ""}<div class="meta">นับเป็น${i.products?.unit ?? ""}</div><span class="ux-short" data-u="${i.products?.unit ?? ""}"></span></div><div class="ord">${+ord}</div><input type="number" inputmode="decimal" step="any" min="0" value="${+v}"></div>`; }).join("");
+  const row = (i) => { const ord = i.qty_final ?? i.qty_proposed; const v = got ? (i.qty_received ?? 0) : ord;
+    return `<div class="it${+ord ? "" : " x"}" data-id="${i.product_id}"><div class="nm">${i.products?.name ?? ""}<div class="meta">นับเป็น${i.products?.unit ?? ""}</div><span class="ux-short" data-u="${i.products?.unit ?? ""}"></span></div><div class="ord">${+ord}</div><input type="number" inputmode="decimal" step="any" min="0" value="${+v}"></div>`; };
+  lines.innerHTML = items.map(row).join("");
   // round 2 (Mos 26 ต.ค.): what was ordered, read-only, fills the screen while the staff checks the delivery note (hidden once ขาด opens the editable rows)
   ordN.textContent = `${items.length} อย่าง`;
+  if (day !== today) ordH.firstChild.textContent = `ใบสั่ง ${fmt(day)}`;
   ordL.innerHTML = items.map((i) => `<div class="kv"><span>${UXS.esc(i.products?.name ?? "")}</span><b>${+(i.qty_final ?? i.qty_proposed)} ${UXS.esc(i.products?.unit ?? "")}</b></div>`).join("");
   const photos = []; let pick = "";
   Photo.picker(supabase, ph, { paths: photos, type: "receipt", name: "รูปใบส่งของ", max: 3, status: phS, onChange: () => short() });
@@ -69,12 +92,15 @@
   // (server refuses short without a photo · ครบ is held here) · the photo goes into receive_order(photos) → order_items.receipt_photos on both paths
   const short = () => {
     // round 2b (Mos 26 ต.ค.): a row that differs from the order is marked (ขาด or เกิน) · the line above the red button sums it live, per unit
-    let n = 0, ch = 0, over = 0; const miss = {};
-    lines.querySelectorAll(".it").forEach((r) => { const ord = +r.querySelector(".ord").textContent, inp = r.querySelector("input"), gap = inp.value === "" ? 0 : ord - +inp.value, sp = r.querySelector(".ux-short");
+    let n = 0, ch = 0, over = 0, ex = 0; const miss = {};
+    lines.querySelectorAll(".it").forEach((r) => {
+      if (r.classList.contains("x")) { const got1 = +r.querySelector("input").value > 0; r.querySelector(".ux-short").textContent = got1 ? "นอกใบสั่ง" : ""; r.classList.toggle("rc-chg", got1); if (got1) ex++; return; }
+      const ord = +r.querySelector(".ord").textContent, inp = r.querySelector("input"), gap = inp.value === "" ? 0 : ord - +inp.value, sp = r.querySelector(".ux-short");
       sp.textContent = gap > 0 ? `ขาด ${+gap.toFixed(1)} ${sp.dataset.u}` : gap < 0 ? `เกิน ${+(-gap).toFixed(1)} ${sp.dataset.u}` : ""; r.classList.toggle("rc-chg", gap !== 0);
       if (gap > 0) { n++; miss[sp.dataset.u] = (miss[sp.dataset.u] || 0) + gap; } if (gap < 0) over++; if (gap) ch++; });
     sum.hidden = pick !== "short";
-    sum.textContent = ch ? [`แก้แล้ว ${ch} รายการ`, n ? "ขาด " + Object.entries(miss).map(([u, v]) => `${+v.toFixed(1)} ${u}`).join(" ") : "", over ? `เกิน ${over} รายการ` : ""].filter(Boolean).join(" ") : "ยังไม่ได้แก้ แตะช่องที่ได้ไม่ตรง";
+    sum.textContent = ch ? [`แก้แล้ว ${ch} รายการ`, n ? "ขาด " + Object.entries(miss).map(([u, v]) => `${+v.toFixed(1)} ${u}`).join(" ") : "", over ? `เกิน ${over} รายการ` : ""].filter(Boolean).join(" ") : ex ? "" : "ยังไม่ได้แก้ แตะช่องที่ได้ไม่ตรง";
+    if (ex) sum.textContent = [sum.textContent, `ของนอกใบสั่ง ${ex} อย่าง`].filter(Boolean).join("\n");
     const need = !!pick && !photos.length && !save.disabled;
     shot.hidden = !need; save.hidden = need; shotT.textContent = n ? `ถ่ายรูปใบส่งของ (ขาด ${n} อย่าง)` : "ถ่ายใบส่งของ";
     phBox.hidden = !pick; phH.hidden = photos.length > 0; phMore.hidden = !photos.length || photos.length >= 3; // the red button takes the first photo, "ถ่ายรูปเพิ่ม" the 2nd and 3rd
@@ -83,7 +109,7 @@
   // round 4 (like close step 2): one tap "ครบ" = every row gets the ordered qty (the same numbers typing them would send) · "ขาด" opens the rows
   const setPick = (v) => { pick = v; save.textContent = v === "all" ? `บันทึก ของมาครบ ${items.length} อย่าง` : "บันทึกรับของ"; save.classList.add("primary"); recAll.setAttribute("aria-checked", v === "all"); recShort.setAttribute("aria-checked", v === "short"); recBox.hidden = v !== "short"; recAll.parentElement.dataset.pick = v; ordBox.hidden = v === "short"; why.hidden = true; save.classList.remove("rc-wait"); save.removeAttribute("aria-disabled"); };
   recAllS.textContent = `${items.length} อย่าง ตัวเลขเท่าที่สั่ง`;
-  recAll.onclick = () => { lines.querySelectorAll(".it").forEach((r) => { r.querySelector("input").value = +r.querySelector(".ord").textContent; }); setPick("all"); msg.textContent = ""; short(); };
+  recAll.onclick = () => { lines.querySelectorAll(".it").forEach((r) => { r.querySelector("input").value = +r.querySelector(".ord").textContent + (+r.dataset.x || 0); }); setPick("all"); msg.textContent = ""; short(); };
   recShort.onclick = () => { setPick("short"); msg.textContent = ""; short(); lines.querySelector("input")?.focus({ preventScroll: true }); recBox.scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); };
   // reopened after receiving: the saved numbers decide which choice is on
   // no solid red until the choice is made · round 2: still reads as the save button (pale red), the reason is the one line above it
@@ -92,21 +118,47 @@
   // done: the form gives way to the mascot screen (title · detail · thank-you line · next task)
   const run = async (p, notify, title, sub, warm) => { save.disabled = none2.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
     const { error } = await p; if (error) { msg.textContent = "ยังบันทึกไม่ได้\n" + App.errText(error); msg.className = "err"; save.disabled = none2.disabled = false; return; }
-    await App.fn("receive-notify", notify).catch(() => {});
+    await (async () => App.fn("receive-notify", typeof notify === "function" ? await notify() : notify))().catch(() => {});
     form.hidden = true; doneT.textContent = title; doneS.textContent = sub; doneW.textContent = warm; done.hidden = false; scrollTo(0, 0);
     await UXS.showNext(supabase, next); };
   save.onclick = () => {
     if (!pick) { msg.className = "err"; msg.textContent = "เลือก ของมาครบ หรือ มีของขาด ก่อน"; return UXM.shake(recAll.parentElement); }
     if (!photos.length) { msg.className = "err"; msg.textContent = "ต้องถ่ายรูปใบส่งของก่อน"; return short(); }
     const arr = [...lines.querySelectorAll(".it")].map((r) => ({ product_id: r.dataset.id, qty_received: +r.querySelector("input").value || 0 }));
+    if (!o && !arr.some((a) => a.qty_received > 0)) { msg.className = "err"; msg.textContent = "เพิ่มของที่ CPF มาส่งก่อน"; return xB.click(); }
     const n = arr.filter((a, i) => a.qty_received < +lines.querySelectorAll(".it .ord")[i].textContent).length;
-    run(supabase.rpc("receive_order", { oid: o.id, items: arr, photos }), { order_id: o.id }, "รับของแล้ว", n ? `ของมาไม่ครบ ${n} อย่าง` : "", "ขอบคุณที่ช่วยนับของ");
+    // no order: the save makes today's order, the card is sent for that one
+    const body = o ? { order_id: o.id } : async () => ({ order_id: (await supabase.from("orders").select("id").eq("for_date", today).in("status", ["sent", "failed"]).limit(1).maybeSingle()).data?.id });
+    run(supabase.rpc("receive_order", { oid: o?.id ?? null, items: arr, photos }), body, "รับของแล้ว", n ? `ของมาไม่ครบ ${n} อย่าง` : "", "ขอบคุณที่ช่วยนับของ");
   };
   // round 6 (Mos 23 ต.ค.): a sheet instead of confirm() · late ≠ not coming, so the save stays off until the sales rep confirmed in the order group
   const nd = UXD.sheet(document.getElementById("nd"));
   ndOk.onchange = () => { ndGo.disabled = !ndOk.checked; };
   none2.onclick = () => { ndOk.checked = false; ndGo.disabled = true; nd.open(); };
   ndGo.onclick = () => { if (!ndOk.checked) return; nd.close(); run(supabase.rpc("no_delivery_today"), { no_delivery: true }, "บันทึกแล้ว", "วันนี้ไม่มีของมา", "ขอบคุณที่แจ้ง"); };
+  // round 3 (item 17, Mos 30 ต.ค.): "มีของอื่นมาด้วย" · a CPF product not on the order gets its own row (ordered 0), one on it gets the amount added
+  const xsh = UXD.sheet(xs); let P = null;
+  xB.onclick = async () => {
+    xm.textContent = ""; xq.value = "";
+    if (!P) { const { data: ps, error: pe } = await supabase.from("products").select("id,name,unit,sort,kind,supplier").eq("active", true).order("sort");
+      if (pe) { msg.className = "err"; msg.textContent = "เปิดรายการสินค้าไม่ขึ้น\n" + App.errText(pe); return; }
+      P = Object.fromEntries((ps || []).filter((p) => p.kind === "cpf" || (p.kind === "consumable" && p.supplier === "cpf")).map((p) => [p.id, p]));
+      xp.innerHTML = '<option value="">เลือกสินค้า</option>' + Object.values(P).map((p) => `<option value="${p.id}">${UXS.esc(p.name)}</option>`).join(""); }
+    xp.value = ""; xu.textContent = ""; xsh.open();
+  };
+  xp.onchange = () => { xu.textContent = UXM.unit(P[xp.value]?.unit); xm.textContent = ""; };
+  xGo.onclick = () => {
+    const p = P?.[xp.value], q = +xq.value;
+    if (!p) { xm.textContent = "เลือกสินค้าก่อน"; return UXM.shake(xp); }
+    if (!(q > 0) || q > 1000) { xm.textContent = "ใส่จำนวน 1 ถึง 1,000"; return UXM.shake(xq); }
+    let r = lines.querySelector(`.it[data-id="${p.id}"]`);
+    if (!r) { lines.insertAdjacentHTML("beforeend", row({ product_id: p.id, qty_proposed: 0, qty_received: 0, products: { name: UXS.esc(p.name), unit: UXM.unit(p.unit) } })); r = lines.lastElementChild; }
+    r.dataset.x = (+r.dataset.x || 0) + q; const inp = r.querySelector("input"); inp.value = +inp.value + q;
+    xsh.close(); setPick("short"); msg.textContent = ""; short(); UXM.toast(`เพิ่ม ${p.name} ${q} ${UXM.unit(p.unit)} แล้ว`);
+  };
+  if (day !== today) none2.hidden = true;   // "วันนี้ไม่มีของมา" is about today
+  if (!o) { rcQ.hidden = true; recAll.parentElement.hidden = true; ordBox.hidden = true; none2.hidden = true; st.className = "muted"; st.textContent = "CPF มาส่งของ ทั้งที่ไม่มีใบสั่ง\nเพิ่มของที่มาทีละอย่าง"; setPick("short"); }
   form.hidden = false; short();
+  if (!o) xB.click();
 })();
 </script></body></html>

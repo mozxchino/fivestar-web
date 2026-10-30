@@ -392,7 +392,7 @@ a.bt:active, button.bt:active { transform: scale(.97); box-shadow: var(--shadow-
 .trio > .bt:not(.wide) .k { gap: 5px; font-size: 13px; }
 .trio > .bt:not(.wide) .v { font-size: 17px; line-height: 1.25; letter-spacing: 0; }
 .trio > .bt:not(.wide) .v small { font-size: 13px; }
-.trio > .bt:not(.wide) .v { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* visual hierarchy rule 3: a tile value is one line · the unit steps down to <small> */
+.trio > .bt:not(.wide) .v { overflow-wrap: break-word; } /* visual hierarchy rule 3: a tile value is one line at normal size · r3 #20: at big text the unit wraps to the next line, never … on the number */
 .trio > .bt:not(.wide) .m { font-size: 12px; line-height: 1.35; }
 .trio > .bt.wide:first-child { margin-bottom: 2px; }
 /* lead: the one next task across the top · as tall as its words, still the biggest thing on the screen */
