@@ -40,9 +40,9 @@
   if (error) throw error;
   const row = (p) => `<div class="grid" data-id="${p.id}"><div class="nm">${E(p.name)}<div class="meta">${E(UXM.unit(p.unit))}</div></div>
     <input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rf" placeholder="ใส่" aria-label="${E(p.name)} สด"><input type="number" inputmode="decimal" enterkeyhint="next" min="0" step="any" class="rc" placeholder="0" aria-label="${E(p.name)} สุก"></div>`;
-  // Mos 30 ต.ค. (M3): two headed groups · products, then shop supplies, each with its count on the right
+  // Mos 30 ต.ค. (M3): products first, then a headed shop-supplies group with its count · no "สินค้า" heading (the table header already says it)
   const head = (t, n) => `<h2 class="sh">${t}<span class="n">${n} อย่าง</span></h2>`, goods = prods.filter((p) => p.kind !== "consumable"), supp = prods.filter((p) => p.kind === "consumable");
-  $("lines").innerHTML = (goods.length ? head("สินค้า", goods.length) + goods.map(row).join("") : "") + (supp.length ? head("ของใช้ในร้าน", supp.length) + supp.map(row).join("") : "");
+  $("lines").innerHTML = goods.map(row).join("") + (supp.length ? head("ของใช้ในร้าน", supp.length) + supp.map(row).join("") : "");
   UXM.bags($("lines"), prods); // 0046: ถุงเต็ม + เศษ
   // a re-count shows what was saved for that day; a day with no rows yet starts blank
   // Mos 30 ต.ค. (audit 10): a failed read must not look like an empty count · error + retry, and no save / no order button until a read worked
