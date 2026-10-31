@@ -1,0 +1,171 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>รายจ่าย</title><meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="lib/ui.css?v=0060b"><link rel="stylesheet" href="lib/ux-data.css">
+<style>
+/* 0070 (Mos 31 ต.ค. แบบ MKT): find a remembered name → sheet → amount + who paid · tabs like waste.html */
+.pg-exp .tabs button b { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 6px; padding: 0 6px; border-radius: 10px; font: 600 12px/1 var(--font-head); font-variant-numeric: tabular-nums; color: #fff; background: var(--color-primary); }
+.pg-exp .tabs button b:empty { display: none; }
+.el { padding: 4px 16px; }
+.el .it { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.el .it + .it, .el h3 + .it { border-top: .5px solid var(--color-separator); }
+.el h3 + .it { border-top: 0; }
+.el .it .grow { flex: 1; min-width: 0; }
+.el .it .grow b { display: block; font-weight: 500; }
+.el .it .grow small { display: block; font-size: 14px; color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
+.el .it .amt { flex: none; font: 500 17px/1.2 var(--font-head); font-variant-numeric: tabular-nums; }
+.el .it .go { flex: none; color: var(--color-ink-soft); font-size: 22px; }
+.el .it.add .grow b { color: var(--color-primary-dark); }
+.el .del { flex: none; width: 44px; height: 44px; margin-right: -10px; border: 0; background: none; font-size: 18px; color: var(--color-ink-soft); cursor: pointer; }
+.el h3.day { display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+.el h3.day > span:first-of-type { flex: 1; }
+.el h3.sec { margin: 14px 0 2px; font: 600 15px/1.3 var(--font-head); color: var(--color-ink-soft); }
+.sum { padding: 12px 16px; }
+.sum .tot { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 6px; font: 600 20px/1.3 var(--font-head); font-variant-numeric: tabular-nums; }
+.sum .kv b { font-variant-numeric: tabular-nums; }
+.sum hr { border: 0; border-top: .5px solid var(--color-separator); margin: 6px 0; }
+.cats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.pg-exp .in > #q { -webkit-appearance: none; appearance: none; border: 0; border-radius: 0; padding: 0 14px; font-size: 17px; text-align: left; }
+.pg-exp .in > #q::-webkit-search-decoration { -webkit-appearance: none; }
+#es .body label.fl { display: block; margin: 14px 0 0; font-weight: 500; }
+#es .body .seg { margin-top: 6px; }
+</style>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js?v=0060b"></script><script src="lib/ux-data.js"></script>
+</head><body class="pg-exp pg-fill" ontouchstart="">
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>รายจ่าย</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
+<p id="blocked" class="err" hidden></p>
+<div class="tabs sk" aria-hidden="true"><button class="on" tabindex="-1">ลงรายจ่าย</button><button tabindex="-1">ลงแล้ว</button></div>
+<div class="sk"><span class="vh">กำลังเปิด…</span><i class="sk-b" style="--w:100%;--h:52px;--r:12px"></i><i class="sk-b" style="--w:100%;--h:240px;--r:14px"></i></div>
+<div id="form" class="ld" hidden>
+  <div class="tabs" id="tabs" role="tablist" aria-label="รายจ่าย"><button type="button" role="tab" data-t="new" class="on" aria-selected="true">ลงรายจ่าย</button><button type="button" role="tab" data-t="list" aria-selected="false" id="tList">ลงแล้ว<b id="cnt"></b></button></div>
+  <div id="pNew" role="tabpanel">
+    <p class="fhint">จ่ายเงินแล้วลงเลย บิล CPF กับเงินเดือนไม่ต้องลง แอปคิดให้</p>
+    <div class="in"><input id="q" type="search" enterkeyhint="search" placeholder="ค้นหา หรือพิมพ์ชื่อใหม่" autocomplete="off" aria-label="ค้นหารายการ"></div>
+    <div class="card el" id="items"></div>
+  </div>
+  <div id="pList" role="tabpanel" hidden></div>
+  <dialog id="es" class="bsheet" aria-labelledby="esH"><div class="body"><div class="grab"></div>
+    <div class="hd"><b id="esH"></b><button class="x" type="button" aria-label="ปิด">✕</button></div>
+    <div id="fCat" hidden><label class="fl">หมวด</label><div class="cats" id="cats"></div></div>
+    <div id="fQty" hidden><label class="fl" for="qty" id="qtyL">ได้มากี่</label><div class="in"><input id="qty" type="number" inputmode="decimal" placeholder="0"><span class="sfx" id="qtyU"></span></div></div>
+    <label class="fl" for="amt">ยอดเงิน</label><div class="in"><input id="amt" type="number" inputmode="decimal" placeholder="0"><span class="sfx">บาท</span></div>
+    <label class="fl">จ่ายด้วย</label><div class="seg" id="paid"><button type="button" data-p="cash">เงินสดหน้าร้าน</button><button type="button" data-p="owner">เจ้าของโอนจ่าย</button></div>
+    <div id="fDate" hidden><label class="fl" for="dt">วันที่จ่าย</label><input id="dt" type="date"></div>
+    <label class="btn" style="margin-top:14px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปใบเสร็จ (ไม่บังคับ) <input id="ph" type="file" accept="image/*" capture="environment" hidden></label>
+    <p id="phS" class="muted"></p></div>
+    <div class="foot"><button id="save" class="btn primary" type="button">บันทึกรายจ่าย</button><p id="msg" class="muted"></p></div></dialog>
+</div>
+<script>
+(async () => {
+  const { supabase, me } = await App.ready();
+  if (UXS.only(me, ["staff", "owner"], "หน้านี้สำหรับพนักงานในร้านและเจ้าของ", "ผู้จัดการดูงานของร้านได้ที่หน้าวันนี้", "owner.html", "ไปหน้าวันนี้")) return;
+  const OWN = me.role === "owner", esc = UXS.esc;
+  const CAT = { raw: "วัตถุดิบ", supply: "ของใช้", gas: "แก๊ส", fee: "ค่าธรรมเนียม", other: "ซ่อม/อื่นๆ", fixed: "ค่าคงที่รายเดือน" }, KEYS = Object.keys(CAT);
+  const PAID = { cash: "เงินสดหน้าร้าน", owner: "เจ้าของโอนจ่าย" };
+  const baht = (n) => (+n).toLocaleString("th-TH", { maximumFractionDigits: 2 }) + " บาท";
+  const hm = (t) => new Date(t).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" });
+  const bday = new Date(Date.now() + 2 * 3600e3).toISOString().slice(0, 10); // 0047: the shop day runs until 05:00 (Bangkok − 5 h)
+  const stop = (t) => { blocked.hidden = false; blocked.innerHTML = t + '<br><a class="btn" href="index.html">กลับหน้าหลัก</a>'; };
+
+  // the list = remembered names + self-bought products (ตั้งค่า › สินค้า) · CPF goods never (their cost is received × price)
+  let ITEMS = [];
+  const load = async () => {
+    const [p, e] = await Promise.all([
+      supabase.from("products").select("id,name,unit,kind,count_mode,supplier,made_here").eq("active", true).eq("supplier", "self").eq("made_here", false).in("kind", ["self", "consumable"]).order("sort"),
+      supabase.from("expense_items").select("id,name,category").eq("active", true).order("name")]);
+    if (p.error || e.error) throw p.error || e.error;
+    ITEMS = [...p.data.map((x) => ({ pid: x.id, name: x.name, cat: x.kind === "self" ? "raw" : "supply", count: x.count_mode === "count", unit: UXM.unit(x.unit) })),
+      ...e.data.map((x) => ({ iid: x.id, name: x.name, cat: x.category }))]
+      .map((x, i) => ({ ...x, i })).sort((a, b) => KEYS.indexOf(a.cat) - KEYS.indexOf(b.cat) || a.i - b.i);
+  };
+  const draw = () => {
+    // "ค่าแก๊ส" finds แก๊สปิกนิก: a leading ค่า is optional both ways
+    const t = q.value.trim(), f = t.toLowerCase().replace(/^ค่า/, ""), list = ITEMS.filter((x) => !f || x.name.toLowerCase().replace(/^ค่า/, "").includes(f));
+    const add = t && !ITEMS.some((x) => x.name === t) ? `<button type="button" class="it add" data-new="1"><span class="grow"><b>+ เพิ่ม "${esc(t)}"</b><small>รายการใหม่ ครั้งหน้าค้นเจอเลย</small></span><span class="go" aria-hidden="true">›</span></button>` : "";
+    // matches first, "+ เพิ่ม" last: a near match is picked before a duplicate name is made
+    items.innerHTML = (list.length ? UXM.byCat(list, (x) => CAT[x.cat], (x) => `<button type="button" class="it" data-k="${ITEMS.indexOf(x)}"><span class="grow"><b>${esc(x.name)}</b>${x.count ? `<small>ใส่จำนวนที่ได้มาด้วย เข้าสต็อก</small>` : ""}</span><span class="go" aria-hidden="true">›</span></button>`) : "")
+      + (list.length && add ? `<h3 class="sec">ไม่ใช่รายการข้างบน</h3>` : "") + add;
+  };
+  q.oninput = draw;
+
+  // ---- the sheet: one expense
+  const sheet = UXD.sheet(es), photo = [];
+  Photo.picker(supabase, ph, { paths: photo, type: "expense", name: "รูปใบเสร็จ", max: 1, status: phS });
+  let cur = null, cat = null, paidBy = null;
+  const pick = (p) => { paidBy = p; paid.querySelectorAll("button").forEach((b) => { b.classList.toggle("on-ok", b.dataset.p === p); b.setAttribute("aria-pressed", b.dataset.p === p); }); };
+  paid.onclick = (e) => { const b = e.target.closest("[data-p]"); if (b) pick(b.dataset.p); };
+  const pickCat = (c) => { cat = c; cats.querySelectorAll("button").forEach((b) => { b.classList.toggle("on", b.dataset.c === c); b.setAttribute("aria-pressed", b.dataset.c === c); }); };
+  cats.innerHTML = KEYS.map((k) => `<button type="button" class="chip" data-c="${k}" aria-pressed="false">${CAT[k]}</button>`).join("");
+  cats.onclick = (e) => { const b = e.target.closest("[data-c]"); if (b) pickCat(b.dataset.c); };
+  if (OWN) { fDate.hidden = false; dt.max = UXS.today(); dt.value = bday; UXM.dateTh(dt); }
+  const open = (x) => {
+    cur = x; esH.textContent = x.name; fCat.hidden = !x.isNew; fQty.hidden = !x.count;
+    qtyL.textContent = `ได้มากี่${x.unit || "หน่วย"}`; qtyU.textContent = x.unit || "";
+    pickCat(x.isNew ? null : x.cat); pick(OWN ? "owner" : "cash");   // staff mostly pay from the drawer, the owner by transfer · one tap to change
+    qty.value = ""; amt.value = ""; msg.textContent = ""; msg.className = "muted";
+    es.querySelectorAll(".thumb .x").forEach((b) => b.click());
+    sheet.open();
+  };
+  items.onclick = (e) => { const b = e.target.closest(".it"); if (!b) return; open(b.dataset.new ? { name: q.value.trim(), isNew: true } : ITEMS[+b.dataset.k]); };
+  const bad = (t, el) => { msg.textContent = t; msg.className = "err"; if (el) UXM.shake(el); };
+  save.onclick = async () => {
+    if (cur.isNew && !cat) return bad("เลือกหมวดก่อน", cats);
+    if (cur.count && !(+qty.value > 0)) return bad(`ใส่จำนวน${cur.name}ที่ได้มา`, qty);
+    if (!(+amt.value > 0)) return bad("ใส่ยอดเงินที่จ่าย", amt);
+    if (+amt.value > 100000) return bad("ยอดเงินเกิน 100,000 บาท ตรวจตัวเลขอีกครั้ง", amt);
+    const p = { amount: amt.value, paid_by: paidBy, photo: photo[0] || null, ...(OWN && dt.value ? { date: dt.value } : {}) };
+    if (cur.pid) Object.assign(p, { product_id: cur.pid, qty: cur.count ? qty.value : null });
+    else if (cur.iid) p.item_id = cur.iid; else Object.assign(p, { name: cur.name, category: cat });
+    save.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
+    const { error } = await supabase.rpc("add_expense", { p });
+    save.disabled = false;
+    if (error) return bad(App.errText(error));
+    sheet.close();
+    UXM.toast(cur.count ? `ลง${cur.name}แล้ว ✓ เข้าสต็อก ${+qty.value} ${cur.unit || ""}` : "ลงรายจ่ายแล้ว ✓");
+    q.value = "";
+    if (cur.isNew) await load();
+    draw(); await list();
+  };
+
+  // ---- ลงแล้ว: staff = today · owner = a month with totals per category
+  let ym = bday.slice(0, 7);
+  const list = async () => {
+    const m0 = ym + "-01", m1 = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 1)).toISOString().slice(0, 10);
+    let rq = supabase.from("expenses").select("id,date,category,name,qty,amount,paid_by,photo,created_by,created_at,product_id").order("date", { ascending: false }).order("created_at", { ascending: false });
+    rq = OWN ? rq.gte("date", m0).lt("date", m1) : rq.eq("date", bday);
+    const [{ data, error }, day] = await Promise.all([rq, supabase.from("shop_days").select("status").eq("date", bday).maybeSingle()]);
+    if (error) { pList.innerHTML = `<p class="err">เปิดรายการไม่ขึ้น ลองเปิดหน้าใหม่</p>`; return; }
+    const rows = data || [], sent = day.data?.status === "sent", sum = (f) => rows.filter(f).reduce((s, r) => s + +r.amount, 0);
+    cnt.textContent = rows.length || ""; tList.firstChild.textContent = OWN ? "เดือนนี้" : "ลงแล้ววันนี้";
+    const nav = OWN ? `<div class="monthnav"><button type="button" id="mp" aria-label="เดือนก่อน">‹</button><div class="m">${new Date(m0 + "T00:00:00Z").toLocaleDateString("th-TH", { month: "long", year: "numeric", timeZone: "UTC" })}</div><button type="button" id="mn" aria-label="เดือนถัดไป"${ym >= bday.slice(0, 7) ? " disabled" : ""}>›</button></div>` : "";
+    const head = rows.length ? `<div class="card sum"><div class="tot"><span>รวม${OWN ? "ทั้งเดือน" : "วันนี้"}</span><span>${baht(sum(() => true))}</span></div>`
+      + (OWN ? KEYS.filter((k) => sum((r) => r.category === k)).map((k) => `<div class="kv"><span>${CAT[k]}</span><b>${baht(sum((r) => r.category === k))}</b></div>`).join("") + "<hr>" : "")
+      + Object.keys(PAID).map((k) => `<div class="kv"><span>${PAID[k]}</span><b>${baht(sum((r) => r.paid_by === k))}</b></div>`).join("") + `</div>` : "";
+    const can = (r) => OWN ? !(r.qty != null && r.date === bday && sent) : r.created_by === me.userId && !sent; // server re-checks (a stock row of any sent day is refused)
+    const row = (r) => `<div class="it" data-id="${r.id}"><span class="grow"><b>${esc(r.name)}${r.qty != null ? ` ${+r.qty}` : ""}</b><small>${CAT[r.category]} · ${PAID[r.paid_by]} · ${hm(r.created_at)} น.${r.photo ? ` · <a href="#" data-ph="${esc(r.photo)}">ดูใบเสร็จ</a>` : ""}</small></span><span class="amt">${baht(r.amount)}</span>${can(r) ? `<button type="button" class="del" data-del="${r.id}" aria-label="ลบ ${esc(r.name)}">✕</button>` : ""}</div>`;
+    let body = "";
+    if (!rows.length) body = `<div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>${OWN ? "เดือนนี้ยังไม่มีรายจ่าย" : "วันนี้ยังไม่มีรายจ่าย"}</p></div>`;
+    else if (OWN) { const g = {}; rows.forEach((r) => (g[r.date] ||= []).push(r)); body = `<div class="card el">` + Object.entries(g).map(([d, rs]) => `<h3 class="sec day"><span>${UXS.thd(d, { weekday: "short" })}</span><span>${baht(rs.reduce((s, r) => s + +r.amount, 0))}</span></h3>` + rs.map(row).join("")).join("") + `</div>`; }
+    else body = `<div class="card el">${rows.map(row).join("")}</div>`;
+    pList.innerHTML = nav + head + body;
+    if (OWN) { const step = (k) => { const d = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7) - 1 + k, 1)); ym = d.toISOString().slice(0, 7); list(); }; mp.onclick = () => step(-1); mn.onclick = () => step(1); }
+    pList.querySelectorAll("[data-ph]").forEach((a) => { a.onclick = async (e) => { e.preventDefault(); try { Photo.view(await Photo.url(supabase, a.dataset.ph)); } catch (_) { UXM.toast("เปิดรูปไม่ได้"); } }; });
+    pList.querySelectorAll("[data-del]").forEach((b) => { b.onclick = () => {
+      const el = b.closest(".it"), r = rows.find((x) => x.id === b.dataset.del); el.hidden = true;
+      UXM.later(`ลบ ${r.name} แล้ว`, async () => { const { error } = await supabase.rpc("delete_expense", { eid: r.id }); if (error) UXM.toast(App.errText(error)); await list(); }, () => { el.hidden = false; });
+    }; });
+  };
+
+  const tab = (t) => { tabs.querySelectorAll("button").forEach((b) => { const on = b.dataset.t === t; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); });
+    pNew.hidden = t !== "new"; pList.hidden = t !== "list"; scrollTo(0, 0); };
+  tabs.onclick = (e) => { const b = e.target.closest("[data-t]"); if (b) tab(b.dataset.t); };
+  try { await load(); } catch (_) { return stop("เปิดไม่ขึ้น ลองเปิดหน้าใหม่"); }
+  draw(); await list();
+  form.hidden = false;
+  tab(new URLSearchParams(location.search).get("tab") === "list" ? "list" : "new");
+})().catch(() => { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น ลองเปิดหน้าใหม่"; });
+</script></body></html>
