@@ -12,6 +12,18 @@
 .field small.h { display: block; margin-top: 2px; font-size: 14px; font-weight: 400; color: var(--color-muted-foreground); }
 /* Mos 31 ต.ค.: the alert under the button reads centred, not packed to the left */
 #msg.err:not(:empty) { text-align: center; padding-right: 44px; }
+/* ข้อ 4 (Mos 1 พ.ย.): delivery apps vs WE POS · drawer counted by note and coin */
+.dl { display: grid; grid-template-columns: 1fr 88px 88px; gap: 8px; align-items: center; padding: 6px 0; }
+.dl.hd { font: 600 13px/1.3 var(--font-head); color: var(--color-ink-soft); padding-top: 0; }
+.dl.hd span:not(:first-child) { text-align: center; }
+.dl b { font: 600 16px/1.3 var(--font-head); }
+.dl input { min-width: 0; text-align: center; }
+.dl-say { grid-column: 1 / -1; margin: -2px 0 4px; font-size: 14px; }
+.notes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 6px 0 12px; }
+.notes label { display: flex; align-items: center; gap: 8px; font: 600 16px/1 var(--font-head); }
+.notes label span { flex: 0 0 44px; text-align: right; }
+.notes input { min-width: 0; text-align: center; }
+.notes-h { font: 600 14px/1.3 var(--font-head); color: var(--color-ink-soft); margin: 10px 0 2px; }
 </style>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -65,8 +77,18 @@
   <label class="field" for="posTot">ยอดขายรวมวันนี้<small class="h">ดูจอ WE POS ยอดรวมทุกช่องทาง</small></label><div class="in"><input id="posTot" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0" min="0" max="100000"><span class="sfx">บาท</span></div>
   </div>
   <div class="card">
+  <h3 class="ux-cat">เดลิเวอรี่ เทียบแอปมือถือกับ WE POS</h3>
+  <div class="dl hd"><span>แอป</span><span>ยอดในแอป</span><span>WE POS</span></div>
+  <div id="dlv"></div>
+  <p class="muted">ไม่ตรง = มีออเดอร์ยังไม่ได้ลง WE POS หาให้เจอ ลงให้ครบก่อนปิด · ไม่มีออเดอร์ เว้นว่างได้</p>
+  </div>
+  <div class="card">
   <label class="field" for="cashExp">จำนวนเงินสดที่มี<small class="h">ดูจอ WE POS ตอนปิดรอบ ตัวเลขนี้รวมเงินทอนแล้ว</small></label><div class="in"><input id="cashExp" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0"><span class="sfx">บาท</span></div>
-  <label class="field" for="cashCnt">เงินที่นับได้ในลิ้นชัก<small class="h">นับทั้งหมดรวมเงินทอน ก่อนหยิบเงินออก</small></label><div class="in"><input id="cashCnt" type="number" inputmode="decimal" enterkeyhint="done" placeholder="0"><span class="sfx">บาท</span></div>
+  <p id="paidOut" class="muted" hidden></p>
+  <p class="field">นับเงินในลิ้นชัก<small class="h">ใส่จำนวนใบ จำนวนเหรียญ ระบบรวมให้ นับทั้งหมดรวมเงินทอน</small></p>
+  <div class="notes-h">แบงก์</div><div class="notes" id="notesB"></div>
+  <div class="notes-h">เหรียญ</div><div class="notes" id="notesC"></div>
+  <label class="field" for="cashCnt">เงินที่นับได้ในลิ้นชัก</label><div class="in"><input id="cashCnt" type="number" inputmode="decimal" placeholder="0" readonly tabindex="-1"><span class="sfx">บาท</span></div>
   </div>
   <p id="cashDiff" class="muted"></p>
   </section>
@@ -148,8 +170,29 @@
     consAll.setAttribute("aria-checked", v === "all"); consLow.setAttribute("aria-checked", v === "low"); consBox.hidden = v !== "low"; };
   consAll.onclick = () => { setPick("all"); say(""); save(); update(); };
   consLow.onclick = () => { setPick("low"); say(""); save(); update(); };
-  const diff = () => { const a = +cashExp.value, b = +cashCnt.value; cashDiff.textContent = (cashExp.value && cashCnt.value) ? (b - a === 0 ? "เงินสดครบ" : (b - a < 0 ? `เงินสดขาด ${(a - b).toLocaleString("th-TH")} บาท` : `เงินสดเกิน ${(b - a).toLocaleString("th-TH")} บาท`)) : ""; cashDiff.className = b - a < 0 ? "err" : "ok"; };
-  cashExp.oninput = cashCnt.oninput = diff;
+  // ข้อ 4 (Mos 1 พ.ย.): LINE MAN / Grab / Shopee typed from the phones and from WE POS · a gap = an order not in WE POS yet
+  const APPS = [["lineman", "LINE MAN"], ["grab", "Grab"], ["shopee", "Shopee"]], NOTES = [1000, 500, 100, 50, 20], COINS = [10, 5, 2, 1];
+  const fmtB = (v) => v.toLocaleString("th-TH");
+  dlv.innerHTML = APPS.map(([k, t]) => `<div class="dl" data-k="${k}"><b>${t}</b><input type="number" inputmode="decimal" class="dlA" placeholder="0" aria-label="${t} ยอดในแอป"><input type="number" inputmode="decimal" class="dlP" placeholder="0" aria-label="${t} ยอดใน WE POS"><span class="dl-say"></span></div>`).join("");
+  const dlSay = () => dlv.querySelectorAll(".dl").forEach((r) => { const a = r.querySelector(".dlA"), b = r.querySelector(".dlP"), m = r.querySelector(".dl-say");
+    if (a.value === "" || b.value === "") { m.textContent = ""; return; } const d = +a.value - +b.value;
+    m.textContent = d === 0 ? "ตรงกัน" : d > 0 ? `WE POS ขาด ${fmtB(d)} บาท หาออเดอร์ที่ยังไม่ได้ลง` : `WE POS เกิน ${fmtB(-d)} บาท เช็กออเดอร์ซ้ำ/ยกเลิก`; m.className = "dl-say " + (d === 0 ? "ok" : "err"); });
+  dlv.addEventListener("input", dlSay);
+  const noteIn = (v) => `<label><span>${fmtB(v)}</span><input type="number" inputmode="numeric" min="0" step="1" placeholder="0" data-v="${v}" aria-label="${v} บาท กี่${v >= 20 ? "ใบ" : "เหรียญ"}"></label>`;
+  notesB.innerHTML = NOTES.map(noteIn).join(""); notesC.innerHTML = COINS.map(noteIn).join("");
+  const noteEls = () => [...document.querySelectorAll(".notes input")];
+  const sumNotes = () => { const any = noteEls().some((i) => i.value !== ""); cashCnt.value = any ? noteEls().reduce((t, i) => t + (+i.value || 0) * +i.dataset.v, 0) : ""; diff(); };
+  document.querySelectorAll(".notes").forEach((n) => n.addEventListener("input", sumNotes));
+  // cash paid from the drawer today (หน้ารายจ่าย 0070) comes off what WE POS says the drawer holds
+  let paid = 0;
+  { const { data: ex } = await supabase.from("expenses").select("amount").eq("date", today).eq("paid_by", "cash");
+    paid = (ex || []).reduce((t, e) => t + (+e.amount || 0), 0);
+    if (paid) { paidOut.hidden = false; paidOut.textContent = `จ่ายเงินสดจากลิ้นชักวันนี้ ${fmtB(paid)} บาท (หน้ารายจ่าย) หักออกจากที่ควรมีให้แล้ว`; } }
+  const should = () => cashExp.value === "" ? null : +cashExp.value - paid;
+  const detail = () => ({ delivery: Object.fromEntries([...dlv.querySelectorAll(".dl")].map((r) => [r.dataset.k, { app: r.querySelector(".dlA").value === "" ? null : +r.querySelector(".dlA").value, pos: r.querySelector(".dlP").value === "" ? null : +r.querySelector(".dlP").value }])),
+    cash: { pos: cashExp.value === "" ? null : +cashExp.value, paid_out: paid, notes: Object.fromEntries(noteEls().filter((i) => i.value !== "").map((i) => [i.dataset.v, +i.value])) } });
+  const diff = () => { const a = should() ?? 0, b = +cashCnt.value; cashDiff.textContent = (cashExp.value && cashCnt.value) ? (b - a === 0 ? "เงินสดครบ" : (b - a < 0 ? `เงินสดขาด ${(a - b).toLocaleString("th-TH")} บาท` : `เงินสดเกิน ${(b - a).toLocaleString("th-TH")} บาท`)) : ""; cashDiff.className = b - a < 0 ? "err" : "ok"; };
+  cashExp.oninput = diff;
   const photos = [], pos = []; // pos: 0 or 1 path
   // round 2b (Mos 26 ต.ค.): the frame shows the photo just taken (the thumbs under it still view / drop each one)
   const face = (inp) => { const lab = inp.closest("label"), im = lab.nextElementSibling?.querySelector(".thumb:last-child img"); lab.style.backgroundImage = im ? `url("${im.src}")` : ""; };
@@ -215,7 +258,7 @@
   const save = () => {
     const rows = {}; document.querySelectorAll("#lines .grid").forEach((g) => { rows[g.dataset.id] = [g.querySelector(".rf").value, g.querySelector(".rc").value]; }); // .w (เสีย) is never saved · it always comes from waste_logs (W)
     const at = Date.now();
-    if (store.set(KEY, JSON.stringify({ at, rows, cons: state, pick, pt: posTot.value, ce: cashExp.value, cc: cashCnt.value, note: note.value, step: cur, reached, wq, lo: kept }))) showDraft(at);
+    if (store.set(KEY, JSON.stringify({ at, rows, cons: state, pick, pt: posTot.value, ce: cashExp.value, cc: cashCnt.value, dl: [...dlv.querySelectorAll("input")].map((i) => i.value), nt: noteEls().map((i) => i.value), note: note.value, step: cur, reached, wq, lo: kept }))) showDraft(at);
   };
   let draft = null; try { draft = JSON.parse(store.get(KEY) || "null"); } catch (_) { draft = null; }
   if (draft) {
@@ -223,7 +266,8 @@
     Object.entries(draft.cons || {}).forEach(([id, v]) => { if (id in state && SAY[v]) state[id] = v; });
     document.querySelectorAll("#cons .ux-cchip").forEach(paint);
     setPick(Object.values(state).some((v) => v !== "ok") ? "low" : (draft.pick === "all" || draft.pick === "low" ? draft.pick : ""));
-    posTot.value = draft.pt || ""; cashExp.value = draft.ce || ""; cashCnt.value = draft.cc || ""; note.value = draft.note || ""; diff(); showDraft(draft.at);
+    posTot.value = draft.pt || ""; cashExp.value = draft.ce || ""; cashCnt.value = draft.cc || "";
+    (draft.dl || []).forEach((v, i) => { const x = dlv.querySelectorAll("input")[i]; if (x) x.value = v; }); (draft.nt || []).forEach((v, i) => { const x = noteEls()[i]; if (x) x.value = v; }); if (draft.nt) sumNotes(); dlSay(); note.value = draft.note || ""; diff(); showDraft(draft.at);
     reached = Math.min(Math.max(+draft.reached || 1, +draft.step || 1), 4);
     wq = draft.wq || 0; kept = draft.lo || "";
   }
@@ -237,7 +281,7 @@
     progBar.style.transform = `scaleX(${(cur - 1 + (cur === 1 ? (n ? x / n : 1) : 0)) / 4})`;
     stepT.innerHTML = `${NAME[cur]} <small>ขั้น ${cur} จาก 4</small>`;
     // round 2b: step 4 opens with what is about to be sent (steps 1–3), each cell goes back to its step
-    if (cur === 4) { const lf = leftRows().length, nl = Object.values(state).filter((v) => v !== "ok").length, a = +cashExp.value, c = +cashCnt.value, cash = cashExp.value && cashCnt.value ? c - a : null;
+    if (cur === 4) { const lf = leftRows().length, nl = Object.values(state).filter((v) => v !== "ok").length, a = should() ?? 0, c = +cashCnt.value, cash = cashExp.value && cashCnt.value ? c - a : null;
       sum4.innerHTML = [[1, "ของเหลือ", !n ? "ไม่มีของ" : lf ? `ยังขาด ${lf}<small> อย่าง</small>` : `ครบ ${n}<small> อย่าง</small>`, lf ? "bad" : "ok"],
         [2, "ของใช้", nl ? `เติม ${nl}<small> อย่าง</small>` : "ครบ", nl ? "wait" : "ok"],
         [3, "เงินสด", cash == null ? "ยังไม่ใส่" : cash === 0 ? "ครบ" : `${cash < 0 ? "ขาด" : "เกิน"} ${Math.abs(cash).toLocaleString("th-TH")}<small> บาท</small>`, cash == null ? "" : cash < 0 ? "bad" : cash > 0 ? "wait" : "ok"]]
@@ -279,7 +323,7 @@
     if (rs[i + 1]) req(rs[i + 1]).focus(); else e.target.blur();
   });
   posTot.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); cashExp.focus(); } });
-  cashExp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); cashCnt.focus(); } });
+  cashExp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); noteEls()[0].focus(); } });
   cashCnt.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); cashCnt.blur(); } });
   document.getElementById("form").addEventListener("input", (e) => { e.target.closest(".ux-miss")?.classList.remove("ux-miss"); e.target.closest(".ux-over")?.classList.remove("ux-over"); if (msg.className === "err") say(""); save(); update(); });
 
@@ -296,7 +340,7 @@
     if (under) { const p = stock.find((x) => x.id === under.dataset.id); go(1); say(`${p.name} ทิ้งไปแล้ว ${W[p.id]} ${p.unit || ""}\nช่องเสียใส่น้อยกว่านี้ไม่ได้`, true); UXM.shake(under.querySelector(".w")); under.querySelector(".w").focus(); return; } // qa2: say after go(), show() clears the message
     if (!confirm(`ปิดร้านเลยไหม?\nนับของแล้ว ${rows.length} จาก ${stock.length} อย่าง\nยอดขายรวม ${(+posTot.value).toLocaleString("th-TH")} บาท${cashDiff.textContent ? "\n" + cashDiff.textContent : ""}\nกดแล้วแก้ตัวเลขไม่ได้`)) return;
     send.disabled = true; back.hidden = true; msg.textContent = "กำลังปิดร้าน…";
-    const payload = { date: today, lines: rows, consumables: Object.entries(state).filter(([, v]) => v !== "ok").map(([product_id, status]) => ({ product_id, status })), pos_total: +posTot.value, cash_expected: cashExp.value === "" ? null : +cashExp.value, cash_counted: cashCnt.value === "" ? null : +cashCnt.value, note: note.value || null, pos_photo: pos[0] ?? null, photos };
+    const payload = { date: today, lines: rows, consumables: Object.entries(state).filter(([, v]) => v !== "ok").map(([product_id, status]) => ({ product_id, status })), pos_total: +posTot.value, cash_expected: should(), detail: detail(), cash_counted: cashCnt.value === "" ? null : +cashCnt.value, note: note.value || null, pos_photo: pos[0] ?? null, photos };
     const { error } = await supabase.rpc("close_day", { p: payload });
     if (error) { msg.textContent = "ยังปิดร้านไม่ได้\n" + App.errText(error); msg.className = "err"; send.disabled = false; back.hidden = false; return; }
     store.del(KEY); showDraft(null);
