@@ -46,6 +46,10 @@
   <ul id="lowL" class="low-l"></ul>
   <p class="bag-hint">เช็กอีกทีว่าพิมพ์ถูกไหม<br>ถ้าขายหมดจริง กดบันทึกได้เลย ไม่ผิด</p></div>
   <div class="foot"><button type="button" id="lowBack" class="btn primary">กลับไปนับใหม่</button><button type="button" id="lowKeep" class="btn" style="margin-top:8px">นับถูกแล้ว บันทึก</button></div></dialog>
+  <dialog id="overS" class="bsheet bad" aria-labelledby="overT"><div class="body"><div class="grab"></div><div class="hd"><b id="overT">นับได้มากกว่าที่มี</b><button type="button" class="x" aria-label="ปิด">✕</button></div>
+  <ul id="overL" class="low-l"></ul>
+  <p class="bag-hint">พิมพ์ผิด กดกลับไปแก้<br>ถ้าของมีจริง เช่น มีของมาส่งเพิ่ม กดไปต่อได้ ระบบแจ้งเจ้าของให้</p></div>
+  <div class="foot"><button type="button" id="overBack" class="btn primary">กลับไปแก้ตัวเลข</button><button type="button" id="overKeep" class="btn" style="margin-top:8px">ของมีจริง ไปต่อ</button></div></dialog>
   <section id="s2" class="ux-step" hidden>
   <div class="ux-pick" role="radiogroup" aria-label="ของใช้ในร้าน">
     <button type="button" id="consAll" class="ux-opt" role="radio" aria-checked="false"><b>ของใช้ครบทุกอย่าง</b><small>ถุง ฟอยล์ น้ำจิ้ม ยังพอ</small></button>
@@ -184,13 +188,22 @@
   lowBack.onclick = () => { lowS.close(); lows.forEach((x) => { x.g.hidden = false; x.g.classList.add("ux-miss"); }); const f = req(lows[0].g); f.scrollIntoView({ block: "center" }); f.focus({ preventScroll: true }); };
   lowKeep.onclick = () => { kept = lowSig(lows); lowS.close(); go(lowTo); };
   const say = (t, bad) => { msg.textContent = t || ""; msg.className = bad ? "err" : "muted"; };
-  // 0047 (Mos 30 ต.ค., server checks the same): no minus · เหลือสด + เหลือสุก + เสีย never above ยกมา + รับเข้า
+  // 0047 (Mos 30 ต.ค., server checks the same): no minus
   const over = () => { for (const g of document.querySelectorAll("#lines .grid")) {
-    const p = stock.find((x) => x.id === g.dataset.id), l = L[g.dataset.id] || {}, f = [".rf", ".rc", ".w"].map((c) => g.querySelector(c)), v = f.map((x) => +x.value || 0);
-    const i = v.findIndex((x) => x < 0); if (i >= 0) return { say: `${p.name} ใส่เลขติดลบไม่ได้`, el: f[i], row: g };
-    const has = (+l.open_fresh || 0) + (+l.open_cooked || 0) + (+l.received || 0), sum = v[0] + v[1] + v[2];
-    if ((p.kind === "cpf" || p.made_here) && sum > has) return { say: `${p.name} มี ${has} ${p.unit || ""} นับได้ ${sum} ${p.unit || ""}\nนับใหม่อีกครั้ง\n${p.made_here ? "ถ้าห่อเพิ่ม กดห่อข้าวเหนียวเสร็จก่อน" : "ถ้าของมีจริง ทักเจ้าของให้แก้ยอดรับเข้า"}`, el: f[0], row: g }; }
+    const p = stock.find((x) => x.id === g.dataset.id), f = [".rf", ".rc", ".w"].map((c) => g.querySelector(c)), v = f.map((x) => +x.value || 0);
+    const i = v.findIndex((x) => x < 0); if (i >= 0) return { say: `${p.name} ใส่เลขติดลบไม่ได้`, el: f[i], row: g }; }
     return null; };
+  // 0061 (Mos 1 พ.ย.): more than ยกมา + รับเข้า no longer stops the close · a sheet says why, staff pick แก้ or "ของมีจริง ไปต่อ"
+  // (same numbers confirmed once = not asked again) · confirmed rows go up with over_ok, the owner's close card shows them
+  let overKept = "", overTo = 2, overs = [];
+  const overList = () => [...document.querySelectorAll("#lines .grid")].map((g) => {
+    const p = stock.find((x) => x.id === g.dataset.id), l = L[g.dataset.id] || {}; if (!p || !(p.kind === "cpf" || p.made_here) || req(g).value === "") return null;
+    const has = (+l.open_fresh || 0) + (+l.open_cooked || 0) + (+l.received || 0), sum = [".rf", ".rc", ".w"].reduce((t, c) => t + (+g.querySelector(c).value || 0), 0);
+    return sum > has ? { g, p, has, sum } : null; }).filter(Boolean);
+  const overSig = (l) => l.map((x) => x.g.dataset.id + ":" + x.sum).join();
+  overS.addEventListener("click", (e) => { if (e.target === overS || e.target.closest(".x")) overS.close(); });
+  overBack.onclick = () => { overS.close(); overs.forEach((x) => { x.g.hidden = false; x.g.classList.add("ux-over"); }); const f = overs[0].g.querySelector(".rf"); f.scrollIntoView({ block: "center" }); f.focus({ preventScroll: true }); };
+  overKeep.onclick = () => { overKept = overSig(overs); overS.close(); go(overTo); };
 
   // ---- draft: every input saved to this phone, per day (LINE can close the page any time) ----
   // ponytail: photos aren't in the draft (they're already uploaded; thumbnails would need signed URLs) · re-shoot after reopening
@@ -243,7 +256,10 @@
       if (!quiet) { say(g.say, true); document.querySelectorAll("#lines .grid").forEach((r) => r.classList.toggle("ux-miss", s === 1 && !r.classList.contains("ux-zero") && req(r).value === ""));
         if (g.row) { g.row.hidden = false; g.row.classList.add("ux-over"); g.el.scrollIntoView({ block: "center" }); } UXM.shake(g.el); }
       return false; }
-      if (s === 1 && !quiet) { const l = lowList(); if (l.length && lowSig(l) !== kept) { showLow(l, n); return false; } } }
+      if (s === 1 && !quiet) { const o = overList(); if (o.length && overSig(o) !== overKept) { overs = o; overTo = n;
+          overL.innerHTML = o.map((x) => `<li><b>${UXS.esc(x.p.name)}</b><span>มี ${x.has} นับได้ ${x.sum} ${UXS.esc(x.p.unit || "")} เกิน ${x.sum - x.has}${x.p.made_here ? " · ห่อเพิ่ม กดห่อข้าวเหนียวก่อน" : ""}</span></li>`).join("");
+          overS.showModal(); overS.querySelector(".body").scrollTop = 0; return false; }
+        const l = lowList(); if (l.length && lowSig(l) !== kept) { showLow(l, n); return false; } } }
     show(n); return true;
   }
   function show(n) {
@@ -271,6 +287,7 @@
     if (cur < 4) { go(cur + 1); return; }
     const bad = [1, 2, 3].find(gap); if (bad) { show(bad); go(bad + 1); return; } // ponytail: forward moves already check · this only guards odd resumes
     const rows = [...document.querySelectorAll("#lines .grid")].map((g) => ({ product_id: g.dataset.id, remain_fresh: req(g).value === "" ? null : +g.querySelector(".rf").value || 0, remain_cooked: +g.querySelector(".rc").value || 0, waste: +g.querySelector(".w").value || 0 })).filter((r) => r.remain_fresh !== null);
+    const ok = new Set(overList().map((x) => x.g.dataset.id)); rows.forEach((r) => { if (ok.has(r.product_id)) r.over_ok = true; }); // 0061: only after the sheet (go() asked)
     if (!rows.length) { msg.textContent = "นับของเหลือ อย่างน้อย 1 อย่าง"; msg.className = "err"; return; }
     // Mos 30 ต.ค.: the two photos are the timestamp → closing needs both (the server checks the same)
     const shot = !photos.length ? ["ยังไม่ได้ถ่ายรูปตู้และถาด", phFridge] : !pos.length ? ["ยังไม่ได้ถ่ายรูปจอ POS", phPos] : null;
