@@ -3,7 +3,7 @@
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="lib/ui.css?v=0060b"><link rel="stylesheet" href="lib/ux-staff.css"><link rel="stylesheet" href="lib/ux-data.css">
+<link rel="stylesheet" href="lib/ui.css?v=r1101"><link rel="stylesheet" href="lib/ux-staff.css"><link rel="stylesheet" href="lib/ux-data.css">
 <style>
 /* 0047: a row above what the shop had (or with a minus) stays red like an empty one (ux-miss) and loses its ✓ until it is fixed */
 .sheet .grid.ux-over .rf, .sheet .grid.ux-over .rc { background-color: var(--tint-destructive); box-shadow: inset 0 0 0 1.5px var(--color-destructive); }
@@ -13,21 +13,52 @@
 /* Mos 31 ต.ค.: the alert under the button reads centred, not packed to the left */
 #msg.err:not(:empty) { text-align: center; padding-right: 44px; }
 /* ข้อ 4 (Mos 1 พ.ย.): delivery apps vs WE POS · drawer counted by note and coin */
-.dl { display: grid; grid-template-columns: 1fr 88px 88px; gap: 8px; align-items: center; padding: 6px 0; }
-.dl.hd { font: 600 13px/1.3 var(--font-head); color: var(--color-ink-soft); padding-top: 0; }
+/* design round 1 พ.ย.: app name with its brand dot · a gap is a tone pill, not a loose line */
+.dl { display: grid; grid-template-columns: 1fr 92px 92px; gap: 8px; align-items: center; padding: 6px 0; }
+.dl.hd { font: 500 13px/1.3 var(--font-body); color: var(--color-ink-soft); padding: 0; }
 .dl.hd span:not(:first-child) { text-align: center; }
-.dl b { font: 600 16px/1.3 var(--font-head); }
-.dl input { min-width: 0; text-align: center; }
-.dl-say { grid-column: 1 / -1; margin: -2px 0 4px; font-size: 14px; }
-.notes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 6px 0 12px; }
-.notes label { display: flex; align-items: center; gap: 8px; font: 600 16px/1 var(--font-head); }
-.notes label span { flex: 0 0 44px; text-align: right; }
-.notes input { min-width: 0; text-align: center; }
-.notes-h { font: 600 14px/1.3 var(--font-head); color: var(--color-ink-soft); margin: 10px 0 2px; }
+.dl b { display: flex; align-items: center; gap: 8px; font: 600 16px/1.3 var(--font-head); white-space: nowrap; }
+.dl b::before { content: ""; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--app); }
+.dl input { min-width: 0; text-align: center; font-variant-numeric: tabular-nums; }
+.dl-say { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: -2px 0 6px; font-size: 14px; color: var(--color-ink-soft); }
+.dl-say:empty { display: none; }
+.dl-say .pill { font-size: 14px; font-weight: 600; }
+/* notes and coins look like the real money (Thai note colours) so the eye finds the row without reading */
+/* round 4: notes and coins in one 3×3 grid (1,000 500 100 · 50 20 10 · 5 2 1), shape tells note from coin */
+.notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 10px; margin: 10px 0 12px; }
+.notes label { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.notes label input { width: 100%; }
+.notes label span { flex: none; width: 58px; height: 34px; display: grid; place-items: center; border-radius: 7px; font: 600 15px/1 var(--font-head); color: #fff; background: var(--note); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12); font-variant-numeric: tabular-nums; }
+.notes label.coin span { flex-basis: auto; width: 40px; height: 40px; margin: -3px 0; border-radius: 50%; color: #3B2F1E; background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, .6), transparent 60%), var(--note); box-shadow: inset 0 0 0 2px rgba(0, 0, 0, .14); }
+.notes input { min-width: 0; text-align: center; font-variant-numeric: tabular-nums; }
+/* what the drawer should hold vs what was counted · the result is the biggest thing on the step */
+.cs { margin-top: 6px; padding-top: 10px; border-top: .5px solid var(--color-separator); }
+.cs > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 4px 0; font-size: 17px; }
+.cs > div b { font: 600 22px/1.25 var(--font-head); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cs > small { display: block; margin: -2px 0 2px; font-size: 14px; color: var(--color-muted-foreground); font-variant-numeric: tabular-nums; }
+.cs > small:empty { display: none; }
+#cashDiff:not(:empty) { margin: 10px 0 0; padding: 14px 16px 14px 52px; font: 600 22px/1.3 var(--font-head); font-variant-numeric: tabular-nums; }
+#cashDiff:not(:empty)::before { left: 16px; top: 50%; width: 24px; height: 24px; translate: 0 -50%; }
+.cs a, #cashHint a { font-weight: 600; color: var(--color-primary-dark); }
+#cashHint { margin: 8px 2px 0; font-size: 15px; text-align: center; }
+/* round 4: the drawer count stays in sight above the buttons while counting (step 3 only) */
+#live { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 0 2px 2px; font-size: 15px; color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
+#live b { font: 600 17px/1.2 var(--font-head); color: var(--color-foreground); }
+#live b.bad { color: var(--color-destructive); } #live b.ok { color: var(--color-success); }
+#s3[hidden] ~ .ux-foot #live, #live:empty { display: none; }
+/* 0061 over-count sheet: a check (amber), not an error · the gap is the number on the right */
+#overS .hd b { color: var(--on-wait); }
+#overS .low-l { list-style: none; margin: 8px 0 12px; padding: 2px 14px; border-radius: var(--radius-sm); background: var(--tint-wait); box-shadow: inset 0 0 0 1px var(--border-wait); }
+#overS .low-l li { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 0 12px; }
+#overS .low-l li + li { border-top-color: var(--border-wait); }
+#overS .low-l em { font: 600 17px/1.3 var(--font-head); font-style: normal; color: var(--on-wait); white-space: nowrap; font-variant-numeric: tabular-nums; }
+#overS .low-l span { grid-column: 1 / -1; color: var(--color-ink-soft); }
+/* Mos 1 พ.ย.: the how-to lines under a check sheet read centred */
+:is(#overS, #lowS) .bag-hint { text-align: center; }
 </style>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js?v=0060b"></script>
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js?v=r1101"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js?v=0060b"></script>
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ปิดร้าน</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3<span id="d"></span></div></div></header>
 <p id="blocked" class="err" hidden></p>
@@ -58,9 +89,9 @@
   <ul id="lowL" class="low-l"></ul>
   <p class="bag-hint">เช็กอีกทีว่าพิมพ์ถูกไหม<br>ถ้าขายหมดจริง กดบันทึกได้เลย ไม่ผิด</p></div>
   <div class="foot"><button type="button" id="lowBack" class="btn primary">กลับไปนับใหม่</button><button type="button" id="lowKeep" class="btn" style="margin-top:8px">นับถูกแล้ว บันทึก</button></div></dialog>
-  <dialog id="overS" class="bsheet bad" aria-labelledby="overT"><div class="body"><div class="grab"></div><div class="hd"><b id="overT">นับได้มากกว่าที่มี</b><button type="button" class="x" aria-label="ปิด">✕</button></div>
+  <dialog id="overS" class="bsheet" aria-labelledby="overT"><div class="body"><div class="grab"></div><div class="hd"><b id="overT">นับได้มากกว่าที่มี</b><button type="button" class="x" aria-label="ปิด">✕</button></div>
   <ul id="overL" class="low-l"></ul>
-  <p class="bag-hint">พิมพ์ผิด กดกลับไปแก้<br>ถ้าของมีจริง เช่น มีของมาส่งเพิ่ม กดไปต่อได้ ระบบแจ้งเจ้าของให้</p></div>
+  <p class="bag-hint">พิมพ์ผิด กดกลับไปแก้<br>ของมีจริง เช่น มีของมาส่งเพิ่ม กดไปต่อได้<br>เจ้าของจะเห็นในการ์ดปิดร้าน</p></div>
   <div class="foot"><button type="button" id="overBack" class="btn primary">กลับไปแก้ตัวเลข</button><button type="button" id="overKeep" class="btn" style="margin-top:8px">ของมีจริง ไปต่อ</button></div></dialog>
   <section id="s2" class="ux-step" hidden>
   <div class="ux-pick" role="radiogroup" aria-label="ของใช้ในร้าน">
@@ -74,23 +105,23 @@
   </section>
   <section id="s3" class="ux-step" hidden>
   <div class="card">
-  <label class="field" for="posTot">ยอดขายรวมวันนี้<small class="h">ดูจอ WE POS ยอดรวมทุกช่องทาง</small></label><div class="in"><input id="posTot" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0" min="0" max="100000"><span class="sfx">บาท</span></div>
+  <h2><label for="posTot">ยอดขายวันนี้</label></h2>
+  <p class="muted" style="margin:-4px 0 8px">รวมทุกช่องทาง ดูจอ WE POS</p><div class="in"><input id="posTot" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0" min="0" max="100000"><span class="sfx">บาท</span></div>
   </div>
   <div class="card">
-  <h3 class="ux-cat">เดลิเวอรี่ เทียบแอปมือถือกับ WE POS</h3>
+  <h2>เดลิเวอรี่</h2>
   <div class="dl hd"><span>แอป</span><span>ยอดในแอป</span><span>WE POS</span></div>
   <div id="dlv"></div>
-  <p class="muted">ไม่ตรง = มีออเดอร์ยังไม่ได้ลง WE POS หาให้เจอ ลงให้ครบก่อนปิด · ไม่มีออเดอร์ เว้นว่างได้</p>
+  <p class="muted">ไม่ตรง = มีออเดอร์ยังไม่ได้ลง WE POS หาให้เจอก่อนปิด<br>ไม่มีออเดอร์ เว้นว่างได้</p>
   </div>
   <div class="card">
+  <h2>เงินในลิ้นชัก</h2>
   <label class="field" for="cashExp">จำนวนเงินสดที่มี<small class="h">ดูจอ WE POS ตอนปิดรอบ ตัวเลขนี้รวมเงินทอนแล้ว</small></label><div class="in"><input id="cashExp" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0"><span class="sfx">บาท</span></div>
-  <p id="paidOut" class="muted" hidden></p>
-  <p class="field">นับเงินในลิ้นชัก<small class="h">ใส่จำนวนใบ จำนวนเหรียญ ระบบรวมให้ นับทั้งหมดรวมเงินทอน</small></p>
-  <div class="notes-h">แบงก์</div><div class="notes" id="notesB"></div>
-  <div class="notes-h">เหรียญ</div><div class="notes" id="notesC"></div>
-  <label class="field" for="cashCnt">เงินที่นับได้ในลิ้นชัก</label><div class="in"><input id="cashCnt" type="number" inputmode="decimal" placeholder="0" readonly tabindex="-1"><span class="sfx">บาท</span></div>
+  <p class="field">นับเงินในลิ้นชัก<small class="h">ใส่จำนวนใบ จำนวนเหรียญ แอปรวมให้<br>นับทั้งหมด รวมเงินทอนด้วย</small></p>
+  <div class="notes" id="notesB"></div>
+  <input id="cashCnt" type="hidden">
+  <div class="cs" aria-live="polite"><div><span>ควรมีในลิ้นชัก</span><b id="csA">-</b></div><small id="csH"></small><div><span>นับได้</span><b id="csB">-</b></div><p id="cashDiff" class="muted"></p><p id="cashHint" hidden>ลืมลงรายจ่ายไหม <a href="expense.html">ไปลงรายจ่าย</a></p></div>
   </div>
-  <p id="cashDiff" class="muted"></p>
   </section>
   <section id="s4" class="ux-step" hidden>
   <div id="sum4" class="cl-sum" aria-label="สรุปที่จะส่ง"></div>
@@ -101,7 +132,7 @@
   <label class="field" for="note">ฝากบอกเจ้าของ <small>(ไม่มีก็ข้ามได้)</small></label>
   <textarea id="note" rows="3" placeholder="เช่น ไก่ต้นตำรับหมด ลูกค้าเอาทรงเครื่องแทน"></textarea>
   </section>
-  <div class="sticky ux-foot"><button type="button" id="back" class="btn" hidden>ย้อนกลับ</button><button id="send" class="btn primary">ปิดร้าน</button><p id="msg" class="muted"></p></div>
+  <div class="sticky ux-foot"><p id="live" aria-live="off"></p><button type="button" id="back" class="btn" hidden>ย้อนกลับ</button><button id="send" class="btn primary">ปิดร้าน</button><p id="msg" class="muted"></p></div>
 </div>
 <script>
 (async () => {
@@ -171,15 +202,16 @@
   consAll.onclick = () => { setPick("all"); say(""); save(); update(); };
   consLow.onclick = () => { setPick("low"); say(""); save(); update(); };
   // ข้อ 4 (Mos 1 พ.ย.): LINE MAN / Grab / Shopee typed from the phones and from WE POS · a gap = an order not in WE POS yet
-  const APPS = [["lineman", "LINE MAN"], ["grab", "Grab"], ["shopee", "Shopee"]], NOTES = [1000, 500, 100, 50, 20], COINS = [10, 5, 2, 1];
+  const APPS = [["lineman", "LINE MAN", "#06C755"], ["grab", "Grab", "#00B14F"], ["shopee", "Shopee", "#EE4D2D"]], NOTES = [1000, 500, 100, 50, 20], COINS = [10, 5, 2, 1];
+  const MONEY = { 1000: "#86664F", 500: "#7A4E9C", 100: "#C0392B", 50: "#2F6DB5", 20: "#2A7A4B", 10: "#D8B54A", 5: "#C9CDD2", 2: "#D8B54A", 1: "#C9CDD2" }; // Thai note and coin colours
   const fmtB = (v) => v.toLocaleString("th-TH");
-  dlv.innerHTML = APPS.map(([k, t]) => `<div class="dl" data-k="${k}"><b>${t}</b><input type="number" inputmode="decimal" class="dlA" placeholder="0" aria-label="${t} ยอดในแอป"><input type="number" inputmode="decimal" class="dlP" placeholder="0" aria-label="${t} ยอดใน WE POS"><span class="dl-say"></span></div>`).join("");
+  dlv.innerHTML = APPS.map(([k, t, c]) => `<div class="dl" data-k="${k}" style="--app:${c}"><b>${t}</b><input type="number" inputmode="decimal" class="dlA" placeholder="0" aria-label="${t} ยอดในแอป"><input type="number" inputmode="decimal" class="dlP" placeholder="0" aria-label="${t} ยอดใน WE POS"><span class="dl-say"></span></div>`).join("");
   const dlSay = () => dlv.querySelectorAll(".dl").forEach((r) => { const a = r.querySelector(".dlA"), b = r.querySelector(".dlP"), m = r.querySelector(".dl-say");
     if (a.value === "" || b.value === "") { m.textContent = ""; return; } const d = +a.value - +b.value;
-    m.textContent = d === 0 ? "ตรงกัน" : d > 0 ? `WE POS ขาด ${fmtB(d)} บาท หาออเดอร์ที่ยังไม่ได้ลง` : `WE POS เกิน ${fmtB(-d)} บาท เช็กออเดอร์ซ้ำ/ยกเลิก`; m.className = "dl-say " + (d === 0 ? "ok" : "err"); });
+    m.innerHTML = d === 0 ? `<span class="pill" data-tone="ok">ตรงกัน</span>` : `<span class="pill" data-tone="bad">WE POS ${d > 0 ? "ขาด" : "เกิน"} ${fmtB(Math.abs(d))} บาท</span>${d > 0 ? "หาออเดอร์ที่ยังไม่ได้ลง" : "เช็กออเดอร์ซ้ำหรือยกเลิก"}`; });
   dlv.addEventListener("input", dlSay);
-  const noteIn = (v) => `<label><span>${fmtB(v)}</span><input type="number" inputmode="numeric" min="0" step="1" placeholder="0" data-v="${v}" aria-label="${v} บาท กี่${v >= 20 ? "ใบ" : "เหรียญ"}"></label>`;
-  notesB.innerHTML = NOTES.map(noteIn).join(""); notesC.innerHTML = COINS.map(noteIn).join("");
+  const noteIn = (v) => `<label${v < 20 ? ' class="coin"' : ""}><span style="--note:${MONEY[v]}">${fmtB(v)}</span><input type="number" inputmode="numeric" min="0" step="1" placeholder="0" data-v="${v}" aria-label="${v} บาท กี่${v >= 20 ? "ใบ" : "เหรียญ"}"></label>`;
+  notesB.innerHTML = [...NOTES, ...COINS].map(noteIn).join("");
   const noteEls = () => [...document.querySelectorAll(".notes input")];
   const sumNotes = () => { const any = noteEls().some((i) => i.value !== ""); cashCnt.value = any ? noteEls().reduce((t, i) => t + (+i.value || 0) * +i.dataset.v, 0) : ""; diff(); };
   document.querySelectorAll(".notes").forEach((n) => n.addEventListener("input", sumNotes));
@@ -187,12 +219,17 @@
   let paid = 0;
   { const { data: ex } = await supabase.from("expenses").select("amount").eq("date", today).eq("paid_by", "cash");
     paid = (ex || []).reduce((t, e) => t + (+e.amount || 0), 0);
-    if (paid) { paidOut.hidden = false; paidOut.textContent = `จ่ายเงินสดจากลิ้นชักวันนี้ ${fmtB(paid)} บาท (หน้ารายจ่าย) หักออกจากที่ควรมีให้แล้ว`; } }
+  }
   const should = () => cashExp.value === "" ? null : +cashExp.value - paid;
   const detail = () => ({ delivery: Object.fromEntries([...dlv.querySelectorAll(".dl")].map((r) => [r.dataset.k, { app: r.querySelector(".dlA").value === "" ? null : +r.querySelector(".dlA").value, pos: r.querySelector(".dlP").value === "" ? null : +r.querySelector(".dlP").value }])),
     cash: { pos: cashExp.value === "" ? null : +cashExp.value, paid_out: paid, notes: Object.fromEntries(noteEls().filter((i) => i.value !== "").map((i) => [i.dataset.v, +i.value])) } });
-  const diff = () => { const a = should() ?? 0, b = +cashCnt.value; cashDiff.textContent = (cashExp.value && cashCnt.value) ? (b - a === 0 ? "เงินสดครบ" : (b - a < 0 ? `เงินสดขาด ${(a - b).toLocaleString("th-TH")} บาท` : `เงินสดเกิน ${(b - a).toLocaleString("th-TH")} บาท`)) : ""; cashDiff.className = b - a < 0 ? "err" : "ok"; };
-  cashExp.oninput = diff;
+  const diff = () => { const a = should() ?? 0, b = +cashCnt.value, has = cashExp.value !== "";
+    csA.textContent = has ? `${fmtB(a)} บาท` : "-"; csB.textContent = cashCnt.value === "" ? "-" : `${fmtB(b)} บาท`;
+    csH.innerHTML = !paid ? "" : (has ? `WE POS ${fmtB(+cashExp.value)} ลบ จ่ายจากลิ้นชัก ${fmtB(paid)} บาท` : `จ่ายจากลิ้นชักวันนี้ ${fmtB(paid)} บาท หักให้แล้ว`) + ` <a href="expense.html?tab=list">ดูรายจ่าย</a>`;
+    const n = cashCnt.value !== "", d = b - a; cashHint.hidden = !(has && n && d < 0);
+    live.innerHTML = has || n ? `<span>ควรมี <b>${has ? fmtB(a) : "-"}</b></span><span>นับได้ <b>${n ? fmtB(b) : "-"}</b></span>${has && n ? `<b class="${d < 0 ? "bad" : "ok"}">${d === 0 ? "ครบ" : d < 0 ? `ขาด ${fmtB(-d)}` : `เกิน ${fmtB(d)}`}</b>` : ""}` : "";
+    cashDiff.textContent = (cashExp.value && cashCnt.value) ? (b - a === 0 ? "เงินสดครบ" : (b - a < 0 ? `เงินสดขาด ${(a - b).toLocaleString("th-TH")} บาท` : `เงินสดเกิน ${(b - a).toLocaleString("th-TH")} บาท`)) : ""; cashDiff.className = b - a < 0 ? "err" : "ok"; };
+  cashExp.oninput = diff; diff();
   const photos = [], pos = []; // pos: 0 or 1 path
   // round 2b (Mos 26 ต.ค.): the frame shows the photo just taken (the thumbs under it still view / drop each one)
   const face = (inp) => { const lab = inp.closest("label"), im = lab.nextElementSibling?.querySelector(".thumb:last-child img"); lab.style.backgroundImage = im ? `url("${im.src}")` : ""; };
@@ -301,7 +338,7 @@
         if (g.row) { g.row.hidden = false; g.row.classList.add("ux-over"); g.el.scrollIntoView({ block: "center" }); } UXM.shake(g.el); }
       return false; }
       if (s === 1 && !quiet) { const o = overList(); if (o.length && overSig(o) !== overKept) { overs = o; overTo = n;
-          overL.innerHTML = o.map((x) => `<li><b>${UXS.esc(x.p.name)}</b><span>มี ${x.has} นับได้ ${x.sum} ${UXS.esc(x.p.unit || "")} เกิน ${x.sum - x.has}${x.p.made_here ? " · ห่อเพิ่ม กดห่อข้าวเหนียวก่อน" : ""}</span></li>`).join("");
+          overL.innerHTML = o.map((x) => `<li><b>${UXS.esc(x.p.name)}</b><em>เกิน ${x.sum - x.has} ${UXS.esc(x.p.unit || "")}</em><span>มี ${x.has} นับได้ ${x.sum}</span>${x.p.made_here ? "<span>ห่อเพิ่ม กดห่อข้าวเหนียวก่อน</span>" : ""}</li>`).join("");
           overS.showModal(); overS.querySelector(".body").scrollTop = 0; return false; }
         const l = lowList(); if (l.length && lowSig(l) !== kept) { showLow(l, n); return false; } } }
     show(n); return true;

@@ -3,18 +3,36 @@
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="lib/ui.css?v=0060b">
+<link rel="stylesheet" href="lib/ui.css?v=r1101">
 <link rel="stylesheet" href="lib/ux-data.css">
 <link rel="stylesheet" href="lib/ux-owner.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-owner.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js?v=0060b"></script>
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js?v=r1101"></script><script src="lib/ux-owner.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js?v=0060b"></script>
 <style>
 /* ข้อ 5 (Mos 1 พ.ย.): day gallery, 3 square thumbs a row per หมวด · tap = full screen (Photo.view) */
-.pics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 4px 0 10px; }
+/* design 1 พ.ย. (Mos ข้อ ก): the layout follows the count so a group never leaves an empty right side ·
+   1 = full width · 2 = halves · 3 = big left + 2 right · 4 = 2×2 · 5 = 2 + 3 · 6+ = 3 a row, the 6th shows "+N" (the rest stay in the swipe view) */
+.pics { display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-flow: dense; gap: 6px; padding: 4px 0 10px; }
+.pt { position: relative; display: block; min-width: 0; }
+.pt[hidden] { display: none; }
+.pics .pt { grid-column: span 2; aspect-ratio: 1; }
+.pics[data-n="1"] .pt { grid-column: span 6; aspect-ratio: 4 / 3; }
+.pics:is([data-n="2"], [data-n="4"]) .pt, .pics[data-n="5"] .pt:nth-child(-n+2) { grid-column: span 3; }
+.pics[data-n="3"] .pt:first-child { grid-column: span 4; grid-row: span 2; aspect-ratio: auto; }
+.pics .more { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 10px; font: 600 26px/1 var(--font-head); color: #fff; background: rgba(32, 24, 24, .5); pointer-events: none; }
+/* big photos (bill slip, POS screen): the "tap for full screen" hint sits on the photo, frosted, bottom centre */
+.pt .zoom { position: absolute; left: 50%; bottom: 12px; translate: -50% 0; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; font: 500 14px/1.2 var(--font-body); font-style: normal; color: #fff; white-space: nowrap; background: rgba(32, 24, 24, .5); -webkit-backdrop-filter: blur(12px) saturate(160%); backdrop-filter: blur(12px) saturate(160%); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .3); pointer-events: none; }
+.pt .zoom svg { width: 16px; height: 16px; }
+:is(#billPic, #posPic) .pt { margin: 8px 0 12px; }
 img.th { display: block; max-width: 100%; border-radius: 10px; cursor: zoom-in; }
-#billPic img.th { width: 100%; margin: 6px 0; } /* ข้อ 6: slip full width so the QR scans */
-.pics img.th { width: 100%; aspect-ratio: 1; object-fit: cover; }
+/* design round 1 พ.ย.: .th below sets 72px boxes → the slip came out a 72px strip (QR cut) and the thumbs were not square */
+.pics img.th, :is(#billPic, #posPic) img.th { width: 100%; height: auto; margin: 0; border: 0; outline: 1px solid rgba(0, 0, 0, .1); outline-offset: -1px; }
+.pics img.th { position: absolute; inset: 0; height: 100%; object-fit: cover; } /* the tile sets the size, the photo fills it */
+:is(#billPic, #posPic) img.th { border-radius: 12px; } /* ข้อ 6: whole slip, full width, so the QR scans */
+.fold-body h3.sec { margin: 14px 0 6px; font: 600 16px/1.35 var(--font-head); color: var(--color-foreground); }
+.fold-body h3.sec:first-child { margin-top: 4px; }
+.ln.mk.paid > span { font-weight: 600; color: var(--color-success); }
 
 @media (min-width:360px){.tabs button{font-size:15px}}
 .th{width:72px;height:72px;object-fit:cover;border-radius:10px;margin:8px 8px 0 0;background:var(--color-muted);border:1px solid var(--color-border);cursor:zoom-in}
@@ -36,6 +54,10 @@ td+td{font-weight:600}
   <div id="bar"><div class="daynav"><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i><div class="d"><i class="sk-b" style="--w:56%;--h:22px;margin:2px auto 0"></i><i class="sk-b" style="--w:40%;--h:13px;margin:6px auto 0"></i></div><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i></div></div><button id="upd" class="ux-upd" type="button" hidden></button><div id="out"><span class="vh">กำลังเปิด…</span><div class="bento trio"><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div></div><h3 class="sec"><i class="sk-b" style="--w:38%;--h:15px"></i></h3><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div></div>
 </div>
 <div id="panel" class="panel" role="dialog" aria-modal="true" aria-labelledby="ph" hidden></div>
+<dialog id="payS" class="bsheet" aria-labelledby="payT"><div class="body"><div class="grab"></div><div class="hd"><b id="payT">จ่ายบิล CPF แล้ว</b><button type="button" class="x" aria-label="ปิด">✕</button></div>
+  <label class="field" for="payV">ยอดที่จ่าย</label><div class="in"><input id="payV" type="number" inputmode="decimal" enterkeyhint="done" min="0" max="100000" step="any" placeholder="0"><span class="sfx">บาท</span></div>
+  <p class="muted">ใส่ยอดตามใบส่งของ</p></div>
+  <div class="foot"><button type="button" class="btn primary" id="payOK">บันทึกว่าจ่ายแล้ว</button><p id="payM" class="muted" role="status"></p></div></dialog>
 <dialog id="posS" class="bsheet" aria-labelledby="posT"><div class="body"><div class="grab"></div><div class="hd"><b id="posT">แก้ยอดขาย WE POS</b><button type="button" class="x" aria-label="ปิด">✕</button></div>
   <p class="muted" id="posD"></p>
   <label class="field" for="posV">ยอดขายรวม</label><div class="in"><input id="posV" type="number" inputmode="decimal" enterkeyhint="done" min="0" max="100000" step="any" placeholder="0"><span class="sfx">บาท</span></div>
@@ -64,7 +86,12 @@ td+td{font-weight:600}
   const money = (n) => n == null ? "-" : Number(n).toLocaleString("th-TH");
   const baht = (n) => n == null ? "-" : money(n) + " บาท";
   const thumbs = async (ps) => (await Promise.all((ps || []).filter(Boolean).map(async (p) => { try { return `<img class="th" alt="รูปจากร้าน" src="${await Photo.url(supabase, p)}">`; } catch { return ""; } }))).join("");
-  document.addEventListener("click", (e) => { const im = e.target.closest("img.th"); if (im) Photo.view(im.src); });
+  document.addEventListener("click", (e) => { const im = e.target.closest("img.th"); if (!im) return; // swipe through the photos of the same group
+    const box = im.closest(".pics, #billPic, #posPic") || im.parentElement; Photo.view(im.src, [...box.querySelectorAll("img.th")].map((x) => x.src)); });
+  const ZOOM = `<i class="zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/></svg>แตะดูเต็มจอ</i>`;
+  const big = async (ps) => (await Promise.all(ps.map(async (p) => { const h = await thumbs([p]); return h && `<span class="pt">${h}${ZOOM}</span>`; }))).join("");
+  const gal = async (ps) => { const t = await Promise.all(ps.map((p) => thumbs([p]))), n = ps.length;
+    return `<div class="pics" data-n="${Math.min(n, 6)}">` + t.map((h, i) => h && `<span class="pt"${i > 5 ? " hidden" : ""}>${h}${i === 5 && n > 6 ? `<b class="more">+${n - 5}</b>` : ""}</span>`).join("") + `</div>`; };
   // skeletons (รอบ 2): grey shapes in the tab's own boxes until its data arrives · same shapes as the static one in the HTML
   const sb = (w, h, x = "") => `<i class="sk-b" style="--w:${w};--h:${h}px${x}"></i>`;
   const SK_TODO = `<div class="card todo">${sb("62%", 18)}${sb("84%", 14, ";--gap:8px")}<div class="acts sk-row">${sb("calc(50% - 4px)", 44, ";--r:12px")}${sb("calc(50% - 4px)", 44, ";--r:12px")}</div></div>`;
@@ -228,9 +255,9 @@ td+td{font-weight:600}
     const posBody = `<div class="ln mk"><span>รูปจอ POS<small>เทียบยอดกับรูปนี้</small></span>${MGR ? "" : `<button class="ux-cancel" type="button" data-a="pos">แก้ยอดขาย</button>`}</div><div id="posPic">${sd.pos_photo ? sb("72px", 72, ";--r:10px") : `<p class="muted">ไม่มีรูปจอ POS</p>`}</div>`;
     const fold = (id, head, body) => `<button class="fold" aria-expanded="false" data-f="${id}">${head}</button><div class="fold-body"><div id="f-${id}">${body}</div></div>`;
     const bill = od && slips.length ? fold("bill", `<b>บิล CPF</b>${od.paid_at ? fv("ok", `จ่ายแล้ว ${baht(od.paid_amount ?? 0)} บาท`) : fv("wait", "ยังไม่จ่าย")}`,
-      `<p class="muted">สแกน QR บนใบส่งของจ่ายได้เลย แตะรูปเปิดเต็มจอ</p><div id="billPic"></div>`
-      + (MGR ? "" : od.paid_at ? `<p>จ่ายแล้ว ${hm(od.paid_at)} น. ${U.dayName(new Date(Date.parse(od.paid_at) + 7 * 3600e3).toISOString().slice(0, 10))}</p><button type="button" class="txt-btn" id="unpay">กดผิด ยกเลิกจ่ายแล้ว</button>`
-        : `<button type="button" class="btn primary" id="pay">จ่ายแล้ว</button>`)) : "";
+      `<p class="muted">สแกน QR บนใบส่งของจ่ายได้เลย</p><div id="billPic"></div>`
+      + (od.paid_at ? `<div class="ln mk paid"><span>✓ จ่ายแล้ว ${baht(od.paid_amount ?? 0)} บาท<small>${hm(od.paid_at)} น. ${U.dayName(new Date(Date.parse(od.paid_at) + 7 * 3600e3).toISOString().slice(0, 10))}</small></span>${MGR ? "" : `<button type="button" class="ux-cancel" id="unpay">กดผิด ยกเลิก</button>`}</div>`
+        : MGR ? "" : `<button type="button" class="btn primary" id="pay">บันทึกว่าจ่ายแล้ว</button>`)) : "";
     const posFold = sd.closed_at ? fold("pos", `<b>ยอดขาย WE POS</b>${fv(posAmt == null ? "wait" : "", posAmt == null ? "ไม่ได้ใส่" : `${posAmt} บาท`)}`, posBody) : "";
     $("out").innerHTML = bento(c) + todo
       + (sd.note ? `<div class="card"><div class="k muted">พนักงานฝากบอก</div>${esc(sd.note)}</div>` : "")
@@ -247,18 +274,20 @@ td+td{font-weight:600}
       + links(c, !MGR);
     if (!MGR) $("edit").onclick = () => openEdit(c);
     const setPaid = async (row) => { const { error } = await supabase.from("orders").update(row).eq("id", od.id); if (error) return alert("บันทึกไม่ได้\n" + App.errText(error)); dayView(); };
-    if ($("pay")) $("pay").onclick = () => { const v = prompt("ยอดตามใบส่งของ (บาท)"); if (v == null) return; const a = +String(v).replace(/[, ]/g, "");
-      if (!(a > 0 && a <= 100000)) return alert("ใส่ยอดเป็นตัวเลข 1 ถึง 100,000 บาท"); setPaid({ paid_at: new Date().toISOString(), paid_amount: a }); };
+    // design round 1 พ.ย.: a sheet with the number pad instead of prompt()
+    if ($("pay")) $("pay").onclick = () => { payV.value = ""; payM.className = "muted"; payM.textContent = ""; paySh.open(); setTimeout(() => { payV.focus(); fitPos(); }, 60); };
+    payOK.onclick = () => { const a = +payV.value; if (!(a > 0 && a <= 100000)) { payM.className = "err"; payM.textContent = "ใส่ยอดเป็นตัวเลข 1 ถึง 100,000 บาท"; return; }
+      paySh.close(); setPaid({ paid_at: new Date().toISOString(), paid_amount: a }); };
     if ($("unpay")) $("unpay").onclick = () => { if (confirm("ยกเลิกจ่ายแล้วไหม?")) setPaid({ paid_at: null, paid_amount: null }); };
     U.folds($("out").querySelector(".folds"), async (b) => {
       if (b.dataset.done) return;
       if (b.dataset.f === "pics") { b.dataset.done = 1;
         const groups = [...PIC, ...[...new Set(photos.map(picOf))].filter((t) => !PIC.some(([k]) => k === t)).map((t) => [t, "อื่น ๆ"])]
           .map(([k, t]) => [t, photos.filter((p) => picOf(p) === k)]).filter(([, ps]) => ps.length);
-        const html = (await Promise.all(groups.map(async ([t, ps]) => `<h3 class="ux-cat">${t}<span class="n">${ps.length} รูป</span></h3><div class="pics">${await thumbs(ps)}</div>`))).join("");
+        const html = (await Promise.all(groups.map(async ([t, ps]) => `<h3 class="sec">${t}<span class="n">${ps.length} รูป</span></h3>${await gal(ps)}`))).join("");
         $("f-pics").innerHTML = html || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
-      if (b.dataset.f === "bill") { b.dataset.done = 1; $("billPic").innerHTML = (await thumbs(slips)) || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
-      if (b.dataset.f === "pos" && sd.pos_photo) { b.dataset.done = 1; $("posPic").innerHTML = (await thumbs([sd.pos_photo])) || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
+      if (b.dataset.f === "bill") { b.dataset.done = 1; $("billPic").innerHTML = (await big(slips)) || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
+      if (b.dataset.f === "pos" && sd.pos_photo) { b.dataset.done = 1; $("posPic").innerHTML = (await big([sd.pos_photo])) || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
     });
   }
   const go = async (d) => { await UXM.flush(); D = d; sync(); await dayView(); stamp(); };
@@ -359,9 +388,11 @@ td+td{font-weight:600}
 
   // ---- pb-review M2: sheet that corrects a closed day's ยอดขาย WE POS · select on focus (ux-motion focusin) · same 0..100,000 rule as close, the server checks again ----
   const posS = $("posS"), posSh = UXD.sheet(posS), posV = $("posV"), vv = window.visualViewport;
-  const fitPos = () => { if (!posS.open || !vv) return; posS.style.bottom = Math.max(0, innerHeight - vv.height - vv.offsetTop) + "px"; posS.style.maxHeight = Math.max(260, vv.height - 12) + "px"; }; // keep the save button above the iPhone keyboard (like the bag sheet)
+  const payS = $("payS"), paySh = UXD.sheet(payS), payV = $("payV"), payM = $("payM"), payOK = $("payOK");
+  const fitPos = () => { if (!vv) return; [posS, payS].filter((s) => s.open).forEach((s) => { s.style.bottom = Math.max(0, innerHeight - vv.height - vv.offsetTop) + "px"; s.style.maxHeight = Math.max(260, vv.height - 12) + "px"; }); }; // keep the save button above the iPhone keyboard (like the bag sheet)
   if (vv) { vv.addEventListener("resize", fitPos); vv.addEventListener("scroll", fitPos); }
-  posS.addEventListener("close", () => { posS.style.bottom = ""; posS.style.maxHeight = ""; });
+  [posS, payS].forEach((s) => s.addEventListener("close", () => { s.style.bottom = ""; s.style.maxHeight = ""; }));
+  payV.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); payOK.click(); } });
   posV.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $("posOK").click(); } });
   let posDay = null;
   function openPos(c) {

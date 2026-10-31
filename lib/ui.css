@@ -577,17 +577,28 @@ input.roll-dn { animation: roll-in-dn 180ms var(--ease-out); }
 @keyframes ux-flash { 50% { background-color: var(--tint-destructive); } }
 
 /* ---------- photo thumbnails (Photo.picker): 80px squares, ✕ has a 44px hit area, tap = full screen ---------- */
-.thumbs { display: flex; flex-wrap: wrap; gap: 12px; margin: 10px 0 2px; }
+/* design 1 พ.ย. (Mos "เก้ๆ ไม่สวย"): one row that scrolls sideways · 104×84 tiles (3 fit at 375px) · the last tile is "+ ถ่ายเพิ่ม" · padding keeps the ✕ unclipped */
+.thumbs { display: flex; gap: 10px; margin: 0 0 2px; padding: 14px 14px 4px 0; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; }
+.thumbs::-webkit-scrollbar { display: none; }
 .thumbs:empty { display: none; }
-.thumb { position: relative; width: 80px; height: 80px; }
-.thumb .see { display: block; width: 80px; height: 80px; padding: 0; border: 0; outline: 1px solid rgba(0, 0, 0, .1); outline-offset: -1px; border-radius: var(--radius-sm); overflow: hidden; background: var(--color-muted); cursor: zoom-in; }
+.thumb { flex: none; position: relative; width: 104px; height: 84px; scroll-snap-align: start; }
+.thumb.add { display: grid; place-content: center; justify-items: center; gap: 2px; border-radius: var(--radius-sm); background: var(--color-fill); box-shadow: inset 0 0 0 1.5px var(--color-field-edge); font: 500 14px/1.2 var(--font-body); color: var(--color-primary-dark); cursor: pointer; touch-action: manipulation; }
+.thumb.add span { font: 400 30px/1 var(--font-head); }
+.thumb.add:active { background: var(--color-fill-pressed); }
+.thumb .see { display: block; width: 100%; height: 100%; padding: 0; border: 0; outline: 1px solid rgba(0, 0, 0, .1); outline-offset: -1px; border-radius: var(--radius-sm); overflow: hidden; background: var(--color-muted); cursor: zoom-in; }
 .thumb .see img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .thumb .x { position: absolute; top: -14px; right: -14px; width: 44px; height: 44px; padding: 0; border: 0; background: none; display: grid; place-items: center; cursor: pointer; }
 .thumb .x span { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--color-foreground); color: #fff; font-size: 13px; line-height: 1; box-shadow: 0 0 0 2px #fff; }
 .thumb .x:active span { background: var(--color-primary-dark); }
 .photo-view { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, .92); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
 .photo-view img { max-width: 100%; max-height: calc(100% - 48px); object-fit: contain; }
-.photo-view p { color: #fff; margin: 12px 0 0; font-size: 15px; }
+.photo-view p { color: #fff; margin: 12px 0 0; font-size: 15px; text-align: center; }
+/* design 1 พ.ย.: swipe between the photos of one group (scroll-snap) · "2 / 5" counter */
+.photo-view .pv-track { flex: 1; min-height: 0; width: 100%; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; }
+.photo-view .pv-track::-webkit-scrollbar { display: none; }
+.photo-view .pv-slide { flex: 0 0 100%; height: 100%; scroll-snap-align: center; }
+.photo-view .pv-slide img { width: 100%; height: 100%; max-height: none; object-fit: contain; }
+.photo-view .pv-n { font-variant-numeric: tabular-nums; }
 
 /* round 6: a page the signed-in role can't use → only the header + one block (UXS.only) */
 body.ux-only > :not(.topbar, .ux-block, .ux-toast, script, style, dialog) { display: none !important; }
