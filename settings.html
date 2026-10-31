@@ -3,10 +3,10 @@
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-data.css">
+<link rel="stylesheet" href="lib/ui.css?v=0060"><link rel="stylesheet" href="lib/ux-data.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js"></script>
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js?v=0060"></script>
 <style>
 .g{align-items:end}
 a.cell{text-decoration:none;color:inherit}
@@ -180,6 +180,7 @@ a.cell{text-decoration:none;color:inherit}
   if (MGR) return staff(); // the product and shop tabs never load for a manager
 
   // ---- สินค้า: ค้นหา + ชิปกรอง + แถวสั้น → หน้าต่างเต็มจอ (เพิ่ม และ แก้ ใช้ฟอร์มเดียวกัน · Mos 29 ต.ค. ถามครบในครั้งเดียว)
+  const CATS = ["ไก่ย่าง", "ไก่ทอด", "ไก่จ๊อ ไส้กรอก", "ของทานเสริม", "น้ำ เครื่องดื่ม", "ของใช้"]; // = products_category_check (0060)
   const { data: ps0, error: psErr } = await supabase.from("product_admin").select("*").order("sort");
   let ps = ps0 || [], cur = null, touched = false;
   const isCons = (p) => p.kind === "consumable";
@@ -220,6 +221,7 @@ a.cell{text-decoration:none;color:inherit}
   function form(p) {
     const sell = !isCons(p), src = srcOf(p);
     return `<label class="field" for="pn">ชื่อสินค้า</label><input type="text" id="pn" name="name" value="${E(p.name ?? "")}" autocomplete="off" required>
+      <label class="field" for="pg">หมวด <small>(หัวข้อในหน้านับ รับของ ใบสั่ง)</small></label><select id="pg" name="category">${CATS.map((c) => `<option${c === (p.category || (sell ? "ของทานเสริม" : "ของใช้")) ? " selected" : ""}>${c}</option>`).join("")}</select>
       ${seg("sell", "ของขาย หรือ ของใช้", [["sell", "ของขาย"], ["use", "ของใช้"]], sell ? "sell" : "use")}
       ${seg("src", "ซื้อจากไหน", [["cpf", "CPF"], ["self", "ซื้อเอง"], ["made", "ทำในร้าน"]], src)}
       <label class="field" for="pu">หน่วยใช้ <small>(ที่พนักงานนับ)</small></label><input type="text" id="pu" name="unit" list="units" placeholder="ชิ้น" value="${E(UXM.unit(p.unit))}" required>
@@ -284,7 +286,7 @@ a.cell{text-decoration:none;color:inherit}
     const unit = back(f.unit, cur?.unit), buyU = back(f.buy_unit, cur?.buy_unit) || null;
     // round 3 (item 18): ติ๊กใกล้หมด only for ของใช้ (a tick never reaches the order · DB check products_tick_consumable)
     const row = { name: f.name, kind: !sell ? "consumable" : src === "cpf" ? "cpf" : "self", supplier: src === "cpf" ? "cpf" : "self", made_here: src === "made",
-      unit, buy_unit: buyU, count_mode: sell ? "count" : f.count_mode, count_cols: f.count_cols, active };
+      unit, buy_unit: buyU, count_mode: sell ? "count" : f.count_mode, count_cols: f.count_cols, active, category: f.category };
     for (const [k, int] of [["pack_size", 1], ["stick_size", 1], ["cost_price"], ["store_price"], ["delivery_price"], ["low_at"]]) {
       row[k] = n(k, int); if (Number.isNaN(row[k])) return bad(k === "pack_size" ? `${$("pkl").textContent} ต้องเป็นเลขเต็ม 1 ขึ้นไป` : k === "stick_size" ? "ชิ้นต่อไม้ ต้องเป็นเลขเต็ม 1 ขึ้นไป\nไม่มีไม้ ให้เว้นว่าง" : "ตัวเลขไม่ถูก\nใส่เลข 0 ขึ้นไป", k);
     }
@@ -294,7 +296,10 @@ a.cell{text-decoration:none;color:inherit}
     if (cur && F("pack_size").disabled && unit === cur.unit && buyU === (cur.buy_unit || null)) delete row.pack_size; // locked "1" saves only when the units just changed
     if (sell && active && row.cost_price == null) return bad(`ใส่ ราคาทุน ต่อ 1 ${un} ก่อน`, "cost_price");
     if ($("psb").querySelector("[data-q=low]").hidden) row.low_at = null; // ponytail: night_plan reads low_at only for ของขาย ซื้อเอง (kind self) counted rows
-    if (!cur) Object.assign(row, { sort: Math.max(0, ...ps.map((p) => p.sort)) + 1, par_weekday: 0, par_weekend: 0 });
+    // 0060: sort = category × 100 + n · a new product, or one moved to another หมวด, goes last in its หมวด
+    const catSort = () => Math.max(100 * (CATS.indexOf(row.category) + 1), ...ps.filter((p) => p.category === row.category && p.id !== cur?.id).map((p) => p.sort)) + 1;
+    if (!cur) Object.assign(row, { sort: catSort(), par_weekday: 0, par_weekend: 0 });
+    else if (row.category !== cur.category) row.sort = catSort();
     $("pss").disabled = true;
     const r = cur ? await supabase.from("product_admin").update(row).eq("id", cur.id).select().single() : await supabase.from("product_admin").insert(row).select().single();
     $("pss").disabled = false;

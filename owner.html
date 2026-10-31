@@ -3,12 +3,12 @@
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="lib/ui.css">
+<link rel="stylesheet" href="lib/ui.css?v=0060">
 <link rel="stylesheet" href="lib/ux-data.css">
 <link rel="stylesheet" href="lib/ux-owner.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-owner.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js"></script>
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-owner.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js?v=0060"></script>
 <style>
 @media (min-width:360px){.tabs button{font-size:15px}}
 .th{width:72px;height:72px;object-fit:cover;border-radius:10px;margin:8px 8px 0 0;background:var(--color-muted);border:1px solid var(--color-border);cursor:zoom-in}
@@ -49,8 +49,9 @@ td+td{font-weight:600}
   const hm = (t) => t ? new Date(t).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" }) : "-";
   const when = (d) => d === TODAY ? "วันนี้" : d === U.plus(TODAY, -1) ? "เมื่อวาน" : U.dayName(d);
   const names = Object.fromEntries(((await supabase.from("user_public").select("id,name")).data || []).map((u) => [u.id, u.name]));
-  const P = (await supabase.from("product_names").select("id,name,unit")).data || [];
+  const P = (await supabase.from("product_names").select("id,name,unit,sort,category")).data || [];
   const prods = Object.fromEntries(P.map((p) => [p.id, p.name])), unit = Object.fromEntries(P.map((p) => [p.id, UXM.unit(p.unit)]));
+  const PP = Object.fromEntries(P.map((p) => [p.id, p])); // Mos 1 พ.ย.: edit panel sorted + category headers (0060)
   const remindAt = String(((await supabase.from("settings").select("key,value").eq("key", "remind_at").maybeSingle()).data || {}).value || "20:30");
   const TYPE = { waste: "ของเสีย/หมดอายุ", equipment: "เครื่องพัง", customer: "ลูกค้าร้องเรียน", cpf: "ของ CPF มาผิด", edit_request: "กรอกผิด ขอแก้", other: "เรื่องอื่น" };
   const CS = { low: "ใกล้หมด", out: "หมด" };
@@ -281,8 +282,8 @@ td+td{font-weight:600}
     const { d, sd, sl } = c, pn = $("panel");
     pn.innerHTML = `<div class="panel-head"><h2 id="ph">แก้ตัวเลข ${U.dayName(d)}</h2><button class="x" id="px" aria-label="ปิด">✕</button></div>
       <div class="panel-body"><div class="colhead"><span>สินค้า</span><span>เหลือสด</span><span>เหลือสุก</span><span>เสีย</span></div>
-      ${sl.map((l) => `<div class="row" data-p="${l.product_id}"><div class="grow">${esc(prods[l.product_id])}</div>
-        <input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เหลือสด" data-f="remain_fresh" value="${l.remain_fresh ?? ""}"><input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เหลือสุก" data-f="remain_cooked" value="${l.remain_cooked ?? ""}"><input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เสีย" data-f="waste" value="${l.waste ?? ""}"></div>`).join("") || `<p class="muted">ไม่มีตัวเลขสินค้าของวันนี้</p>`}
+      ${UXM.byCat([...sl].sort((a, b) => (PP[a.product_id]?.sort ?? 0) - (PP[b.product_id]?.sort ?? 0)), (l) => PP[l.product_id]?.category, (l) => `<div class="row" data-p="${l.product_id}"><div class="grow">${esc(prods[l.product_id])}</div>
+        <input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เหลือสด" data-f="remain_fresh" value="${l.remain_fresh ?? ""}"><input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เหลือสุก" data-f="remain_cooked" value="${l.remain_cooked ?? ""}"><input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เสีย" data-f="waste" value="${l.waste ?? ""}"></div>`) || `<p class="muted">ไม่มีตัวเลขสินค้าของวันนี้</p>`}
       ${["open", "closed"].includes(sd.status) && sl.length ? `<h2>ยอดรับเข้า</h2><p class="muted">CPF ส่งมาเกินที่บันทึก<br>แก้ทีละอย่าง</p>
       <div class="row"><select id="rp" class="grow" aria-label="สินค้าที่จะแก้ยอดรับเข้า">${sl.map((l) => `<option value="${l.product_id}" data-r="${+l.received || 0}">${esc(prods[l.product_id])} (ตอนนี้ ${+l.received || 0} ${esc(unit[l.product_id])})</option>`).join("")}</select>
       <input id="rq" class="ed" type="number" inputmode="decimal" aria-label="รับเข้าที่ถูก" value="${+sl[0].received || 0}"></div>

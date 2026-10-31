@@ -3,7 +3,7 @@
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="lib/ui.css"><link rel="stylesheet" href="lib/ux-staff.css"><link rel="stylesheet" href="lib/ux-data.css">
+<link rel="stylesheet" href="lib/ui.css?v=0060"><link rel="stylesheet" href="lib/ux-staff.css"><link rel="stylesheet" href="lib/ux-data.css">
 <style>
 /* 0047: a row above what the shop had (or with a minus) stays red like an empty one (ux-miss) and loses its ✓ until it is fixed */
 .sheet .grid.ux-over .rf, .sheet .grid.ux-over .rc { background-color: var(--tint-destructive); box-shadow: inset 0 0 0 1.5px var(--color-destructive); }
@@ -15,7 +15,7 @@
 </style>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script>
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js?v=0060"></script>
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ปิดร้าน</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3<span id="d"></span></div></div></header>
 <p id="blocked" class="err" hidden></p>
@@ -97,7 +97,7 @@
   if (pend && pend.order_items.some((i) => i.qty_received == null && i.received_at == null)) {
     const b = document.getElementById("blocked"); b.hidden = false; b.innerHTML = late ? 'ของวันนั้นยังไม่ได้กดรับ<br>บอกเจ้าของก่อน แล้วค่อยปิดร้าน' : 'ต้องกดรับของก่อน ถึงจะปิดร้านได้<br><a class="btn primary" href="receive.html">ไปรับของ</a>'; return;
   }
-  const { data: prods, error: pErr } = await supabase.from("products").select("id,sort,name,unit,buy_unit,pack_size,stick_size,kind,made_here,count_mode,count_cols").eq("active", true).order("sort");
+  const { data: prods, error: pErr } = await supabase.from("products").select("id,sort,name,unit,buy_unit,pack_size,stick_size,kind,made_here,count_mode,count_cols,category").eq("active", true).order("sort");
   const { data: lines, error: lErr } = await supabase.from("stock_lines").select("product_id,open_fresh,open_cooked,received").eq("date", today);
   if (pErr || lErr || !prods) { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดรายการของไม่ขึ้น\n" + App.errText(pErr || lErr || "no products"); return; }
   prods.forEach((p) => { p.unit = UXM.unit(p.unit); }); // EA / PC → ตัว / ชิ้น // qa: never show 0s from a failed read
@@ -120,13 +120,14 @@
   const row = (p, z) => { const l = L[p.id] || {}, c = cols(p); return `
     <div class="grid${z ? " ux-zero" : ""}" data-id="${p.id}" data-cols="${c}"${z ? " hidden" : ""}><div class="nm">${p.name}<div class="meta"><span>ยกมา ${(+l.open_fresh || 0) + (+l.open_cooked || 0)}</span> · <span>${p.made_here ? "ห่อวันนี้" : "รับเข้า"} ${+l.received || 0} ${p.unit || ""}</span>${W[p.id] ? ` · <span>ทิ้งแล้ว ${W[p.id]}</span>` : ""}</div></div>
     <input type="number" inputmode="decimal" enterkeyhint="next" class="rf" placeholder="ใส่" aria-label="${p.name} เหลือสด"${c === "cooked" ? off : z ? ' value="0"' : ""}><input type="number" inputmode="decimal" enterkeyhint="next" class="rc" placeholder="${c === "cooked" ? "ใส่" : "0"}" aria-label="${p.name} เหลือสุก"${c === "fresh" ? off : c === "cooked" && z ? ' value="0"' : ""}><input type="number" inputmode="decimal" enterkeyhint="next" class="w" placeholder="0" aria-label="${p.name} เสีย แตะเพื่อไปหน้าทิ้งของเสีย" readonly inputmode="none"${W[p.id] ? ` value="${W[p.id]}"` : ""}></div>`; };
-  const live = stock.filter((p) => !zero(p)), zeros = stock.filter(zero);
-  document.getElementById("lines").innerHTML = live.map((p) => row(p, false)).join("") + zeros.map((p) => row(p, true)).join("");
+  // Mos 1 พ.ย.: grouped under category headers · ยกมา 0 rows stay folded inside their own category
+  document.getElementById("lines").innerHTML = UXM.byCat(stock, (p) => p.category, (p) => row(p, zero(p)), zero);
   UXM.bags(document.getElementById("lines"), stock);
   // 0046 (Mos 30 ต.ค.): ช่องเสียล็อก · ของเสียลงได้ที่หน้าทิ้งของเสียเท่านั้น (ชั่ง + รูป) · แตะช่อง → sheet บอกและพาไป (ร่างเก็บไว้แล้ว กลับมานับต่อได้)
   document.getElementById("lines").addEventListener("click", (e) => { if (e.target.closest(".w")) wasteGo.showModal(); });
   if (late) { wasteGo.querySelector(".bag-hint").innerHTML = "ของเสียของวันนั้นใส่เพิ่มไม่ได้แล้ว<br>ของที่ทิ้งเช้านี้ บันทึกหลังปิดร้านวันนั้น"; wasteGo.querySelector("a.btn").remove(); }
   wasteGo.addEventListener("click", (e) => { if (e.target === wasteGo || e.target.closest(".x")) wasteGo.close(); }); // 0046: ถุงเต็ม + เศษ for anything packed (ไก่ จ๊อ เป๊ปซี่ น้ำ)
+  const zeros = stock.filter(zero);
   if (zeros.length) { fold.hidden = false; foldT.textContent = `ไม่มีของค้าง ${zeros.length} อย่าง`; }
   foldB.onclick = () => { const open = foldB.getAttribute("aria-expanded") !== "true"; foldB.setAttribute("aria-expanded", open); foldB.textContent = open ? "ซ่อน" : "เปิดดู";
     document.querySelectorAll("#lines .ux-zero").forEach((g) => g.hidden = !open); };
