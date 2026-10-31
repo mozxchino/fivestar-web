@@ -649,6 +649,10 @@ label.btn.ux-need { white-space: nowrap; }
 .pg-fill #form:not([hidden]), .pg-fill > .sk { flex: 1; display: flex; flex-direction: column; }
 .pg-fill #form > .sticky, .pg-fill > .sk > .sticky { margin-top: auto; }
 /* Mos 1 พ.ย.: category header inside product lists (UXM.byCat) */
-h3.ux-cat { font: 600 17px/1.35 var(--font-head); color: var(--color-foreground); margin: 20px 0 6px; }
-h3.ux-cat:first-child { margin-top: 4px; }
+/* Mos 1 พ.ย. รอบ 2: a sub-section band (brand tint + red bar), not a plain line · count on the right */
+h3.ux-cat { --tone: var(--color-primary); --tone-ink: var(--color-primary-dark); font: 600 17px/1.35 var(--font-head); color: var(--color-primary-dark);
+  background: var(--tint-primary); border-radius: var(--radius-sm); padding: 10px 12px; margin: 18px 0 4px; }
+h3.ux-cat::before { height: 20px !important; }
+h3.ux-cat:first-child { margin-top: 10px; }
+.card.list > h3.ux-cat { margin-inline: 12px; }
 h3.ux-cat[hidden] { display: none; }
