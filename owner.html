@@ -10,6 +10,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js"></script><script src="lib/ux-owner.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js?v=0060b"></script>
 <style>
+/* ข้อ 5 (Mos 1 พ.ย.): day gallery, 3 square thumbs a row per หมวด · tap = full screen (Photo.view) */
+.pics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 4px 0 10px; }
+img.th { display: block; max-width: 100%; border-radius: 10px; cursor: zoom-in; }
+#billPic img.th { width: 100%; margin: 6px 0; } /* ข้อ 6: slip full width so the QR scans */
+.pics img.th { width: 100%; aspect-ratio: 1; object-fit: cover; }
+
 @media (min-width:360px){.tabs button{font-size:15px}}
 .th{width:72px;height:72px;object-fit:cover;border-radius:10px;margin:8px 8px 0 0;background:var(--color-muted);border:1px solid var(--color-border);cursor:zoom-in}
 input.ed{width:58px;min-height:44px;padding:6px 2px;font-size:18px;font-weight:500;text-align:center;flex:none}
@@ -95,16 +101,19 @@ td+td{font-weight:600}
       supabase.from("shop_days").select("*").gte("date", U.plus(d, -7)).lte("date", d).order("date", { ascending: false }),
       supabase.from("stock_lines").select("*").eq("date", d),
       supabase.from("consumable_checks").select("product_id,status").eq("date", d).neq("status", "ok"),
-      supabase.from("orders").select("plan,order_items(product_id,qty_proposed,qty_final,qty_received,received_at)").eq("for_date", d).eq("status", "sent").order("created_at", { ascending: false }).limit(5), // item 17: an extra order + a real one on the same day gave 2 rows to maybeSingle → error
+      supabase.from("orders").select("id,plan,paid_at,paid_amount,order_items(product_id,qty_proposed,qty_final,qty_received,received_at,receipt_photos)").eq("for_date", d).eq("status", "sent").order("created_at", { ascending: false }).limit(5), // item 17: an extra order + a real one on the same day gave 2 rows to maybeSingle → error
       supabase.from("issues").select("id,date,type,text,photos,created_by,created_at,status").eq("status", "open").order("created_at", { ascending: false }),
       isToday ? supabase.from("leave_requests").select("id,user_id,date,type,note,status,users:user_public(name)").gte("date", TODAY.slice(0, 8) + "01").lte("date", U.plus(TODAY, 31)).order("date") : Promise.resolve({ data: [] }),
+      // ข้อ 5 (Mos 1 พ.ย.): every photo of the day = the day's storage folder (lib/photo.js: YYYY/MM/DD/<type>-uuid.jpg)
+      supabase.storage.from("photos").list(d.replaceAll("-", "/"), { limit: 300, sortBy: { column: "created_at", order: "asc" } }),
     ]);
     const bad = res.find((r) => r.error); if (bad) throw bad.error; // qa: a failed read must not read as "ไม่มีเรื่องต้องจัดการ"
-    const [{ data: days }, { data: sl }, { data: cc }, { data: odAll }, { data: iss }, { data: lv }] = res;
+    const [{ data: days }, { data: sl }, { data: cc }, { data: odAll }, { data: iss }, { data: lv }, { data: pf }] = res;
     const od = (odAll || []).find((o) => !(o.plan && (o.plan.extra === true || o.plan.extra === "true"))) || (odAll || [])[0] || null; // the real order wins over an extra (off-order delivery) one
     const byDate = Object.fromEntries((days || []).map((x) => [x.date, x]));
-    return { d, isToday, sd: byDate[d] || null, yday: byDate[U.plus(d, -1)] || null, days: days || [], sl: sl || [], cc: cc || [], items: od?.order_items || [],
-      iss: (iss || []).filter((i) => i.status === "open" && (isToday || (i.date || "").slice(0, 10) === d)), lv: lv || [] };
+    return { d, isToday, sd: byDate[d] || null, yday: byDate[U.plus(d, -1)] || null, days: days || [], sl: sl || [], cc: cc || [], items: od?.order_items || [], od,
+      iss: (iss || []).filter((i) => i.status === "open" && (isToday || (i.date || "").slice(0, 10) === d)), lv: lv || [],
+      pics: (pf || []).filter((o) => /\.jpe?g$/i.test(o.name)).map((o) => `${d.replaceAll("-", "/")}/${o.name}`) };
   }
   const cashOf = (s) => s && s.cash_expected != null && s.cash_counted != null ? s.cash_counted - s.cash_expected : null;
 
@@ -186,6 +195,9 @@ td+td{font-weight:600}
       $("out").innerHTML = bento(c) + todo + `<div class="card muted">ไม่มีบันทึกของ${when(d)}</div>` + (c.isToday ? links(c, false) : "");
       return;
     }
+    // ข้อ 6 (Mos 1 พ.ย.): CPF bill = the QR on the delivery slip · slip big enough to scan from this screen · "จ่ายแล้ว" keeps time + amount
+    const od = c.od, slips = [...new Set(items.flatMap((i) => i.receipt_photos || []))];
+    const baht = (v) => (+v).toLocaleString("th-TH");
     const waste = sl.filter((l) => +l.waste > 0);
     const recv = items.map((i) => {
       const o = +(i.qty_final ?? i.qty_proposed) || 0;
@@ -195,7 +207,10 @@ td+td{font-weight:600}
     }).join("");
     const nShort = items.filter((i) => i.received_at != null && (+i.qty_received || 0) < (+(i.qty_final ?? i.qty_proposed) || 0)).length;
     const nLow = cc.filter((x) => x.status === "low").length, nOut = cc.filter((x) => x.status === "out").length;
-    const photos = [sd.open_photo, ...(sd.photos || []), sd.pos_photo].filter(Boolean);
+    // ข้อ 5: the day's folder + the day's own photo columns (an after-midnight close uploads into the next date's folder)
+    const photos = [...new Set([...(c.pics || []), sd.open_photo, ...(sd.photos || []), sd.pos_photo].filter(Boolean))];
+    const PIC = [["open", "เปิดร้าน"], ["receipt", "ใบส่งของ"], ["pos", "จอ WE POS"], ["fridge", "ตู้และถาด"], ["waste", "ของเสีย"], ["issue", "แจ้งปัญหา"], ["expense", "ใบเสร็จรายจ่าย"]];
+    const picOf = (p) => p.split("/").pop().split("-")[0];
     // 0030: proof for the day's waste = each waste.html log (2 photos + kg) and any extra found at close
     const { data: wlog } = await supabase.from("waste_logs").select("id,product_id,qty,kg,photos,created_at").eq("date", sd.date).order("created_at");
     const wKg = (wlog || []).reduce((a, w) => a + +w.kg, 0) + (+sd.waste_kg || 0);
@@ -212,10 +227,15 @@ td+td{font-weight:600}
     const posAmt = sd.pos_total == null ? null : money(sd.pos_total);
     const posBody = `<div class="ln mk"><span>รูปจอ POS<small>เทียบยอดกับรูปนี้</small></span>${MGR ? "" : `<button class="ux-cancel" type="button" data-a="pos">แก้ยอดขาย</button>`}</div><div id="posPic">${sd.pos_photo ? sb("72px", 72, ";--r:10px") : `<p class="muted">ไม่มีรูปจอ POS</p>`}</div>`;
     const fold = (id, head, body) => `<button class="fold" aria-expanded="false" data-f="${id}">${head}</button><div class="fold-body"><div id="f-${id}">${body}</div></div>`;
+    const bill = od && slips.length ? fold("bill", `<b>บิล CPF</b>${od.paid_at ? fv("ok", `จ่ายแล้ว ${baht(od.paid_amount ?? 0)} บาท`) : fv("wait", "ยังไม่จ่าย")}`,
+      `<p class="muted">สแกน QR บนใบส่งของจ่ายได้เลย แตะรูปเปิดเต็มจอ</p><div id="billPic"></div>`
+      + (MGR ? "" : od.paid_at ? `<p>จ่ายแล้ว ${hm(od.paid_at)} น. ${U.dayName(new Date(Date.parse(od.paid_at) + 7 * 3600e3).toISOString().slice(0, 10))}</p><button type="button" class="txt-btn" id="unpay">กดผิด ยกเลิกจ่ายแล้ว</button>`
+        : `<button type="button" class="btn primary" id="pay">จ่ายแล้ว</button>`)) : "";
     const posFold = sd.closed_at ? fold("pos", `<b>ยอดขาย WE POS</b>${fv(posAmt == null ? "wait" : "", posAmt == null ? "ไม่ได้ใส่" : `${posAmt} บาท`)}`, posBody) : "";
     $("out").innerHTML = bento(c) + todo
       + (sd.note ? `<div class="card"><div class="k muted">พนักงานฝากบอก</div>${esc(sd.note)}</div>` : "")
       + `<div class="card folds">`
+      + bill
       + fold("recv", items.length ? `<b>รับของ</b>${fv(nShort ? "bad" : "ok", nShort ? `ขาด ${nShort} จาก ${items.length}` : `ครบ ${items.length} รายการ`)}` : `<b>ใบสั่ง</b>${fv("", "ไม่มี")}`, recv || `<p class="muted">ไม่มีใบสั่ง</p>`)
       + (waste.length || wDel ? fold("waste", `<b>ของเสีย</b>${fv("wait", waste.length ? `${waste.length} รายการ` : `ทิ้งแล้ว ${wl.length} ครั้ง`)}`, waste.map((l) => `<div class="ln">${esc(prods[l.product_id])} ${l.waste} ${esc(unit[l.product_id])}</div>`).join("") + wDel + (wKg ? `<div class="ln">หนักรวม ${Math.round(wKg * 100) / 100} กก.</div>` : "") + (wPics ? `<div>${wPics}</div>` : `<p class="muted">ไม่มีรูปของเสีย</p>`)) : "")
       + (mk.length ? fold("made", `<b>ห่อข้าวเหนียว</b>${fv("", `${mk.length} ครั้ง`)}`, mkBody) : "")
@@ -226,9 +246,18 @@ td+td{font-weight:600}
       + `</div>`
       + links(c, !MGR);
     if (!MGR) $("edit").onclick = () => openEdit(c);
+    const setPaid = async (row) => { const { error } = await supabase.from("orders").update(row).eq("id", od.id); if (error) return alert("บันทึกไม่ได้\n" + App.errText(error)); dayView(); };
+    if ($("pay")) $("pay").onclick = () => { const v = prompt("ยอดตามใบส่งของ (บาท)"); if (v == null) return; const a = +String(v).replace(/[, ]/g, "");
+      if (!(a > 0 && a <= 100000)) return alert("ใส่ยอดเป็นตัวเลข 1 ถึง 100,000 บาท"); setPaid({ paid_at: new Date().toISOString(), paid_amount: a }); };
+    if ($("unpay")) $("unpay").onclick = () => { if (confirm("ยกเลิกจ่ายแล้วไหม?")) setPaid({ paid_at: null, paid_amount: null }); };
     U.folds($("out").querySelector(".folds"), async (b) => {
       if (b.dataset.done) return;
-      if (b.dataset.f === "pics") { b.dataset.done = 1; $("f-pics").innerHTML = (await thumbs(photos)) || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
+      if (b.dataset.f === "pics") { b.dataset.done = 1;
+        const groups = [...PIC, ...[...new Set(photos.map(picOf))].filter((t) => !PIC.some(([k]) => k === t)).map((t) => [t, "อื่น ๆ"])]
+          .map(([k, t]) => [t, photos.filter((p) => picOf(p) === k)]).filter(([, ps]) => ps.length);
+        const html = (await Promise.all(groups.map(async ([t, ps]) => `<h3 class="ux-cat">${t}<span class="n">${ps.length} รูป</span></h3><div class="pics">${await thumbs(ps)}</div>`))).join("");
+        $("f-pics").innerHTML = html || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
+      if (b.dataset.f === "bill") { b.dataset.done = 1; $("billPic").innerHTML = (await thumbs(slips)) || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
       if (b.dataset.f === "pos" && sd.pos_photo) { b.dataset.done = 1; $("posPic").innerHTML = (await thumbs([sd.pos_photo])) || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
     });
   }
