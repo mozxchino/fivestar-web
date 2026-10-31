@@ -78,7 +78,7 @@
       let n = (m.data || []).reduce((a, r) => a + +r.qty, 0);
       put(kind === "bt"
         ? `<button type="button" class="bt wide" id="madeB" aria-haspopup="dialog"><span class="k">ห่อข้าวเหนียวเสร็จ</span><span class="v" id="madeN">${say(n)}</span><span class="go">${svg(I.made)}</span></button>`
-        : `<button type="button" class="btn tile ux-hub" id="madeB" aria-haspopup="dialog"><span class="ico">${svg(I.made)}</span><span class="t">ห่อข้าวเหนียวเสร็จ<small id="madeN">${say(n)}</small></span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></button>`);
+        : `<button type="button" class="btn tile ux-hub primary" id="madeB" aria-haspopup="dialog"><span class="ico">${svg(I.made)}</span><span class="t">ห่อข้าวเหนียวเสร็จ<small id="madeN">${say(n)}</small></span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></button>`);
       const sheet = UXD.sheet(document.getElementById("madeS")), q = document.getElementById("madeQ"), msg = document.getElementById("madeM"), go = document.getElementById("madeGo");
       document.getElementById("madeU").textContent = P.unit || "ห่อ";
       document.getElementById("madeB").onclick = () => { q.value = ""; msg.textContent = ""; sheet.open(); q.focus(); };
