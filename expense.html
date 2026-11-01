@@ -27,9 +27,6 @@
 .sum .tot > :last-child { font-size: 30px; line-height: 1.15; } /* the month total is the one number to see first */
 .sum .kv b { font-variant-numeric: tabular-nums; }
 .sum hr { border: 0; border-top: .5px solid var(--color-separator); margin: 6px 0; }
-#due { margin-bottom: 12px; }
-#due b.h { display: block; font: 600 17px/1.35 var(--font-head); color: var(--on-wait); }
-#due .cats { margin-top: 8px; }
 .cats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .pg-exp .in > #q { -webkit-appearance: none; appearance: none; border: 0; border-radius: 0; padding: 0 14px; font-size: 17px; text-align: left; }
 .pg-exp .in > #q::-webkit-search-decoration { -webkit-appearance: none; }
@@ -100,7 +97,6 @@
   <div id="pNew" role="tabpanel">
     <p class="fhint">จ่ายเงินแล้วลงเลย<br>บิล CPF กับเงินเดือน แอปคิดให้ ไม่ต้องลง</p>
     <div class="recent" id="recent" hidden></div>
-    <div id="due" class="card sum" hidden></div>
     <div class="in"><input id="q" type="search" enterkeyhint="search" placeholder="ค้นหา หรือพิมพ์ชื่อใหม่" autocomplete="off" aria-label="ค้นหารายการ"></div>
     <div class="card el" id="items"></div>
   </div>
@@ -174,16 +170,6 @@
     recent.innerHTML = rc.length ? `<h3>ลงล่าสุด</h3><div class="row">${rc.map(([x, v]) => `<button type="button" data-k="${ITEMS.indexOf(x)}">${ci(x.cat)}<span><b>${esc(x.name)}</b><small>${baht(v.a)}</small></span></button>`).join("")}</div>` : "";
   };
   q.oninput = draw;
-  // owner: ค่าคงที่รายเดือน not logged yet this month (Mos 31 ต.ค.: ต้นเดือนเตือนค่าคงที่ที่ยังไม่ลง) · tap a name = its sheet
-  const dueDraw = async () => {
-    if (!OWN) return;
-    const { data, error } = await supabase.from("expenses").select("name").eq("category", "fixed").gte("date", bday.slice(0, 7) + "-01");
-    if (error) return;
-    const done = new Set(data.map((r) => r.name)), miss = ITEMS.filter((x) => x.cat === "fixed" && !done.has(x.name));
-    due.hidden = !miss.length;
-    due.innerHTML = `<b class="h">ค่าคงที่เดือนนี้ยังไม่ลง ${miss.length} ตัว</b><div class="cats">${miss.map((x) => `<button type="button" class="chip" data-k="${ITEMS.indexOf(x)}">${esc(x.name)}</button>`).join("")}</div>`;
-  };
-  due.onclick = (e) => { const b = e.target.closest("[data-k]"); if (b) open(ITEMS[+b.dataset.k]); };
   recent.onclick = (e) => { const b = e.target.closest("[data-k]"); if (b) open(ITEMS[+b.dataset.k]); };
 
   // ---- the sheet: one expense
@@ -222,7 +208,7 @@
     UXM.toast(cur.count ? `ลง${cur.name}แล้ว ✓ เข้าสต็อก ${+qty.value} ${cur.unit || ""}` : "ลงรายจ่ายแล้ว ✓");
     q.value = "";
     if (cur.isNew) await load();
-    draw(); await Promise.all([list(), dueDraw()]);
+    draw(); await list();
   };
 
   // ---- ลงแล้ว: staff = today · owner = a month with totals per category
@@ -267,7 +253,7 @@
     pNew.hidden = t !== "new"; pList.hidden = t !== "list"; scrollTo(0, 0); if (t === "list") tick(); };
   tabs.onclick = (e) => { const b = e.target.closest("[data-t]"); if (b) tab(b.dataset.t); };
   try { await load(); } catch (_) { return stop("เปิดไม่ขึ้น ลองเปิดหน้าใหม่"); }
-  draw(); await Promise.all([list(), dueDraw()]);
+  draw(); await list();
   form.hidden = false;
   tab(new URLSearchParams(location.search).get("tab") === "list" ? "list" : "new");
 })().catch(() => { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น ลองเปิดหน้าใหม่"; });
