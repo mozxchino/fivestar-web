@@ -228,7 +228,7 @@ a.cell{text-decoration:none;color:inherit}
       <label class="field" for="pb">หน่วยซื้อ</label><input type="text" id="pb" name="buy_unit" list="buys" placeholder="ถุง" value="${E(UXM.unit(p.buy_unit))}">
       <label class="field" for="pk" id="pkl"></label><input type="number" id="pk" inputmode="numeric" min="1" step="1" name="pack_size" value="${E(p.pack_size ?? 1)}" data-v="${E(p.pack_size ?? 1)}">
       <div data-q="stick"><label class="field" for="pst">ชิ้นต่อไม้<small class="h">ว่าง = ไม่มีไม้</small></label>${num("pst", "stick_size", p.stick_size, 1).replace("ยังไม่ใส่", "ไม่มีไม้")}</div>
-      <label class="field" for="pc"><span id="pcl"></span><small class="h" id="pch">ว่างได้ ใส่ทีหลังจากใบเสร็จ</small></label>${num("pc", "cost_price", p.cost_price)}
+      <label class="field" for="pc"><span id="pcl"></span><small class="h" id="pch">ใช้ตั้งแต่วันนี้ วันก่อนไม่เปลี่ยน</small></label>${num("pc", "cost_price", p.cost_price)}
       <div data-q="sell"><label class="field" for="psp">ขายหน้าร้าน (บาท)</label>${num("psp", "store_price", p.store_price)}
         <label class="field" for="pdp">ขายเดลิเวอรี่ (บาท)</label>${num("pdp", "delivery_price", p.delivery_price)}</div>
       ${seg("count_mode", "ตอนปิดร้าน", [["count", "นับจำนวน"], ["tick", "ติ๊กใกล้หมด"]], modeOf(p))}
@@ -250,7 +250,7 @@ a.cell{text-decoration:none;color:inherit}
     if (sell) setSeg("count_mode", "count");
     $("psb").querySelector("[data-q=low]").hidden = !(sell && src !== "cpf" && F("count_mode").value === "count");
     $("psb").querySelector("[data-seg=count_cols]").style.display = $("ql-count_cols").style.display = F("count_mode").value === "count" ? "" : "none"; // a ticked ของใช้ has no boxes
-    $("pcl").textContent = `ราคาทุน ต่อ 1 ${un} (บาท)`; $("pch").hidden = sell; $("pll").textContent = `เตือนเมื่อเหลือต่ำกว่า (${un})`;
+    $("pcl").textContent = `ราคาทุน ต่อ 1 ${un} (บาท)`; $("pll").textContent = `เตือนเมื่อเหลือต่ำกว่า (${un})`;
     // 0043: same unit → 1 locked (the typed number comes back if they differ again) · a CPF ของใช้ with one unit = how many per order (foil 2 ม้วน)
     const order = !sell && src === "cpf" && same(u, b);
     $("pkl").textContent = order ? `สั่ง CPF ทีละกี่ ${un}` : packLabel(u, b);
