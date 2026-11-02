@@ -139,7 +139,19 @@ details.ux-day { border-bottom: .5px solid var(--color-separator); }
 details.ux-day:last-child { border-bottom: 0; }
 details.ux-day summary { list-style: none; gap: 10px; min-height: 52px; padding: 6px 0; font-variant-numeric: tabular-nums; }
 details.ux-day summary::-webkit-details-marker { display: none; }
-details.ux-day summary .d { flex: none; width: 72px; font-weight: 700; white-space: nowrap; }
+details.ux-day summary .d { flex: none; width: 72px; font: 600 17px/1.2 var(--font-head); white-space: nowrap; }
+/* round 3 พ.ย. (Mos: หน้าประวัติจืด): weekday big + date small, the main line bold in its tone, a tone bar on the left edge */
+details.ux-day summary .d small { display: block; font: 400 12px/1.2 var(--font-body); color: var(--color-ink-soft); }
+details.ux-day summary .m b { display: block; font: 600 16px/1.3 var(--font-head); color: var(--color-foreground); }
+details.ux-day summary .m small { display: block; font-size: 14px; color: var(--color-ink-soft); }
+details.ux-day { padding-left: 10px; box-shadow: inset 4px 0 0 var(--sh-bar); }
+details.ux-day[data-tone=ok] { box-shadow: inset 4px 0 0 var(--color-success); }
+details.ux-day[data-tone=ok] summary .m b { color: var(--color-success); }
+details.ux-day[data-tone=bad] { box-shadow: inset 4px 0 0 var(--color-destructive); }
+details.ux-day[data-tone=bad] summary .m b { color: var(--color-destructive); }
+details.ux-day[data-tone=wait] { box-shadow: inset 4px 0 0 var(--color-wait-mark); }
+details.ux-day[data-tone=wait] summary .m b { color: var(--on-wait); }
+details.ux-day summary { min-height: 60px; }
 details.ux-day summary { flex-wrap: wrap; position: relative; padding-right: 22px; } /* r3 #20: at big text the status pill drops under the day instead of squeezing the text to one letter per line */
 details.ux-day summary .m { flex: 1 1 6em; min-width: 0; overflow-wrap: break-word; color: var(--color-ink-soft); } /* r3 #20: wraps to the next line, never … on the amount */
 details.ux-day summary::after { content: "›"; position: absolute; right: 0; top: 50%; translate: 0 -50%; color: var(--color-chevron); font-size: 20px; transition: transform 200ms var(--ease-out); }
@@ -178,10 +190,18 @@ button.row.ux-all .ux-go { color: var(--color-primary-dark); }
 .ux-date svg { width: 16px; height: 16px; flex: none; }
 /* visual hierarchy rule 3 (26 ต.ค.): one line per day · the main problem first, "อีก N เรื่อง" counts the rest (all of it shows when the day opens) */
 details.ux-day summary .m { font-size: 15px; }
-details.ux-day summary .m b { font-weight: 500; color: var(--color-ink-soft); }
+
 
 /* ---------- round 4 owner hub (index เจ้าของ): every row says what waits there · status dot + words (no count bubble, the words say it) ---------- */
 .ux-hub .t { min-width: 0; }
+/* round 3 พ.ย. (Mos): staff home · the four doors as owner-style tiles inside the trio grid, full width, same gap as the bento */
+.trio > .ux-quick { grid-column: 1 / -1; display: grid; gap: 10px; }
+.trio > .ux-quick > .tile { margin: 0; }
+/* Mos 3 พ.ย.: the sticky-rice box keeps its old shape (staff know it) but a little bigger and warmer so it is not missed */
+.trio > .ux-quick > .bt.ux-made { min-height: 92px; background: var(--tint-primary); box-shadow: var(--shadow-card), inset 0 0 0 1.5px rgba(200, 33, 40, .22); }
+.trio > .ux-quick > .bt.ux-made .k { font-size: 15px; color: var(--color-primary-dark); font-weight: 600; }
+.trio > .ux-quick > .bt.ux-made .v { font-size: 26px; }
+.trio > .ux-quick > .bt.ux-made .go { color: var(--color-primary); }
 .ux-hub .t small { opacity: 1; color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
 .ux-hub .t small::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; vertical-align: 1px; background: var(--color-chevron); }
 .ux-hub .t small[data-tone=ok]::before { background: var(--color-success); }
@@ -251,7 +271,8 @@ details.ux-day summary .m b { font-weight: 500; color: var(--color-ink-soft); }
 /* ---------- close step 1, round 2 (Mos 26 ต.ค.): the count table gets anchors ----------
    a header band that reads as column titles (dark, bold, own background) · product name bold on one line · the carried-over line muted ·
    every other row on a faint warm band so the eye keeps its row across the three boxes */
-.sheet:has(> .grid) { padding: 0; overflow: clip; }
+.sheet:has(> .grid) { padding: 0; } /* round 3 พ.ย.: no overflow clip · WebKit kept the sticky header frozen under it (Mos 3 พ.ย. "แถบไม่เลื่อนตาม") · the last row rounds itself */
+.sheet:has(> .grid) > :last-child, .sheet:has(> .grid) > #lines > .grid:last-child { border-radius: 0 0 var(--radius-card) var(--radius-card); }
 .sheet > .grid.sheet-head { margin: 0; padding: 11px 12px 10px !important; background: var(--color-fill); font: 600 14px/1.3 var(--font-head); color: var(--color-foreground); box-shadow: 0 1px 0 var(--color-border-strong), 0 6px 8px -8px rgba(32, 24, 24, .25); }
 .sheet > .grid.sheet-head > div { white-space: nowrap; font-size: 13px; }
 .sheet > .grid.sheet-head #progT { font-family: var(--font-body); font-weight: 700; }
@@ -304,10 +325,20 @@ details.ux-day summary .m b { font-weight: 500; color: var(--color-ink-soft); }
 @media (max-width: 359px) { .trio > .bt:not(.wide) { padding: 10px 6px 10px 9px; } .trio > .bt:not(.wide) .v { font-size: 15px; } .trio > .bt:not(.wide) .v small { font-size: 12px; } .trio > .bt.hero.lead:not(.calm) .v { font-size: 26px; } }
 
 /* ---------- receive round 2b: two-sided rows, the other answer folds away ---------- */
-#recBox .sheet .it { grid-template-columns: minmax(0, 1fr) auto 84px; gap: 10px; }
+/* round 3 พ.ย. (Mos: "สั่ง 10" ลอย ๆ): the order line reads "สั่งมา 2 ถุง = 10 ตัว" under the name · the box is shorter, the number centred, the unit inside */
+#recBox .sheet .it { grid-template-columns: minmax(0, 1fr) 92px; gap: 10px; }
 #recBox .nm { font-weight: 600; }
-#recBox .ord { font-size: 15px; color: var(--color-ink-soft); white-space: nowrap; }
-#recBox .it:not(.sheet-head) .ord::before { content: "สั่ง "; }
+#recBox .nm .meta b { font-weight: 600; color: var(--color-foreground); }
+#recBox .ord { display: none; }
+#recBox .in.u { margin: 0; }
+#recBox .in.u > input { text-align: center; padding: 8px 2px 8px 8px; }
+#recBox .in.u .sfx { padding-right: 10px; }
+#recBox .sheet-head { background: var(--color-foreground) !important; color: #fff; box-shadow: none; padding: 9px 12px !important; border-bottom: 0 !important; }
+#recBox .sheet-head > div { font: 700 14px/1.2 var(--font-head); color: #fff; }
+#recBox .sheet-head > div:last-child { padding: 5px 0; border-radius: 999px; background: var(--color-success); text-align: center; }
+#recBox .sheet { padding: 0; }
+#recBox .sheet .it:not(.sheet-head), #recBox .sheet h3.ux-cat { margin-inline: 0; padding-left: 12px; padding-right: 12px; }
+#recBox .sheet > #lines > :last-child { border-radius: 0 0 var(--radius-card) var(--radius-card); }
 .rc-pick[data-pick=short] #recAll, .rc-pick[data-pick=all] #recShort { min-height: 48px; padding: 10px 16px 10px 52px; background: var(--color-fill); box-shadow: none; border-color: transparent; }
 .rc-pick[data-pick=short] #recAll b, .rc-pick[data-pick=all] #recShort b { font: 500 16px/1.3 var(--font-head); color: var(--color-ink-soft); }
 .rc-pick[data-pick=short] #recAll small, .rc-pick[data-pick=all] #recShort small { display: none; }
@@ -344,7 +375,8 @@ label.btn.cl-frame.ux-next { box-shadow: var(--shadow-card), inset 0 0 0 2.5px v
 /* taken: the photo fills the frame (inline background-image from the page), green tag, one dark strip says how to shoot again */
 .cl-shot label.btn.cl-frame.ux-got { background-color: var(--color-muted); background-size: cover; background-position: center; box-shadow: var(--shadow-card), inset 0 0 0 2px var(--color-success); }
 .cl-frame.ux-got > :is(svg, b, small) { visibility: hidden; }
-.cl-frame.ux-got::after { content: attr(data-again); position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 8px 10px; font: 500 14px/1.2 var(--font-head); color: #fff; background: linear-gradient(transparent, rgba(32, 24, 24, .72)); }
+/* round 3 พ.ย. (Mos: ตัวเล็ก กลืนกับรูป): a rounded dark box, not a gradient strip */
+.cl-frame.ux-got::after { content: attr(data-again); position: absolute; left: 12px; right: 12px; bottom: 12px; padding: 10px 8px; border-radius: 12px; font: 600 16px/1.2 var(--font-head); color: #fff; background: rgba(32, 24, 24, .78); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .cl-shot .thumbs { gap: 8px; margin: 8px 0 0; }
 .cl-shot .thumb, .cl-shot .thumb .see { width: 52px; height: 52px; }
 .cl-shot > p.muted { margin: 4px 2px 0; font-size: 13px; }

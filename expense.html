@@ -116,6 +116,7 @@
 (async () => {
   const { supabase, me } = await App.ready();
   if (UXS.only(me, ["staff", "owner"], "หน้านี้สำหรับพนักงานในร้านและเจ้าของ", "ผู้จัดการดูงานของร้านได้ที่หน้าวันนี้", "owner.html", "ไปหน้าวันนี้")) return;
+  if (new URLSearchParams(location.search).get("from") === "close") document.querySelector(".topbar .back").href = "close.html"; // round 3 พ.ย. (Mos): opened from ปิดร้าน → the back arrow returns there, not home
   const OWN = me.role === "owner", esc = UXS.esc;
   const CAT = { raw: "วัตถุดิบ", supply: "ของใช้", gas: "แก๊ส", fee: "ค่าธรรมเนียม", other: "ซ่อม/อื่นๆ", fixed: "ค่าคงที่รายเดือน" }, KEYS = Object.keys(CAT);
   const PAID = { cash: "เงินสดหน้าร้าน", owner: "เจ้าของโอนจ่าย" }, PAY_S = { cash: "เงินสด", owner: "เจ้าของโอน" }; // PAY_S: row grey line stays one line
@@ -179,7 +180,7 @@
   const pick = (p) => { paidBy = p; paid.querySelectorAll("button").forEach((b) => { b.classList.toggle("on-ok", b.dataset.p === p); b.setAttribute("aria-pressed", b.dataset.p === p); }); };
   paid.onclick = (e) => { const b = e.target.closest("[data-p]"); if (b) pick(b.dataset.p); };
   const pickCat = (c) => { cat = c; cats.querySelectorAll("button").forEach((b) => { b.classList.toggle("on", b.dataset.c === c); b.setAttribute("aria-pressed", b.dataset.c === c); }); };
-  cats.innerHTML = KEYS.map((k) => `<button type="button" class="chip" data-c="${k}" aria-pressed="false">${CAT[k]}</button>`).join("");
+  cats.innerHTML = KEYS.filter((k) => k !== "fee").map((k) => `<button type="button" class="chip" data-c="${k}" aria-pressed="false">${CAT[k]}</button>`).join(""); // round 3 พ.ย. (Mos): the 7-11 fee comes from หน้าฝากเงิน by itself · no fee chip here
   cats.onclick = (e) => { const b = e.target.closest("[data-c]"); if (b) pickCat(b.dataset.c); };
   if (OWN) { fDate.hidden = false; dt.max = UXS.today(); dt.value = bday; UXM.dateTh(dt); }
   const open = (x) => {
