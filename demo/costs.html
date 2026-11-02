@@ -1,0 +1,127 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><script src="lib/demo.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ต้นทุน/กำไร (เจ้าของ)</title><meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="lib/ui.css?v=r1101"><link rel="stylesheet" href="lib/ux-data.css">
+
+
+<script src="lib/skeleton.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js"></script>
+<style>
+#more td.n{font-weight:600}
+#prod .row{min-height:64px}
+#prod .row b{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+#prod .meta .err{white-space:nowrap;font-weight:600}
+#prodf{scroll-margin-top:calc(var(--chrome-h) + 8px)}
+#fs .muted a{display:inline-block;padding:12px 0;margin:-12px 0}
+</style></head><body ontouchstart="">
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ต้นทุน/กำไร</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
+<p id="blocked" class="err" hidden></p>
+<div class="sk"><span class="vh">กำลังเปิด…</span><div class="monthnav"><i class="sk-b" style="--w:48px;--h:48px;--r:50%;margin:0"></i><i class="sk-b" style="--w:30%;--h:22px;margin:0 auto"></i><i class="sk-b" style="--w:48px;--h:48px;--r:50%;margin:0"></i></div><p></p><div class="bento"><div class="bt wide"><i class="sk-b" style="--w:46%;--h:14px"></i><i class="sk-b" style="--w:58%;--h:44px;--gap:10px"></i></div><div class="bt "><i class="sk-b" style="--w:40%;--h:14px"></i><i class="sk-b" style="--w:70%;--h:26px;--gap:8px"></i></div><div class="bt "><i class="sk-b" style="--w:40%;--h:14px"></i><i class="sk-b" style="--w:64%;--h:26px;--gap:8px"></i></div><div class="bt wide"><i class="sk-b" style="--w:24%;--h:14px"></i><i class="sk-b" style="--w:44%;--h:26px;--gap:8px"></i><i class="sk-b" style="--w:76%;--h:13px;--gap:8px"></i></div></div><div class="sk-row" style="justify-content:space-between;min-height:52px"><i class="sk-b" style="--w:44%;--h:16px"></i><i class="sk-b" style="--w:64px;--h:36px;--r:999px"></i></div><div class="sk-row" style="justify-content:space-between;min-height:52px"><i class="sk-b" style="--w:44%;--h:16px"></i><i class="sk-b" style="--w:64px;--h:36px;--r:999px"></i></div><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
+<div id="app" class="ld" hidden>
+  <div class="monthnav"><button type="button" id="mp" aria-label="เดือนก่อน">‹</button><div class="m" id="ml" aria-live="polite"></div><button type="button" id="mn" aria-label="เดือนถัดไป">›</button></div>
+  <div id="sum" class="bento"><span class="vh">กำลังเปิด…</span><div class="bt wide"><i class="sk-b" style="--w:46%;--h:14px"></i><i class="sk-b" style="--w:58%;--h:44px;--gap:10px"></i></div><div class="bt "><i class="sk-b" style="--w:40%;--h:14px"></i><i class="sk-b" style="--w:70%;--h:26px;--gap:8px"></i></div><div class="bt "><i class="sk-b" style="--w:40%;--h:14px"></i><i class="sk-b" style="--w:64%;--h:26px;--gap:8px"></i></div><div class="bt wide"><i class="sk-b" style="--w:24%;--h:14px"></i><i class="sk-b" style="--w:44%;--h:26px;--gap:8px"></i><i class="sk-b" style="--w:76%;--h:13px;--gap:8px"></i></div></div>
+  <div id="todo" class="chips" style="margin-top:12px" hidden></div>
+  <details class="fold" id="moref"><summary>ตัวเลขอื่นของเดือน<span class="chip">เปิดดู</span></summary><div id="more" class="card"></div></details>
+  <details class="fold" id="prodf"><summary><span>ต้นทุนรายสินค้า <span id="pc" class="muted"></span></span><span class="chip">เปิดดู</span></summary><div id="prod" class="card list"></div></details>
+  <div class="sticky"><button class="btn primary" id="open">กรอกยอดเดือนนี้</button><button class="btn" id="ed" style="margin-top:8px" hidden>กรอกยอดเดือนนี้</button></div>
+</div>
+<dialog id="fs" class="bsheet" aria-labelledby="fsh"><div class="body"><div class="grab"></div>
+  <div class="hd"><b id="fsh">กรอกยอดขายและค่าใช้จ่าย</b><button class="x" type="button" aria-label="ปิด" autofocus>✕</button></div>
+  <p class="meta" style="margin:2px 0 0">ใส่เป็นบาท ช่องที่เว้นว่างนับเป็น 0</p>
+  <p class="meta" id="fxn" style="margin:2px 0 0" hidden>ค่าใช้จ่ายลงที่ <a href="expense.html" style="display:inline-flex;align-items:center;min-height:44px;padding:0 6px;margin:-12px -6px">หน้ารายจ่าย</a><br>เงินเดือน โอที โบนัส แอปคิดเอง</p>
+  <div class="g"><label>ยอดหน้าร้าน (POS ไม่รวมเดลิเวอรี่)<span class="in"><input type="number" inputmode="decimal" id="store_sales"><span class="sfx">บาท</span></span></label><label>ยอด LINE MAN<span class="in"><input type="number" inputmode="decimal" id="lineman_sales"><span class="sfx">บาท</span></span></label>
+    <label>ยอด Grab<span class="in"><input type="number" inputmode="decimal" id="grab_sales"><span class="sfx">บาท</span></span></label><label>ยอด Shopee<span class="in"><input type="number" inputmode="decimal" id="shopee_sales"><span class="sfx">บาท</span></span></label>
+    <label class="fx">ค่าเช่า<span class="in"><input type="number" inputmode="decimal" id="rent"><span class="sfx">บาท</span></span></label><label class="fx">ค่าแรง<span class="in"><input type="number" inputmode="decimal" id="wages"><span class="sfx">บาท</span></span></label>
+    <label class="fx">ค่าน้ำไฟ<span class="in"><input type="number" inputmode="decimal" id="utilities"><span class="sfx">บาท</span></span></label><label class="fx">ค่าแก๊ส<span class="in"><input type="number" inputmode="decimal" id="gas"><span class="sfx">บาท</span></span></label>
+    <label class="fx">จิปาถะ<span class="in"><input type="number" inputmode="decimal" id="misc"><span class="sfx">บาท</span></span></label></div>
+  <label class="field" for="note">โน้ต</label><textarea id="note" rows="2"></textarea>
+  <p class="muted">ค่าคอมแอปส่ง แก้ได้ที่ <a href="settings.html?tab=sys">ตั้งค่า › ร้าน</a></p></div>
+  <div class="foot"><button class="btn primary" id="save">บันทึกยอด</button><p id="smsg" class="muted"></p></div></dialog>
+<script>
+(async () => {
+  const $ = (i) => document.getElementById(i);
+  const { supabase, me } = await App.ready();
+  if (me.role === "manager" && UXS.only(me, ["owner"], "หน้านี้สำหรับเจ้าของ", "ต้นทุนและกำไรดูได้เฉพาะเจ้าของ", "index.html", "กลับหน้าหลัก")) return;
+  if (me.role !== "owner") { $("blocked").hidden = false; $("blocked").textContent = "หน้านี้สำหรับเจ้าของ"; return; }
+  $("app").hidden = false;
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const money = (n) => n == null ? "-" : Number(n).toLocaleString("th-TH", { maximumFractionDigits: 0 });
+  const money2 = (n) => n == null ? "-" : Number(n).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); // 0057: the fee in satang (58.32)
+  const IN = ["store_sales", "lineman_sales", "grab_sales", "shopee_sales", "rent", "wages", "utilities", "gas", "misc"];
+  const FX = ["rent", "wages", "utilities", "gas", "misc"]; // 0084: typed only for a month before หน้ารายจ่าย
+  const CAT = { fixed: "ค่าคงที่รายเดือน", gas: "แก๊ส", supply: "ของใช้", raw: "วัตถุดิบ", fee: "ค่าธรรมเนียม", other: "ซ่อม/อื่นๆ" }; // = expense.html
+  let typed = false;
+  const now = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 7);
+  const qm = new URLSearchParams(location.search).get("m"); // round 4: owner สรุปเดือน links here with ?m=YYYY-MM
+  const FIRST = "2026-11"; // Mos 2 Nov: Oct 2026 belongs to the previous owner, the shop's books start in Nov
+  let cur = /^\d{4}-\d{2}$/.test(qm || "") && qm <= now && qm >= FIRST ? qm : now;
+  const ym = () => cur;
+  const mname = (v) => new Date(v + "-01T00:00:00Z").toLocaleDateString("th-TH", { month: "short", year: "numeric", timeZone: "UTC" });
+  const shift = (d) => { const [y, m] = cur.split("-").map(Number), t = new Date(Date.UTC(y, m - 1 + d, 1)); cur = t.toISOString().slice(0, 7); load(); };
+  $("mp").onclick = () => shift(-1); $("mn").onclick = () => shift(1);
+  const sheet = UXD.sheet($("fs"));
+  const editM = () => { $("smsg").className = "muted"; $("smsg").textContent = ""; sheet.open(); };
+  $("open").onclick = $("ed").onclick = editM;
+
+  async function load() {
+    const [y, m] = ym().split("-").map(Number);
+    $("ml").textContent = mname(ym()); $("mn").disabled = ym() >= now; $("mp").disabled = ym() <= FIRST;
+    $("fsh").textContent = "ยอดเดือน " + mname(ym()); $("save").textContent = "บันทึกยอด " + mname(ym());
+    const { data: r, error } = await supabase.rpc("month_costs", { y, m });
+    if (error) { $("sum").className = "card"; $("sum").innerHTML = `<p class="err">เปิดไม่ขึ้น: ${esc(App.errText(error))}</p>`; return; }
+    IN.forEach((k) => $(k).value = r.inputs[k] ?? "");
+    // 0084: costs come from หน้ารายจ่าย + pay the app works out · a month before it keeps the typed costs (cost_source month_inputs)
+    typed = r.cost_source === "month_inputs";
+    document.querySelectorAll("#fs .fx").forEach((e) => e.hidden = !typed); $("fxn").hidden = typed;
+    const pay = r.pay || {}, payT = (+pay.salary || 0) + (+pay.ot || 0) + (+pay.bonus || 0), miss = r.fixed_missing || [];
+    const fixM = typed ? `ค่าใช้จ่ายประจำ ${money(r.fixed)} บาท<br>(ยอดที่กรอกเอง ก่อนมีหน้ารายจ่าย)`
+      : `รายจ่าย ${money(r.expense_total)} บาท<br>เงินเดือน โอที โบนัส ${money(payT)} บาท`;
+    $("note").value = r.inputs.note || "";
+    // L6: with a missing cost price the red button is that job (the sheet of month numbers moves to the grey button under it)
+    const nc = r.missing_cost.length, editT = (r.has_inputs ? "แก้ยอดเดือน " : "กรอกยอดเดือน ") + mname(ym());
+    $("open").textContent = nc ? `ใส่ทุน ${nc} ตัว` : editT; $("ed").textContent = editT; $("ed").hidden = !nc;
+    $("open").onclick = nc ? () => { location.href = "settings.html?tab=prod&f=nocost"; } : editM;
+    // bento (Mos 23 ต.ค.): กำไร across the top · ยอดขาย | GP · ต้นทุน across (tap = ต้นทุนรายสินค้า)
+    const t = (cls, k, v, m) => `<div class="bt ${cls}"><span class="k">${k}</span><span class="v">${money(v)} <small>บาท</small></span>${m ? `<span class="m">${m}</span>` : ""}</div>`;
+    // 0057: CPF bill = goods + CPF ของใช้ (sauces, foil, bags) + ค่าการตลาด 1.5% on both (the app works it out, nobody types it)
+    const cpfAll = (+r.cpf_cost || 0) + (+r.cpf_consumable_cost || 0) + (+r.cpf_fee || 0), pct = Number(r.cpf_fee_pct ?? 1.5);
+    const cons = r.cpf_consumables || [];
+    $("sum").className = "bento";
+    $("sum").innerHTML = `<div class="bt wide hero${r.net >= 0 ? " calm" : ""}"><span class="k">กำไรสุทธิ ${mname(ym())}</span><span class="v"><span class="big">${money(r.net)}</span> <small>บาท</small></span>`
+      + `<span class="m">${r.has_inputs ? "" : "ยังไม่กรอกยอดขายเดือนนี้<br>"}ค่าใช้จ่ายจาก${typed ? "ยอดที่กรอกเอง" : "หน้ารายจ่าย"}</span></div>`
+      + t("", "ยอดขายรวม", r.revenue) + t("", "ค่าคอมแอปส่ง", r.gp_cost)
+      + `<button type="button" class="bt wide" id="costT"><span class="k">ต้นทุน</span><span class="v">${money(cpfAll + (+r.fixed || 0))} <small>บาท</small></span><span class="m">ค่าของ CPF ${money(r.cpf_cost)} บาท<br>ของใช้ CPF ${money(r.cpf_consumable_cost)} บาท<br>ค่าการตลาด CPF ${pct}% ${money(r.cpf_fee)} บาท<br>${fixM}</span><svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>`;
+    $("costT").onclick = () => { $("prodf").open = true; $("prodf").scrollIntoView({ behavior: "smooth", block: "start" }); };
+    // ต้องทำ: things only the owner can fix
+    const apps = ["lineman_sales", "grab_sales", "shopee_sales"].reduce((a, k) => a + (+r.inputs[k] || 0), 0);
+    const todo = [];
+    if (!r.has_inputs || apps === 0) todo.push(`<button type="button" class="chip wait" id="t-in">ยังไม่กรอกยอดแอป ›</button>`);
+    if (!typed && miss.length) todo.push(`<a class="chip wait" href="expense.html">ยังไม่ลง ${esc(miss.slice(0, 2).join(" "))}${miss.length > 2 ? ` อีก ${miss.length - 2} ตัว` : ""} ›</a>`);
+    if (r.missing_cost.length) todo.push(`<a class="chip bad" href="settings.html?tab=prod&amp;f=nocost">ยังไม่ใส่ทุน ${r.missing_cost.length} ตัว ›</a>`);
+    $("todo").hidden = !todo.length; $("todo").innerHTML = todo.length ? `<span class="lbl">ต้องทำ</span>` + todo.join("") : "";
+    if ($("t-in")) $("t-in").onclick = editM;
+    const diff = r.revenue > 0 && r.stock_sales_est > 0 ? Math.round((r.stock_sales_est - r.revenue) / r.revenue * 100) : null;
+    const ex = r.expenses || {}, split = typed ? [] : [...Object.keys(CAT).filter((k) => +ex[k]).map((k) => [CAT[k], money(ex[k]), "บาท"]),
+      ["เงินเดือน", money(pay.salary), "บาท"], ["โอทีที่อนุมัติแล้ว", money(pay.ot), "บาท"], ["โบนัสยอดขาย", money(pay.bonus), "บาท"]];
+    const after = [...split, ["ของเสีย (รวมอยู่ในค่าของ CPF แล้ว)", money(r.waste_cost), "บาท"], ["เปิดร้าน", r.days_open, "วัน"], ["ยอดขายเฉลี่ยต่อวัน", money(r.avg_daily_sales), "บาท"], ["ยอดขายคิดจากสต็อก (ประมาณ)", money(r.stock_sales_est), "บาท"]];
+    $("more").innerHTML = `<table>${after.map(([k, v, u]) => `<tr><td>${k}</td><td class="n">${v ?? 0} ${u}</td></tr>`).join("")}</table>`
+      + (diff == null ? "" : `<p class="muted">ยอดขายคิดจากสต็อก ต่างจากยอดขายรวม ${diff > 0 ? "+" : ""}${diff}%</p>`);
+    $("pc").textContent = r.per_product.length + cons.length ? `(${r.per_product.length + cons.length} ตัว)` : "";
+    $("prod").innerHTML = r.per_product.length ? r.per_product.map((p) => `<div class="row"><div class="grow"><div class="nm">${esc(p.name)}</div><div class="meta">รับ ${money(p.received)} · ขาย ${money(p.sold)} · เสีย ${money(p.waste)}<br>${p.cost_price == null ? '<b class="err">ยังไม่ใส่ราคาทุน</b>' : "ทุนต่อหน่วย " + money(p.cost_price) + " บาท"}</div></div><b>${money(p.cost)} บาท</b></div>`).join("")
+      : cons.length ? "" : '<p class="muted">เดือนนี้ยังไม่มีการนับของ</p>';
+    $("prod").innerHTML += cons.map((c) => `<div class="row"><div class="grow"><div class="nm">${esc(c.name)}</div><div class="meta">ของใช้ CPF · รับ ${money(c.qty)}<br>${c.cost_price == null ? '<b class="err">ยังไม่ใส่ราคาทุน</b>' : "ทุนต่อหน่วย " + (Number.isInteger(+c.cost_price) ? money : money2)(c.cost_price) + " บาท"}</div></div><b>${money(c.cost)} บาท</b></div>`).join("")
+      + (cpfAll > 0 ? `<div class="row"><div class="grow"><div class="nm">ค่าการตลาด CPF ${pct}%</div><div class="meta">ท้ายบิล CPF คิดจากค่าของและของใช้ CPF</div></div><b>${money2(r.cpf_fee)} บาท</b></div>` : "");
+  }
+  $("save").onclick = async () => {
+    const row = { ym: ym(), note: $("note").value.trim() || null, updated_at: new Date().toISOString() };
+    IN.forEach((k) => { if (typed || !FX.includes(k)) row[k] = +$(k).value || 0; });
+    $("save").disabled = true;
+    const { error } = await supabase.from("month_inputs").upsert(row);
+    $("save").disabled = false;
+    if (error) { $("smsg").className = "err"; $("smsg").textContent = "บันทึกไม่ได้: " + App.errText(error); return; }
+    sheet.close(); UXM.toast("บันทึกยอด " + mname(ym()) + " แล้ว ✓"); await load();
+  };
+  await load();
+})().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น: " + App.errText(e); } });
+</script></body></html>

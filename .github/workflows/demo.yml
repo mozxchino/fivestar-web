@@ -1,0 +1,25 @@
+# Practice copy of the shop app at /demo/ (fake data, no Supabase, no LINE).
+# Rebuilt from the live pages on every push to main, so /demo/ is always the same version as the real app.
+# If the safety check fails, nothing is committed and /demo/ stays at the last safe build.
+name: demo
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["demo/**"]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: demo
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 .demo-src/build.py
+      - name: commit demo/ if it changed
+        run: |
+          git add -A demo
+          git diff --cached --quiet && { echo "demo/ unchanged"; exit 0; }
+          git -c user.name="demo-bot" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "demo: rebuild from ${GITHUB_SHA::7}"
+          git pull -q --rebase origin main && git push -q origin HEAD:main

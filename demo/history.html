@@ -1,0 +1,113 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><script src="lib/demo.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ประวัติ</title><meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="lib/ui.css?v=r1101"><link rel="stylesheet" href="lib/ux-staff.css"><link rel="stylesheet" href="lib/ux-data.css">
+
+
+<script src="lib/skeleton.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script>
+</head><body class="grouped" ontouchstart="">
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ประวัติ</h1><div class="sub" id="rng">ย้อนหลัง 7 วัน</div></div></header>
+<div class="sk"><span class="vh">กำลังเปิด…</span><div class="card"><i class="sk-b" style="--w:30%;--h:14px;margin:3px 0 4px"></i><div class="ux-3" style="margin-top:12px"><div><i class="sk-b" style="--w:50%;--h:22px;margin:2px auto 3px"></i><i class="sk-b" style="--w:70%;--h:12px;margin:8px auto 3px"></i></div><div><i class="sk-b" style="--w:50%;--h:22px;margin:2px auto 3px"></i><i class="sk-b" style="--w:70%;--h:12px;margin:8px auto 3px"></i></div><div><i class="sk-b" style="--w:50%;--h:22px;margin:2px auto 3px"></i><i class="sk-b" style="--w:70%;--h:12px;margin:8px auto 3px"></i></div></div></div><div class="ux-tools"><i class="sk-b" style="--w:auto;flex:1;--h:50px;--r:14px"></i><i class="sk-b" style="--w:132px;--h:44px;--r:999px"></i></div><h2 class="ux-week" style="display:flow-root"><i class="sk-b" style="--w:40%;--h:13px;margin:4px 0"></i></h2><div class="card list"><div class="sk-row" style="min-height:52px;border-bottom:.5px solid var(--color-separator)"><i class="sk-b" style="--w:64px;--h:16px"></i><i class="sk-b" style="--w:52%;--h:14px"></i></div><div class="sk-row" style="min-height:52px;border-bottom:.5px solid var(--color-separator)"><i class="sk-b" style="--w:64px;--h:16px"></i><i class="sk-b" style="--w:52%;--h:14px"></i></div><div class="sk-row" style="min-height:52px;border-bottom:.5px solid var(--color-separator)"><i class="sk-b" style="--w:64px;--h:16px"></i><i class="sk-b" style="--w:52%;--h:14px"></i></div><div class="sk-row" style="min-height:52px;border-bottom:.5px solid var(--color-separator)"><i class="sk-b" style="--w:64px;--h:16px"></i><i class="sk-b" style="--w:52%;--h:14px"></i></div><div class="sk-row" style="min-height:52px;border-bottom:.5px solid var(--color-separator)"><i class="sk-b" style="--w:64px;--h:16px"></i><i class="sk-b" style="--w:52%;--h:14px"></i></div></div></div>
+<p id="msg" class="muted ld"></p>
+<div id="sum" class="ld"></div>
+<div id="tools" class="ld"></div>
+<div id="list" class="ld"></div>
+<script>
+(async () => {
+  try {
+    const { supabase } = await App.ready();
+    const { esc, thd, hm } = UXS, today = UXS.today();
+    const back = (n) => { const d = new Date(today + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() - n); return d.toISOString().slice(0, 10); };
+    const { data, error } = await supabase.from("shop_days").select("date,status,opened_at,closed_at,cash_expected,cash_counted,ot_hours,note")
+      .gte("date", back(30)).order("date", { ascending: false }).limit(31);
+    if (error) throw error;
+    const ST = { open: "ยังไม่ปิดร้าน", closed: "ปิดร้านแล้ว", sent: "ปิดร้านแล้ว", holiday: "ร้านหยุด", backfill: "กรอกย้อนหลัง" };
+    const TONE = { open: "wait", holiday: "", backfill: "" };
+    const baht = (n) => Math.abs(n).toLocaleString("th-TH") + " บาท";
+    const gapOf = (d) => d.cash_counted != null && d.cash_expected != null ? d.cash_counted - d.cash_expected : null;
+    msg.hidden = !!data.length;
+    if (!data.length) { list.innerHTML = `<div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>ยังไม่มีประวัติ</p><p class="muted">ปิดร้านครั้งแรกแล้ว จะขึ้นที่นี่</p></div>`; return; }
+    // month summary (this month, inside the 30 days staff can see)
+    const mon = data.filter((d) => d.date.slice(0, 7) === today.slice(0, 7));
+    const worked = mon.filter((d) => d.status !== "holiday" && (d.opened_at || d.closed_at || d.status === "backfill")).length;
+    const ot = mon.reduce((a, d) => a + (+d.ot_hours || 0), 0), short = mon.reduce((a, d) => a + Math.max(0, -(gapOf(d) ?? 0)), 0);
+    sum.innerHTML = `<div class="card"><p class="muted" style="margin:0 0 8px">${thd(today, { day: undefined, month: "long", year: "numeric" })}</p><div class="ux-3">
+      <div><b>${worked}</b> วัน<small>วันทำงาน</small></div><div><b>${+ot.toFixed(1)}</b> ชม.<small>โอทีรวม</small></div><div><b class="${short ? "err" : ""}">${short.toLocaleString("th-TH")}</b> บาท<small>เงินสดขาดรวม</small></div></div></div>`;
+    // ค (round 3): 7 วัน / 30 วัน / เลือกวัน · 5 latest days then ดูเพิ่ม · chip "วันที่มีเรื่อง" = ของขาด, ของเสีย or เงินสดไม่ตรง · staff RLS still caps at 30 days
+    const [wl, sh] = await Promise.all([
+      supabase.from("stock_lines").select("date,waste").gte("date", back(30)).gt("waste", 0),
+      supabase.rpc("short_days"), // 0025 · dates only (staff can't read orders older than ±1 day)
+    ]);
+    const waste = {}; (wl.data || []).forEach((l) => { if (+l.waste > 0 && l.date) waste[l.date] = (waste[l.date] || 0) + 1; });
+    const shortD = new Set((Array.isArray(sh.data) ? sh.data : []).map((x) => typeof x === "string" ? x : Object.values(x || {})[0]));
+    const flagged = (d) => shortD.has(d.date) || !!waste[d.date] || !!gapOf(d);
+    const monday = (ds) => { const d = new Date(ds + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7); return d.toISOString().slice(0, 10); };
+    const plus = (ds, n) => { const d = new Date(ds + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+    const lineOf = (d) => {
+      if (d.status === "holiday") return "";
+      // at most 2 short parts (middle-dot rule): the most important problem first, the rest shows when the day is opened
+      const g = gapOf(d), probs = [];
+      if (g) probs.push(`<span class="pill" data-tone="${g < 0 ? "bad" : "wait"}">เงินสด${g < 0 ? "ขาด" : "เกิน"} ${baht(g)}</span>`); // M6: icon + word, not red text alone (ขาด = bad, เกิน = wait)
+      if (shortD.has(d.date)) probs.push('<span class="pill" data-tone="bad">ของมาไม่ครบ</span>');
+      if (waste[d.date]) probs.push(`ของเสีย ${waste[d.date]} อย่าง`);
+      if (probs.length) return probs.length > 1 ? `${probs[0]} <b>อีก ${probs.length - 1} เรื่อง</b>` : probs[0];
+      const t = d.closed_at ? `ปิด ${hm(d.closed_at)}` : d.opened_at ? `เปิด ${hm(d.opened_at)}` : "";
+      return [g === 0 ? "เงินสดครบ" : "", t].filter(Boolean).join(" ");
+    };
+    let R = 7, N = 5, only = false, pickD = "";
+    const inRange = () => data.filter((d) => R === 30 || d.date > back(7));
+    function draw() {
+      document.getElementById("rng").textContent = `ย้อนหลัง ${R} วัน`; // L2: the head line follows the chip (7 วัน / 30 วัน / a picked day = 30)
+      const base = inRange(), nFlag = base.filter(flagged).length, rows = only ? base.filter(flagged) : base, show = rows.slice(0, N);
+      // M5: range = chips, exactly one .on · the "วันที่มีเรื่อง" filter sits on its own row so it never reads as a 4th range
+      tools.innerHTML = `<div class="ux-tools" role="radiogroup" aria-label="ช่วงวัน">
+        <button type="button" role="radio" data-r="7" class="chip${R === 7 && !pickD ? " on" : ""}" aria-checked="${R === 7 && !pickD}">7 วัน</button><button type="button" role="radio" data-r="30" class="chip${R === 30 && !pickD ? " on" : ""}" aria-checked="${R === 30 && !pickD}">30 วัน</button><label class="chip ux-date${pickD ? " on" : ""}"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>${pickD ? thd(pickD) : "เลือกวัน"}</span><input id="pick" type="date" min="${back(30)}" max="${today}" value="${pickD}" aria-label="เลือกวัน"></label></div>
+      <div class="ux-tools ux-filter"><button type="button" id="flag" class="chip${only ? " on" : ""}" aria-pressed="${only}">วันที่มีเรื่อง <b>${nFlag}</b></button></div>`;
+      const weeks = new Map(); show.forEach((d) => { const k = monday(d.date); if (!weeks.has(k)) weeks.set(k, []); weeks.get(k).push(d); });
+      list.innerHTML = (show.length ? [...weeks].map(([k, days]) => `<h2 class="ux-week">สัปดาห์ ${thd(k, { month: undefined })}–${thd(plus(k, 6))}</h2><div class="card list">${days.map((d) => `
+        <details class="ux-day" data-d="${d.date}"><summary><span class="d">${thd(d.date, { weekday: "short", month: undefined })}</span><span class="m">${lineOf(d)}</span>${d.status in TONE ? `<span class="pill" data-tone="${TONE[d.status]}">${ST[d.status]}</span>` : ""}</summary><div class="ux-body"></div></details>`).join("")}</div>`).join("")
+        : `<div class="empty tight"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>${only ? `ไม่มีวันที่มีเรื่องใน ${R} วัน` : `ไม่มีบันทึกใน ${R} วัน`}</p>${only ? '<p class="muted">ของครบ ไม่มีของเสีย เงินสดตรง</p>' : ""}</div>`)
+        + (rows.length > N ? `<button type="button" class="btn ux-more" id="more">ดูเพิ่ม อีก ${rows.length - N} วัน</button>` : "");
+    }
+    tools.addEventListener("click", (e) => {
+      const r = e.target.closest("button[data-r]"); if (r) { R = +r.dataset.r; N = 5; pickD = ""; return draw(); }
+      if (e.target.closest("#flag")) { only = !only; N = 5; return draw(); }
+    });
+    tools.addEventListener("change", (e) => {
+      const v = e.target.id === "pick" && e.target.value; if (!v) return;
+      const i = data.findIndex((d) => d.date === v);
+      if (i < 0) { UXM.toast(`${thd(v)} ไม่มีบันทึก`); return; }
+      // jump: 30-day range, list long enough to reach that day, then open it in place
+      R = 30; only = false; pickD = v; N = Math.max(5, i + 1); draw();
+      const det = list.querySelector(`details[data-d="${v}"]`); det.open = true;
+      det.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    });
+    tools.addEventListener("click", (e) => { const l = e.target.closest(".ux-date"); if (l && e.target.id === "pick") { try { e.target.showPicker(); } catch (_) { /* iOS opens it on tap */ } } });
+    list.addEventListener("click", (e) => { if (e.target.closest("#more")) { N += 10; draw(); } });
+    draw();
+    // tap a day → read-only details (opened/closed · cash · what was counted and received)
+    let P = null;
+    list.addEventListener("toggle", async (e) => {
+      const det = e.target; if (!det.open || det.dataset.loaded) return; det.dataset.loaded = 1;
+      const body = det.querySelector(".ux-body"), d = data.find((x) => x.date === det.dataset.d), g = gapOf(d);
+      const kv = (k, v) => `<div class="kv"><span>${k}</span><b class="num">${v}</b></div>`;
+      // 1 เรื่อง 1 บรรทัด · cash to compare on 2 lines (ควรมี / นับได้)
+      let h = kv("เปิด", `${hm(d.opened_at) || "-"} น.`) + kv("ปิด", `${hm(d.closed_at) || "-"} น.`) + kv("โอที", `${+d.ot_hours || 0} ชม.`)
+        + (d.cash_expected != null || d.cash_counted != null ? kv("เงินสดควรมี", `${d.cash_expected?.toLocaleString("th-TH") ?? "-"} บาท`) + kv("นับได้", `${d.cash_counted?.toLocaleString("th-TH") ?? "-"} บาท`) : "")
+        + (g ? kv("", `<span class="pill" data-tone="${g < 0 ? "bad" : "wait"}">เงินสด${g < 0 ? "ขาด" : "เกิน"} ${baht(g)}</span>`) : "")
+        + (d.note ? `<p class="muted">ฝากบอกเจ้าของ: ${esc(d.note)}</p>` : "");
+      body.innerHTML = h + `<div style="padding-top:8px">${'<i class="sk-b" style="--h:14px;--gap:12px"></i>'.repeat(4)}</div>`;
+      try {
+        if (!P) { const r = await supabase.from("product_names").select("id,name,unit,sort"); if (r.error) throw r.error; P = Object.fromEntries(r.data.map((p) => [p.id, p])); }
+        const { data: ls, error: e2 } = await supabase.from("stock_lines").select("product_id,received,remain_fresh,remain_cooked,waste").eq("date", d.date);
+        if (e2) throw e2;
+        const rows = (ls || []).filter((l) => +l.received || +l.remain_fresh || +l.remain_cooked || +l.waste).sort((a, b) => (P[a.product_id]?.sort ?? 0) - (P[b.product_id]?.sort ?? 0));
+        h += rows.length ? `<table><tr><th>สินค้า</th><th>รับเข้า</th><th>เหลือ</th><th>เสีย</th></tr>${rows.map((l) => `<tr><td>${esc(P[l.product_id]?.name ?? "")}</td><td>${+l.received}</td><td>${l.remain_fresh == null ? "-" : +l.remain_fresh + +(l.remain_cooked || 0)}</td><td>${+l.waste}</td></tr>`).join("")}</table>` : '<p class="muted">ไม่มีของที่นับวันนั้น</p>';
+      } catch (err) { h += `<p class="err">เปิดไม่ขึ้น: ${App.errText(err)}</p>`; }
+      body.innerHTML = h;
+    }, true);
+  } catch (e) { if (e.message !== "denied") { const m = document.getElementById("msg"); m.className = "err ld"; m.textContent = "เปิดไม่ขึ้น\n" + App.errText(e); } }
+})();
+</script></body></html>

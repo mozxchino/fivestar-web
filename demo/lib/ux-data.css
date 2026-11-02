@@ -1,0 +1,208 @@
+/* ux-audit-2 stream "data" (approve · settings · costs) · loads after ui.css · don't put other pages' styles here */
+
+/* chip row: one line, scrolls sideways */
+.chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: -2px -16px 8px; padding: 2px 16px 6px; }
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 6px 14px; border-radius: 999px;
+  border: 1px solid transparent; background: var(--color-card); color: var(--color-foreground); box-shadow: var(--shadow-raised);
+  font: 500 15px/1.2 var(--font-body); white-space: nowrap; text-decoration: none; cursor: pointer; touch-action: manipulation;
+  transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out), transform 160ms var(--ease-out);
+}
+button.chip { appearance: none; -webkit-appearance: none; }
+.chip:active { transform: scale(.97); }
+.chip b { font-variant-numeric: tabular-nums; font-weight: 600; }
+.chip.on { background: var(--color-foreground); color: #fff; border-color: var(--color-foreground); }
+.chip.wait { background: var(--tint-wait); color: var(--on-wait); border-color: var(--border-wait); }
+.chip.bad { background: var(--tint-destructive); color: var(--color-destructive); border-color: var(--border-bad); }
+.chip.bad.on { background: var(--color-destructive); color: #fff; border-color: var(--color-destructive); }
+.chips .lbl { flex: none; align-self: center; font-size: 14px; color: var(--color-ink-soft); }
+
+/* approve: order row = name + meta | − qty + */
+.orow { display: flex; align-items: center; gap: 10px; min-height: 68px; padding: 8px 0; border-bottom: .5px solid var(--color-separator); transition: background-color 200ms var(--ease-out); }
+.orow:last-child { border-bottom: 0; }
+.orow.chg { background: var(--tint-wait); margin: 0 -16px; padding: 8px 16px; }
+.orow.chg .meta b { color: var(--on-wait); }
+.step { display: flex; align-items: center; gap: 4px; flex: none; }
+.step button {
+  width: 44px; height: 48px; border-radius: 12px; border: 0; background: var(--color-fill);
+  font: 600 22px/1 var(--font-head); color: var(--color-foreground); cursor: pointer; touch-action: manipulation;
+  transition: transform 120ms var(--ease-out), background-color 120ms var(--ease-out);
+}
+.step button:active { transform: scale(.94); background: var(--color-fill-pressed); }
+.step input[type=number] { width: 60px; padding: 8px 4px; text-align: center; font-weight: 600; font-size: 18px; }
+@media (max-width: 359px) { .step input[type=number] { width: 46px; } } /* r3 #37: the − + buttons keep 44px wide, the number box gives the room */
+
+/* fold: a quiet row that opens a detail block */
+details.fold > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; color: var(--color-foreground); font-weight: 500; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary .chip { min-height: 44px; padding: 4px 12px; font-size: 14px; }
+details.fold[open] > summary .chip { background: var(--color-fill); box-shadow: none; }
+details.fold[open] > :not(summary) { animation: fold-in 200ms var(--ease-out); }
+@keyframes fold-in { from { opacity: 0; transform: translateY(-4px); } }
+
+/* settings: search + product rows */
+.search { display: flex; gap: 8px; align-items: center; }
+.search input { flex: 1; }
+.search .btn { margin: 0; flex: none; white-space: nowrap; }
+.prow {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 64px; padding: 8px 0; text-align: left;
+  background: none; border: 0; border-bottom: .5px solid var(--color-separator); font: inherit; color: inherit; cursor: pointer;
+  touch-action: manipulation; transition: background-color 120ms ease-out;
+}
+.prow:last-child { border-bottom: 0; }
+.prow:active { background: var(--color-fill-pressed); }
+.prow .go { color: var(--color-chevron); font-size: 22px; line-height: 1; }
+.prow.off .nm { color: var(--color-muted-foreground); text-decoration: line-through; }
+
+/* bottom sheet = native <dialog> */
+dialog.bsheet {
+  position: fixed; inset: auto 0 0 0; width: 100%; max-width: 100%; max-height: 88vh; margin: 0; padding: 0;
+  border: 0; border-radius: 22px 22px 0 0; background: var(--color-card); color: var(--color-foreground);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, .12); overflow: hidden;
+}
+dialog.bsheet[open] { display: flex; flex-direction: column; animation: sheet-up 280ms cubic-bezier(.32, .72, 0, 1); }
+dialog.bsheet::backdrop { background: rgba(32, 24, 24, .45); }
+dialog.bsheet[open]::backdrop { animation: dim-in 200ms ease-out; }
+@keyframes dim-in { from { opacity: 0; } }
+@keyframes sheet-up { from { transform: translateY(100%); } }
+.bsheet .body { overflow-y: auto; padding: 10px 16px 8px; -webkit-overflow-scrolling: touch; }
+.bsheet .grab { width: 40px; height: 5px; border-radius: 9px; background: var(--color-fill-pressed); margin: 0 auto 10px; }
+.bsheet .hd { display: flex; align-items: center; gap: 10px; }
+.bsheet .hd b { flex: 1; font: 600 19px/1.3 var(--font-head); }
+.bsheet .x { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--color-fill); font-size: 20px; color: var(--color-foreground); cursor: pointer; transition: transform 120ms ease-out; }
+.bsheet .x:active { transform: scale(.94); }
+.bsheet .foot { padding: 10px 16px calc(14px + env(safe-area-inset-bottom)); border-top: .5px solid var(--color-separator); background: var(--color-card); }
+.bsheet .foot .btn { margin: 0; }
+.bsheet .foot p { margin: 8px 0 0; }
+.bsheet .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 359px) { .bsheet .g3 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.bsheet .chk { display: flex; align-items: center; gap: 10px; min-height: 48px; font-size: 16px; }
+/* 0045 full-screen form (สินค้า): same <dialog>, covers the screen · header ยกเลิก | title, scrolling body, footer one red save */
+dialog.bsheet.full { inset: 0; height: 100%; max-height: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; box-shadow: none; background: var(--color-background); }
+html:has(dialog.bsheet.full[open]), html:has(dialog.bsheet.full[open]) body { overflow: hidden; }   /* the page behind does not scroll */
+.bsheet.full > .hd { display: grid; grid-template-columns: 80px minmax(0, 1fr) 80px; padding: calc(4px + env(safe-area-inset-top)) 8px 4px; min-height: 52px; background: var(--color-card); border-bottom: .5px solid var(--color-separator); }
+.bsheet.full > .hd b { text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bsheet.full > .hd .txt-btn { justify-self: start; min-height: 44px; min-width: 44px; padding: 0 8px; border: 0; background: none; cursor: pointer; font: 500 17px/1 var(--font-body); color: var(--color-primary); }
+.bsheet.full > .hd .txt-btn:active { opacity: .55; }
+.bsheet.full > .body { flex: 1; padding: 4px 16px 24px; }
+.bsheet.full .body .tabs { margin: 0; }
+.bsheet.full .field small.h { display: block; font-weight: 400; font-size: 14px; color: var(--color-muted-foreground); }
+.bsheet.full .chk { margin-top: var(--space-md); }
+@media (prefers-reduced-motion: reduce) { dialog.bsheet[open], dialog.bsheet.full[open], details.fold[open] > :not(summary) { animation: dim-in 150ms ease-out; } }
+
+/* costs: month picker (the summary is a bento in ui.css) */
+.monthnav { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; }
+.monthnav button {
+  flex: none; width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--color-card); box-shadow: var(--shadow-raised);
+  font: 600 22px/1 var(--font-head); color: var(--color-foreground); cursor: pointer;
+}
+.monthnav button:disabled { opacity: .35; cursor: default; }
+.monthnav .m { flex: 1; text-align: center; font: 600 20px/1.2 var(--font-head); }
+
+/* round 3 ง3 approve: one grey line above the send button · how many rows differ from what the system proposed */
+.sticky .ux-chg { margin: 0 0 8px; padding: 0; text-align: center; font-size: 14px; line-height: 1.4; color: var(--color-ink-soft); background: none; animation: none; font-variant-numeric: tabular-nums; }
+.ux-chg:empty { display: none; }
+
+/* ---------- round 4 settings พนักงาน: name row opens this month's summary · first pending approve = the one red action ---------- */
+button.cell.ux-who { width: 100%; border: 0; border-radius: 0; text-align: left; cursor: pointer; touch-action: manipulation; }
+button.cell.ux-who:active { background: var(--color-fill-pressed); }
+.ux-who .k small { font-weight: 400; }
+.ux-who .go { flex: none; color: var(--color-chevron); font-size: 22px; line-height: 1; margin-left: -4px; }
+.cell.act.ux-prim { justify-content: center; color: var(--color-on-primary); background: var(--color-primary) linear-gradient(180deg, #D02A31, var(--color-primary)); }
+.cell.act.ux-prim:active { background: var(--color-primary-dark); }
+.ux-usm { margin: 2px 0 12px; font-size: 14px; color: var(--color-ink-soft); }
+.ux-4 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 6px; }
+.ux-4 > div { min-height: 76px; padding: 12px 14px; border-radius: 14px; background: var(--color-fill); }
+.ux-4 b { display: block; font: 600 24px/1.2 var(--font-head); font-variant-numeric: tabular-nums; }
+.ux-4 b small { font: 500 14px/1.2 var(--font-body); color: var(--color-ink-soft); }
+.ux-4 b.err small { color: inherit; }
+.ux-4 span { display: block; margin-top: 2px; font-size: 14px; color: var(--color-ink-soft); }
+.ux-4 .err { grid-column: 1 / -1; white-space: pre-line; }
+.bsheet .foot.ux-2b { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+
+/* ---------- round 5 approve: two always-visible groups · "ต้องดู" = white card, "ตามที่ระบบเสนอ" = grey panel, muted text ---------- */
+#items > .ux-gh:first-child { margin-top: 6px; }
+/* round 6: the grey box is its own block after a clear gap (never reads as the white card's tail) · folded = header only, no line */
+.ux-sys { margin: 32px 0 12px; padding: 4px 16px; border-radius: var(--radius); background: #EBE6E2; box-shadow: inset 0 0 0 .5px rgba(32, 24, 24, .06); }
+.ux-sysh { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.ux-sysh:has(+ #sysL:not([hidden])) { border-bottom: .5px solid var(--color-separator); }
+.ux-sysh .chip { flex: none; min-height: 44px; padding: 6px 14px; border: 0; font: 500 14px/1.2 var(--font-body); color: var(--color-foreground); background: var(--color-card); border-radius: var(--radius-pill); cursor: pointer; touch-action: manipulation; font-variant-numeric: tabular-nums; transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out); }
+.ux-sysh .chip:active { transform: scale(.96); background: var(--color-fill-pressed); }
+#sysL:not([hidden]) { animation: fold-in 200ms var(--ease-out); }
+@media (prefers-reduced-motion: reduce) { #sysL:not([hidden]) { animation: none; } .ux-sysh .chip:active { transform: none; } }
+#items .ux-sysh h2 { margin: 0; font: 600 15px/1.4 var(--font-head); color: var(--color-foreground); }
+.ux-sysh p { margin: 2px 0 0; font-size: 13px; line-height: 1.35; color: var(--color-ink-soft); }
+.ux-sys .nm { font-weight: 400; color: var(--color-ink-soft); }
+.ux-sys .meta { font-weight: 400; }
+.ux-sys .step button, .ux-sys .step input[type=number] { background-color: var(--color-card); }
+.ux-sys .step button:active { background: var(--color-fill-pressed); }
+.ux-sys .orow.chg .nm { color: var(--color-foreground); }
+/* make-interfaces-feel-better: sheet numbers fade in over the grey bars (no jump) · fold title wraps evenly */
+.ux-4 > div { transition: opacity 180ms var(--ease-out); }
+@starting-style { .ux-4 > div { opacity: 0; } }
+.ux-usm, .ux-4 span { text-wrap: pretty; }
+@media (prefers-reduced-motion: reduce) { .ux-4 > div { transition: none; } }
+/* make-interfaces-feel-better: group counts don't shift width, short titles wrap evenly */
+#items .ux-gh, #items .ux-sysh h2 { font-variant-numeric: tabular-nums; text-wrap: balance; }
+.ux-sysh p { text-wrap: pretty; }
+/* round 6 receive: "วันนี้ไม่มีของมา" sheet · the warning line first, then the one required tick */
+.ux-nd { margin: 6px 0 12px; padding: 12px 14px; border-radius: var(--radius-sm); background: #FFF6D6; color: #7A5B00; font-weight: 500; text-wrap: pretty; }
+.bsheet .chk.ux-ndc { align-items: flex-start; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--color-fill); line-height: 1.45; cursor: pointer; text-wrap: pretty; }
+.ux-ndc input { flex: none; width: 24px; height: 24px; margin: 1px 0 0; accent-color: var(--color-primary); }
+/* round 6 settings: ตั้งเป็นผู้จัดการ / เปลี่ยนกลับ · the row says what the role can and can't do */
+.cell.act.ux-mgr { justify-content: flex-start; text-align: left; color: var(--color-primary-dark); }
+.ux-mgr .k { display: flex; flex-direction: column; gap: 2px; font-weight: 500; }
+.ux-mgr .k small { font-size: 13px; font-weight: 400; line-height: 1.4; color: var(--color-ink-soft); white-space: pre-line; text-wrap: pretty; }
+/* impeccable round 6: done state of the role row is not a link any more · end-of-box ซ่อน */
+.cell.act.ux-mgr:disabled { color: var(--color-ink-soft); opacity: 1; }
+.ux-sysend { display: block; width: 100%; min-height: 48px; margin: 0; border: 0; border-top: .5px solid var(--color-separator); background: none; font: 500 15px/1.3 var(--font-body); color: var(--color-ink-soft); cursor: pointer; touch-action: manipulation; font-variant-numeric: tabular-nums; }
+.ux-sysend:active { color: var(--color-foreground); }
+/* make-interfaces-feel-better round 6: the chip keeps its width when "ดู 9 รายการ" swaps to "ซ่อน" (no jump under the finger) */
+.ux-sysh .chip { min-width: 112px; text-align: center; }
+
+/* 0046: sheet "นับเป็นถุง" (UXM.bags) · opened from the สด box on close / opening */
+#bagS .bag-hint, #wasteGo .bag-hint { margin: 2px 0 12px; font-size: 14px; color: var(--color-ink-soft); }
+#bagS .bag-hint { white-space: pre-line; }
+#bagS #bagOK { position: sticky; bottom: 8px; }   /* stays in view when the sheet is short (keyboard up) */
+#bagS .field, #cookS .field { margin-top: 10px; }
+#cookKw .field:first-child { margin-top: 0; }
+#bagS .field small.h { display: block; font-weight: 400; font-size: 14px; color: var(--color-ink-soft); }   /* 0055: "1 ไม้ = 5 ชิ้น" under ไม้ */
+#bagS .bag-total, #cookS .bag-total { margin: 16px 0 12px; text-align: center; font: 500 17px/1.3 var(--font-head); color: var(--color-ink-soft); }
+#bagS .bag-total b, #cookS .bag-total b { font-size: 30px; color: var(--color-foreground); margin: 0 4px; }
+#wasteGo .hd b, #wasteGo .bag-hint { text-align: center; }
+#wasteGo .hd { justify-content: center; } #wasteGo .hd b { flex: 1; padding-left: 44px; } /* title stays centred under the × */
+#bagS .btn.primary, #wasteGo .btn.primary { width: 100%; margin-bottom: max(8px, env(safe-area-inset-bottom)); }
+.grid .rf[readonly], .grid .rc[readonly] { cursor: pointer; }
+.bagsay, .cooksay { display: block; }
+/* Mos 30 ต.ค.: sheet for the สุก box (UXM.bags) · same look as #bagS: one field with the unit, "+ ครึ่ง" under it, red ตกลง */
+#cookS .bag-hint { margin: 2px 0 12px; font-size: 14px; color: var(--color-ink-soft); }
+#cookS .in { margin-top: 0; }
+#cookS #cookHalf { margin: 12px 0 0; }
+#cookS #cookOK { position: sticky; bottom: 8px; width: 100%; margin: 16px 0 max(8px, env(safe-area-inset-bottom)); }
+/* 0052 close.html: red sheet (tone bad) "ตรวจอีกรอบ นับน้อยกว่าปกติ" · red title, the items in a red-tint box (name, then the numbers in red) */
+.bsheet.bad .hd b { color: var(--color-destructive); }
+.bsheet.bad .low-l { list-style: none; margin: 8px 0 12px; padding: 2px 14px; border-radius: var(--radius-sm); background: var(--tint-destructive); box-shadow: inset 0 0 0 1px var(--border-bad); }
+.low-l li { padding: 10px 0; }
+.low-l li + li { border-top: .5px solid var(--border-bad); }
+.low-l b { display: block; font-weight: 600; }
+.low-l span { display: block; font-size: 15px; color: var(--color-destructive); font-variant-numeric: tabular-nums; }
+#lowS .bag-hint, #wasteQ .bag-hint { margin: 2px 0 12px; font-size: 15px; color: var(--color-ink-soft); }
+/* the waste question at the start of closing: centred, no ✕ (one of the two answers) */
+#wasteQ .hd b, #wasteQ .bag-hint { text-align: center; }
+#wasteQ .bag-hint { white-space: pre-line; }
+@media (max-width: 359px) { #wasteQ .foot.ux-2b { grid-template-columns: minmax(0, 1fr); } #wasteQ .foot .primary { order: -1; } }   /* 320px: "มี ไปลงของเสีย" never splits, red on top */
+
+/* Mos 31 ต.ค.: bag / สุก card · product name big, what is counted small under it · label and box on one row (shorter card, less thumb travel) */
+#bagT, #cookT { display: flex; flex-direction: column; gap: 2px; }
+#bagT .bn, #cookT .bn { font: 600 24px/1.25 var(--font-head); color: var(--color-foreground); }
+#bagT small, #cookT small { font: 500 15px/1.3 var(--font-body); color: var(--color-ink-soft); }
+#bagS .body { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-items: center; }
+#bagS .body > * { grid-column: 1 / -1; }
+#bagS .body > .field, #bagS .body > .in, #bagKw > * { grid-column: auto; }
+#bagKw:not([hidden]) { display: contents; }
+#bagS .body > .field, #bagKw > .field { margin: 10px 0 0; }
+#bagS .body > .in, #bagKw > .in { margin-top: 10px; }
+#cookKw:not([hidden]) { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-items: center; }
+#cookKw > .field, #cookKw > .in { margin: 10px 0 0; }
+#cookKw > .bag-total { grid-column: 1 / -1; }

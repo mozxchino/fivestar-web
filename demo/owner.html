@@ -1,0 +1,515 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><script src="lib/demo.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>วันนี้ (เจ้าของ)</title><meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="lib/ui.css?v=r1101">
+<link rel="stylesheet" href="lib/ux-data.css">
+<link rel="stylesheet" href="lib/ux-owner.css">
+
+
+<script src="lib/skeleton.js"></script><script src="lib/photo.js?v=r1101b"></script><script src="lib/ux-owner.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js?v=0060b"></script>
+<style>
+/* ข้อ 5 (Mos 1 พ.ย.): day gallery, 3 square thumbs a row per หมวด · tap = full screen (Photo.view) */
+/* design 1 พ.ย. (Mos ข้อ ก): the layout follows the count so a group never leaves an empty right side ·
+   1 = full width · 2 = halves · 3 = big left + 2 right · 4 = 2×2 · 5 = 2 + 3 · 6+ = 3 a row, the 6th shows "+N" (the rest stay in the swipe view) */
+.pics { display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-flow: dense; gap: 6px; padding: 4px 0 10px; }
+.pt { position: relative; display: block; min-width: 0; }
+.pt[hidden] { display: none; }
+.pics .pt { grid-column: span 2; aspect-ratio: 1; }
+.pics[data-n="1"] .pt { grid-column: span 6; aspect-ratio: 4 / 3; }
+.pics:is([data-n="2"], [data-n="4"]) .pt, .pics[data-n="5"] .pt:nth-child(-n+2) { grid-column: span 3; }
+.pics[data-n="3"] .pt:first-child { grid-column: span 4; grid-row: span 2; aspect-ratio: auto; }
+.pics .more { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 10px; font: 600 26px/1 var(--font-head); color: #fff; background: rgba(32, 24, 24, .5); pointer-events: none; }
+/* big photos (bill slip, POS screen): the "tap for full screen" hint sits on the photo, frosted, bottom centre */
+.pt .zoom { position: absolute; left: 50%; bottom: 12px; translate: -50% 0; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; font: 500 14px/1.2 var(--font-body); font-style: normal; color: #fff; white-space: nowrap; background: rgba(32, 24, 24, .5); -webkit-backdrop-filter: blur(12px) saturate(160%); backdrop-filter: blur(12px) saturate(160%); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .3); pointer-events: none; }
+.pt .zoom svg { width: 16px; height: 16px; }
+:is(#billPic, #posPic) .pt { margin: 8px 0 12px; }
+img.th { display: block; max-width: 100%; border-radius: 10px; cursor: zoom-in; }
+/* design round 1 พ.ย.: .th below sets 72px boxes → the slip came out a 72px strip (QR cut) and the thumbs were not square */
+.pics img.th, :is(#billPic, #posPic) img.th { width: 100%; height: auto; margin: 0; border: 0; outline: 1px solid rgba(0, 0, 0, .1); outline-offset: -1px; }
+.pics img.th { position: absolute; inset: 0; height: 100%; object-fit: cover; } /* the tile sets the size, the photo fills it */
+:is(#billPic, #posPic) img.th { border-radius: 12px; } /* ข้อ 6: whole slip, full width, so the QR scans */
+.fold-body h3.sec { margin: 14px 0 6px; font: 600 16px/1.35 var(--font-head); color: var(--color-foreground); }
+.fold-body h3.sec:first-child { margin-top: 4px; }
+.ln.mk.paid > span { font-weight: 600; color: var(--color-success); }
+
+@media (min-width:360px){.tabs button{font-size:15px}}
+.th{width:72px;height:72px;object-fit:cover;border-radius:10px;margin:8px 8px 0 0;background:var(--color-muted);border:1px solid var(--color-border);cursor:zoom-in}
+input.ed{width:58px;min-height:44px;padding:6px 2px;font-size:18px;font-weight:500;text-align:center;flex:none}
+input.ed.cash{width:120px;text-align:right;padding-right:10px}
+td+td{font-weight:600}
+#bar input{margin-bottom:12px}#bar .th-date input{margin-bottom:0}#bar .th-date{margin-bottom:12px!important}
+#out{font-variant-numeric:tabular-nums}
+#out .row .grow,.panel .row .grow{text-wrap:balance}
+.dayrows{margin-top:12px}a.cell.nav{text-decoration:none}button.cell.nav{width:100%;border:0;border-radius:0;text-align:left;cursor:pointer;touch-action:manipulation}
+.iss .day-head{margin-bottom:2px}
+.iss .who{font-size:14px;color:var(--color-ink-soft);display:flex;flex-wrap:wrap;align-items:center;gap:0 6px}
+</style></head><body class="grouped" ontouchstart="">
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>วันนี้</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div>
+  <div class="tabs sk" aria-hidden="true"><button class="on" tabindex="-1">วัน</button><button tabindex="-1">ปัญหา</button><button tabindex="-1">สรุปเดือน</button></div><div class="tabs ld" id="tabs" hidden><button data-t="day" class="on">วัน</button><button data-t="iss">ปัญหา</button><button data-t="mon">สรุปเดือน</button></div></header>
+<p id="blocked" class="err" hidden></p>
+<div class="sk"><span class="vh">กำลังเปิด…</span><div class="daynav"><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i><div class="d"><i class="sk-b" style="--w:56%;--h:22px;margin:2px auto 0"></i><i class="sk-b" style="--w:40%;--h:13px;margin:6px auto 0"></i></div><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i></div><div class="bento trio"><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div></div><h3 class="sec"><i class="sk-b" style="--w:38%;--h:15px"></i></h3><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div></div>
+<div id="app" class="ld" hidden>
+  <div id="bar"><div class="daynav"><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i><div class="d"><i class="sk-b" style="--w:56%;--h:22px;margin:2px auto 0"></i><i class="sk-b" style="--w:40%;--h:13px;margin:6px auto 0"></i></div><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i></div></div><button id="upd" class="ux-upd" type="button" hidden></button><div id="out"><span class="vh">กำลังเปิด…</span><div class="bento trio"><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div></div><h3 class="sec"><i class="sk-b" style="--w:38%;--h:15px"></i></h3><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div></div>
+</div>
+<div id="panel" class="panel" role="dialog" aria-modal="true" aria-labelledby="ph" hidden></div>
+<dialog id="payS" class="bsheet" aria-labelledby="payT"><div class="body"><div class="grab"></div><div class="hd"><b id="payT">จ่ายบิล CPF แล้ว</b><button type="button" class="x" aria-label="ปิด">✕</button></div>
+  <label class="field" for="payV">ยอดที่จ่าย</label><div class="in"><input id="payV" type="number" inputmode="decimal" enterkeyhint="done" min="0" max="100000" step="any" placeholder="0"><span class="sfx">บาท</span></div>
+  <p class="muted">ใส่ยอดตามใบส่งของ</p></div>
+  <div class="foot"><button type="button" class="btn primary" id="payOK">บันทึกว่าจ่ายแล้ว</button><p id="payM" class="muted" role="status"></p></div></dialog>
+<dialog id="posS" class="bsheet" aria-labelledby="posT"><div class="body"><div class="grab"></div><div class="hd"><b id="posT">แก้ยอดขาย WE POS</b><button type="button" class="x" aria-label="ปิด">✕</button></div>
+  <p class="muted" id="posD"></p>
+  <label class="field" for="posV">ยอดขายรวม</label><div class="in"><input id="posV" type="number" inputmode="decimal" enterkeyhint="done" min="0" max="100000" step="any" placeholder="0"><span class="sfx">บาท</span></div>
+  <p class="muted">ดูจากรูปจอ WE POS<br>โบนัสพนักงานคิดใหม่จากยอดนี้</p></div>
+  <div class="foot"><button type="button" class="btn primary" id="posOK">บันทึกยอดขาย</button><p id="posM" class="muted" role="status" style="white-space:pre-line"></p></div></dialog>
+<script>
+(async () => {
+  const $ = (i) => document.getElementById(i);
+  const U = window.UxOwner, esc = U.esc;
+  const { supabase, me } = await App.ready();
+  if (me.role !== "owner" && me.role !== "manager") { $("blocked").hidden = false; $("blocked").textContent = "หน้านี้สำหรับเจ้าของ"; return; }
+  // round 6: a manager gets วัน + ปัญหา only (no month money, no number edits, no โอที) · the DB refuses those anyway
+  const MGR = me.role === "manager";
+  if (MGR) document.querySelectorAll('.tabs [data-t="mon"], .tabs.sk button:last-child').forEach((b) => b.remove());
+  $("app").hidden = false; $("tabs").hidden = false;
+  const TODAY = U.today();
+  const hm = (t) => t ? new Date(t).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" }) : "-";
+  const when = (d) => d === TODAY ? "วันนี้" : d === U.plus(TODAY, -1) ? "เมื่อวาน" : U.dayName(d);
+  const names = Object.fromEntries(((await supabase.from("user_public").select("id,name")).data || []).map((u) => [u.id, u.name]));
+  const P = (await supabase.from("product_names").select("id,name,unit,sort,category")).data || [];
+  const prods = Object.fromEntries(P.map((p) => [p.id, p.name])), unit = Object.fromEntries(P.map((p) => [p.id, UXM.unit(p.unit)]));
+  const PP = Object.fromEntries(P.map((p) => [p.id, p])); // Mos 1 พ.ย.: edit panel sorted + category headers (0060)
+  // Mos 1 พ.ย.: a fresh-only row (drinks, count_cols fresh) has no เหลือสุก box in the edit panel · no read (manager) = every box shows
+  const CC = Object.fromEntries(((await supabase.from("products").select("id,count_cols")).data || []).map((p) => [p.id, p.count_cols]));
+  const remindAt = String(((await supabase.from("settings").select("key,value").eq("key", "remind_at").maybeSingle()).data || {}).value || "21:00");
+  const TYPE = { waste: "ของเสีย/หมดอายุ", equipment: "เครื่องพัง", customer: "ลูกค้าร้องเรียน", cpf: "ของ CPF มาผิด", edit_request: "กรอกผิด ขอแก้", other: "เรื่องอื่น" };
+  const CS = { low: "ใกล้หมด", out: "หมด" };
+  const money = (n) => n == null ? "-" : Number(n).toLocaleString("th-TH");
+  const baht = (n) => n == null ? "-" : money(n) + " บาท";
+  const thumbs = async (ps) => (await Promise.all((ps || []).filter(Boolean).map(async (p) => { try { return `<img class="th" alt="รูปจากร้าน" src="${await Photo.url(supabase, p)}">`; } catch { return ""; } }))).join("");
+  document.addEventListener("click", (e) => { const im = e.target.closest("img.th"); if (!im) return; // swipe through the photos of the same group
+    const box = im.closest(".pics, #billPic, #posPic") || im.parentElement; Photo.view(im.src, [...box.querySelectorAll("img.th")].map((x) => x.src)); });
+  const ZOOM = `<i class="zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/></svg>แตะดูเต็มจอ</i>`;
+  const big = async (ps) => (await Promise.all(ps.map(async (p) => { const h = await thumbs([p]); return h && `<span class="pt">${h}${ZOOM}</span>`; }))).join("");
+  const gal = async (ps) => { const t = await Promise.all(ps.map((p) => thumbs([p]))), n = ps.length;
+    return `<div class="pics" data-n="${Math.min(n, 6)}">` + t.map((h, i) => h && `<span class="pt"${i > 5 ? " hidden" : ""}>${h}${i === 5 && n > 6 ? `<b class="more">+${n - 5}</b>` : ""}</span>`).join("") + `</div>`; };
+  // skeletons (รอบ 2): grey shapes in the tab's own boxes until its data arrives · same shapes as the static one in the HTML
+  const sb = (w, h, x = "") => `<i class="sk-b" style="--w:${w};--h:${h}px${x}"></i>`;
+  const SK_TODO = `<div class="card todo">${sb("62%", 18)}${sb("84%", 14, ";--gap:8px")}<div class="acts sk-row">${sb("calc(50% - 4px)", 44, ";--r:12px")}${sb("calc(50% - 4px)", 44, ";--r:12px")}</div></div>`;
+  const SK = {
+    day: `<span class="vh">กำลังเปิด…</span><div class="bento trio">${`<div class="bt">${sb("70%", 13)}${sb("62%", 20, ";--gap:6px")}${sb("84%", 12, ";--gap:6px")}${sb("60%", 12, ";--gap:5px")}</div>`.repeat(3)}</div><h3 class="sec">${sb("38%", 15)}</h3>${SK_TODO.repeat(2)}`,
+    iss: `<span class="vh">กำลังเปิด…</span>` + `<div class="card iss"><div class="day-head sk-row">${sb("42%", 18)}${sb("64px", 22, ";--r:999px")}</div>${sb("90%", 15, ";--gap:12px")}${sb("50%", 14, ";--gap:10px")}<div class="sk-row" style="margin-top:14px">${sb("96px", 44, ";--r:12px")}${sb("96px", 44, ";--r:12px")}</div></div>`.repeat(3),
+    mon: `<span class="vh">กำลังเปิด…</span><div class="card">${`<div class="sk-row" style="justify-content:space-between;padding:14px 2px">${sb("42%", 15)}${sb("22%", 15)}</div>`.repeat(8)}</div>`,
+  };
+  const SKB = { iss: `<div class="chips sk-row">${sb("78px", 44, ";--r:999px").repeat(3)}</div>` };
+  const EMPTY = (t, m = "") => `<div class="empty tight"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>${t}</p>${m ? `<p class="muted">${m}</p>` : ""}</div>`;
+  const ALLDONE = EMPTY("ไม่มีเรื่องต้องจัดการ", "ร้านเรียบร้อยดี");
+
+  // ---- state: ?d=YYYY-MM-DD · ?tab=day|iss|month (LINE cards deep-link here) ----
+  const q = new URLSearchParams(location.search);
+  let D = /^\d{4}-\d{2}-\d{2}$/.test(q.get("d") || "") && q.get("d") <= TODAY ? q.get("d") : TODAY;
+  let TAB = { iss: "iss", month: MGR ? "day" : "mon", mon: MGR ? "day" : "mon" }[q.get("tab")] || "day";
+  let CHIP = "open";
+  const sync = () => {
+    const p = new URLSearchParams();
+    if (TAB !== "day") p.set("tab", TAB === "mon" ? "month" : TAB);
+    if (TAB === "day" && D !== TODAY) p.set("d", D);
+    try { history.replaceState(null, "", location.pathname + (p.toString() ? "?" + p : "")); } catch (_) { /* LIFF webview without history: fine */ }
+  };
+  // ง2: "อัปเดต HH:MM น." under the bar · tap = load this tab again (pending undo jobs commit first so the reload sees them)
+  const stamp = () => { $("upd").hidden = false; $("upd").disabled = false; $("upd").textContent = `อัปเดต ${hm(new Date())} น. แตะเพื่อโหลดใหม่`; };
+  const show = async (t) => { await UXM.flush(); TAB = t; document.querySelectorAll("#tabs button").forEach((x) => x.classList.toggle("on", x.dataset.t === t)); $("out").innerHTML = SK[t] || ""; $("bar").innerHTML = SKB[t] || ""; sync(); await V[t](); stamp(); };
+  $("upd").onclick = () => { $("upd").disabled = true; $("upd").textContent = "กำลังโหลดใหม่…"; $("bar").onclick = null; $("out").onclick = null; show(TAB); };
+
+  // ---- day ----
+  let ctx = null; // last loaded day (used by the edit panel)
+  async function loadDay(d) {
+    const isToday = d === TODAY;
+    const res = await Promise.all([
+      supabase.from("shop_days").select("*").gte("date", U.plus(d, -7)).lte("date", d).order("date", { ascending: false }),
+      supabase.from("stock_lines").select("*").eq("date", d),
+      supabase.from("consumable_checks").select("product_id,status").eq("date", d).neq("status", "ok"),
+      supabase.from("orders").select("id,plan,paid_at,paid_amount,bill_reads(total,status),order_items(product_id,qty_proposed,qty_final,qty_received,received_at,receipt_photos)").eq("for_date", d).eq("status", "sent").order("created_at", { ascending: false }).limit(5), // item 17: an extra order + a real one on the same day gave 2 rows to maybeSingle → error
+      supabase.from("issues").select("id,date,type,text,photos,created_by,created_at,status").eq("status", "open").order("created_at", { ascending: false }),
+      isToday ? supabase.from("leave_requests").select("id,user_id,date,type,note,status,users:user_public(name)").gte("date", TODAY.slice(0, 8) + "01").lte("date", U.plus(TODAY, 31)).order("date") : Promise.resolve({ data: [] }),
+      // ข้อ 5 (Mos 1 พ.ย.): every photo of the day = the day's storage folder (lib/photo.js: YYYY/MM/DD/<type>-uuid.jpg)
+      supabase.storage.from("photos").list(d.replaceAll("-", "/"), { limit: 300, sortBy: { column: "created_at", order: "asc" } }),
+      MGR ? Promise.resolve({ data: null }) : supabase.from("deposits").select("gap,confirmed_at").eq("date", d).maybeSingle(), // 0082: managers don't see money
+    ]);
+    const bad = res.slice(0, -1).find((r) => r.error); if (bad) throw bad.error; // the deposit read (last) failing only hides its row // qa: a failed read must not read as "ไม่มีเรื่องต้องจัดการ"
+    const [{ data: days }, { data: sl }, { data: cc }, { data: odAll }, { data: iss }, { data: lv }, { data: pf }, { data: dep, error: depE }] = res;
+    const od = (odAll || []).find((o) => !(o.plan && (o.plan.extra === true || o.plan.extra === "true"))) || (odAll || [])[0] || null; // the real order wins over an extra (off-order delivery) one
+    const byDate = Object.fromEntries((days || []).map((x) => [x.date, x]));
+    return { d, isToday, sd: byDate[d] || null, yday: byDate[U.plus(d, -1)] || null, days: days || [], sl: sl || [], cc: cc || [], items: od?.order_items || [], od,
+      dep, depE, iss: (iss || []).filter((i) => i.status === "open" && (isToday || (i.date || "").slice(0, 10) === d)), lv: lv || [],
+      pics: (pf || []).filter((o) => /\.jpe?g$/i.test(o.name)).map((o) => `${d.replaceAll("-", "/")}/${o.name}`) };
+  }
+  const cashOf = (s) => s && s.cash_expected != null && s.cash_counted != null ? s.cash_counted - s.cash_expected : null;
+
+  function todos(c) {
+    const T = [];
+    for (const i of c.iss) {
+      const n = (i.photos || []).filter(Boolean).length, line = String(i.text || "").split("\n")[0];
+      T.push({ r: 0, bad: 1, at: i.created_at, key: "i" + i.id,
+        t: TYPE[i.type] || esc(i.type), b: esc(line.length > 80 ? line.slice(0, 80) + "…" : line),
+        s: `${esc(names[i.created_by] || "-")} · ${(i.date || "").slice(0, 10) !== c.d ? when((i.date || "").slice(0, 10)) + " " : ""}${hm(i.created_at)} น.${n ? ` · มีรูป ${n} รูป` : ""}`,
+        a: `${n ? `<button class="btn sm" data-a="photos" data-i="${i.id}">ดูรูป</button>` : ""}<button class="btn sm" data-a="ack" data-i="${i.id}">รับทราบ</button>` });
+    }
+    for (const s of [c.sd, c.isToday ? c.yday : null].filter(Boolean)) {
+      const x = cashOf(s); if (x == null || x >= 0) continue;
+      T.push({ r: 1, bad: 1, at: s.date, key: "c" + s.date, t: `${when(s.date)} เงินสดขาด ${baht(-x)}`, s: `ควรมี ${baht(s.cash_expected)}<br>นับได้ ${baht(s.cash_counted)}`,
+        a: s.date !== c.d ? `<button class="btn sm go" data-a="go" data-d="${s.date}">ดู${when(s.date)}</button>` : "" });
+    }
+    const short = c.items.filter((i) => i.received_at != null && (+i.qty_received || 0) < (+(i.qty_final ?? i.qty_proposed) || 0));
+    if (short.length) T.push({ r: 2, bad: 1, key: "g", t: `ของมาไม่ครบ ขาด ${short.length} รายการ`, s: esc(short.slice(0, 3).map((i) => prods[i.product_id]).join(" · ") + (short.length > 3 ? " …" : "")),
+      a: `<button class="btn sm go" data-a="recv">ดูที่ขาด</button>` });
+    for (const l of c.lv.filter((l) => l.status === "pending" && l.date >= TODAY)) {
+      const off = c.lv.filter((x) => x.user_id === l.user_id && x.status === "approved" && x.date.slice(0, 7) === l.date.slice(0, 7)).length;
+      T.push({ r: 3, at: l.date, key: "l" + l.id, t: `${esc(l.users?.name || names[l.user_id] || "-")} ${U.LEAVE[l.type] || esc(l.type)} ${U.dayName(l.date)}`,
+        b: l.note ? esc(l.note) : "", s: `เดือนนั้นหยุดแล้ว ${off} วัน`,
+        a: `<button class="btn sm" data-a="leave" data-ok="0" data-i="${l.id}">ไม่อนุมัติลา</button><button class="btn sm" data-a="leave" data-ok="1" data-i="${l.id}">อนุมัติลา</button>` });
+    }
+    const ot = MGR ? [] : c.days.filter((s) => +s.ot_hours > 0 && !s.ot_approved_at && (c.isToday ? s.date >= U.plus(c.d, -7) && s.date <= c.d : s.date === c.d)).sort((a, b) => a.date.localeCompare(b.date));
+    if (ot.length === 1) { const s = ot[0];
+      T.push({ r: 4, at: s.date, key: "o" + s.date, t: `${when(s.date)} โอที ${+s.ot_hours} ชม.`, s: s.closed_at ? `ปิดร้าน ${hm(s.closed_at)} น. · ${esc(names[s.closed_by] || "-")}` : "ยังไม่ปิดร้าน",
+        a: `<button class="btn sm" data-a="ot" data-d="${s.date}">อนุมัติโอที</button>` }); }
+    // several days waiting → one card, one press (approve_ot per day)
+    if (ot.length > 1) T.push({ r: 4, at: ot[0].date, key: "o", t: `โอทีรออนุมัติ ${ot.length} วัน รวม ${ot.reduce((n, s) => n + +s.ot_hours, 0)} ชม.`,
+      s: `${U.short(ot[0].date)} – ${U.short(ot[ot.length - 1].date)}`, a: `<button class="btn sm" data-a="ot" data-d="${ot.map((s) => s.date).join(",")}">อนุมัติโอทีทั้ง ${ot.length} วัน</button>` });
+    return T.sort((a, b) => a.r - b.r || String(a.at || "").localeCompare(String(b.at || "")));
+  }
+
+  // trio (Mos 23 ต.ค. รอบ 2): เงินสด / ของขาด / สถานะร้าน in one row · the to-do list sits right under it (no "ต้องจัดการ N" tile)
+  // narrow tiles: each meta part on its own line instead of a dot
+  function bento(c) {
+    const { sd, items, isToday } = c;
+    const tile = (cls, k, v, m, a) => `<${a ? `button type="button" data-a="${a}"` : "div"} class="bt ${cls}"><span class="k"><i class="dot" aria-hidden="true"></i>${k}</span><span class="v">${v}</span>${m ? `<span class="m">${m}</span>` : ""}</${a ? "button" : "div"}>`;
+    const x = cashOf(sd);
+    const cash = !sd ? tile("", "เงินสด", "-", "ไม่มีบันทึก") : x == null ? tile("", "เงินสด", "ยังไม่นับ", "")
+      : tile(x < 0 ? "bad" : "ok", "เงินสด", x < 0 ? `ขาด ${money(-x)} <small>บาท</small>` : x > 0 ? `เกิน ${money(x)} <small>บาท</small>` : "ครบ", `นับได้ ${baht(sd.cash_counted)}`);
+    const recvd = items.filter((i) => i.received_at != null), short = recvd.filter((i) => (+i.qty_received || 0) < (+(i.qty_final ?? i.qty_proposed) || 0));
+    const rAt = recvd.length ? hm(recvd.map((i) => i.received_at).sort()[0]) : "", fold = sd && items.length ? "recv" : "";
+    const recv = !items.length ? tile("", "ของขาด", "ไม่มีใบสั่ง", "")
+      : !recvd.length ? tile(isToday ? "wait" : "", "ของขาด", "ยังไม่รับของ", `ใบสั่ง ${items.length} รายการ`, fold)
+      : short.length ? tile("bad", "ของขาด", `${short.length} <small>รายการ</small>`, `รับของ ${rAt} น.`, fold) : tile("ok", "ของขาด", "ครบ", `${items.length} รายการ<br>รับ ${rAt} น.`, fold);
+    const ot = sd && +sd.ot_hours ? `<br>โอที ${+sd.ot_hours} ชม.` : "";
+    const shop = sd?.status === "holiday" ? tile("", "สถานะร้าน", "ร้านหยุด", "")
+      : sd?.closed_at ? tile("ok", "สถานะร้าน", `ปิด ${hm(sd.closed_at)}`, esc(names[sd.closed_by] || "-") + ot)
+      : sd?.opened_at ? tile(isToday ? "wait" : "bad", "สถานะร้าน", isToday ? "เปิดอยู่" : "ไม่ได้ปิดในแอป", `เปิด ${hm(sd.opened_at)}<br>${esc(names[sd.opened_by] || "-")}${ot}`)
+      : tile(isToday ? "" : "bad", "สถานะร้าน", "ยังไม่เปิด", isToday ? `เตือนปิด ${esc(remindAt)}` : "ไม่ได้เปิดในแอป");
+    return `<div class="bento trio">${cash}${recv}${shop}</div>`;
+  }
+
+  async function dayView() {
+    const d = D;
+    $("bar").innerHTML = `<div class="daynav"><button id="prev" aria-label="วันก่อน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+      <div class="d"><span>${U.dayName(d)}</span><small>${d === TODAY ? "วันนี้ " : d === U.plus(TODAY, -1) ? "เมื่อวาน " : ""}แตะเลือกวัน</small><input id="pd" type="date" value="${d}" max="${TODAY}" aria-label="เลือกวัน"></div>
+      <button id="next" aria-label="วันถัดไป" ${d >= TODAY ? "disabled" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div>`;
+    $("prev").onclick = () => go(U.plus(D, -1));
+    $("next").onclick = () => go(U.plus(D, 1));
+    $("pd").onchange = () => { const v = $("pd").value; if (v) go(v > TODAY ? TODAY : v); };
+    $("pd").onclick = () => { try { $("pd").showPicker(); } catch (_) { /* iOS opens the picker on tap anyway */ } };
+    $("out").innerHTML = SK.day;
+    let c; try { c = ctx = await loadDay(d); } catch (e) { if (d === D && TAB === "day") $("out").innerHTML = `<p class="err">เปิดไม่ขึ้น แตะ อัปเดต เพื่อลองใหม่\n${esc(App.errText(e))}</p>`; return; }
+    if (d !== D || TAB !== "day") return; // user moved on while loading
+    const { sd, sl, cc, items } = c;
+    const T = todos(c);
+    const todo = `<h3 class="sec" id="todoh"${T.length ? ` data-tone="${T.some((x) => x.bad) ? "bad" : "wait"}"` : ' data-tone="ok"'}>ต้องจัดการ<span class="n">${T.length ? `${T.length} เรื่อง` : "ไม่มี"}</span></h3>` + (T.length
+      ? T.map((x) => `<div class="card todo${x.bad ? " bad" : ""}" data-k="${x.key}"><div class="t">${x.t}</div>${x.b ? `<div class="b">${x.b}</div>` : ""}<div class="s">${x.s}</div>${x.a ? `<div class="acts">${x.a}</div>` : ""}</div>`).join("")
+      : ALLDONE);
+    // L4: the two ways on from the day are rows in one group (like รับของ / ของเสีย above), not loose white chips · edit only where the page binds it
+    const chev = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
+    const links = (c, edit) => (c.isToday || edit) ? `<div class="gl dayrows">${c.isToday ? `<a class="cell nav" href="approve.html"><span class="k">ดูใบสั่ง</span><span class="v"></span>${chev}</a>` : ""}${edit ? `<button type="button" class="cell nav" id="edit"><span class="k">แก้ตัวเลข${c.isToday ? "วันนี้" : "วันนั้น"}</span><span class="v"></span>${chev}</button>` : ""}</div>` : "";
+    if (!sd) {
+      $("out").innerHTML = bento(c) + todo + `<div class="card muted">ไม่มีบันทึกของ${when(d)}</div>` + (c.isToday ? links(c, false) : "");
+      return;
+    }
+    // ข้อ 6 (Mos 1 พ.ย.): CPF bill = the QR on the delivery slip · slip big enough to scan from this screen · "จ่ายแล้ว" keeps time + amount
+    const od = c.od, slips = [...new Set(items.flatMap((i) => i.receipt_photos || []))];
+    const baht = (v) => (+v).toLocaleString("th-TH");
+    const waste = sl.filter((l) => +l.waste > 0);
+    const recv = items.map((i) => {
+      const o = +(i.qty_final ?? i.qty_proposed) || 0;
+      if (i.received_at == null) return `<div class="ln">${esc(prods[i.product_id])} สั่ง ${o} ${esc(unit[i.product_id])} <span class="muted">ยังไม่รับของ</span></div>`;
+      const r = +i.qty_received || 0;
+      return `<div class="ln">${esc(prods[i.product_id])} สั่ง ${o} ได้ ${r} ${esc(unit[i.product_id])}${r < o ? ` <b class="err">ขาด ${o - r} ${esc(unit[i.product_id])}</b>` : ""}</div>`;
+    }).join("");
+    const nShort = items.filter((i) => i.received_at != null && (+i.qty_received || 0) < (+(i.qty_final ?? i.qty_proposed) || 0)).length;
+    const nLow = cc.filter((x) => x.status === "low").length, nOut = cc.filter((x) => x.status === "out").length;
+    // ข้อ 5: the day's folder + the day's own photo columns (an after-midnight close uploads into the next date's folder)
+    const photos = [...new Set([...(c.pics || []), sd.open_photo, ...(sd.photos || []), sd.pos_photo].filter(Boolean))];
+    const PIC = [["open", "เปิดร้าน"], ["receipt", "ใบส่งของ"], ["pos", "จอ WE POS"], ["fridge", "ตู้และถาด"], ["waste", "ของเสีย"], ["issue", "แจ้งปัญหา"], ["expense", "ใบเสร็จรายจ่าย"]];
+    const picOf = (p) => p.split("/").pop().split("-")[0];
+    // 0030: proof for the day's waste = each waste.html log (2 photos + kg) and any extra found at close
+    const { data: wlog } = await supabase.from("waste_logs").select("id,product_id,qty,kg,photos,created_at").eq("date", sd.date).order("created_at");
+    const wKg = (wlog || []).reduce((a, w) => a + +w.kg, 0) + (+sd.waste_kg || 0);
+    const wPics = await thumbs([...(wlog || []).flatMap((w) => w.photos), ...(sd.waste_photos || [])]);
+    // visual hierarchy rule 3: label left, value right, one line · the value carries the tone (bad act · wait check · ok fine)
+    const fv = (tone, v) => `<span class="fv"${tone ? ` data-tone="${tone}"` : ""}>${v}</span>`;
+    // 0047 (Mos 30 ต.ค.): the owner deletes a mistyped waste log so the staff can close · only before the day is sent
+    const wl = wlog || [], wDel = !MGR && sd.status !== "sent" && wl.length ? `<p class="muted">พิมพ์ผิด ลบได้จนกว่าจะปิดร้าน</p>` + wl.map((w) => `<div class="ln">${esc(prods[w.product_id])} ${+w.qty} ${esc(unit[w.product_id])} <span class="muted">ทิ้ง ${hm(w.created_at)} น.</span> <button class="btn sm" type="button" data-a="wdel" data-i="${w.id}" data-n="${esc(prods[w.product_id])} ${+w.qty} ${esc(unit[w.product_id])}">ลบรายการนี้</button></div>`).join("") : "";
+    // 0050 (Mos 30 ต.ค.): the owner takes back a staff ห่อข้าวเหนียว entry · only the open business day (undo_made reads business_day) · manager: the rpc allows own entries only, so no button
+    const mk = !MGR && sd.status !== "sent" && sd.date === U.bizDay() ? ((await supabase.from("made_logs").select("id,product_id,qty,created_by,created_at").eq("date", sd.date).order("created_at")).data || []) : [];
+    const mkBody = `<p class="muted">กดผิด ยกเลิกได้จนกว่าจะปิดร้าน</p>` + mk.map((m) => { const n = `${esc(prods[m.product_id])} ${+m.qty} ${esc(unit[m.product_id])}`;
+      return `<div class="ln mk"><span>${n}<small>${esc(names[m.created_by] || "-")} ${hm(m.created_at)} น.</small></span><button class="ux-cancel" type="button" data-a="mdel" data-i="${m.id}" data-n="${n}">ยกเลิกรายการนี้</button></div>`; }).join("");
+    // pb-review M2 (Mos 30 ต.ค.): ยอดขาย WE POS the staff typed at close (sets the bonus) · beside the POS screen photo · the owner corrects it (set_pos_total, audit_log)
+    const posAmt = sd.pos_total == null ? null : money(sd.pos_total);
+    const posBody = `<div class="ln mk"><span>รูปจอ POS<small>เทียบยอดกับรูปนี้</small></span>${MGR ? "" : `<button class="ux-cancel" type="button" data-a="pos">แก้ยอดขาย</button>`}</div><div id="posPic">${sd.pos_photo ? sb("72px", 72, ";--r:10px") : `<p class="muted">ไม่มีรูปจอ POS</p>`}</div>`;
+    const fold = (id, head, body) => `<button class="fold" aria-expanded="false" data-f="${id}">${head}</button><div class="fold-body"><div id="f-${id}">${body}</div></div>`;
+    const bill = od && slips.length ? fold("bill", `<b>บิล CPF</b>${od.paid_at ? fv("ok", `จ่ายแล้ว ${baht(od.paid_amount ?? 0)} บาท`) : fv("wait", "ยังไม่จ่าย")}`,
+      `<p class="muted">สแกน QR บนใบส่งของจ่ายได้เลย</p><div id="billPic"></div>`
+      + (od.paid_at ? `<div class="ln mk paid"><span>✓ จ่ายแล้ว ${baht(od.paid_amount ?? 0)} บาท<small>${hm(od.paid_at)} น. ${U.dayName(new Date(Date.parse(od.paid_at) + 7 * 3600e3).toISOString().slice(0, 10))}</small></span>${MGR ? "" : `<button type="button" class="ux-cancel" id="unpay">กดผิด ยกเลิก</button>`}</div>`
+        : MGR ? "" : `<button type="button" class="btn primary" id="pay">บันทึกว่าจ่ายแล้ว</button>`)) : "";
+    const posFold = sd.closed_at ? fold("pos", `<b>ยอดขาย WE POS</b>${fv(posAmt == null ? "wait" : "", posAmt == null ? "ไม่ได้ใส่" : `${posAmt} บาท`)}`, posBody) : "";
+    // 0085 (Mos 30 ต.ค.): a closed day's cash goes to the bank (deposit.html) · ฝาก + ค่าธรรมเนียม − เอาออก = gap
+    const g = c.dep && c.dep.gap != null ? +c.dep.gap : null;
+    const [dt, dv] = !c.dep ? [d >= U.plus(TODAY, -1) ? "wait" : "bad", "ยังไม่ได้ฝาก"] : g == null ? ["", "ฝากแล้ว เทียบไม่ได้"] : g === 0 ? ["ok", "ตรง"] : g < 0 ? ["bad", `ขาด ${money(-g)} บาท`] : ["wait", `เกิน ${money(g)} บาท`];
+    const depRow = MGR || c.depE || sd.status !== "sent" ? "" : `<div class="gl dayrows"><a class="cell nav" href="deposit.html"><span class="k">ฝากเงิน${c.dep ? `<small>${c.dep.confirmed_at ? "ตรวจแล้ว" : "ยังไม่ได้ตรวจ"}</small>` : ""}</span><span class="v"><span class="pill"${dt ? ` data-tone="${dt}"` : ""}>${dv}</span></span>${chev}</a></div>`;
+    $("out").innerHTML = bento(c) + todo
+      + (sd.note ? `<div class="card"><div class="k muted">พนักงานฝากบอก</div>${esc(sd.note)}</div>` : "")
+      + `<div class="card folds">`
+      + bill
+      + fold("recv", items.length ? `<b>รับของ</b>${fv(nShort ? "bad" : "ok", nShort ? `ขาด ${nShort} จาก ${items.length}` : `ครบ ${items.length} รายการ`)}` : `<b>ใบสั่ง</b>${fv("", "ไม่มี")}`, recv || `<p class="muted">ไม่มีใบสั่ง</p>`)
+      + (waste.length || wDel ? fold("waste", `<b>ของเสีย</b>${fv("wait", waste.length ? `${waste.length} รายการ` : `ทิ้งแล้ว ${wl.length} ครั้ง`)}`, waste.map((l) => `<div class="ln">${esc(prods[l.product_id])} ${l.waste} ${esc(unit[l.product_id])}</div>`).join("") + wDel + (wKg ? `<div class="ln">หนักรวม ${Math.round(wKg * 100) / 100} กก.</div>` : "") + (wPics ? `<div>${wPics}</div>` : `<p class="muted">ไม่มีรูปของเสีย</p>`)) : "")
+      + (mk.length ? fold("made", `<b>ห่อข้าวเหนียว</b>${fv("", `${mk.length} ครั้ง`)}`, mkBody) : "")
+      + fold("cons", `<b>ของใช้ในร้าน</b>${!cc.length ? fv("ok", "มีครบ") : nOut && nLow ? fv("bad", `หมด/ใกล้หมด ${nOut + nLow} อย่าง`) : nOut ? fv("bad", `หมด ${nOut} อย่าง`) : fv("wait", `ใกล้หมด ${nLow} อย่าง`)}`,
+        cc.map((c) => `<div class="ln">${esc(prods[c.product_id])} <span class="pill" data-tone="${c.status === "out" ? "bad" : "wait"}">${CS[c.status] || esc(c.status)}</span></div>`).join("") || `<p class="muted">มีครบ</p>`)
+      + posFold
+      + (photos.length ? fold("pics", `<b>รูปจากร้าน</b>${fv("", `${photos.length} รูป`)}`, `<div class="sk-row" style="flex-wrap:wrap;gap:8px;padding:8px 0 12px">${sb("72px", 72, ";--r:10px").repeat(photos.length)}</div>`) : "")
+      + `</div>`
+      + depRow
+      + links(c, !MGR);
+    if (!MGR) $("edit").onclick = () => openEdit(c);
+    const setPaid = async (row) => { const { error } = await supabase.from("orders").update(row).eq("id", od.id); if (error) return alert("บันทึกไม่ได้\n" + App.errText(error)); dayView(); };
+    // design round 1 พ.ย.: a sheet with the number pad instead of prompt()
+    // 0088: the bill reader's total (layers 1–3 held) fills the amount · a different amount = costs are not changed by themselves
+    const billTotal = [].concat(od?.bill_reads || []).find((r) => r.status === "ready")?.total;
+    if ($("pay")) $("pay").onclick = () => { payV.value = billTotal ?? ""; payM.className = "muted"; payM.textContent = ""; paySh.open(); setTimeout(() => { payV.focus(); fitPos(); }, 60); };
+    payOK.onclick = () => { const a = +payV.value; if (!(a > 0 && a <= 100000)) { payM.className = "err"; payM.textContent = "ใส่ยอดเป็นตัวเลข 1 ถึง 100,000 บาท"; return; }
+      paySh.close(); setPaid({ paid_at: new Date().toISOString(), paid_amount: a }); };
+    if ($("unpay")) $("unpay").onclick = () => { if (confirm("ยกเลิกจ่ายแล้วไหม?")) setPaid({ paid_at: null, paid_amount: null }); };
+    U.folds($("out").querySelector(".folds"), async (b) => {
+      if (b.dataset.done) return;
+      if (b.dataset.f === "pics") { b.dataset.done = 1;
+        const groups = [...PIC, ...[...new Set(photos.map(picOf))].filter((t) => !PIC.some(([k]) => k === t)).map((t) => [t, "อื่น ๆ"])]
+          .map(([k, t]) => [t, photos.filter((p) => picOf(p) === k)]).filter(([, ps]) => ps.length);
+        const html = (await Promise.all(groups.map(async ([t, ps]) => `<h3 class="sec">${t}<span class="n">${ps.length} รูป</span></h3>${await gal(ps)}`))).join("");
+        $("f-pics").innerHTML = html || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
+      if (b.dataset.f === "bill") { b.dataset.done = 1; $("billPic").innerHTML = (await big(slips)) || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
+      if (b.dataset.f === "pos" && sd.pos_photo) { b.dataset.done = 1; $("posPic").innerHTML = (await big([sd.pos_photo])) || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
+    });
+  }
+  const go = async (d) => { await UXM.flush(); D = d; sync(); await dayView(); stamp(); };
+
+  // in-place decisions on the to-do cards (R10: press → done → card leaves) · round 3 ง1: the card leaves now, the server call waits 5 s for "เลิกทำ"
+  const recount = () => { const h = $("todoh"); if (!h) return; const n = document.querySelectorAll("#out .todo:not([hidden])").length;
+    h.textContent = n ? `ต้องจัดการ ${n} เรื่อง` : "ต้องจัดการ"; $("alld")?.remove(); if (!n) h.insertAdjacentHTML("afterend", `<div id="alld">${ALLDONE}</div>`); };
+  const gone = (card) => { card.classList.add("gone"); setTimeout(() => { if (card.classList.contains("gone")) { card.hidden = true; recount(); } }, 200); };
+  const back = (card) => { card.hidden = false; card.querySelectorAll("button").forEach((x) => x.disabled = false); recount(); requestAnimationFrame(() => card.classList.remove("gone")); };
+  const undoable = (card, text, call) => { card.querySelectorAll("button").forEach((x) => x.disabled = true); gone(card);
+    UXM.later(text, async () => { const msg = await call(); if (msg) { back(card); UXM.toast(msg, { ms: 4000 }); } else card.remove(); }, () => back(card)); };
+  $("out").addEventListener("click", async (e) => {
+    if (TAB !== "day") return;
+    const b = e.target.closest("button[data-a]"); if (!b) return;
+    const card = b.closest(".todo"), a = b.dataset.a;
+    if (a === "go") return go(b.dataset.d);
+    if (a === "pos") return openPos(ctx);
+    if (a === "wdel") {
+      if (!confirm(`ลบของเสียรายการนี้ไหม?\n${b.dataset.n}\nพนักงานบันทึกใหม่ได้`)) return;
+      b.disabled = true;
+      const { error } = await supabase.rpc("waste_delete", { wid: b.dataset.i });
+      if (error) { b.disabled = false; UXM.toast("ลบไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error), { ms: 4000 }); return; }
+      UXM.toast("ลบของเสียแล้ว\nให้พนักงานปิดหน้าปิดร้านแล้วเปิดใหม่", { ms: 5000 }); return dayView();
+    }
+    if (a === "mdel") {
+      if (!confirm(`ยกเลิกรายการห่อนี้ไหม?\n${b.dataset.n}\nพนักงานบันทึกใหม่ได้`)) return;
+      b.disabled = true;
+      const { error } = await supabase.rpc("undo_made", { log_id: b.dataset.i });
+      if (error) { b.disabled = false; UXM.toast("ยกเลิกไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error), { ms: 4000 }); return; }
+      UXM.toast("ยกเลิกรายการห่อแล้ว", { ms: 4000 }); return dayView();
+    }
+    if (a === "recv") { const f = document.querySelector('.fold[data-f="recv"]'); if (f && f.getAttribute("aria-expanded") !== "true") f.click(); f?.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+    if (a === "photos") {
+      const i = ctx.iss.find((x) => String(x.id) === b.dataset.i); b.disabled = true;
+      card.insertAdjacentHTML("beforeend", `<div>${await thumbs(i?.photos)}</div>`); b.remove(); return;
+    }
+    if (a === "ack") return undoable(card, "รับทราบแล้ว", async () => {
+      const { error } = await supabase.from("issues").update({ status: "ack", ack_by: me.userId, ack_at: new Date().toISOString() }).eq("id", b.dataset.i);
+      return error && "รับทราบไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error); });
+    if (a === "ot") return undoable(card, "อนุมัติโอทีแล้ว", async () => {
+      for (const d of b.dataset.d.split(",")) { const { error } = await supabase.rpc("approve_ot", { d }); if (error) return "อนุมัติโอทีไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error); } });
+    if (a === "leave") return undoable(card, `${b.dataset.ok === "1" ? "อนุมัติ" : "ไม่อนุมัติ"} ${card.querySelector(".t").textContent}`, async () => {
+      const r = await U.decideLeave(supabase, b.dataset.i, b.dataset.ok === "1");
+      if (!r.ok) return r.text;
+      if (r.data?.error) UXM.toast(r.text, { ms: 4000 }); }); // decided elsewhere / cancelled meanwhile: say so, the card stays gone
+  });
+
+  // ---- edit panel (P2-4): numbers of one day, save button sticky at the bottom ----
+  // Mos 1 พ.ย.: ของใช้ (kind consumable, ติ๊กอย่างเดียว) never in the count rows · received stays editable below (it is money)
+  function openEdit(c) {
+    const { d, sd, sl } = c, pn = $("panel");
+    pn.innerHTML = `<div class="panel-head"><h2 id="ph">แก้ตัวเลข ${U.dayName(d)}</h2><button class="x" id="px" aria-label="ปิด">✕</button></div>
+      <div class="panel-body"><div class="colhead"><span>สินค้า</span><span>เหลือสด</span><span>เหลือสุก</span><span>เสีย</span></div>
+      ${UXM.byCat(sl.filter((l) => PP[l.product_id]?.kind !== "consumable").sort((a, b) => (PP[a.product_id]?.sort ?? 0) - (PP[b.product_id]?.sort ?? 0)), (l) => PP[l.product_id]?.category, (l) => `<div class="row" data-p="${l.product_id}"><div class="grow">${esc(prods[l.product_id])}</div>
+        <input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เหลือสด" data-f="remain_fresh" value="${l.remain_fresh ?? ""}">${CC[l.product_id] === "fresh" ? "<span></span>" : `<input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เหลือสุก" data-f="remain_cooked" value="${l.remain_cooked ?? ""}">`}${PP[l.product_id]?.category === "น้ำ เครื่องดื่ม" && !+l.waste ? "<span></span>" : `<input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เสีย" data-f="waste" value="${l.waste ?? ""}">`}</div>`) || `<p class="muted">ไม่มีตัวเลขสินค้าของวันนี้</p>`}
+      ${["open", "closed"].includes(sd.status) && sl.length ? `<h2>ยอดรับเข้า</h2><p class="muted">CPF ส่งมาเกินที่บันทึก<br>แก้ทีละอย่าง</p>
+      <div class="row"><select id="rp" class="grow" aria-label="สินค้าที่จะแก้ยอดรับเข้า">${sl.map((l) => `<option value="${l.product_id}" data-r="${+l.received || 0}">${esc(prods[l.product_id])} (ตอนนี้ ${+l.received || 0} ${esc(unit[l.product_id])})</option>`).join("")}</select>
+      <input id="rq" class="ed" type="number" inputmode="decimal" aria-label="รับเข้าที่ถูก" value="${+sl[0].received || 0}"></div>
+      <p class="muted">แก้หลังพนักงานกดรับของแล้ว</p>
+      <button class="btn" id="rs" type="button">บันทึกยอดรับเข้า</button><p id="rm" class="muted"></p>` : ""}
+      <h2>เงินสด</h2>
+      <div class="row"><label class="grow" for="ce">เงินสดควรมี (บาท)</label><input id="ce" class="ed cash" type="number" inputmode="decimal" value="${sd.cash_expected ?? ""}"></div>
+      <div class="row"><label class="grow" for="cn">เงินสดนับได้ (บาท)</label><input id="cn" class="ed cash" type="number" inputmode="decimal" value="${sd.cash_counted ?? ""}"></div>
+      <label class="field" for="nt">พนักงานฝากบอก</label><textarea id="nt" rows="2">${esc(sd.note)}</textarea>
+      <div class="sticky"><button class="btn primary" id="sv">บันทึกที่แก้</button><p id="sm" class="muted"></p></div></div>`;
+    pn.hidden = false; document.body.style.overflow = "hidden";
+    requestAnimationFrame(() => requestAnimationFrame(() => pn.classList.add("on")));
+    const close = () => { pn.classList.remove("on"); document.body.style.overflow = ""; setTimeout(() => { pn.hidden = true; pn.innerHTML = ""; }, 200); };
+    $("px").onclick = close;
+    // review r2 (item 6 exit): รับเข้า of one product · confirm, then rpc set_received (owner only, day not closed, audit_log keeps old → new)
+    if ($("rs")) {
+      $("rp").onchange = () => { $("rq").value = $("rp").selectedOptions[0].dataset.r; };
+      $("rs").onclick = async () => {
+        const o = $("rp").selectedOptions[0], q = $("rq").value;
+        if (q === "" || +q < 0) { $("rm").className = "err"; $("rm").textContent = "ใส่ยอดรับเข้าเป็นตัวเลข"; return; }
+        if (!confirm(`แก้ยอดรับเข้าไหม?\n${prods[o.value]}\nจาก ${o.dataset.r} เป็น ${+q} ${unit[o.value] || ""}`)) return;
+        $("rs").disabled = true;
+        const { error } = await supabase.rpc("set_received", { pid: o.value, qty: +q, d });
+        $("rs").disabled = false;
+        if (error) { $("rm").className = "err"; $("rm").textContent = "บันทึกไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error); return; }
+        close(); UXM.toast("แก้ยอดรับเข้าแล้ว ✓"); if (TAB === "day") dayView();
+      };
+    }
+    $("sv").onclick = async () => {
+      const num = (v) => v === "" ? null : +v; let err = null;
+      $("sv").disabled = true; $("sm").className = "muted"; $("sm").textContent = "กำลังบันทึก…";
+      for (const r of pn.querySelectorAll("[data-p]")) {
+        const old = sl.find((l) => String(l.product_id) === r.dataset.p) || {};
+        const u = {}; r.querySelectorAll("input").forEach((i) => u[i.dataset.f] = i.dataset.f === "waste" ? +i.value || 0 : num(i.value));
+        if (Object.keys(u).every((k) => (old[k] ?? null) === u[k] || (k === "waste" && (+old[k] || 0) === u[k]))) continue; // unchanged row: skip the call
+        const { error } = await supabase.from("stock_lines").update(u).eq("date", d).eq("product_id", r.dataset.p); err = err || error;
+      }
+      const { error } = await supabase.from("shop_days").update({ cash_expected: num($("ce").value), cash_counted: num($("cn").value), note: $("nt").value || null }).eq("date", d);
+      $("sv").disabled = false;
+      $("sm").textContent = (err || error) ? "บันทึกไม่ได้ ลองกดอีกครั้ง\n" + App.errText(err || error) : ""; $("sm").className = (err || error) ? "err" : "muted";
+      if (!(err || error)) { close(); UXM.toast("บันทึกแล้ว ✓"); if (TAB === "day") dayView(); }
+    };
+  }
+
+  // ---- pb-review M2: sheet that corrects a closed day's ยอดขาย WE POS · select on focus (ux-motion focusin) · same 0..100,000 rule as close, the server checks again ----
+  const posS = $("posS"), posSh = UXD.sheet(posS), posV = $("posV"), vv = window.visualViewport;
+  const payS = $("payS"), paySh = UXD.sheet(payS), payV = $("payV"), payM = $("payM"), payOK = $("payOK");
+  const fitPos = () => { if (!vv) return; [posS, payS].filter((s) => s.open).forEach((s) => { s.style.bottom = Math.max(0, innerHeight - vv.height - vv.offsetTop) + "px"; s.style.maxHeight = Math.max(260, vv.height - 12) + "px"; }); }; // keep the save button above the iPhone keyboard (like the bag sheet)
+  if (vv) { vv.addEventListener("resize", fitPos); vv.addEventListener("scroll", fitPos); }
+  [posS, payS].forEach((s) => s.addEventListener("close", () => { s.style.bottom = ""; s.style.maxHeight = ""; }));
+  payV.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); payOK.click(); } });
+  posV.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $("posOK").click(); } });
+  let posDay = null;
+  function openPos(c) {
+    posDay = c.d; const v = c.sd?.pos_total;
+    $("posD").innerHTML = `${U.dayName(c.d)}<br>${v == null ? "ยังไม่ได้ใส่ยอด" : `ตอนนี้ ${baht(v)}`}`;
+    posV.value = v == null ? "" : String(+v); $("posM").className = "muted"; $("posM").textContent = "";
+    posSh.open(); setTimeout(() => { posV.focus(); fitPos(); }, 60);
+  }
+  $("posOK").onclick = async () => {
+    const v = posV.value, say = (t) => { $("posM").className = "err"; $("posM").textContent = t; };
+    if (v === "") return say("ยังไม่ได้ใส่ยอดขาย\nดูจากรูปจอ WE POS");
+    if (+v < 0 || +v > 100000) return say("ยอดขายรวมต้องอยู่ระหว่าง 0 ถึง 100,000 บาท\nดูจอ WE POS อีกครั้ง");
+    $("posOK").disabled = true;
+    const { error } = await supabase.rpc("set_pos_total", { d: posDay, amount: +v });
+    $("posOK").disabled = false;
+    if (error) return say("บันทึกไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error));
+    posSh.close(); UXM.toast("แก้ยอดขายแล้ว ✓"); if (TAB === "day") dayView();
+  };
+
+  // ---- issues (P2-6): chips ใหม่ · รับทราบ · ปิดแล้ว · date taps through to that day ----
+  async function issView() {
+    const { data, error } = await supabase.from("issues").select("*").order("created_at", { ascending: false }).limit(200);
+    if (error) { $("out").innerHTML = `<p class="err">เปิดไม่ขึ้น: ${esc(App.errText(error))}</p>`; return; }
+    const all = data || [], CH = [["open", "ใหม่"], ["ack", "รับทราบ"], ["closed", "ปิดแล้ว"]];
+    const draw = async () => {
+      $("bar").innerHTML = `<div class="chips" role="group" aria-label="กรองเรื่อง">${CH.map(([k, t]) => `<button data-c="${k}" aria-pressed="${k === CHIP}">${t} ${all.filter((i) => i.status === k).length}</button>`).join("")}</div>`;
+      const rows = all.filter((i) => i.status === CHIP), nNew = all.filter((i) => i.status === "open").length;
+      // ง4: 2+ new issues → one tonal button acknowledges them all (same per-issue update, one undo)
+      $("out").innerHTML = (CHIP === "open" && nNew >= 2 ? `<button class="btn tonal ux-ackall" type="button" id="ackall">รับทราบทั้งหมด (${nNew})</button>` : "") + (await Promise.all(rows.map(async (i) => {
+        const d = (i.date || new Date(new Date(i.created_at).getTime() + 7 * 3600e3).toISOString()).slice(0, 10);
+        return `<div class="card iss"><div class="day-head"><b>${TYPE[i.type] || esc(i.type)}</b><span class="pill" data-tone="${{ open: "bad", ack: "wait", closed: "ok" }[i.status] || ""}">${{ open: "ใหม่", ack: "รับทราบแล้ว", closed: "ปิดแล้ว" }[i.status] || esc(i.status)}</span></div>
+        <div style="white-space:pre-line">${esc(i.text)}</div>
+        <div class="who"><button class="daylink" data-day="${d}">${U.dayName(d)}</button><span>${hm(i.created_at)} น. · ${esc(names[i.created_by] || "-")}</span></div><div>${await thumbs(i.photos)}</div>
+        ${i.status === "open" ? `<button class="btn sm" data-i="${i.id}" data-s="ack">รับทราบ</button>` : ""}${i.status !== "closed" ? `<button class="btn sm" data-i="${i.id}" data-s="closed">ปิดเรื่อง</button>` : ""}</div>`;
+      }))).join("") || EMPTY({ open: "ไม่มีเรื่องใหม่", ack: "ไม่มีเรื่องที่รับทราบค้างอยู่", closed: "ยังไม่มีเรื่องที่ปิดแล้ว" }[CHIP], CHIP === "open" ? "พนักงานแจ้งเรื่องเมื่อไร จะขึ้นที่นี่" : "");
+    };
+    $("bar").onclick = (e) => { const b = e.target.closest("button[data-c]"); if (b) { CHIP = b.dataset.c; draw(); } };
+    // ง1: the card moves to its new chip now · the update waits 5 s for "เลิกทำ" · a failed update puts it back
+    const ackU = () => ({ status: "ack", ack_by: me.userId, ack_at: new Date().toISOString() });
+    const change = (list, u, text) => {
+      const olds = list.map((i) => ({ i, o: { status: i.status, ack_by: i.ack_by, ack_at: i.ack_at } }));
+      list.forEach((i) => Object.assign(i, u)); draw();
+      const undo = () => { olds.forEach(({ i, o }) => Object.assign(i, o)); if (TAB === "iss") draw(); };
+      UXM.later(text, async () => {
+        const bad = [];
+        for (const { i, o } of olds) { const { error } = await supabase.from("issues").update(u).eq("id", i.id); if (error) { bad.push(error); Object.assign(i, o); } }
+        if (bad.length) { if (TAB === "iss") draw(); UXM.toast("ทำไม่ได้ ลองกดอีกครั้ง\n" + App.errText(bad[0]), { ms: 4000 }); }
+      }, undo);
+    };
+    $("out").onclick = async (e) => {
+      if (TAB !== "iss") return;
+      const dl = e.target.closest("button[data-day]"); if (dl) { D = dl.dataset.day; return show("day"); }
+      if (e.target.closest("#ackall")) { const list = all.filter((i) => i.status === "open"); return change(list, ackU(), `รับทราบแล้ว ${list.length} เรื่อง`); }
+      const b = e.target.closest("button[data-i]"); if (!b) return;
+      const i = all.find((x) => String(x.id) === b.dataset.i); if (!i) return;
+      change([i], b.dataset.s === "ack" ? ackU() : { status: "closed" }, b.dataset.s === "ack" ? "รับทราบแล้ว" : "ปิดเรื่องแล้ว");
+    };
+    await draw();
+  }
+
+  const V = {
+    day: dayView,
+    iss: issView,
+    // round 4: every number that has days behind it opens them · a day opens the day view · ร้านหยุด → holiday · ต้นทุน/กำไร of the same month
+    async mon() {
+      $("bar").innerHTML = `<input id="pm" type="month" lang="th" value="${TODAY.slice(0, 7)}" max="${TODAY.slice(0, 7)}" aria-label="เลือกเดือน">`;
+      UXM.dateTh($("pm")); // L5: the box shows the Thai month (ตุลาคม 2569) whatever language the phone is set to, the native picker stays
+      const go = async () => {
+        const ym = $("pm").value, [y, m] = ym.split("-").map(Number); if (!y) return;
+        const first = ym + "-01", next = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, "0")}-01`, inM = (d) => String(d || "").slice(0, 7) === ym;
+        const [{ data: s, error }, { data: days }, { data: wl }, { data: od }] = await Promise.all([supabase.rpc("month_summary", { y, m }),
+          supabase.from("shop_days").select("date,status,opened_at,opened_by,cash_expected,cash_counted").gte("date", first).lt("date", next).order("date"),
+          supabase.from("stock_lines").select("date,waste").gte("date", first).lt("date", next).gt("waste", 0),
+          supabase.from("orders").select("for_date,order_items(qty_proposed,qty_final,qty_received)").gte("for_date", first).lt("for_date", next)]);
+        if (error) { $("out").innerHTML = `<p class="err">เปิดไม่ขึ้น: ${esc(App.errText(error))}</p>`; return; }
+        const r = (Array.isArray(s) ? s[0] : s) || {};
+        const D0 = (days || []).filter((x) => inM(x.date));
+        // day lists behind the numbers (same rules as month_summary) · newest first
+        const openD = D0.filter((x) => x.opened_at && x.status === "open" && x.date < TODAY).map((x) => [x.date]); // opened, never closed in the app
+        const cashD = D0.map((x) => [x.date, -cashOf(x)]).filter(([, v]) => v > 0);
+        const wasteD = {}; (wl || []).filter((l) => inM(l.date) && +l.waste > 0).forEach((l) => { wasteD[l.date] = (wasteD[l.date] || 0) + 1; });
+        const shortD = {}; (od || []).filter((o) => inM(o.for_date)).forEach((o) => { const n = (o.order_items || []).filter((i) => i.qty_received != null && +i.qty_received < +(i.qty_final ?? i.qty_proposed)).length; if (n) shortD[o.for_date] = (shortD[o.for_date] || 0) + n; });
+        const day = (d, v) => `<button type="button" class="ux-mday" data-day="${d}"><span>${U.dayName(d)}</span><span class="v">${v}</span><span class="go" aria-hidden="true">›</span></button>`;
+        const newest = (a) => a.sort((x, z) => z[0].localeCompare(x[0]));
+        const val = (v, u, bad) => `<span class="v${bad && v ? " bad" : ""}">${money(v ?? 0)} ${u}</span>`;
+        const plain = (k, v, u) => `<div class="ux-mrow"><span>${k}</span>${val(v, u)}</div>`;
+        const drill = (id, k, v, u, list) => list.length ? `<button class="fold ux-mrow" aria-expanded="false" data-f="${id}"><span>${k}</span>${val(v, u, 1)}</button><div class="fold-body"><div>${list.join("")}</div></div>` : plain(k, v, u);
+        const cnt = {}; D0.forEach((x) => { if (x.opened_by) cnt[x.opened_by] = (cnt[x.opened_by] || 0) + 1; });
+        const mn = `${U.MON[m - 1]} ${y + 543}`;
+        $("out").innerHTML = `<div class="card folds ux-mon">`
+          + plain("เปิดร้าน", r.days_worked, "วัน") + plain("ปิดร้านในแอป", r.days_closed_sent, "วัน")
+          + (openD.length ? drill("open", "เปิดแต่ไม่ได้ปิดในแอป", openD.length, "วัน", newest(openD).map(([d]) => day(d, "ดูวันนั้น"))) : "")
+          + `<a class="ux-mrow" href="holiday.html"><span>ร้านหยุด<small>ดูวันหยุดและวันลา</small></span><span class="v">${money(r.days_holiday ?? 0)} วัน</span><span class="go" aria-hidden="true">›</span></a>`
+          + plain("โอที", r.ot_hours, "ชม.") + plain("โอทีที่อนุมัติแล้ว", r.ot_approved_hours, "ชม.")
+          + drill("cash", "เงินสดขาดรวม", r.cash_short_total, "บาท", newest(cashD).map(([d, v]) => day(d, `ขาด ${money(v)} บาท`)))
+          + drill("waste", "ของเสียรวม", r.waste_total, "หน่วย", newest(Object.entries(wasteD)).map(([d, n]) => day(d, `เสีย ${n} อย่าง`)))
+          + drill("short", "วันที่ของมาไม่ครบ", r.cpf_short_days, "วัน", newest(Object.entries(shortD)).map(([d, n]) => day(d, `ขาด ${n} รายการ`)))
+          + `</div><a class="btn tonal ux-costs" href="costs.html?m=${ym}">ดูต้นทุน/กำไร ${mn}</a>`
+          + `<h2>ใครเปิดร้านกี่วัน</h2><div class="card"><table>${Object.entries(cnt).map(([u, n]) => `<tr><td>${esc(names[u] || u)}</td><td>${n} วัน</td></tr>`).join("") || '<tr><td class="muted">ยังไม่มีใครเปิดร้าน</td></tr>'}</table></div>`;
+        U.folds($("out").querySelector(".ux-mon"));
+      };
+      $("out").onclick = (e) => { const b = e.target.closest("button[data-day]"); if (b && TAB === "mon") { D = b.dataset.day; show("day"); } };
+      $("pm").onchange = go; await go();
+    },
+  };
+  $("tabs").onclick = (e) => { const b = e.target.closest("button"); if (!b || b.dataset.t === TAB) return; $("bar").onclick = null; $("out").onclick = null; show(b.dataset.t); };
+  await show(TAB);
+})().catch((e) => { if (e.message !== "denied") { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดไม่ขึ้น: " + App.errText(e); } });
+</script></body></html>

@@ -1,0 +1,50 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><script src="lib/demo.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>โหมดทดลอง ห้าดาว</title>
+<meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="lib/ui.css?v=r1101">
+<style>
+  /* practice mode start page · pick who you are and where the day is, then the normal home page opens */
+  .pick { display: grid; gap: 8px; margin: var(--space-lg) 0 0; padding: 0; border: 0; min-width: 0; }
+  .pick legend { font: 600 17px/1.35 var(--font-head); margin: 0 0 var(--space-sm); padding: 0; float: left; width: 100%; } /* float: margins under a legend work in Safari too */
+  .opt { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 10px 14px; background: var(--color-card); border: 1.5px solid var(--color-border-strong);
+    border-radius: var(--radius); box-shadow: var(--shadow-sm); cursor: pointer; }
+  .opt input { width: 22px; height: 22px; margin: 0; accent-color: var(--color-primary); flex: none; }
+  .opt b { display: block; font: 600 16px/1.3 var(--font-head); }
+  .opt small { display: block; font-size: 13.5px; line-height: 1.45; color: var(--color-ink-soft); }
+  .opt:has(input:checked) { border-color: var(--color-primary); background: var(--tint-primary); }
+  .opt:has(input:focus-visible) { outline: 2px solid var(--color-ring); outline-offset: 2px; }
+  .why { margin: 0; padding: 12px 14px; border-radius: var(--radius); background: var(--tint-wait); color: var(--on-wait); border: 1px solid var(--border-wait); font-size: 14.5px; line-height: 1.6; }
+</style>
+</head><body ontouchstart="">
+<header class="topbar home"><img class="logo" src="img/logo-96.png" alt="" width="52" height="52"><div><h1>ลองใช้แอปร้าน</h1><div class="sub">ข้อมูลปลอม ไม่แตะร้านจริง</div></div></header>
+<p class="why">กดได้ทุกปุ่ม ไม่มีอะไรบันทึกจริง<br>ไม่ส่ง LINE ไม่ส่งใบสั่งให้เซลล์<br>ปิดแท็บนี้ = ข้อมูลทดลองหายหมด</p>
+<form id="f">
+  <fieldset class="pick"><legend>ลองเป็นใคร</legend>
+    <label class="opt"><input type="radio" name="role" value="staff" checked><span><b>พนักงาน</b><small>เปิดร้าน รับของ ปิดร้าน ฝากเงิน</small></span></label>
+    <label class="opt"><input type="radio" name="role" value="manager"><span><b>ผู้จัดการ</b><small>ดูงานร้าน อนุมัติใบสั่ง วันหยุดพนักงาน</small></span></label>
+    <label class="opt"><input type="radio" name="role" value="owner"><span><b>เจ้าของ</b><small>ทุกหน้า รวมเงิน ต้นทุน ตั้งค่า</small></span></label>
+  </fieldset>
+  <fieldset class="pick"><legend>วันนี้ถึงไหนแล้ว</legend>
+    <label class="opt"><input type="radio" name="scene" value="notopen" checked><span><b>ยังไม่เปิดร้าน</b><small>เช้า ก่อนกดเปิดร้าน</small></span></label>
+    <label class="opt"><input type="radio" name="scene" value="opened"><span><b>เปิดแล้ว ของยังไม่มา</b><small>ระหว่างวัน ก่อนบ่าย 2</small></span></label>
+    <label class="opt"><input type="radio" name="scene" value="received"><span><b>รับของแล้ว</b><small>บ่าย ถึงก่อนปิดร้าน</small></span></label>
+    <label class="opt"><input type="radio" name="scene" value="closed"><span><b>ปิดร้านแล้ว</b><small>กลางคืน มีใบสั่งรอส่ง</small></span></label>
+  </fieldset>
+  <div class="sticky"><button type="submit" class="btn primary">เริ่มลอง</button></div>
+</form>
+<script>
+  // demo.js (loaded in <head>) keeps everything in this tab · picking again starts the day over from fresh fake data
+  try { const s = window.DEMO && DEMO.state; if (s && sessionStorage.getItem("fs_demo")) for (const [k, v] of [["role", s.role], ["scene", s.scene]]) { const r = document.querySelector(`input[name=${k}][value=${v}]`); if (r) r.checked = true; } } catch (_) {}
+  document.getElementById("f").onsubmit = (e) => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    DEMO.reset();
+    sessionStorage.setItem("fs_demo", JSON.stringify({ role: f.get("role"), scene: f.get("scene"), seed: Date.now() }));
+    location.href = "index.html";
+  };
+</script>
+</body></html>

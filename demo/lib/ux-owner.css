@@ -1,0 +1,128 @@
+/* ux-audit-2 · owner stream (owner.html · holiday.html owner view) · loaded after ui.css · tokens from ui.css only */
+
+/* day navigator ‹ ศุกร์ 23 ต.ค. › · the date itself is a native date picker */
+.daynav { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; }
+.daynav > button { flex: none; width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--color-card); box-shadow: var(--shadow-raised); color: var(--color-foreground); display: grid; place-items: center; cursor: pointer; touch-action: manipulation; transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out); }
+.daynav > button svg { width: 22px; height: 22px; }
+.daynav > button:active { transform: scale(.94); background: var(--color-fill); }
+.daynav > button:disabled { opacity: .35; transform: none; cursor: default; }
+.daynav .d { position: relative; flex: 1; min-height: 48px; text-align: center; font: 600 20px/1.2 var(--font-head); border-radius: var(--radius); }
+.daynav .d small { display: block; margin-top: 2px; font: 400 13px/1.3 var(--font-body); color: var(--color-ink-soft); }
+.daynav .d input { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; margin: 0; padding: 0; opacity: 0; border: 0; cursor: pointer; }
+.daynav .d:has(input:focus-visible) { outline: 2px solid var(--color-ring); outline-offset: 2px; }
+
+/* section heading + to-do cards (urgent = red edge) */
+h3.sec { font: 600 17px/1.35 var(--font-head); color: var(--color-foreground); margin: 24px 16px 8px; scroll-margin-top: calc(var(--chrome-h) + 72px); }
+/* to-do card: a status dot leads the title (red = urgent · amber = decide) · no side stripe */
+.todo { padding: 14px 16px; margin: 8px 0; transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out); }
+.todo .t { position: relative; padding-left: 16px; font: 500 16px/1.35 var(--font-head); }
+.todo .t::before { content: ""; position: absolute; left: 0; top: .5em; width: 8px; height: 8px; border-radius: 50%; background: var(--color-wait-mark); }
+.todo.bad .t::before { background: var(--color-destructive); }
+.todo .s { padding-left: 16px; }
+.todo .s { font-size: 14px; color: var(--color-ink-soft); }
+.todo .b { padding-left: 16px; margin-top: 2px; font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; text-wrap: pretty; }
+.todo .acts { display: flex; gap: 8px; margin-top: 8px; }
+.todo .acts .btn { margin: 0; flex: 1; }
+.todo .acts .btn.go { color: var(--color-primary-dark); background: var(--tint-primary); }
+.todo .acts .btn.go:active { background: var(--tint-primary-pressed); }
+.todo.gone { opacity: 0; transform: translateX(16px); }
+.todo .say { margin: 8px 0 0; font-size: 14px; white-space: pre-line; }
+
+/* folds (details collapsed, 200ms) */
+.folds { padding-top: 2px; padding-bottom: 2px; }
+.fold { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; padding: 10px 0; margin: 0; background: none; border: 0; border-top: .5px solid var(--color-separator); color: var(--color-ink-soft); font: 400 15px/1.35 var(--font-body); text-align: left; cursor: pointer; }
+.folds > .fold:first-child { border-top: 0; }
+.fold b { color: var(--color-foreground); font-weight: 500; }
+.fold .fv { margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--color-ink-soft); }
+.fold .fv[data-tone] { font-weight: 600; } .fold .fv[data-tone=bad] { color: var(--color-destructive); } .fold .fv[data-tone=wait] { color: var(--on-wait); } .fold .fv[data-tone=ok] { color: var(--color-success); }
+.fold::after { content: ""; flex: none; width: 9px; height: 9px; margin-right: 4px; border-right: 2px solid var(--color-chevron); border-bottom: 2px solid var(--color-chevron); transform: rotate(45deg); transition: transform 200ms var(--ease-out); }
+.fold[aria-expanded=true]::after { transform: rotate(225deg); }
+.fold-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 200ms var(--ease-out); }
+.fold[aria-expanded=true] + .fold-body { grid-template-rows: 1fr; }
+.fold-body > div { overflow: hidden; min-height: 0; }
+.fold-body > div > :last-child { margin-bottom: 12px; }
+.fold-body .ln { padding: 3px 0; }
+/* 30 ต.ค.: owner cancels a staff pack entry · name + meta left, a dark-red text button right (secondary destructive, no card) */
+.fold-body .ln.mk { display: flex; align-items: center; gap: 12px; padding: 0; }
+.ln.mk > span { flex: 1; min-width: 0; }
+.ln.mk small { display: block; font-size: 14px; color: var(--color-ink-soft); }
+.ux-cancel { flex: none; min-height: 44px; padding: 0 4px; border: 0; background: none; font: 500 15px/1.3 var(--font-body); color: var(--color-primary-dark); cursor: pointer; touch-action: manipulation; }
+.ux-cancel:active { opacity: .6; }
+.ux-cancel:disabled { opacity: .4; }
+
+/* chips (issue filter) */
+.chips { display: flex; gap: 8px; margin: -2px -16px 6px; padding: 2px 16px 6px; overflow-x: auto; scrollbar-width: none; }
+.chips button { flex: none; min-height: 44px; padding: 6px 16px; border-radius: 999px; border: 0; background: var(--color-card); box-shadow: var(--shadow-raised); color: var(--color-ink-soft); font: 500 15px/1.2 var(--font-head); cursor: pointer; font-variant-numeric: tabular-nums; transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out), transform 160ms var(--ease-out); }
+.chips button:active { transform: scale(.97); }
+.chips button[aria-pressed=true] { background: var(--color-foreground); border-color: var(--color-foreground); color: var(--color-card); }
+button.daylink { min-height: 44px; padding: 0; margin: -8px 0; border: 0; background: none; color: var(--color-primary-dark); font: 500 15px/1.3 var(--font-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+/* edit panel: full-height sheet, save button sticky at the bottom */
+.panel { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; background: var(--color-background); transform: translateY(100%); transition: transform 200ms var(--ease-out); }
+.panel.on { transform: none; transition: transform 280ms cubic-bezier(.32, .72, 0, 1); } /* iOS drawer curve in, faster out */
+button.daylink:active, .cal-nav button:active, .daynav .d:active { opacity: .7; }
+.panel-head { display: flex; align-items: center; gap: 12px; padding: calc(10px + env(safe-area-inset-top)) var(--space-md) 10px; background: var(--color-background); box-shadow: inset 0 -.5px 0 var(--color-separator); }
+.panel-head h2 { margin: 0; flex: 1; font: 600 18px/1.3 var(--font-head); }
+.panel-head .x { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--color-fill); font: 500 22px/1 var(--font-head); color: var(--color-foreground); cursor: pointer; }
+.panel-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 var(--space-md); }
+.panel-body .sticky { margin-top: var(--space-md); }
+.colhead { position: sticky; top: 0; z-index: 2; display: flex; gap: 12px; padding: 10px 0 6px; background: var(--color-background); font-size: 13px; color: var(--color-ink-soft); }
+.colhead span { width: 58px; text-align: center; flex: none; }
+.colhead span:first-child { flex: 1; width: auto; text-align: left; }
+
+/* holiday · owner month calendar */
+.cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 18px 0 6px; }
+.cal-nav h2 { margin: 0; }
+.cal-nav > div { display: flex; gap: 8px; }
+.cal-nav button { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--color-card); box-shadow: var(--shadow-raised); font: 600 20px/1 var(--font-head); color: var(--color-foreground); cursor: pointer; }
+.cal-nav button:disabled { opacity: .35; cursor: default; }
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.cal .wd { text-align: center; font-size: 13px; color: var(--color-ink-soft); padding: 2px 0; }
+.cal .c { min-height: 54px; padding: 3px 2px; border-radius: 8px; background: var(--color-card); border: 1px solid transparent; font-size: 11px; line-height: 1.25; overflow: hidden; }
+.cal .c .n { display: block; font: 500 14px/1.3 var(--font-head); font-variant-numeric: tabular-nums; }
+.cal .c.out { visibility: hidden; }
+.cal .c.today { border: 1.5px solid var(--color-primary); }
+.cal .c.shut { background: var(--color-fill); }
+.cal .c i { display: block; font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 4px; padding: 0 2px; margin-top: 1px; }
+.cal .c i.ok { background: var(--tint-success); color: var(--color-success); }
+.cal .c i.wait { background: var(--tint-wait); color: var(--on-wait); }
+.cal .c i.shop { color: var(--color-ink-soft); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; color: var(--color-ink-soft); margin: 6px 0 0; }
+.legend i { font-style: normal; padding: 0 6px; border-radius: 4px; }
+.legend i.ok { background: var(--tint-success); color: var(--color-success); }
+.legend i.wait { background: var(--tint-wait); color: var(--on-wait); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fold-body, .fold::after, .panel, .todo { transition: none; }
+}
+
+/* round 3 ง2: "อัปเดต HH:MM น. แตะเพื่อโหลดใหม่" · small grey line, 28px to the eye, 44px to the finger */
+.ux-upd { position: relative; display: block; width: 100%; min-height: 44px; margin: -14px 0 -6px; padding: 12px 0; /* r3 #37: 44px tap target, same layout height */ border: 0; background: none; font: 400 13px/1.4 var(--font-body); color: var(--color-ink-soft); text-align: center; cursor: pointer; font-variant-numeric: tabular-nums; }
+.ux-upd::before { content: ""; position: absolute; inset: -8px 0; }
+.ux-upd:disabled { opacity: .7; cursor: default; }
+/* ง4: "รับทราบทั้งหมด (N)" sits above the new issues */
+.ux-ackall { margin: 0 0 4px; }
+
+/* ---------- round 4 สรุปเดือน: one row per number · rows with days behind them open (chevron) · each day opens the day view ---------- */
+.ux-mon { padding-top: 2px; padding-bottom: 2px; }
+.ux-mrow { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 10px 0; margin: 0; border: 0; border-top: .5px solid var(--color-separator); background: none; color: var(--color-foreground); font: 400 16px/1.35 var(--font-body); text-align: left; text-decoration: none; }
+.ux-mon > .ux-mrow:first-child { border-top: 0; }
+.ux-mrow > span:first-child { flex: 1; min-width: 0; }
+.ux-mrow small { display: block; font-size: 13px; color: var(--color-ink-soft); }
+.ux-mrow .v { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ux-mrow .v.bad { color: var(--color-destructive); }
+.ux-mrow .v.bad::before { content: ""; display: inline-block; width: 8px; height: 8px; margin: 0 7px 2px 0; border-radius: 50%; background: var(--color-destructive); vertical-align: middle; } /* L11: a status dot, red is never the only signal */
+.ux-mrow .go, .ux-mday .go { flex: none; color: var(--color-chevron); font-size: 20px; line-height: 1; }
+a.ux-mrow, button.ux-mrow, .ux-mday { cursor: pointer; touch-action: manipulation; transition: background-color 160ms var(--ease-out); }
+a.ux-mrow:active, button.ux-mrow:active, .ux-mday:active { background: var(--color-fill-pressed); }
+.ux-mon .fold.ux-mrow { justify-content: flex-start; }
+.ux-mday { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 6px 0 6px 12px; margin: 0; border: 0; border-top: .5px solid var(--color-separator); background: var(--color-fill); color: var(--color-foreground); font: 400 15px/1.35 var(--font-body); text-align: left; font-variant-numeric: tabular-nums; }
+.ux-mday:first-child { border-top: 0; border-radius: 10px 10px 0 0; }
+.ux-mday:last-child { border-radius: 0 0 10px 10px; margin-bottom: 10px; }
+.ux-mday:only-child { border-radius: 10px; }
+.ux-mday > span:first-child { flex: 1; }
+.ux-mday .v { color: var(--color-ink-soft); padding-right: 2px; }
+.ux-mday .go { padding-right: 10px; }
+.ux-costs { margin-top: 4px; }
+.ux-mrow small, .ux-mday > span:first-child { text-wrap: pretty; }
+.ux-mrow .v, .ux-mday .v { font-variant-numeric: tabular-nums; }

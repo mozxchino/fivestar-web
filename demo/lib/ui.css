@@ -1,0 +1,669 @@
+/* Five Star (ไก่ย่างห้าดาว) ops app · tokens + components · source of truth: DESIGN.md
+   Use scene: one staff member at the counter, bright light, greasy hands → big targets, high contrast, one red CTA per screen.
+   Soft pass (22 ต.ค.): white-cream ground, white cards, red is an accent only (~10% of the screen). */
+:root {
+  --color-primary: #C82128; --color-on-primary: #FFFFFF; --color-primary-dark: #9E0B23;
+  --color-accent: #FFE60A; --color-on-accent: #201818; --color-warning: #FFDA2B;
+  --color-background: #FFFAF6; --color-card: #FFFFFF; --color-foreground: #201818;
+  --color-muted: #F4EFEC; --color-muted-foreground: #5C5450; --color-border: #EFE6E0; --color-border-strong: #E3D9D3;
+  --color-success: #2A7430; --color-destructive: #C62828; --color-ring: #C82128;
+  --tint-success: #E8F5E9; --tint-destructive: #FDECEC; --tint-primary: #FDF0EF; --tint-icon: #FCEDEC;
+  --tint-wait: #FFF6D6; --on-wait: #7A5B00; --tint-neutral: #F1EEEC;
+  /* audit 22 ต.ค.: field edges need 3:1 on white cards (sunlight) · data captions use a darker ink than muted */
+  --color-border-input: #9C8F89; --color-ink-soft: #5C5450; --color-chevron: #8F817A; --color-placeholder: #6B625E; --color-disabled-fg: #6E6460;
+  --tint-primary-pressed: #FBE4E2; --tint-filled: #F6FBF6; --border-filled: #9CCB9F; --border-ok: #A9D3AC; --border-wait: #EBD48A; --border-bad: #F1B9B9;
+  --space-xs: 4px; --space-sm: 8px; --space-md: 16px; --space-lg: 24px; --space-xl: 32px;
+  --radius-sm: 10px; --radius: 14px; --radius-lg: 18px;
+  --shadow-sm: 0 1px 2px rgba(32, 24, 24, .04); --shadow-md: 0 2px 8px -2px rgba(32, 24, 24, .10);
+  --font-head: "Mitr", "Noto Sans Thai", -apple-system, sans-serif;
+  --font-body: "Noto Sans Thai", -apple-system, "Sukhumvit Set", sans-serif;
+  --ease-out: cubic-bezier(.23, 1, .32, 1);
+  --ease-spring: cubic-bezier(.3, 1.3, .6, 1); /* round 3: release overshoots a hair, then settles (apple-design: taps carry no momentum, so keep the bounce small) */
+  --tap: 52px; --field: 52px;
+  /* premium pass 23 ต.ค. (design/premium/tokens.css): grouped ground · soft fill · hairlines · layered shadow · glass chrome */
+  --color-grouped: #F4EEEA; --color-fill: #F5EFEB; --color-fill-pressed: #EDE5E0;
+  --color-separator: rgba(60, 40, 36, .16); --color-secondary: #4A4340;
+  /* visual hierarchy 26 ต.ค. (Mos, iPhone in bright light): every readable grey ≥ 4.5:1 on the ground it sits on · status marks ≥ 3:1 */
+  --color-wait-mark: #B07F05; --sh-bar: #B9AEA8;
+  /* filled field edge: 3.8:1 on white · 3.3:1 on the fill (WCAG 1.4.11) */
+  --color-field-edge: #8F817A;
+  --shadow-card: 0 1px 2px rgba(32, 24, 24, .04), 0 6px 20px -8px rgba(32, 24, 24, .10);
+  --shadow-raised: 0 1px 1px rgba(32, 24, 24, .06), 0 2px 6px -1px rgba(32, 24, 24, .10);
+  --glass-bg: rgba(255, 250, 246, .84); --glass-solid: #FFFAF6; --glass-blur: blur(20px) saturate(180%); --glass-edge: rgba(255, 255, 255, .7);
+  --radius-field: 12px; --radius-card: 20px; --radius-pill: 999px;
+  /* sticky glass header height (back 44 + padding 10/12) · sheet column headers stick right under it */
+  --chrome-h: calc(66px + env(safe-area-inset-top));
+  /* legacy aliases still referenced by page CSS / inline styles */
+  --bg: var(--color-background); --card: var(--color-card); --fg: var(--color-foreground); --muted: var(--color-muted-foreground);
+  --line: var(--color-border); --red: var(--color-primary); --red-dark: var(--color-primary-dark); --yellow: var(--color-accent);
+  --green: var(--color-success); --err: var(--color-destructive); --brand: var(--color-primary);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; overflow-x: hidden; overflow-x: clip; }
+/* qa3 #1: a focused field (Tab, Enter → next row, focus()) stops above the sticky bottom bar · tallest bar 111px (approve) + the home-bar inset */
+html:has(.sticky) { scroll-padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
+body {
+  margin: 0; padding: 0 var(--space-md) calc(var(--space-lg) + env(safe-area-inset-bottom));
+  font: 16px/1.5 var(--font-body); color: var(--color-foreground); background: var(--color-background);
+  overflow-x: hidden; overflow-x: clip; text-rendering: optimizeLegibility;
+}
+/* mock ก pages (settings · owner · history · approve · holiday owner): warm grouped ground, white rounded groups */
+body.grouped { background: var(--color-grouped); --glass-bg: rgba(244, 238, 234, .86); --glass-solid: var(--color-grouped); }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+a { color: var(--color-primary-dark); }
+b, strong { font-weight: 700; }
+code { font: 13px/1.4 ui-monospace, Menlo, monospace; background: var(--color-muted); padding: 2px 6px; border-radius: 6px; word-break: break-all; }
+
+/* ---------- topbar: sticky glass chrome, mascot, ink title, 2px soft-red rule at the bottom · content scrolls under ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  margin: 0 calc(-1 * var(--space-md)) var(--space-md); min-height: var(--chrome-h);
+  padding: calc(10px + env(safe-area-inset-top)) var(--space-md) 12px;
+  background: var(--glass-solid); color: var(--color-foreground);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  box-shadow: inset 0 -2px 0 var(--color-primary);
+}
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .topbar, .sticky { background: var(--glass-bg); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
+}
+/* segmented tabs live inside the chrome (owner · settings) so they stay reachable while the list scrolls */
+.topbar > .tabs { flex: 1 0 100%; margin: 0; background: rgba(120, 100, 92, .12); }
+.topbar:has(> .tabs:not([hidden])) { padding-bottom: 10px; }
+.topbar .logo { width: 40px; height: 40px; flex: none; display: block; }
+.topbar h1 { font: 600 19px/1.25 var(--font-head); margin: 0; color: var(--color-foreground); letter-spacing: -.01em; }
+.topbar .sub { font-size: 13px; line-height: 1.4; color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
+.topbar.home { padding-top: calc(16px + env(safe-area-inset-top)); padding-bottom: 18px; gap: 14px; margin-bottom: var(--space-lg); }
+.topbar.home .logo { width: 52px; height: 52px; }
+.topbar.home h1 { font-size: 21px; }
+.who { text-align: center; margin-top: var(--space-lg); white-space: pre-line; }
+.topbar .back {
+  width: 44px; height: 44px; margin-left: -8px; flex: none; border-radius: 50%;
+  display: grid; place-items: center; color: var(--color-foreground); background: transparent;
+  transition: background-color 160ms var(--ease-out), transform 160ms var(--ease-out);
+}
+.topbar .back:active { background: var(--color-fill); transform: scale(.94); }
+.topbar .back svg { width: 24px; height: 24px; }
+
+/* ---------- type ---------- */
+h1 { font: 600 22px/1.3 var(--font-head); margin: var(--space-sm) 0 var(--space-md); text-wrap: balance; }
+/* visual hierarchy 26 ต.ค.: a section heading is bold ink, one size everywhere, never paler than the words under it */
+h2 { font: 600 17px/1.35 var(--font-head); margin: var(--space-lg) 0 var(--space-sm); color: var(--color-foreground); }
+.card h2 { font: 600 17px/1.35 var(--font-head); margin: var(--space-md) 0 var(--space-sm); color: var(--color-foreground); }
+p { margin: var(--space-sm) 0; }
+.muted { color: var(--color-muted-foreground); font-size: 14px; }
+.num, input[type=number], td, .pill { font-variant-numeric: tabular-nums; }
+.err { color: var(--color-destructive); }
+.ok { color: var(--color-success); }
+
+/* message lines: success = green bar · error = red line with the fix · both 1 เรื่อง 1 บรรทัด */
+p.ok:not(:empty), p.err:not(:empty) {
+  position: relative; display: block; padding: 12px 14px 12px 44px; border-radius: var(--radius-sm);
+  font-weight: 500; font-size: 16px; white-space: pre-line; animation: msg-in 220ms var(--ease-out);
+}
+p.ok:not(:empty) { background: var(--tint-success); color: var(--color-success); }
+p.err:not(:empty) { background: var(--tint-destructive); color: var(--color-destructive); }
+p.ok:not(:empty)::before, p.err:not(:empty)::before {
+  content: ""; position: absolute; left: 14px; top: 14px; width: 20px; height: 20px; background: currentColor;
+  -webkit-mask: var(--i) center / contain no-repeat; mask: var(--i) center / contain no-repeat;
+}
+p.ok { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m8 12 3 3 5-6'/%3E%3C/svg%3E"); }
+p.err { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 7v6M12 16.5v.5'/%3E%3C/svg%3E"); }
+p.err .btn { margin: 12px 0 0 -30px; width: calc(100% + 30px); border-radius: var(--radius-sm); }
+p.err:has(.btn) { border-radius: var(--radius-lg); text-wrap: pretty; } /* qa3 #2 retry box: outer 18 = inner 10 + ~8 optical inset, never a rounder child */
+p.ok a, p.err a { color: inherit; font-weight: 700; }
+@keyframes msg-in { from { opacity: 0; transform: translateY(-4px); } }
+
+/* ---------- buttons ---------- */
+.btn {
+  position: relative; display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; min-height: var(--tap); padding: 12px 18px; margin: 12px 0;
+  font: 500 18px/1.3 var(--font-head); text-align: center; text-decoration: none;
+  color: var(--color-foreground); background: var(--color-fill);
+  border: 1.5px solid transparent; border-radius: var(--radius);
+  cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: manipulation;
+  transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out), color 160ms var(--ease-out), opacity 160ms var(--ease-out);
+}
+.btn svg { width: 22px; height: 22px; flex: none; }
+.btn:active { transform: scale(.97); background: var(--color-fill-pressed); }
+/* tonal red: a secondary action that moves you on (ดูเมื่อวาน · ดูที่ขาด) · never competes with the one solid red */
+.btn.tonal { color: var(--color-primary-dark); background: var(--tint-primary); }
+.btn.tonal:active { background: var(--tint-primary-pressed); }
+.btn.primary {
+  color: var(--color-on-primary); background: var(--color-primary) linear-gradient(180deg, #D02A31, var(--color-primary)); border-color: transparent;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 1px 2px rgba(158, 11, 35, .25), 0 6px 14px -6px rgba(158, 11, 35, .45);
+}
+.btn.primary:active { background: var(--color-primary-dark); box-shadow: 0 1px 2px rgba(158, 11, 35, .35); }
+.btn:disabled, .btn[aria-disabled=true] {
+  cursor: not-allowed; transform: none; color: var(--color-disabled-fg); background: var(--color-muted); border-color: transparent; box-shadow: none;
+}
+/* loading: the button that was just pressed keeps its colour and shows a spinner while #msg says "กำลัง…" */
+.btn:disabled:has(~ #msg.muted:not(:empty)) { color: transparent; opacity: 1; }
+.btn.primary:disabled:has(~ #msg.muted:not(:empty)) { background: var(--color-primary); }
+.btn:disabled:has(~ #msg.muted:not(:empty))::after {
+  content: ""; position: absolute; inset: 0; margin: auto; width: 22px; height: 22px; border-radius: 50%;
+  border: 2.5px solid var(--color-foreground); border-right-color: transparent; animation: spin 700ms linear infinite;
+}
+.btn.primary:disabled:has(~ #msg.muted:not(:empty))::after { border-color: var(--color-on-primary); border-right-color: transparent; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.btn.sm { display: inline-flex; width: auto; min-height: 44px; padding: 8px 16px; margin: var(--space-sm) var(--space-sm) 0 0; font-size: 16px; border-radius: var(--radius-field); }
+
+/* menu tiles (home) */
+.tile {
+  justify-content: flex-start; text-align: left; gap: 14px; min-height: 72px; padding: 12px 14px;
+  color: var(--color-foreground); background: var(--color-card); border-color: transparent; border-radius: var(--radius-card); box-shadow: var(--shadow-card); font-size: 19px;
+}
+.tile:active { transform: scale(.98); background: var(--color-card); box-shadow: var(--shadow-raised); }
+.tile .ico { width: 44px; height: 44px; flex: none; border-radius: 12px; display: grid; place-items: center; color: var(--color-primary); background: var(--tint-primary); }
+.tile .ico svg { width: 24px; height: 24px; }
+.tile .go { margin-left: auto; color: var(--color-chevron); }
+.tile .ico { background: var(--tint-icon); }
+/* next task: soft tint + red hairline, never a solid red block */
+.tile.primary { min-height: 80px; color: var(--color-foreground); background: var(--tint-primary); border-color: transparent; box-shadow: var(--shadow-card), inset 0 0 0 1px rgba(200, 33, 40, .18); }
+.tile.primary:active { background: var(--tint-primary-pressed); }
+.tile.primary .ico { color: var(--color-primary); background: var(--color-card); }
+.tile.primary .go { color: var(--color-primary); }
+.tile .t small { display: block; font: 400 13px/1.3 var(--font-body); color: var(--color-ink-soft); }
+
+/* ---------- surfaces ---------- */
+.card { position: relative; background: var(--color-card); border: 0; border-radius: var(--radius-card); padding: var(--space-md); margin: 12px 0; box-shadow: var(--shadow-card); }
+/* grouped pages: iOS inset groups · smaller radius, a whisper of shadow (the grey ground already separates) */
+body.grouped .card { border-radius: var(--radius); box-shadow: 0 1px 2px rgba(32, 24, 24, .05); }
+.card > :first-child { margin-top: 0; }
+.row { display: flex; gap: 12px; align-items: center; min-height: 56px; padding: 10px 0; border-bottom: .5px solid var(--color-separator); }
+.row:last-child { border-bottom: 0; }
+details summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+
+/* ---------- form controls ---------- */
+/* mock ข soft filled field: warm fill, no box border · the 1.5px bottom edge keeps a 3:1 boundary (audit 22 ต.ค.) */
+input[type=number], input[type=text], input[type=date], input[type=time], input[type=month], textarea, select {
+  font: 400 17px/1.4 var(--font-body); color: var(--color-foreground); width: 100%; min-height: var(--field);
+  padding: 10px 14px; background: var(--color-fill); border: 1px solid transparent; border-radius: var(--radius-field);
+  box-shadow: inset 0 -1.5px 0 var(--color-field-edge);
+  appearance: none; -webkit-appearance: none;
+  transition: background-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out), border-color 160ms var(--ease-out);
+}
+input[type=date], input[type=time], input[type=month] { display: block; text-align: left; }
+input::-webkit-date-and-time-value { text-align: left; }
+textarea { resize: vertical; min-height: 96px; }
+select {
+  padding-right: 40px; cursor: pointer;
+  background: var(--color-fill) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235C5450' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") right 12px center / 20px no-repeat;
+}
+::placeholder { color: var(--color-placeholder); opacity: 1; }
+input:focus, textarea:focus, select:focus { outline: none; background-color: var(--color-card); border-color: transparent; box-shadow: 0 0 0 2px var(--color-primary), 0 0 0 6px rgba(200, 33, 40, .14); }
+input:disabled, textarea:disabled, select:disabled { background-color: var(--color-muted); color: var(--color-muted-foreground); box-shadow: inset 0 -1px 0 var(--color-border-strong); }
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=time]::-webkit-calendar-picker-indicator, input[type=date]::-webkit-calendar-picker-indicator { opacity: .55; }
+
+/* field with a unit inside (บาท · % · วัน) · label sits above · the wrapper carries the fill */
+.in { position: relative; display: flex; align-items: center; min-height: var(--field); margin-top: 4px; border-radius: var(--radius-field); background: var(--color-fill);
+  box-shadow: inset 0 -1.5px 0 var(--color-field-edge); transition: background-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out); }
+.in > input { flex: 1; min-width: 0; margin: 0 !important; background: transparent; box-shadow: none; text-align: right; padding-right: 6px; }
+.in > input:focus { background: transparent; box-shadow: none; }
+.in:has(> input:focus) { background: var(--color-card); box-shadow: 0 0 0 2px var(--color-primary), 0 0 0 6px rgba(200, 33, 40, .14); }
+.in .sfx { flex: none; padding-right: 14px; font-size: 15px; font-weight: 400; color: var(--color-ink-soft); pointer-events: none; }
+input[type=checkbox] { width: 24px; height: 24px; accent-color: var(--color-primary); margin: 0; }
+label { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--color-ring); outline-offset: 2px; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; }
+
+/* field label stacked above its control */
+.field { display: block; font-size: 16px; font-weight: 500; color: var(--color-foreground); margin: var(--space-md) 4px 6px; }
+.field small { font-weight: 400; }
+.field + .in { margin-top: 0; }
+.in > input[type=number] { font-size: 18px; font-weight: 500; }
+/* 2-up field grid (settings · costs): label wraps its input so a tap on the words focuses the field */
+.g { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-top: 12px; }
+.g > label, .g > div > label { display: block; font-size: 15px; font-weight: 500; line-height: 1.35; color: var(--color-foreground); }
+.g > label > input, .g > label > select { margin-top: 4px; }
+.g > label:has(> .in) { display: flex; flex-direction: column; justify-content: flex-end; }
+
+/* ---------- status chips: icon + word, never colour alone ---------- */
+.pill {
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px 3px 8px; border-radius: var(--radius-pill); vertical-align: middle;
+  font: 500 13px/1.4 var(--font-body); white-space: nowrap; color: var(--color-muted-foreground); background: var(--tint-neutral);
+}
+.pill::before {
+  content: ""; width: 12px; height: 12px; flex: none; background: currentColor;
+  -webkit-mask: var(--pi) center / contain no-repeat; mask: var(--pi) center / contain no-repeat;
+  --pi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='5'/%3E%3C/svg%3E");
+}
+.pill:empty { display: none; }
+.pill[data-tone=ok] { color: var(--color-success); background: var(--tint-success); }
+.pill[data-tone=ok]::before { --pi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E"); }
+.pill[data-tone=wait] { color: var(--on-wait); background: var(--tint-wait); }
+.pill[data-tone=wait]::before { --pi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='7'/%3E%3C/svg%3E"); }
+.pill[data-tone=bad] { color: var(--color-destructive); background: var(--tint-destructive); }
+.pill[data-tone=bad]::before { --pi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round'%3E%3Cpath d='M12 4v10M12 19.5v.5'/%3E%3C/svg%3E"); }
+
+/* ---------- sticky bottom action (one primary CTA) ---------- */
+.sticky {
+  position: sticky; bottom: 0; z-index: 5; margin: var(--space-lg) calc(-1 * var(--space-md)) 0;
+  padding: 12px var(--space-md) calc(12px + env(safe-area-inset-bottom));
+  background: var(--glass-solid); border-top: .5px solid var(--color-separator);
+}
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) { .sticky { box-shadow: inset 0 1px 0 var(--glass-edge); } }
+@media (prefers-reduced-transparency: reduce) {
+  .topbar, .sticky { background: var(--glass-solid) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+}
+.sticky .btn { margin: 0; }
+.sticky p { margin-bottom: 0; }
+
+/* ---------- tabs (segmented) ---------- */
+.tabs { display: flex; gap: 2px; padding: 3px; margin: 0 0 var(--space-md); background: var(--color-fill); border-radius: var(--radius); }
+.tabs button {
+  flex: 1; min-height: 44px; padding: 6px 4px; font: 500 16px/1.2 var(--font-head); color: var(--color-ink-soft);
+  background: transparent; border: 0; border-radius: 11px; cursor: pointer; white-space: nowrap;
+  transition: background-color 180ms var(--ease-out), color 180ms var(--ease-out), box-shadow 180ms var(--ease-out), transform 160ms var(--ease-out);
+}
+.tabs button.on { color: var(--color-foreground); background: var(--color-card); box-shadow: var(--shadow-raised); }
+.tabs button:active { transform: scale(.97); }
+
+/* ---------- photo picker / file label ---------- */
+label.btn input[type=file] { display: none; }
+
+/* ---------- tables ---------- */
+table { width: 100%; border-collapse: collapse; }
+td, th { padding: 12px 2px; border-bottom: .5px solid var(--color-separator); text-align: left; vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td + td, th + th { text-align: right; }
+
+/* ---------- page patterns ---------- */
+.grow { flex: 1; min-width: 0; }
+.list { padding-top: 4px; padding-bottom: 4px; }
+.list > p { margin: 10px 0; }
+.kv { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; color: var(--color-ink-soft); }
+.kv > span:first-child { white-space: nowrap; }
+.kv b { color: var(--color-foreground); font-weight: 500; text-align: right; }
+.day-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.day-head .date { font: 500 20px/1.3 var(--font-head); }
+.day .kv { justify-content: flex-start; gap: 20px; }
+.order-head .pill { margin-bottom: 6px; }
+.preview { background: var(--color-fill); box-shadow: none; }
+.stat { font-weight: 500; line-height: 1.6; }
+p.ok.big:not(:empty) { font: 500 20px/1.4 var(--font-head); padding: 18px 16px; }
+.steps p { margin: 0; } .steps p + p { margin-top: 2px; }
+.empty { text-align: center; padding: var(--space-xl) var(--space-md) var(--space-md); color: var(--color-muted-foreground); }
+.empty p:first-of-type { font: 500 18px/1.4 var(--font-head); color: var(--color-foreground); }
+.empty p { margin: 2px 0; }
+
+/* ---------- mock ก · grouped list (settings): label left · value right · inset hairlines · header/footer hints ---------- */
+body.grouped h2:not(.card h2, .panel h2, .cal-nav h2) { margin: 26px 16px 8px; font: 600 17px/1.35 var(--font-head); color: var(--color-foreground); }
+.gl { position: relative; margin: 0; padding: 0; background: var(--color-card); border-radius: var(--radius); overflow: hidden; box-shadow: 0 1px 2px rgba(32, 24, 24, .05); }
+.gl + .gl, .gl + .person, .person + .gl, .person + .person { margin-top: 12px; }
+/* on the grey ground the warm fill disappears → loose fields and tonal buttons sit on white instead */
+body.grouped :is(input[type=text], input[type=number], input[type=date], input[type=month], select, textarea):not(:is(.card, .gl, .bsheet, .panel, .in) *) { background-color: var(--color-card); }
+body.grouped .btn:not(.primary, .tonal, .go):not(:is(.card, .bsheet, .panel) *) { background-color: var(--color-card); box-shadow: var(--shadow-raised); }
+body.grouped .btn:not(.primary, .tonal, .go):not(:is(.card, .bsheet, .panel) *):active { background-color: var(--color-fill-pressed); }
+.gf { margin: 7px 16px 0; font-size: 14px; line-height: 1.45; color: var(--color-ink-soft); text-wrap: pretty; }
+.gf span { display: block; }
+.cell {
+  position: relative; display: flex; align-items: center; gap: 12px; min-height: var(--tap); padding: 8px 16px; margin: 0;
+  font: 400 17px/1.35 var(--font-body); color: var(--color-foreground); background: var(--color-card); transition: background-color 120ms var(--ease-out);
+}
+.cell + .cell::before { content: ""; position: absolute; top: 0; right: 0; left: var(--sep, 16px); height: .5px; background: var(--color-separator); }
+.cell .k { flex: 1 1 auto; min-width: 0; }
+.cell .k small { display: block; font-size: 13px; line-height: 1.35; color: var(--color-ink-soft); }
+.cell .v { flex: none; color: var(--color-secondary); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cell .unit { flex: none; color: var(--color-secondary); }
+.cell.nav .k { flex: none; }
+.cell.nav .v { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.cell input[type=date] { min-width: 132px; }
+.cell .chev { width: 18px; height: 18px; flex: none; margin-right: -4px; color: var(--color-chevron); }
+.cell .name { font-weight: 500; }
+/* value edited in place: borderless, right-aligned, no field box (the row is the field) */
+.cell input[type=text], .cell input[type=number] {
+  flex: 1 1 0; min-width: 0; min-height: 44px; padding: 6px 0; border: 0; border-radius: 0; background: transparent; box-shadow: none;
+  font: 400 17px/1.35 var(--font-body); color: var(--color-secondary); text-align: right;
+}
+.cell input.num-in { flex: none; width: 84px; }
+/* L10: every value edited in the row sits on the field fill like the date and time boxes, so it reads as editable */
+.cell input[type=text], .cell input[type=number] { min-height: 36px; padding: 5px 12px; border-radius: 8px; background: var(--color-fill); }
+.cell input[type=text]:focus, .cell input[type=number]:focus { background: var(--tint-primary); box-shadow: none; color: var(--color-foreground); }
+.cell:has(input:focus-visible, select:focus-visible) { box-shadow: inset 3px 0 0 var(--color-primary); }
+.cell input[type=time], .cell input[type=date] {
+  flex: none; width: auto; min-height: 36px; padding: 5px 12px; border: 0; border-radius: 8px; background: var(--color-fill); box-shadow: none;
+  font: 500 17px/1.3 var(--font-body); font-variant-numeric: tabular-nums; color: var(--color-foreground);
+}
+.cell input[type=time]::-webkit-calendar-picker-indicator { display: none; }
+.cell input[type=time]:focus, .cell input[type=date]:focus { color: var(--color-primary-dark); background: var(--tint-primary); box-shadow: none; }
+/* picker row: the whole row is the tap target, the native select sits invisible on top */
+.cell.nav select { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; margin: 0; padding: 0; opacity: 0; border: 0; cursor: pointer; }
+.cell.nav:active, .cell.act:active { background: var(--color-fill-pressed); }
+/* action rows: tinted text, no box */
+.cell.act { width: 100%; border: 0; border-radius: 0; text-align: left; cursor: pointer; font-weight: 500; color: var(--color-primary); }
+.cell.act .ic { width: 30px; height: 30px; flex: none; border-radius: 8px; display: grid; place-items: center; color: var(--color-on-primary); background: var(--color-primary); }
+.cell.act .ic svg { width: 17px; height: 17px; }
+.cell.act.danger { justify-content: center; color: var(--color-destructive); }
+.cell.act:disabled { color: var(--color-disabled-fg); cursor: default; }
+.cell .txt-btn { flex: none; min-height: 44px; min-width: 44px; text-align: right; padding: 0 0 0 12px; border: 0; background: none; cursor: pointer; font: 500 17px/1 var(--font-body); color: var(--color-primary); }
+.cell .txt-btn:active { opacity: .55; }
+.cell.dim .name { color: var(--color-muted-foreground); }
+.cell.has-av { --sep: 64px; }
+.cell + .cell.has-av::before { left: 64px; }
+.av { width: 36px; height: 36px; flex: none; border-radius: 50%; display: grid; place-items: center; font: 500 16px/1 var(--font-head); color: var(--color-primary-dark); background: var(--tint-primary); }
+.av.off { color: var(--color-muted-foreground); background: var(--color-fill); }
+
+/* ---------- bento: overview surfaces only (staff home · owner day · costs) · 2 columns, one clear number per tile ---------- */
+.bento { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: dense; gap: 12px; margin: 0 0 12px; }
+.bt {
+  position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 4px; min-width: 0; min-height: 76px; margin: 0;
+  padding: 14px 16px; border: 0; border-radius: var(--radius-card); background: var(--color-card); box-shadow: var(--shadow-card);
+  color: var(--color-foreground); text-align: left; text-decoration: none; font: inherit; -webkit-user-select: none; user-select: none;
+  transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out), background-color 160ms var(--ease-out);
+}
+a.bt, button.bt { cursor: pointer; touch-action: manipulation; }
+a.bt:active, button.bt:active { transform: scale(.97); box-shadow: var(--shadow-raised); }
+.bt.wide { grid-column: 1 / -1; }
+.bt.tall { grid-row: span 3; }
+.bt h2.k { margin: 0 0 2px; }
+.bt .k { display: flex; align-items: center; gap: 6px; font: 500 14px/1.35 var(--font-head); color: var(--color-ink-soft); }
+.bt .v { font: 600 22px/1.2 var(--font-head); letter-spacing: -.01em; font-variant-numeric: tabular-nums; text-wrap: balance; }
+.bt .v small { font: 500 15px/1.2 var(--font-head); letter-spacing: 0; color: var(--color-ink-soft); }
+.bt .m { font-size: 13px; line-height: 1.4; color: var(--color-ink-soft); font-variant-numeric: tabular-nums; text-wrap: pretty; }
+.bt .go { position: absolute; top: 14px; right: 12px; width: 20px; height: 20px; color: var(--color-chevron); }
+.bt.ok .v { color: var(--color-success); }
+.bt.bad .v { color: var(--color-destructive); }
+.bt.wait .v { color: var(--on-wait); }
+/* status dot before the label: colour + word, never colour alone */
+.bt .dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--color-chevron); }
+.bt.ok .dot { background: var(--color-success); } .bt.bad .dot { background: var(--color-destructive); } .bt.wait .dot { background: var(--color-wait-mark); } .bt.now .dot { background: var(--color-primary); }
+.bt.now .v { color: var(--color-primary); }
+/* hero tile: the one thing to do next · soft red ground, number/word large */
+.bt.hero { justify-content: flex-start; background: var(--tint-primary); box-shadow: var(--shadow-card), inset 0 0 0 1px rgba(200, 33, 40, .14); }
+.bt.hero .k { color: var(--color-primary-dark); }
+.bt.hero .v { margin-top: auto; font-size: 30px; line-height: 1.15; }
+.bt.hero .big { font: 600 48px/1 var(--font-head); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.bt.hero .ico { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; color: var(--color-primary); background: var(--color-card); box-shadow: var(--shadow-raised); }
+.bt.hero .ico svg { width: 24px; height: 24px; }
+.bt.hero .go { color: var(--color-primary); }
+.bt.hero.calm { background: var(--tint-success); box-shadow: var(--shadow-card), inset 0 0 0 1px rgba(46, 125, 50, .16); }
+.bt.hero.calm .k, .bt.hero.calm .v { color: var(--color-success); }
+.bt.hero.calm .ico { color: var(--color-success); }
+/* a list living in a wide tile (เรื่องของฉัน) */
+.bt.list { padding-top: 12px; padding-bottom: 4px; justify-content: flex-start; }
+.bt.list .row { padding-left: 0; padding-right: 0; }
+.bt.list .row:last-child { border-bottom: 0; }
+.bt.list > h2.k { margin: 2px 0 4px; font: 600 17px/1.35 var(--font-head); color: var(--color-foreground); }
+@media (max-width: 359px) { .bento { gap: 8px; } .bt { padding: 12px; } .bt.hero .v { font-size: 26px; } .bt.hero .big { font-size: 40px; } }
+
+/* trio (Mos 23 ต.ค. รอบ 2): 3 small status tiles in one row of equal width (staff home · owner day) · no decorative tiles */
+.bento.trio { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.trio > .bt:not(.wide) { justify-content: flex-start; gap: 3px; min-height: 0; padding: 11px 10px 12px 12px; border-radius: 16px; }
+.trio > .bt:not(.wide) .k { gap: 5px; font-size: 13px; }
+.trio > .bt:not(.wide) .v { font-size: 17px; line-height: 1.25; letter-spacing: 0; }
+.trio > .bt:not(.wide) .v small { font-size: 13px; }
+.trio > .bt:not(.wide) .v { overflow-wrap: break-word; } /* visual hierarchy rule 3: a tile value is one line at normal size · r3 #20: at big text the unit wraps to the next line, never … on the number */
+.trio > .bt:not(.wide) .m { font-size: 12px; line-height: 1.35; }
+.trio > .bt.wide:first-child { margin-bottom: 2px; }
+/* lead: the one next task across the top · as tall as its words, still the biggest thing on the screen */
+.bt.lead { flex-direction: row; align-items: center; gap: 14px; padding: 16px 14px 16px 16px; }
+.bt.lead .tx { display: flex; flex: 1; flex-direction: column; gap: 1px; min-width: 0; }
+.bt.lead .v { margin-top: 0; font-size: 28px; line-height: 1.2; }
+.bt.lead .go { position: static; flex: none; width: 22px; height: 22px; }
+@media (max-width: 359px) { .trio > .bt:not(.wide) { padding: 10px 8px 10px 10px; } .trio > .bt:not(.wide) .v { font-size: 16px; } .bt.lead .v { font-size: 24px; } }
+
+/* ---------- skeleton (รอบ 2): grey shimmer shapes inside the page's own boxes while LIFF + data load ----------
+   CSS only: a .sk block hides itself the moment a later sibling marked .ld is shown with something in it */
+.sk:has(~ .ld:not([hidden]):not(:empty)), body:has(#blocked:not([hidden])) .sk { display: none !important; }
+.ld:empty { display: none; }
+/* real content eases in where the grey shapes were (same boxes, so only opacity moves) · #app and tabs hold skeletons themselves */
+.ld:not(#app, .tabs) { animation: msg-fade 180ms var(--ease-out); }
+.sk-b {
+  display: block; flex: none; width: var(--w, 100%); height: var(--h, 14px); border-radius: var(--r, 7px);
+  background: #ECE4DF linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .65) 50%, transparent 70%) 150% 0 / 250% 100% no-repeat;
+  animation: sk-shine 1.5s linear 10; /* ponytail: stops after 15 s so a stuck load doesn't look busy forever */
+}
+.sk-b + .sk-b { margin-top: var(--gap, 8px); }
+.sk-row { display: flex; align-items: center; gap: 10px; }
+.sk-row > .sk-b + .sk-b { margin-top: 0; }
+@keyframes sk-shine { to { background-position: -50% 0; } }
+/* on the grey grouped ground a bar needs a darker grey to show (inside white cards the default is enough) */
+body.grouped .sk-b:not(:is(.card, .gl, .bt, .sheet, .todo) *) { background-color: #E2D7D1; }
+.tabs.sk { pointer-events: none; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- mascot moments (รอบ 2): done screens + empty lists · small and warm, never a cartoon takeover ---------- */
+.mascot { display: block; width: 80px; height: 80px; margin: 0 auto; }
+.mascot.sm { width: 56px; height: 56px; }
+.mascot > img { display: block; width: 100%; height: 100%; }
+/* done screens: the mascot wears a green tick so "done" never reads like "empty" */
+.ok-badge { position: relative; }
+.ok-badge::after {
+  content: ""; position: absolute; right: -4px; bottom: -2px; width: 30px; height: 30px; border-radius: 50%; box-shadow: 0 0 0 3px var(--color-background);
+  background: var(--color-success) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 16px no-repeat;
+}
+/* done: message in the upper middle, actions pinned to the thumb zone (iOS "all set" screens) */
+.done { display: flex; flex-direction: column; min-height: calc(100vh - var(--chrome-h) - 40px - env(safe-area-inset-bottom)); min-height: calc(100dvh - var(--chrome-h) - 40px - env(safe-area-inset-bottom)); padding-top: 8vh; text-align: center; }
+.done .mascot { margin-bottom: 16px; animation: mascot-in 360ms var(--ease-out) both; }
+.done h2 { margin: 0; font: 600 24px/1.3 var(--font-head); text-wrap: balance; }
+.done p { margin: 6px 0 0; font-size: 16px; line-height: 1.45; color: var(--color-ink-soft); white-space: pre-line; font-variant-numeric: tabular-nums; text-wrap: pretty; }
+.done p:empty { display: none; }
+.done p.warm { margin-top: 12px; color: var(--color-foreground); }
+.done .acts { margin-top: auto; padding-top: 24px; text-align: left; }
+.done .acts .btn { margin: 0 0 8px; }
+/* with a next-task button above it, "กลับหน้าหลัก" steps back to a quiet text button (one strong action) */
+.done #next:not(:empty) + .home { background: none; color: var(--color-ink-soft); }
+.done #next:not(:empty) + .home:active { background: var(--color-fill); }
+.empty .mascot { margin-bottom: 12px; }
+.empty.tight { padding: 14px 16px 6px; }
+@keyframes mascot-in { from { opacity: 0; transform: scale(.92) translateY(6px); filter: blur(4px); } }
+/* the tick lands just after the mascot: a small, quick "done" beat (3 times a day · no bounce) */
+.done .ok-badge::after { animation: badge-in 240ms 200ms var(--ease-out) both; }
+@keyframes badge-in { from { opacity: 0; transform: scale(.4); } }
+.empty p { text-wrap: balance; }
+
+/* denied: centered message under the mascot */
+.hero-msg { text-align: center; padding-top: var(--space-md); }
+.hero-msg > img { width: 120px; height: 120px; display: block; margin: 0 auto var(--space-sm); }
+.hero-msg > p { margin: 2px 0; font-size: 17px; }
+.id-card { text-align: left; margin-top: var(--space-lg); }
+.id-card .row { justify-content: space-between; min-height: 48px; }
+
+/* stock sheets (receive · close): name left, numbers right, sticky column header */
+.sheet { background: var(--color-card); border: 0; border-radius: var(--radius-card); padding: 0 12px; box-shadow: var(--shadow-card); }
+.sheet-head {
+  position: sticky; top: calc(var(--chrome-h) - 2px); z-index: 3; margin: 0 -12px; padding: 10px 12px 8px !important; min-height: 0 !important;
+  background: var(--color-card); border-radius: var(--radius-card) var(--radius-card) 0 0; border-bottom: .5px solid var(--color-separator) !important;
+  box-shadow: 0 6px 8px -8px rgba(32, 24, 24, .25);
+}
+.sheet-head > div:not(:first-child) { text-align: center; }
+.sheet-head, .sheet-head .meta { color: var(--color-foreground); font-weight: 600; } /* column headers outrank the grey caption in each row */
+.meta { font-size: 13px; line-height: 1.35; color: var(--color-ink-soft); font-weight: 500; font-variant-numeric: tabular-nums; }
+.nm { font-size: 17px; font-weight: 500; line-height: 1.35; min-width: 0; }
+.nm .meta { font-weight: 400; margin-top: 2px; }
+/* long names ("น่องสะโพกทอดน้ำปลา") split into two even lines instead of leaving one word alone */
+.sheet .nm { text-wrap: balance; }
+.it, .grid { display: grid; gap: 6px; align-items: center; min-height: 68px; padding: 8px 0; border-bottom: .5px solid var(--color-separator); }
+.sheet .it:last-child, .sheet .grid:last-child { border-bottom: 0; }
+.sheet .it { grid-template-columns: 1fr 52px 92px; gap: 8px; }
+.sheet .it .ord { text-align: center; font-size: 18px; color: var(--color-muted-foreground); font-variant-numeric: tabular-nums; }
+.sheet .grid { grid-template-columns: minmax(0, 1fr) 54px 54px 50px; }
+.it input, .grid input { min-height: var(--field); padding: 8px 2px; text-align: center; font-size: 18px; font-weight: 500; border-radius: 10px; }
+.grid input::placeholder { color: var(--color-placeholder); font-weight: 400; }
+/* a row with "เหลือสด" filled: a green tick pops in at the row end (round 3 ก2 · the name no longer shifts right) */
+.sheet .grid:not(.sheet-head) { position: relative; } /* the column header stays sticky */
+.sheet .grid::after {
+  content: ""; position: absolute; right: -8px; top: 1px; width: 20px; height: 20px; border-radius: 50%; opacity: 0; transform: scale(.4); pointer-events: none;
+  background: var(--color-success) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 12px no-repeat;
+  box-shadow: 0 0 0 2px var(--color-card); transition: opacity 120ms var(--ease-out), transform 200ms var(--ease-spring);
+}
+.sheet .grid:has(.rf:not(:placeholder-shown))::after { opacity: 1; transform: none; }
+.grid:has(.rf:not(:placeholder-shown)) .rf { background-color: var(--tint-filled); box-shadow: inset 0 -1.5px 0 var(--color-success); }
+/* 0057: a สุกอย่างเดียว row (ข้าวเหนียวห่อ) is filled by its สุก box */
+.sheet .grid[data-cols=cooked]:has(.rc:not(:placeholder-shown))::after { opacity: 1; transform: none; }
+.grid[data-cols=cooked]:has(.rc:not(:placeholder-shown)) .rc { background-color: var(--tint-filled); box-shadow: inset 0 -1.5px 0 var(--color-success); }
+
+/* consumables: name on its own line, 3-way segmented status under it */
+.row.cons { flex-wrap: wrap; gap: 8px; padding: 12px 0; }
+.row.cons .grow { flex-basis: 100%; font-weight: 500; }
+.seg { display: flex; gap: 6px; flex: 1 1 100%; }
+.seg button {
+  flex: 1; min-height: 44px; padding: 6px 4px; font: 500 16px/1.2 var(--font-body); color: var(--color-ink-soft);
+  background: var(--color-fill); border: 1.5px solid transparent; border-radius: var(--radius-field); cursor: pointer;
+  transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), color 160ms var(--ease-out), transform 120ms var(--ease-out);
+}
+.seg button:active { transform: scale(.96); }
+.seg button.on-ok { color: var(--color-success); background: var(--tint-success); border-color: var(--border-ok); }
+.seg button.on-low { color: var(--on-wait); background: var(--tint-wait); border-color: var(--border-wait); }
+.seg button.on-out { color: var(--color-destructive); background: var(--tint-destructive); border-color: var(--border-bad); }
+
+/* narrow phones (iPhone SE 1st gen · 320px) */
+@media (max-width: 359px) {
+  .sheet .grid { grid-template-columns: 1fr 50px 50px 44px; gap: 4px; }
+  .sheet .it { grid-template-columns: 1fr 44px 80px; }
+  .nm { font-size: 16px; }
+  .tabs button { font-size: 14px; padding: 6px 2px; }
+  .topbar .back { margin-left: -8px; }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn:not(:disabled):hover { background-color: var(--color-fill-pressed); }
+  .btn.tonal:not(:disabled):hover { background-color: var(--tint-primary-pressed); }
+  .btn.primary:not(:disabled):hover { background: var(--color-primary-dark); }
+  .tabs button:not(.on):hover, .seg button:hover { color: var(--color-foreground); }
+  .topbar .back:hover { background: var(--color-muted); }
+}
+
+/* ---------- round 3 (Mos 23 ต.ค.): press feel · toast · shake · number roll · count badge ---------- */
+/* ก1 every button: press = scale .97 + a touch darker (80ms) · release springs back (200ms) · list rows keep their highlight instead */
+:is(button, .btn, .tile, a.bt, .chip):not(:disabled, .prow, .cell, .fold, .row) {
+  transition-property: transform, filter, background-color, box-shadow, color, opacity, border-color;
+  transition-duration: 200ms, 160ms, 160ms, 160ms, 160ms, 160ms, 160ms;
+  transition-timing-function: var(--ease-spring), var(--ease-out), var(--ease-out), var(--ease-out), var(--ease-out), var(--ease-out), var(--ease-out);
+}
+:is(button, .btn, .tile, a.bt, .chip):not(:disabled, .prow, .cell, .fold, [aria-disabled=true]):active {
+  transform: scale(.97); filter: brightness(.95); transition-duration: 80ms; transition-timing-function: var(--ease-out);
+}
+/* ก4 bottom toast (UXM.toast) · dark pill, white text, yellow "เลิกทำ" */
+.ux-toast {
+  position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 60; max-width: 448px; margin: 0 auto;
+  display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 4px 4px 4px 18px; border-radius: 16px;
+  background: #201818; color: #fff; font: 500 16px/1.4 var(--font-body); box-shadow: 0 10px 28px -8px rgba(32, 24, 24, .45);
+  opacity: 0; transform: translateY(calc(100% + 24px)); pointer-events: none; transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out); /* exit: quieter than the way in */
+}
+.ux-toast.on { opacity: 1; transform: none; pointer-events: auto; transition-duration: 200ms; }
+.ux-toast span { flex: 1; min-width: 0; padding: 10px 0; text-wrap: pretty; }
+.ux-toast button { flex: none; min-height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: rgba(255, 255, 255, .12); color: var(--color-accent); font: 600 16px/1 var(--font-head); cursor: pointer; }
+/* ก5 missing field: one short shake (UXM.shake) */
+.ux-shake { animation: ux-shake 200ms var(--ease-out); }
+@keyframes ux-shake { 20% { transform: translateX(-6px); } 45% { transform: translateX(5px); } 70% { transform: translateX(-3px); } 90% { transform: translateX(1px); } }
+/* ก3 number roll: inputs slide their text (padding), other text slides the box */
+input.roll-up { animation: roll-in-up 180ms var(--ease-out); }
+input.roll-dn { animation: roll-in-dn 180ms var(--ease-out); }
+@keyframes roll-in-up { from { padding-top: 26px; padding-bottom: 0; color: transparent; } }
+@keyframes roll-in-dn { from { padding-top: 0; padding-bottom: 26px; color: transparent; } }
+:not(input).roll-up { display: inline-block; animation: roll-box-up 180ms var(--ease-out); }
+@keyframes roll-box-up { from { opacity: 0; transform: translateY(6px); } }
+/* ข small red count next to a heading */
+.ux-badge { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--color-primary); color: #fff; font: 600 12px/1 var(--font-body); font-variant-numeric: tabular-nums; vertical-align: 1px; }
+
+/* reduced motion: keep fades and colour changes, drop movement */
+@media (prefers-reduced-motion: reduce) {
+  .btn:active, .tile:active, .tabs button:active, .seg button:active, .topbar .back:active, a.bt:active, button.bt:active { transform: none; }
+  .sheet .grid::after { transform: none; }
+  :is(button, .btn, .tile, a.bt, .chip):not(:disabled, .prow, .cell, .fold, .row):active { transform: none; }
+  .ux-toast { transform: none; }
+  .ux-shake { animation: ux-flash 200ms ease-out; }
+  input.roll-up, input.roll-dn, :not(input).roll-up { animation: msg-fade 150ms ease-out; }
+  p.ok:not(:empty), p.err:not(:empty) { animation-name: msg-fade; }
+  .btn:disabled:has(~ #msg.muted:not(:empty))::after { animation-duration: 1.4s; }
+  .sk-b { animation: none; }
+  .done .mascot { animation-name: msg-fade; }
+  .done .ok-badge::after { animation-name: msg-fade; }
+}
+@keyframes msg-fade { from { opacity: 0; } }
+@keyframes ux-flash { 50% { background-color: var(--tint-destructive); } }
+
+/* ---------- photo thumbnails (Photo.picker): 80px squares, ✕ has a 44px hit area, tap = full screen ---------- */
+/* design 1 พ.ย. (Mos "เก้ๆ ไม่สวย"): one row that scrolls sideways · 104×84 tiles (3 fit at 375px) · the last tile is "+ ถ่ายเพิ่ม" · padding keeps the ✕ unclipped */
+.thumbs { display: flex; gap: 10px; margin: 0 0 2px; padding: 14px 14px 4px 0; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; }
+.thumbs::-webkit-scrollbar { display: none; }
+.thumbs:empty { display: none; }
+.thumb { flex: none; position: relative; width: 104px; height: 84px; scroll-snap-align: start; }
+.thumb.add { display: grid; place-content: center; justify-items: center; gap: 2px; border-radius: var(--radius-sm); background: var(--color-fill); box-shadow: inset 0 0 0 1.5px var(--color-field-edge); font: 500 14px/1.2 var(--font-body); color: var(--color-primary-dark); cursor: pointer; touch-action: manipulation; }
+.thumb.add span { font: 400 30px/1 var(--font-head); }
+.thumb.add:active { background: var(--color-fill-pressed); }
+.thumb .see { display: block; width: 100%; height: 100%; padding: 0; border: 0; outline: 1px solid rgba(0, 0, 0, .1); outline-offset: -1px; border-radius: var(--radius-sm); overflow: hidden; background: var(--color-muted); cursor: zoom-in; }
+.thumb .see img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb .x { position: absolute; top: -14px; right: -14px; width: 44px; height: 44px; padding: 0; border: 0; background: none; display: grid; place-items: center; cursor: pointer; }
+.thumb .x span { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--color-foreground); color: #fff; font-size: 13px; line-height: 1; box-shadow: 0 0 0 2px #fff; }
+.thumb .x:active span { background: var(--color-primary-dark); }
+.photo-view { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, .92); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+.photo-view img { max-width: 100%; max-height: calc(100% - 48px); object-fit: contain; }
+.photo-view p { color: #fff; margin: 12px 0 0; font-size: 15px; text-align: center; }
+/* design 1 พ.ย.: swipe between the photos of one group (scroll-snap) · "2 / 5" counter */
+.photo-view .pv-track { flex: 1; min-height: 0; width: 100%; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; }
+.photo-view .pv-track::-webkit-scrollbar { display: none; }
+.photo-view .pv-slide { flex: 0 0 100%; height: 100%; scroll-snap-align: center; }
+.photo-view .pv-slide img { width: 100%; height: 100%; max-height: none; object-fit: contain; }
+.photo-view .pv-n { font-variant-numeric: tabular-nums; }
+
+/* round 6: a page the signed-in role can't use → only the header + one block (UXS.only) */
+body.ux-only > :not(.topbar, .ux-block, .ux-toast, script, style, dialog) { display: none !important; }
+/* make-interfaces-feel-better round 6: the blocked block arrives softly (opacity + 6px), no motion when reduced */
+.ux-block { transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out); text-wrap: balance; }
+@starting-style { .ux-block { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) { .ux-block { transition: none; } }
+
+/* photo buttons the routine expects (Photo.picker need:true) · red stays the one primary CTA, so state shows as outline + tag:
+   missing = soft red edge + red icon · next to press = red ring on pink · taken = green */
+label.btn.ux-need { box-shadow: inset 0 0 0 1.5px var(--border-bad); }
+label.btn.ux-need svg { color: var(--color-primary); }
+label.btn.ux-need.ux-next { background: var(--tint-primary); box-shadow: inset 0 0 0 2px var(--color-primary); color: var(--color-primary-dark); }
+label.btn.ux-need.ux-got { background: var(--tint-success); box-shadow: inset 0 0 0 1.5px var(--border-ok); }
+label.btn.ux-need.ux-got svg { color: var(--color-success); }
+.ux-tag { flex: none; margin-left: 8px; padding: 4px 9px; border-radius: var(--radius-pill); font: 600 12px/1.1 var(--font-head); color: #fff; background: var(--color-primary); white-space: nowrap; }
+label.btn.ux-got .ux-tag { background: var(--color-success); }
+/* one line always: label + tag never wrap; on the narrowest phones (SE 320) text and tag step down a little */
+label.btn.ux-need { white-space: nowrap; }
+@media (max-width: 359px) {
+  label.btn.ux-need { font-size: 15px; padding-inline: 12px; }
+  label.btn.ux-need svg { width: 20px; height: 20px; }
+  .ux-tag { margin-left: 6px; padding: 3px 7px; font-size: 11px; }
+}
+
+/* Mos 26 ต.ค.: Thai text over a native date box (UXM.dateTh) · the phone's own picker opens on tap, its English value is hidden */
+.th-date { position: relative; display: flex; padding: 0 !important; margin: 0 !important; } /* the box is exactly the input, so the Thai text lands on it */
+.cell .th-date { flex: none; }
+.th-date > input { color: transparent !important; -webkit-text-fill-color: transparent; }
+.th-date > b { position: absolute; top: 0; bottom: 0; left: 0; display: flex; align-items: center; width: max-content; max-width: 100%; font: 500 17px/1.3 var(--font-body); font-variant-numeric: tabular-nums; color: var(--color-foreground); white-space: nowrap; pointer-events: none; }
+.th-date.empty > b { color: var(--color-ink-soft); font-weight: 400; }
+
+/* ---------- visual hierarchy (Mos 26 ต.ค. 2026 · same grammar as LINE cards headings-v2) ----------
+   1 section heading = bold ink (h2 above) · 2 a short tone bar on the left, the count right-aligned on the heading line (.n) ·
+   tone: data-tone="bad" act now · "wait" check · "ok" fine · none = grey (info) · skeleton headings and headings with buttons (.cal-nav) skip the bar */
+:is(body.grouped h2:not(.card h2, .panel h2, .cal-nav h2, .done h2, .ux-sysh h2), .card > h2, h3.sec, .ux-gh, .ux-week, .bt.list > h2.k, .sh, h3.ux-cat):not(:has(.sk-b)) {
+  display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; text-wrap: balance;
+}
+:is(body.grouped h2:not(.card h2, .panel h2, .cal-nav h2, .done h2, .ux-sysh h2), .card > h2, h3.sec, .ux-gh, .ux-week, .bt.list > h2.k, .sh, h3.ux-cat):not(:has(.sk-b))::before {
+  content: ""; flex: none; width: 4px; height: 16px; border-radius: 2px; background: var(--tone, var(--sh-bar));
+}
+:is(h2, h3, .sh) > .n { margin-left: auto; padding-left: 12px; font: 500 15px/1.3 var(--font-body); color: var(--tone-ink, var(--color-ink-soft)); white-space: nowrap; font-variant-numeric: tabular-nums; }
+[data-tone=bad]:is(h2, h3, .sh) { --tone: var(--color-destructive); --tone-ink: var(--color-destructive); }
+[data-tone=wait]:is(h2, h3, .sh) { --tone: var(--color-wait-mark); --tone-ink: var(--on-wait); }
+[data-tone=ok]:is(h2, h3, .sh) { --tone: var(--color-success); --tone-ink: var(--color-success); }
+[data-tone]:is(h2, h3, .sh) > .n { font-weight: 700; }
+
+/* ---------- visual hierarchy round 2 (Mos 26 ต.ค. 2026): form fields read as numbered steps ----------
+   waste · issue: each field opens with a dark bold heading and its number, its photo button sits inside the same group,
+   space above a heading (24px) is wider than inside a group (8px) · .fhint = the page's one short how-to line */
+.fhint { margin: 0 4px 4px; font-size: 15px; line-height: 1.4; color: var(--color-ink-soft); text-wrap: pretty; }
+.fstep { display: flex; align-items: center; gap: 10px; margin: 24px 2px 8px; font: 600 18px/1.35 var(--font-head); color: var(--color-foreground); text-wrap: balance; }
+.fstep > i { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font: 600 14px/1 var(--font-head); font-style: normal; color: #fff; background: var(--color-foreground); font-variant-numeric: tabular-nums; }
+.fstep > small { margin-left: auto; padding-left: 8px; font: 400 14px/1.3 var(--font-body); color: var(--color-ink-soft); white-space: nowrap; }
+.fstep:first-child { margin-top: 4px; }
+.fstep + label.btn { margin: 0 0 8px; }
+/* short form pages: the red button sits on the screen bottom, not right under the last field */
+.pg-fill { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; padding-bottom: 0; }
+.pg-fill #form:not([hidden]), .pg-fill > .sk { flex: 1; display: flex; flex-direction: column; }
+.pg-fill #form > .sticky, .pg-fill > .sk > .sticky { margin-top: auto; }
+/* Mos 1 พ.ย.: category header inside product lists (UXM.byCat) */
+/* Mos 1 พ.ย. รอบ 2: a sub-section band (brand tint + red bar), not a plain line · count on the right */
+h3.ux-cat { --tone: var(--color-primary); --tone-ink: var(--color-primary-dark); font: 600 17px/1.35 var(--font-head); color: var(--color-primary-dark);
+  background: var(--tint-primary); border-radius: var(--radius-sm); padding: 10px 12px; margin: 18px 0 4px; }
+h3.ux-cat::before { height: 20px !important; }
+h3.ux-cat:first-child { margin-top: 10px; }
+.card.list > h3.ux-cat { margin-inline: 12px; }
+h3.ux-cat[hidden] { display: none; }

@@ -1,0 +1,415 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><script src="lib/demo.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>คู่มือพนักงาน</title><meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="lib/ui.css?v=r1101">
+<style>
+  /* static staff manual · no login, no data · source text: docs/manual/STAFF-MANUAL.md */
+  .mn h2 { font: 600 20px/1.3 var(--font-head); margin: 0; }
+  .mn h3 { font: 600 16px/1.35 var(--font-head); margin: 22px 0 8px; }
+  .mn p, .mn li { margin: 0; line-height: 1.6; }
+  .mn ol, .mn ul { margin: 6px 0 0; padding-left: 22px; display: grid; gap: 4px; }
+  .mn .day, .mn .steps { padding-left: 0; }
+  /* make-interfaces-feel-better: short titles balance, short body pretty, times keep their width, screenshots keep an edge */
+  .mn h2, .mn h3, .day .t, .duo b, .pick b, .fix b, .cmp b, .must b { text-wrap: balance; }
+  .mn p, .mn li, .pick div, .fix span, .cmp span, .duo div, .good, .bad-note { text-wrap: pretty; }
+  .day .w, .duo b, .must b { font-variant-numeric: tabular-nums; }
+  figure.shot img { outline: 1px solid rgba(255, 255, 255, .12); outline-offset: -1px; }
+  details.sec > summary:active { background: var(--color-fill-pressed); }
+  .mn .hint { color: var(--color-ink-soft); font-size: 14px; margin-top: 8px; }
+  .mn .hint a { display: inline-block; min-height: 44px; padding: 12px 8px; box-sizing: border-box; } /* L7: a 44px tap box, the font stays 14px */
+  .mn-hero { display: flex; align-items: center; gap: 14px; background: var(--color-card); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 16px; margin-bottom: 14px; }
+  .mn-hero img { width: 64px; height: 64px; flex: none; }
+  .mn-hero b { display: block; font: 600 20px/1.3 var(--font-head); }
+  .mn-hero span { display: block; font-size: 14px; color: var(--color-ink-soft); line-height: 1.5; }
+  .must { background: var(--color-primary); color: #fff; border-radius: var(--radius-card); padding: 14px 16px; margin-bottom: 14px; }
+  .must small { display: block; font-size: 14px; opacity: .92; }
+  .must b { display: block; font: 600 22px/1.3 var(--font-head); }
+  .must b span { white-space: nowrap; background: var(--color-accent); color: var(--color-foreground); border-radius: 6px; padding: 0 6px; }
+  details.sec { background: var(--color-card); border-radius: var(--radius-card); box-shadow: var(--shadow-card); margin-bottom: 12px; overflow: hidden; }
+  details.sec > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 16px; min-height: var(--tap); }
+  details.sec > summary::-webkit-details-marker { display: none; }
+  details.sec > summary .n { width: 32px; height: 32px; flex: none; border-radius: 50%; background: var(--tint-icon); color: var(--color-primary); font: 600 16px/32px var(--font-head); text-align: center; }
+  details.sec > summary .ux-go { margin-left: auto; transition: transform .2s var(--ease-out); color: var(--color-chevron); font-size: 22px; }
+  details.sec[open] > summary .ux-go { transform: rotate(90deg); }
+  details.sec > .mn-in { padding: 0 16px 18px; border-top: 1px solid var(--color-border); }
+  .day { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 10px; }
+  .day li { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; padding: 10px 12px; border-radius: 14px; background: var(--color-fill); }
+  .day li.hot { background: var(--tint-primary); outline: 2px solid var(--color-primary); }
+  .day .w { font-size: 13px; color: var(--color-ink-soft); grid-column: 1; }
+  .day li.hot .w { color: var(--color-primary); font-weight: 700; }
+  .day .t { font: 600 16px/1.35 var(--font-head); grid-column: 1; }
+  .day .b { grid-column: 2; grid-row: 1 / span 2; font: 500 13px/1 var(--font-head); color: var(--color-primary-dark); background: var(--tint-primary); border-radius: var(--radius-pill); padding: 8px 12px; white-space: nowrap; box-shadow: inset 0 0 0 1px rgba(200, 33, 40, .18); } /* M11: tonal like .btn.tonal, the solid red is only the 22:00 banner */
+  .day li.hot .b { background: var(--color-card); }
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .duo div { border-radius: 14px; padding: 10px 12px; font-size: 14px; line-height: 1.45; }
+  .duo b { display: block; font: 600 16px/1.3 var(--font-head); }
+  .duo .warn { background: var(--tint-wait); border: 1px solid var(--border-wait); }
+  .duo .warn b { color: var(--on-wait); }
+  .duo .bad { background: var(--tint-destructive); border: 1px solid var(--border-bad); }
+  .duo .bad b { color: var(--color-primary-dark); }
+  .good { background: var(--tint-success); border: 1px solid var(--border-ok); border-radius: 14px; padding: 10px 12px; margin-top: 10px; }
+  .bad-note { background: var(--tint-destructive); border: 1px solid var(--border-bad); border-radius: 14px; padding: 10px 12px; margin-top: 12px; font-size: 14px; line-height: 1.5; }
+  .bad-note b { display: block; font: 600 16px/1.35 var(--font-head); color: var(--color-primary-dark); }
+  .good b { display: block; font: 600 16px/1.35 var(--font-head); color: var(--color-success); }
+  figure.shot { position: relative; margin: 12px auto 0; max-width: 300px; border-radius: 22px; overflow: hidden; border: 6px solid #201818; background: #201818; }
+  figure.shot img { display: block; width: 100%; height: auto; aspect-ratio: 780 / 1688; border-radius: 16px; } /* iOS LIFF: no lazy load inside <details> · box keeps its size before load */
+  figure.shot i { position: absolute; transform: translate(-50%, -50%); width: 30px; height: 30px; border-radius: 50%; background: var(--color-primary); color: #fff; font: 600 14px/30px var(--font-head); font-style: normal; text-align: center; box-shadow: 0 0 0 4px rgba(200, 33, 40, .28), 0 2px 6px rgba(0, 0, 0, .3); }
+  .steps { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 8px; counter-reset: s; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; }
+  .steps li::before { content: counter(s); width: 26px; height: 26px; border-radius: 50%; background: var(--color-primary); color: #fff; font: 600 14px/26px var(--font-head); text-align: center; }
+  .pick { display: grid; gap: 10px; margin-top: 12px; }
+  .pick div { background: var(--color-fill); border-radius: 14px; padding: 10px 12px; }
+  .pick b { display: block; font: 600 16px/1.35 var(--font-head); margin-bottom: 4px; }
+  .cmp { display: grid; gap: 8px; margin-top: 12px; }
+  .cmp div { display: grid; grid-template-columns: 1fr 1fr; border-radius: 14px; overflow: hidden; border: 1px solid var(--color-border); }
+  .cmp b { grid-column: 1 / -1; font: 600 16px/1.3 var(--font-head); padding: 8px 12px 6px; background: var(--color-fill); }
+  .cmp span { padding: 8px 12px 10px; font-size: 14px; line-height: 1.45; }
+  .cmp span:first-of-type { color: var(--color-ink-soft); text-decoration: line-through; text-decoration-color: rgba(92, 84, 80, .45); }
+  .cmp span:last-of-type { background: var(--tint-success); }
+  .cmp .head { border: 0; overflow: visible; }
+  .cmp .head span { font: 500 13px/1.4 var(--font-head); padding: 0 12px 2px; text-decoration: none; background: none; color: var(--color-ink-soft); }
+  .fix { display: grid; gap: 8px; margin-top: 12px; }
+  .fix div { background: var(--color-fill); border-radius: 14px; padding: 10px 12px; }
+  .fix b { display: block; font: 600 16px/1.35 var(--font-head); }
+  .fix span { font-size: 14px; line-height: 1.5; }
+  /* swipe strip (1 พ.ย.): one feature, several screens · native scroll-snap, no script · next screen peeks so people see it moves */
+  .strip { display: flex; gap: 12px; margin: 12px 0 0; padding: 0 0 10px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: thin; border-radius: 14px; }
+  .strip:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+  @media (prefers-reduced-motion: no-preference) { .strip { scroll-behavior: smooth; } }
+  .strip .slide { flex: 0 0 min(72%, 250px); scroll-snap-align: start; scroll-snap-stop: always; }
+  .strip figure.shot { margin: 0; max-width: none; }
+  .strip figure.shot img { aspect-ratio: 750 / 1624; }
+  .strip .cap { margin: 8px 2px 0; font-size: 14px; line-height: 1.5; text-wrap: pretty; }
+  .strip .cap b { display: inline-block; min-width: 24px; height: 24px; margin-right: 6px; border-radius: 12px; padding: 0 6px; box-sizing: border-box; background: var(--color-primary); color: #fff; font: 600 13px/24px var(--font-head); text-align: center; font-variant-numeric: tabular-nums; }
+  .swipe { display: flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 13px; color: var(--color-ink-soft); }
+  .swipe::after { content: "›››"; letter-spacing: 1px; color: var(--color-chevron); }
+  @media print {
+    .strip { display: grid; grid-template-columns: repeat(3, 1fr); overflow: visible; }
+    .swipe { display: none; }
+  }
+  @media print {
+    body { padding: 0 12mm; background: #fff; }
+    .topbar { position: static; }
+    .topbar .back { display: none; }
+    .mn-hero { box-shadow: none; border: 1px solid var(--color-border); }
+    details.sec { box-shadow: none; border: 1px solid var(--color-border); break-inside: auto; }
+    details.sec > summary .ux-go { display: none; }
+    figure.shot, .day li, .cmp div, .fix div, .pick div { break-inside: avoid; }
+  }
+  html.mgr .no-mgr { display: none !important; } /* managers can't open รายจ่าย and money is hidden from them */
+</style>
+<script>try { if ((JSON.parse(sessionStorage.getItem("fs_session_v1") || "null") || {}).me?.role === "manager") document.documentElement.classList.add("mgr"); } catch (_) {}</script>
+</head><body ontouchstart="">
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>คู่มือพนักงาน</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
+<main class="mn">
+
+<div class="mn-hero"><img src="img/mascot-240.png" alt=""><div><b>วันนี้ทำอะไรบ้าง</b><span>ทำตามลำดับในหัวข้อ 1<br>ติดตรงไหน เปิดหัวข้อนั้นดู</span></div></div>
+
+<div class="must"><small>เรื่องเดียวที่ต้องจำ</small><b>ปิดร้านในแอป ก่อน <span>22:00 น.</span></b></div>
+
+<details class="sec" open>
+  <summary><span class="n">1</span><h2>หนึ่งวันของเรา</h2><span class="ux-go" aria-hidden="true">›</span></summary>
+  <div class="mn-in">
+    <ul class="day">
+      <li><span class="w">ร้านเปิด 11:00 น.</span><span class="t">เปิดร้าน ถ่ายรูปหน้าร้าน</span><span class="b">เปิดร้าน</span></li>
+      <li><span class="w">ของ CPF มาส่ง ราว 14:00 น.</span><span class="t">นับของที่มา ถ่ายใบส่งของ</span><span class="b">รับของ</span></li>
+      <li><span class="w">ระหว่างวัน</span><span class="t">มีเรื่องผิดปกติ แจ้งทันที</span><span class="b">แจ้งปัญหา</span></li>
+      <li><span class="w">ระหว่างวัน</span><span class="t">อยากหยุดหรือลา</span><span class="b">ขอหยุด/ลา</span></li>
+      <li><span class="w">ระหว่างวัน</span><span class="t">ห่อเสร็จทุกรอบ กดบอกแอป</span><span class="b">ห่อข้าวเหนียว</span></li>
+      <li><span class="w">ระหว่างวัน</span><span class="t">ชั่ง ถ่ายรูป แล้วทิ้ง</span><span class="b">ทิ้งของเสีย</span></li>
+      <li><span class="w">ระหว่างวัน</span><span class="t">ซื้อของเองหรือจ่ายเงิน ลงทันที</span><span class="b">รายจ่าย</span></li>
+      <li class="hot"><span class="w">ร้านปิด 21:00 น. ปิดร้านในแอปก่อน 22:00 น.</span><span class="t">นับของเหลือ เดลิเวอรี่ เงินสด ถ่ายรูป</span><span class="b">ปิดร้าน</span></li>
+    </ul>
+    <p class="hint">ต้องรับของก่อน ถึงจะปิดร้านได้<br>วันที่ของไม่มา ก็ต้องกดรับของ แล้วเลือก "วันนี้ไม่มีของมา"<br>ร้านหยุดทุกวันจันทร์ หน้าแรกขึ้น "วันนี้ร้านหยุด"<br>วันจันทร์ไม่ต้องเปิดร้านหรือปิดร้าน และแอปไม่เตือน</p>
+    <div class="duo">
+      <div class="warn"><b>21:00 น.</b>ยังไม่ปิดร้าน แอปเตือนเข้ากลุ่มพนักงาน</div>
+      <div class="bad"><b>22:00 น.</b>ยังไม่ปิดร้าน ไม่มีใบสั่ง CPF ของอาจขาด</div>
+    </div>
+    <p class="hint">22:30 น. ถ้าใบสั่งยังไม่ได้ส่ง แอปเตือนอีกรอบ</p>
+    <div class="good"><b>ไม่ต้องสั่งของเอง</b>แอปคิดใบสั่งจากของเหลือที่เรานับ<br>นับให้ตรง ของมาพอดี</div>
+    <figure class="shot"><img src="img/manual/index.png" alt="หน้าแรกของแอป" width="780" height="1688"><i style="left:62%;top:27%">1</i><i style="left:30%;top:35.7%">2</i><i style="left:5%;top:57.2%">3</i></figure>
+    <ol class="steps">
+      <li>กล่องใหญ่บอกงานถัดไป แตะแล้วไปหน้านั้นเลย</li>
+      <li>กล่องเล็กบอกว่าวันนี้ทำอะไรไปแล้ว</li>
+      <li>เรื่องของฉัน: เรื่องที่เราแจ้งไว้ และเจ้าของรับทราบหรือยัง</li>
+    </ol>
+    <h3>ปุ่ม "ห่อข้าวเหนียวเสร็จ"</h3>
+    <ol class="steps">
+      <li>ห่อเสร็จแต่ละรอบ กดปุ่ม "ห่อข้าวเหนียวเสร็จ" ที่หน้าแรก</li>
+      <li>ใส่จำนวนห่อของรอบนั้น แล้วกด "บันทึกจำนวนห่อ"</li>
+      <li>ปุ่มบอกยอดรวม "วันนี้ห่อแล้ว" ทั้งวันให้</li>
+    </ol>
+    <p class="hint">ปุ่มนี้ขึ้นตอนร้านเปิดอยู่<br>ใส่ผิด กด "ยกเลิกรายการล่าสุด" ภายใน 10 นาที<br>ยกเลิกได้เฉพาะรายการของเราเอง ที่บันทึกล่าสุด<br>เลย 10 นาทีแล้ว แจ้งปัญหา เลือก "กรอกผิด ขอแก้"</p>
+  </div>
+</details>
+
+<details class="sec">
+  <summary><span class="n">2</span><h2>เปิดร้าน</h2><span class="ux-go" aria-hidden="true">›</span></summary>
+  <div class="mn-in">
+    <figure class="shot"><img src="img/manual/open.png" alt="หน้าเปิดร้าน" width="780" height="1688"><i style="left:9%;top:89%">1</i></figure>
+    <ol class="steps">
+      <li>กดปุ่มแดง "ถ่ายรูปหน้าร้าน" ต้องถ่ายตอนนั้น เลือกจากอัลบั้มไม่ได้ ไม่มีรูปเปิดร้านไม่ได้</li>
+      <li>ได้รูปแล้ว ปุ่มแดงเปลี่ยนเป็น "เปิดร้าน" กดแล้วเห็นไก่มาสคอตกับติ๊กเขียว คือเสร็จ</li>
+    </ol>
+    <p class="hint">เวลาที่กดเปิดร้าน คือเวลาเข้างานของเรา<br>รูปไม่ชัด กดลบแล้วถ่ายใหม่ได้<br>ถ้าหน้านี้ขึ้น "ยังไม่ได้ปิดร้านวันก่อน"<br>กด "ปิดร้านที่ค้างก่อน" ปิดให้เสร็จ แล้วค่อยเปิดร้านวันนี้</p>
+  </div>
+</details>
+
+<details class="sec">
+  <summary><span class="n">3</span><h2>รับของ</h2><span class="ux-go" aria-hidden="true">›</span></summary>
+  <div class="mn-in">
+    <figure class="shot"><img src="img/manual/receive.png" alt="หน้ารับของ" width="780" height="1688"><i style="left:13%;top:22.7%">1</i><i style="left:13%;top:35%">2</i></figure>
+    <div class="pick">
+      <div><b>1 ของมาครบ</b>กด "ของมาครบตามใบสั่ง"<br>กด "ถ่ายใบส่งของ"<br>กด "บันทึก ของมาครบ"</div>
+      <div><b>2 ของมาไม่ครบ</b>กด "มีของขาด / ไม่ตรง"<br>แก้จำนวนแถวที่ไม่ตรง แถวนั้นขึ้น "ขาด N" หรือ "เกิน N"<br>ถ่ายใบส่งของ แล้วกดบันทึก</div>
+      <div><b>3 วันนี้ไม่มีของมา</b>ถามเซลล์ในกลุ่มสั่งของก่อน<br>กด "วันนี้ไม่มีของมา"<br>ติ๊ก "ถามเซลล์ในกลุ่มสั่งของแล้ว" แล้วกดบันทึก</div>
+      <div><b>4 มีของที่ไม่อยู่ในใบสั่ง</b>กด "+ มีของอื่นมาด้วย"<br>เลือกสินค้า ใส่จำนวนที่ได้มา กด "เพิ่มของที่มา"<br>แถวนั้นขึ้น "นอกใบสั่ง" แล้วถ่ายใบส่งของ กดบันทึก</div>
+    </div>
+    <p class="hint">ปุ่ม "วันนี้ไม่มีของมา" กับ "+ มีของอื่นมาด้วย" อยู่ล่างสุดของหน้า เลื่อนลงไปหา<br>วันที่มีของมา ต้องถ่ายใบส่งของทุกครั้ง ไม่ถ่ายบันทึกไม่ได้<br>ถ่ายได้ถึง 3 รูป<br>รับของแล้ว แก้ตัวเลขได้จนกว่าจะปิดร้าน</p>
+  </div>
+</details>
+
+<details class="sec">
+  <summary><span class="n">4</span><h2>ปิดร้าน 4 ขั้น</h2><span class="ux-go" aria-hidden="true">›</span></summary>
+  <div class="mn-in">
+    <figure class="shot"><img src="img/manual/close.png" alt="หน้าปิดร้าน ขั้นนับของเหลือ" width="780" height="1688"><i style="left:15.5%;top:16.4%">1</i><i style="left:51.5%;top:31.6%">2</i><i style="left:9%;top:93.6%">3</i></figure>
+    <ol class="steps">
+      <li>แถบบนบอกว่าอยู่ขั้นไหน จาก 4 ขั้น</li>
+      <li>ใส่จำนวนที่เหลือจริง แยกสดกับสุก ช่อง "เสีย" แตะไม่ได้ แอปใส่ยอดจากหน้าทิ้งของเสียให้<br>ข้าวเหนียวห่อมีแค่ช่องสุก ข้าวเหนียวดิบและน้ำดื่มมีแค่ช่องสด</li>
+      <li>กดปุ่มแดงด้านล่าง ไปขั้นถัดไป</li>
+    </ol>
+    <h3>4 ขั้น</h3>
+    <ol class="steps">
+      <li><span><b>นับของเหลือ</b> ทุกอย่างในตู้<br>วันที่ยังไม่ได้ลงของเสีย แอปถามก่อนนับ</span></li>
+      <li><span><b>ของใช้ในร้าน</b> ไม่ต้องนับจำนวน แค่แตะบอก<br>ยังพอทุกอย่าง กด "ของใช้ครบทุกอย่าง"<br>มีของใกล้หมด กด "มีของใกล้หมด / หมด" แล้วแตะชื่อของ<br>ใกล้หมด = ใช้ได้อีกแค่ 3–4 วัน<br>ต้องบอกตอนใกล้หมด เพราะเจ้าของสั่งของต้องรอ 1–2 วัน<br>แตะ 1 ครั้ง = ใกล้หมด<br>แตะ 2 ครั้ง = หมด<br>แตะ 3 ครั้ง = กลับเป็นมี</span></li>
+      <li><span><b>ยอดขาย เดลิเวอรี่ และเงินสด</b> ใส่ "ยอดขายวันนี้" ตามจอ WE POS ยอดรวมทุกช่องทาง (ต้องใส่)<br>ใส่ยอดเดลิเวอรี่ในแอป เทียบกับ WE POS<br>ใส่ "จำนวนเงินสดที่มี" ตามจอ WE POS แล้วนับเงินในลิ้นชัก<br>ดูวิธีทีละจอที่หัวข้อ "ขั้นเงิน" ด้านล่าง</span></li>
+      <li><span><b>ถ่ายรูปและส่ง</b> "รูปตู้และถาด" กับ "รูปจอ POS"<br>ต้องมีทั้ง 2 รูป รูปบอกเวลาที่ปิดร้าน<br>แล้วกด "ปิดร้าน"</span></li>
+    </ol>
+    <p class="hint">ปิดร้านแล้ว การ์ดปิดร้านเข้ากลุ่มพนักงาน<br>ของใช้ที่ต้องซื้อเองที่ใกล้หมดหรือหมด มีการ์ด "ของใช้ต้องซื้อเอง" แยกอีกใบในกลุ่มพนักงาน</p>
+    <h3>ของที่นับเป็นถุง</h3>
+    <ol class="steps">
+      <li>แถวที่ช่อง "เหลือสด" ขึ้นคำว่า "แตะ" ให้แตะช่องนั้น</li>
+      <li>ใส่ "ถุงเต็ม" กี่ถุง และ "นอกถุง (เศษ)" กี่ชิ้น<br>เป๊ปซี่และน้ำดื่มนับเป็นแพ็ค ช่องจะขึ้น "แพ็คเต็ม" กับ "นอกแพ็ค (เศษ)"</li>
+      <li>แอปบวกให้เอง ดูยอดรวมแล้วกด "ตกลง"</li>
+      <li>ไก่จ๊อมีช่อง "ไม้" เพิ่ม 1 ไม้ = 5 ชิ้น<br>ใส่ "ถุงเต็ม" กับ "ไม้" แล้วใส่ชิ้นที่ "นอกถุง ไม่ได้เสียบไม้"</li>
+    </ol>
+    <h3>ช่องเหลือสุก</h3>
+    <ol class="steps">
+      <li>แถวเดียวกัน ช่อง "เหลือสุก" ขึ้น "แตะ" ให้แตะช่องนั้น</li>
+      <li>ใส่จำนวนที่เหลือสุก<br>มีครึ่งตัว กด "+ ครึ่ง" หรือพิมพ์ .5 เช่น 2.5</li>
+      <li>ไก่จ๊อใส่ "ไม้" กับ "ชิ้น" แอปรวมให้</li>
+      <li>กด "ตกลง" แอปเปิดช่องถัดไปให้เอง</li>
+    </ol>
+    <h3>ถาม "วันนี้มีของเสียไหม"</h3>
+    <ol class="steps">
+      <li>เปิดหน้าปิดร้านวันที่ยังไม่มีของเสีย แอปถามก่อนนับ</li>
+      <li>ไม่มีของเสีย กด "ไม่มี"</li>
+      <li>มีของเสีย กด "มี ไปลงของเสีย" ลงให้เสร็จ แล้วกลับมานับ</li>
+    </ol>
+    <p class="hint">ตอบแล้ว แอปไม่ถามซ้ำวันนั้น<br>ปิดร้านย้อนหลัง ของเสียวันนั้นลงในแอปไม่ได้แล้ว<br>ถ้ามี เขียนในช่อง "ฝากบอกเจ้าของ"</p>
+    <h3>นับน้อยกว่าปกติ</h3>
+    <figure class="shot"><img src="img/manual/close-low.png" alt="แผ่นเตือนตรวจอีกรอบ นับน้อยกว่าปกติ" width="780" height="1688"><i style="left:91%;top:69%">1</i><i style="left:9%;top:88.1%">2</i><i style="left:9%;top:95.2%">3</i></figure>
+    <ol class="steps">
+      <li>กดปุ่มแดงไปขั้นถัดไป ถ้านับน้อยกว่าที่ควรเหลือมาก แผ่นแดง "ตรวจอีกรอบ นับน้อยกว่าปกติ" ขึ้น พร้อมรายการของ</li>
+      <li>นับผิด กด "กลับไปนับใหม่" แถวนั้นขึ้นสีแดง</li>
+      <li>นับถูกแล้ว กด "นับถูกแล้ว บันทึก"</li>
+    </ol>
+    <p class="hint">นับขาด ใบสั่งจะสั่งเกิน ของจะค้างตู้<br>ของที่กด "นับถูกแล้ว บันทึก" ไปขึ้นในการ์ดปิดร้านที่เจ้าของเห็น<br>ตัวเลขชุดเดิมไม่ถามซ้ำ</p>
+    <h3>นับได้มากกว่าที่มี</h3>
+    <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอ นับได้มากกว่าที่มี 3 รูป ปัดซ้ายขวาดูรูปถัดไป">
+      <div class="slide"><figure class="shot"><img src="img/manual/over-1.webp" alt="หน้านับของเหลือ ไก่ย่างต้นตำรับ ช่องเหลือสดใส่ 30 ทั้งที่มี 13" width="750" height="1624"></figure><p class="cap"><b>1</b>ใส่เลขที่นับ ถ้ามากกว่าที่มี กดปุ่มแดงไปขั้นถัดไป</p></div>
+      <div class="slide"><figure class="shot"><img src="img/manual/over-2.webp" alt="แผ่นเหลือง นับได้มากกว่าที่มี ไก่ย่างต้นตำรับ มี 13 นับได้ 30 เกิน 17 ตัว พร้อมปุ่ม กลับไปแก้ตัวเลข และ ของมีจริง ไปต่อ" width="750" height="1624"></figure><p class="cap"><b>2</b>แผ่นเหลืองบอกของที่เกิน เลือกปุ่มใดปุ่มหนึ่ง</p></div>
+      <div class="slide"><figure class="shot"><img src="img/manual/over-3.webp" alt="กลับมาหน้านับ ช่องของไก่ย่างต้นตำรับขึ้นกรอบสีแดง" width="750" height="1624"></figure><p class="cap"><b>3</b>กด "กลับไปแก้ตัวเลข" แถวที่เกินขึ้นกรอบแดง แก้ได้เลย</p></div>
+    </div>
+    <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
+    <ol class="steps">
+      <li>นับรวมแล้วมากกว่า "ยกมา" บวก "รับเข้า" แผ่นเหลือง "นับได้มากกว่าที่มี" ขึ้น</li>
+      <li>พิมพ์ผิด กด "กลับไปแก้ตัวเลข"</li>
+      <li>ของมีจริง เช่น ของมาส่งเพิ่ม กด "ของมีจริง ไปต่อ"</li>
+    </ol>
+    <p class="hint">ยังไม่กดปุ่มใด ไปขั้นถัดไปไม่ได้<br>กด "ของมีจริง ไปต่อ" ส่วนเกินนับเป็นของที่เข้ามาเพิ่มวันนี้ ยอดขายไม่ติดลบ<br>เจ้าของเห็นในการ์ดปิดร้าน ส่วน "นับเกิน ของมาเพิ่ม"<br>ของที่เราซื้อเอง ลงที่หน้ารายจ่าย ใส่จำนวนที่ซื้อมาด้วย</p>
+    <h3>ขั้นเงิน</h3>
+    <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอ ขั้นเงิน 3 รูป ปัดซ้ายขวาดูรูปถัดไป">
+      <div class="slide"><figure class="shot"><img src="img/manual/cash-1.webp" alt="ขั้นที่ 3 ช่องยอดขายวันนี้ และตารางเดลิเวอรี่ LINE MAN ตรงกัน Grab ขึ้นแดง WE POS ขาด 50 บาท" width="750" height="1624"></figure><p class="cap"><b>1</b>ใส่ยอดขายวันนี้ ตามจอ WE POS แล้วใส่ยอดเดลิเวอรี่ในแอปกับใน WE POS</p></div>
+      <div class="slide"><figure class="shot"><img src="img/manual/cash-2.webp" alt="ช่องจำนวนเงินสดที่มี และปุ่มนับแบงก์เหรียญ 1,000 500 100 50 20 10 5 2 1" width="750" height="1624"></figure><p class="cap"><b>2</b>ใส่ "จำนวนเงินสดที่มี" ตามจอ WE POS แล้วนับแบงก์และเหรียญ</p></div>
+      <div class="slide"><figure class="shot"><img src="img/manual/cash-3.webp" alt="สรุปควรมีในลิ้นชัก 3,270 บาท นับได้ 3,270 บาท แถบล่างขึ้น ครบ" width="750" height="1624"></figure><p class="cap"><b>3</b>แอปรวมให้ ดู "ควรมี" กับ "นับได้" ที่แถบล่างจอ</p></div>
+    </div>
+    <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
+    <div class="pick">
+      <div><b>เดลิเวอรี่</b>ใส่ยอดในแอป LINE MAN, Grab, Shopee จากมือถือ<br>ใส่ยอดช่องทางนั้นใน WE POS<br>ตรงกัน ขึ้นเขียว "ตรงกัน"<br>ไม่ตรง ขึ้นแดง แปลว่ามีออเดอร์ยังไม่ได้ลง WE POS หาให้เจอก่อนปิด<br>ช่องทางไหนไม่มีออเดอร์ เว้นว่างได้</div>
+      <div><b>นับเงินในลิ้นชัก</b>ใส่จำนวนแบงก์แต่ละชนิด และจำนวนเหรียญ แอปรวมให้<br>นับทั้งหมด รวมเงินทอนด้วย</div>
+      <div><b>ควรมีในลิ้นชัก</b>คือ "จำนวนเงินสดที่มี" ตามจอ WE POS ลบเงินสดที่จ่ายออกจากลิ้นชักวันนี้ (จากหน้ารายจ่าย)<br>ลืมลงรายจ่าย กดลิงก์ "ไปลงรายจ่าย" ลงให้ครบแล้วกลับมา</div>
+    </div>
+    <p class="hint">แถบล่างบอก "ควรมี" "นับได้" และ ขาด, เกิน หรือ ครบ<br>เงินขาดหรือเกิน นับใหม่อีกรอบก่อนกดไปต่อ</p>
+    <div class="bad-note"><b>ของเสีย บันทึกก่อนปิดร้าน</b>ทิ้งเมื่อไหร่ บันทึกที่หน้า "ทิ้งของเสีย" ตอนนั้นเลย พร้อมรูปตาชั่ง<br>ช่อง "เสีย" ตอนปิดร้านแตะไม่ได้ แอปใส่ยอดที่บันทึกไว้ให้เอง<br>แตะช่องนั้น มีปุ่ม "ไปบันทึกของเสีย" ตัวเลขที่นับไว้ไม่หาย<br>เก็บร้านแล้วมีของต้องทิ้ง บันทึกให้เสร็จก่อนกดปิดร้าน</div>
+    <p class="hint">ช่องที่ขึ้น 0 แตะแล้วพิมพ์ทับได้เลย ไม่ต้องลบ 0<br>ปิดแอปกลางทางได้ ตัวเลขยังอยู่ แต่รูปต้องถ่ายใหม่<br>กดปิดร้านแล้ว แก้ตัวเลขเองไม่ได้<br>ปิดร้านหลังเที่ยงคืน ยังนับเป็นวันเดิม จนถึงตี 5<br>มีอะไรอยากบอกเจ้าของ เขียนช่อง "ฝากบอกเจ้าของ"</p>
+  </div>
+</details>
+
+<details class="sec">
+  <summary><span class="n">5</span><h2>แจ้งปัญหา</h2><span class="ux-go" aria-hidden="true">›</span></summary>
+  <div class="mn-in">
+    <figure class="shot"><img src="img/manual/issue.png" alt="หน้าแจ้งปัญหา" width="780" height="1688"><i style="left:7.9%;top:11.7%">1</i><i style="left:7.9%;top:24.8%">2</i><i style="left:7.9%;top:45.5%">3</i><i style="left:9%;top:89%">4</i></figure>
+    <ol class="steps">
+      <li>เลือกเรื่อง: เครื่องพัง, ลูกค้าร้องเรียน, ของ CPF มาผิด, กรอกผิด ขอแก้, เรื่องอื่น</li>
+      <li>เขียนสั้น ๆ ว่าเกิดอะไร</li>
+      <li>ถ่ายรูปถ้ามี ไม่เกิน 3 รูป</li>
+      <li>กด "ส่งให้เจ้าของ"</li>
+    </ol>
+    <p class="hint">เครื่องพัง ลูกค้าร้องเรียน ของ CPF มาผิด การ์ดเข้ากลุ่มพนักงานทันที<br>เรื่องอื่นเจ้าของเห็นตอนปิดร้าน<br>เจ้าของกด "รับทราบ" แล้ว หน้าแรกส่วน "เรื่องของฉัน" ขึ้น "รับทราบแล้ว"</p>
+  </div>
+</details>
+
+<details class="sec">
+  <summary><span class="n">6</span><h2>ทิ้งของเสีย</h2><span class="ux-go" aria-hidden="true">›</span></summary>
+  <div class="mn-in">
+    <figure class="shot"><img src="img/manual/waste.png" alt="หน้าทิ้งของเสีย" width="780" height="1688"><i style="left:7.9%;top:24.4%">1</i><i style="left:7.9%;top:37.4%">2</i><i style="left:7.9%;top:50.5%">3</i><i style="left:7.9%;top:70.6%">4</i><i style="left:9%;top:89%">5</i></figure>
+    <ol class="steps">
+      <li>เลือกสินค้า</li>
+      <li>ใส่จำนวน</li>
+      <li>วางบนตาชั่ง กด "ถ่ายรูปบนตาชั่ง" ให้เห็นน้ำหนัก<br>แล้วใส่น้ำหนักเป็นกรัม เช่น ครึ่งกิโล ใส่ 500</li>
+      <li>ทิ้งลงถัง กด "ถ่ายรูปตอนทิ้งลงถัง"</li>
+      <li>กด "บันทึกของเสีย"</li>
+      <li>แผ่น "ตรวจก่อนบันทึก" ขึ้น ถูกแล้วกด "บันทึกของเสีย" ผิดกด "กลับไปแก้"</li>
+    </ol>
+    <p class="hint">ทิ้งเมื่อไหร่ บันทึกตอนนั้นเลย<br>ต้องมีรูปตาชั่ง น้ำหนักอย่างน้อย 10 กรัม และรูปตอนทิ้งลงถัง<br>ทิ้งได้ไม่เกินจำนวนที่มีในร้านวันนี้<br>บันทึกแล้วแก้เองไม่ได้ ผิดให้บอกเจ้าของ<br>ดูของที่ทิ้งไปแล้ว ที่แท็บ "ทิ้งแล้ววันนี้"<br>ตอนปิดร้าน ช่อง "เสีย" แตะไม่ได้ แอปใส่ยอดจากหน้านี้ให้เอง<br>ปิดร้านแล้ว บันทึกของเสียของวันนั้นไม่ได้<br>เก็บร้านแล้วมีของต้องทิ้ง ให้บันทึกก่อนกดปิดร้าน</p>
+  </div>
+</details>
+
+<details class="sec no-mgr">
+  <summary><span class="n">7</span><h2>ลงรายจ่าย</h2><span class="ux-go" aria-hidden="true">›</span></summary>
+  <div class="mn-in">
+    <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอ ลงรายจ่าย 3 รูป ปัดซ้ายขวาดูรูปถัดไป">
+      <div class="slide"><figure class="shot"><img src="img/manual/exp-1.webp" alt="หน้ารายจ่าย แท็บลงรายจ่าย ช่องค้นหา และปุ่มรายการสินค้า" width="750" height="1624"></figure><p class="cap"><b>1</b>เปิดหน้า "รายจ่าย" แตะรายการที่ซื้อ หรือพิมพ์ชื่อใหม่ในช่องค้นหา</p></div>
+      <div class="slide"><figure class="shot"><img src="img/manual/exp-2.webp" alt="แผ่นกรอกรายจ่าย ช่องยอดเงิน ปุ่มจ่ายด้วยเงินสดหน้าร้านหรือเจ้าของโอนจ่าย ปุ่มถ่ายรูปใบเสร็จ และปุ่มบันทึกรายจ่าย" width="750" height="1624"></figure><p class="cap"><b>2</b>ใส่ยอดเงิน เลือกจ่ายด้วยอะไร ถ่ายรูปใบเสร็จ แล้วกด "บันทึกรายจ่าย"</p></div>
+      <div class="slide"><figure class="shot"><img src="img/manual/exp-3.webp" alt="แท็บลงแล้ววันนี้ รวมวันนี้ 530 บาท แยกเงินสดหน้าร้านกับเจ้าของโอนจ่าย และรายการที่ลงแล้ว" width="750" height="1624"></figure><p class="cap"><b>3</b>แท็บ "ลงแล้ววันนี้" ดูรายการและยอดรวม</p></div>
+    </div>
+    <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
+    <ol class="steps">
+      <li>จ่ายเงินแล้วลงเลย ไม่ต้องรอตอนปิดร้าน</li>
+      <li>แตะรายการ หรือพิมพ์ชื่อใหม่ในช่องค้นหา</li>
+      <li>ใส่ "ยอดเงิน" ถ้ามีช่อง "ได้มากี่" ใส่จำนวนที่ซื้อมาด้วย</li>
+      <li>เลือก "จ่ายด้วย": เงินสดหน้าร้าน หรือเจ้าของโอนจ่าย</li>
+      <li>ถ่ายรูปใบเสร็จ (ไม่บังคับ) แล้วกด "บันทึกรายจ่าย"</li>
+    </ol>
+    <p class="hint">เงินสดหน้าร้าน ถูกหักออกจาก "ควรมีในลิ้นชัก" ตอนปิดร้าน<br>บิล CPF กับเงินเดือน แอปคิดให้ ไม่ต้องลง<br>ลงผิด กด ✕ ที่แถวนั้น ลบได้ มีปุ่มเลิกทำ<br>ลบได้เฉพาะรายการของเรา ก่อนปิดร้าน</p>
+  </div>
+</details>
+
+<details class="sec">
+  <summary><span class="n">8</span><h2>ขอหยุด/ลา</h2><span class="ux-go" aria-hidden="true">›</span></summary>
+  <div class="mn-in">
+    <figure class="shot"><img src="img/manual/holiday.png" alt="หน้าขอหยุดหรือลา" width="780" height="1688"><i style="left:92%;top:28%">1</i><i style="left:92%;top:39.6%">2</i><i style="left:9%;top:73.3%">3</i></figure>
+    <ol class="steps">
+      <li>เลือกว่าขออะไร</li>
+      <li>เลือกวัน</li>
+      <li>กด "ส่งคำขอหยุด/ลา"</li>
+    </ol>
+    <div class="pick">
+      <div><b>หยุดประจำสัปดาห์</b>1 วันต่อสัปดาห์ ผ่านทันที ไม่ต้องรอ<br>วันที่มีของ CPF เข้า ต้องรอเจ้าของอนุมัติ</div>
+      <div><b>ลาป่วย ลากิจ หยุดพิเศษ</b>รอเจ้าของกดอนุมัติในกลุ่มพนักงาน<br>ลาป่วยเลือกวันนี้ได้ อย่างอื่นขอล่วงหน้า 1 วัน</div>
+    </div>
+    <p class="hint">กดยกเลิกคำขอเองได้<br>กดผิด มีปุ่ม "เลิกทำ" ให้กดภายใน 5 วินาที<br>ถ้าจองลาไว้แต่มาทำงาน เปิดร้านได้เลย วันลาจะยกเลิกให้เอง</p>
+  </div>
+</details>
+
+<details class="sec">
+  <summary><span class="n">9</span><h2>เจ้าของดูอะไรจากรูปของเรา</h2><span class="ux-go" aria-hidden="true">›</span></summary>
+  <div class="mn-in">
+    <p>เจ้าของไม่ได้อยู่ร้าน ดูร้านจากรูปที่เราถ่าย<br>ถ่ายให้ชัด ถ่ายตรงหมวด</p>
+    <h3>รูปจากร้าน</h3>
+    <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอเจ้าของ รูปจากร้าน 2 รูป ปัดซ้ายขวาดูรูปถัดไป">
+      <div class="slide"><figure class="shot"><img src="img/manual/owner-pics.webp" alt="หน้าวันของเจ้าของ ส่วนรูปจากร้าน 13 รูป เปิดออกแล้ว" width="750" height="1624"></figure><p class="cap"><b>1</b>ส่วน "รูปจากร้าน" ในหน้าวัน บอกจำนวนรูปทั้งวัน</p></div>
+      <div class="slide"><figure class="shot"><img src="img/manual/owner-pics2.webp" alt="รูปย่อแยกหมวด จอ WE POS ตู้และถาด ของเสีย" width="750" height="1624"></figure><p class="cap"><b>2</b>รูปแยกหมวด แตะรูปดูเต็มจอ</p></div>
+    </div>
+    <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
+    <p class="hint">ทุกรูปที่ถ่ายในวันนั้นขึ้นที่นี่<br>หมวด: เปิดร้าน ใบส่งของ จอ WE POS ตู้และถาด ของเสีย แจ้งปัญหา ใบเสร็จรายจ่าย<br>แตะรูปเต็มจอ แล้วปัดซ้ายขวาดูรูปถัดไป</p>
+    <h3>บิล CPF</h3>
+    <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอเจ้าของ บิล CPF 2 รูป ปัดซ้ายขวาดูรูปถัดไป">
+      <div class="slide"><figure class="shot"><img src="img/manual/owner-bill.webp" alt="ส่วนบิล CPF ยังไม่จ่าย รูปใบส่งของเต็มกว้าง และปุ่ม บันทึกว่าจ่ายแล้ว" width="750" height="1624"></figure><p class="cap"><b>1</b>เจ้าของเห็นรูปใบส่งของเต็มกว้าง สแกน QR จ่ายได้เลย</p></div>
+      <div class="slide"><figure class="shot"><img src="img/manual/owner-pay.webp" alt="แผ่นจ่ายบิล CPF แล้ว ช่องยอดที่จ่าย และปุ่มบันทึกว่าจ่ายแล้ว" width="750" height="1624"></figure><p class="cap"><b>2</b>จ่ายแล้ว กด "บันทึกว่าจ่ายแล้ว" ใส่ยอดตามใบ</p></div>
+    </div>
+    <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
+    <p class="hint">เพราะฉะนั้นรับของแล้ว ถ่ายใบส่งของให้เห็น QR ชัดทุกครั้ง<br>เจ้าของกดจ่ายผิด ยกเลิกเองได้</p>
+  </div>
+</details>
+
+<details class="sec">
+  <summary><span class="n">10</span><h2>เดิมทำแบบนี้ ตอนนี้ทำแบบนี้</h2><span class="ux-go" aria-hidden="true">›</span></summary>
+  <div class="mn-in">
+    <div class="cmp">
+      <div class="head"><span>เดิม (กระดาษ)</span><span>ตอนนี้ (แอป)</span></div>
+      <div><b>มาทำงาน</b><span>ไม่ต้องบันทึก</span><span>กดเปิดร้าน ถ่ายรูปหน้าร้าน</span></div>
+      <div><b>นับของ</b><span>เขียนใบนับสต็อก</span><span>ใส่ในขั้นที่ 1 ของปิดร้าน ยกมาแอปใส่ให้</span></div>
+      <div><b>สั่งของ</b><span>พิมพ์สั่งในกลุ่มเซลล์</span><span>ไม่ต้องทำ แอปคิดจากของเหลือที่เรานับ</span></div>
+      <div><b>ของ CPF มา</b><span>เช็กแล้วจบ</span><span>กดรับของ ถ่ายใบส่งของทุกครั้ง</span></div>
+      <div><b>เงินสด</b><span>จดหรือบอกปากเปล่า</span><span>ใส่ในขั้นที่ 3 ของปิดร้าน นับแบงก์เหรียญ แอปรวมให้</span></div>
+      <div><b>ยอดเดลิเวอรี่</b><span>ไม่ได้เทียบ</span><span>ใส่ยอดในแอปที่ขั้นที่ 3 เทียบกับ WE POS</span></div>
+      <div><b>ซื้อของเอง</b><span>จดหรือบอกปากเปล่า</span><span>ลงที่หน้ารายจ่าย พร้อมรูปใบเสร็จ</span></div>
+      <div><b>ของใช้ในร้าน</b><span>บอกเมื่อหมด</span><span>แตะบอกตอนปิดร้าน ใช้ได้อีก 3–4 วันก็บอกแล้ว</span></div>
+      <div><b>หยุด ลา</b><span>บอกเจ้าของในแชต</span><span>กดขอหยุด/ลา</span></div>
+      <div><b>ของเสีย</b><span>จดตัวเลขเอง</span><span>กดทิ้งของเสีย ถ่ายรูปตาชั่งกับตอนทิ้ง</span></div>
+      <div><b>เครื่องพัง</b><span>พิมพ์ในแชต</span><span>กดแจ้งปัญหา พร้อมรูป</span></div>
+      <div><b>สิทธิ์ใช้งาน</b><span>ไม่มี</span><span>อยู่ในกลุ่มพนักงาน ใช้แอปได้<br>ออกจากกลุ่ม ใช้ไม่ได้</span></div>
+    </div>
+  </div>
+</details>
+
+<details class="sec">
+  <summary><span class="n">11</span><h2>ถ้าเจอปัญหา</h2><span class="ux-go" aria-hidden="true">›</span></summary>
+  <div class="mn-in">
+    <div class="fix">
+      <div><b>เน็ตล่ม เปิดแอปไม่ได้</b><span>เขียนลงใบกระดาษสำรองก่อน เน็ตกลับมาค่อยกรอกในแอป แล้วบอกในกลุ่มพนักงาน</span></div>
+      <div><b>กล้องไม่ขึ้น</b><span>ปิดแอป LINE แล้วเปิดใหม่ ถ้ายังไม่ได้ ให้ LINE ใช้กล้องในตั้งค่ามือถือ</span></div>
+      <div><b>ส่งรูปไม่ขึ้น</b><span>ลองถ่ายใหม่ ถ้ายังไม่ได้ ย้ายไปที่สัญญาณดีกว่า</span></div>
+      <div><b>ขึ้นว่า "ยังไม่ได้ปิดร้านวันก่อน"</b><span>วันก่อนลืมปิดร้าน อาจเป็น 2 วันก่อนก็ได้ กด "ปิดร้านที่ค้างก่อน"<br>ปิดร้านวันนั้นให้เสร็จ แล้วค่อยเปิดร้านวันนี้<br>ถ้าขึ้นว่าของวันนั้นยังไม่ได้กดรับ บอกเจ้าของก่อน</span></div>
+      <div><b>ลืมปิดร้าน เลย 21:00 น.</b><span>ปิดร้านทันที ก่อน 22:00 น. ยังทันใบสั่ง CPF</span></div>
+      <div><b>เลย 22:00 น. แล้ว</b><span>ยังต้องปิดร้าน แล้วบอกในกลุ่มพนักงาน เจ้าของจะจัดการใบสั่งเอง<br>ปิดหลังเที่ยงคืนก็ได้ ยังนับเป็นวันเดิม จนถึงตี 5</span></div>
+      <div><b>กรอกผิดหลังปิดร้าน</b><span>แจ้งปัญหา เลือก "กรอกผิด ขอแก้" บอกว่าผิดตัวไหน ที่ถูกเท่าไหร่</span></div>
+      <div><b>ขึ้นว่า "ยังไม่มีสิทธิ์ใช้แอป"</b><span>เช็กว่ายังอยู่ในกลุ่มพนักงานไหม ถ้าหลุด บอกเจ้าของดึงกลับ แล้วกด "ฉันเป็นพนักงาน"</span></div>
+      <div><b>ของไม่มาตามเวลา</b><span>ถามเซลล์ในกลุ่มสั่งของ ไม่มาจริง กดรับของ "วันนี้ไม่มีของมา"</span></div>
+      <div><b>ของ CPF มาผิดตัว</b><span>รับของตามที่มาจริง ของที่ไม่อยู่ในใบสั่ง กด "+ มีของอื่นมาด้วย"<br>แล้วแจ้งปัญหา เลือก "ของ CPF มาผิด" ถ่ายรูป</span></div>
+      <div><b>ขึ้นว่า "นับได้มากกว่าที่มี"</b><span>เลขที่ใส่ รวมสด สุก เสีย มากกว่าของที่มีวันนี้ (ยกมา กับ รับเข้า)<br>พิมพ์ผิด กด "กลับไปแก้ตัวเลข"<br>ของมีจริง กด "ของมีจริง ไปต่อ"<br>ข้าวเหนียวห่อ ห่อเพิ่ม กด "ห่อข้าวเหนียวเสร็จ" ก่อน<br>ใส่เลขติดลบไม่ได้</span></div>
+      <div><b>ขึ้นว่า "เปิดไม่ขึ้น"</b><span>กด "ลองอีกครั้ง" ถ้าไม่มีปุ่ม ให้ปิดหน้าแล้วเข้าใหม่<br>ยังไม่ได้ ย้ายไปที่สัญญาณดีกว่า ถ้ายังไม่ได้ บอกในกลุ่มพนักงาน</span></div>
+      <div><b>เมนูด้านล่างแชตไม่ขึ้น</b><span>ปิดแอป LINE แล้วเปิดใหม่ 1 ครั้ง</span></div>
+    </div>
+  </div>
+</details>
+
+<details class="sec">
+  <summary><span class="n">12</span><h2>วันแรกที่เริ่มใช้แอป</h2><span class="ux-go" aria-hidden="true">›</span></summary>
+  <div class="mn-in">
+    <h3>ก่อนวันแรก</h3>
+    <ol class="steps">
+      <li>เข้ากลุ่มพนักงาน</li>
+      <li>กด "ฉันเป็นพนักงาน" ในการ์ด "ยืนยันตัวตนในร้าน"</li>
+      <li>กด "เปิดแอป" ถ้า LINE ถามให้เพิ่มเพื่อน ให้กดเพิ่ม</li>
+      <li>เปิดแชตร้าน เห็นเมนูด้านล่าง ปุ่มใหญ่ "หน้าหลัก" คือพร้อมใช้</li>
+    </ol>
+    <h3>วันที่ 1 ถึง 3</h3>
+    <ul>
+      <li>ทำทุกอย่างในแอปตามปกติ</li>
+      <li>เขียนใบนับสต็อกกระดาษควบคู่ไปด้วย</li>
+      <li>ถ่ายรูปใบกระดาษส่งในกลุ่มพนักงานตอนปิดร้าน</li>
+      <li>เจ้าของเทียบตัวเลขทุกคืน ไม่ตรงจะบอกในกลุ่ม</li>
+    </ul>
+    <h3>วันที่ 4 เป็นต้นไป</h3>
+    <ul>
+      <li>ใช้แอปอย่างเดียว</li>
+      <li>เก็บใบกระดาษเปล่าไว้ในร้าน ใช้วันเน็ตล่มหรือมือถือพัง</li>
+    </ul>
+  </div>
+</details>
+
+<p class="hint" style="text-align:center"><a href="order-rules.html">กติกาใบสั่ง CPF</a></p>
+<p class="hint" style="text-align:center">ยังไม่รู้ ถามในกลุ่มพนักงาน</p>
+</main>
+<script>
+  // ?print=1 (PDF export) opens every section; printing from the browser does the same
+  const openAll = () => document.querySelectorAll("details.sec").forEach((d) => d.open = true);
+  if (new URLSearchParams(location.search).has("print")) openAll();
+  addEventListener("beforeprint", openAll);
+</script>
+</body></html>

@@ -1,0 +1,49 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><script src="lib/demo.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>แจ้งปัญหา</title><meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="lib/ui.css?v=r1101">
+
+
+<script src="lib/skeleton.js"></script><script src="lib/photo.js?v=r1101b"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js"></script>
+</head><body class="pg-fill" ontouchstart="">
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>แจ้งปัญหา</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
+<div class="sk"><span class="vh">กำลังเปิด…</span><div class="field" style="display:flow-root"><i class="sk-b" style="--w:22%;--h:14px;margin:5px 0 4px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:12px;--gap:0px"></i><div class="field" style="display:flow-root"><i class="sk-b" style="--w:26%;--h:14px;margin:5px 0 4px"></i></div><i class="sk-b" style="--w:100%;--h:96px;--r:12px;--gap:0px"></i><i class="sk-b" style="--w:100%;--h:52px;--r:14px;margin:12px 0"></i><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
+<div id="lE" class="ld" hidden><p class="err" role="alert"></p><button type="button" id="retry" class="btn primary">ลองอีกครั้ง</button></div>
+<div id="form" class="ld" hidden>
+  <label class="fstep" for="type"><i>1</i>เรื่องอะไร</label>
+  <select id="type"><option value="equipment">เครื่องพัง</option><option value="customer">ลูกค้าร้องเรียน</option><option value="cpf">ของ CPF มาผิด</option><option value="edit_request">กรอกผิด ขอแก้</option><option value="other">เรื่องอื่น</option></select>
+  <label class="fstep" for="text"><i>2</i>เกิดอะไรขึ้น</label>
+  <textarea id="text" rows="4" placeholder="เช่น เตาย่างหัวซ้ายไฟไม่ติด"></textarea>
+  <h3 class="fstep"><i>3</i>รูป<small>ไม่บังคับ ได้ถึง 3 รูป</small></h3>
+  <label class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูป <input id="ph" type="file" accept="image/*" capture="environment" hidden></label>
+  <p id="phS" class="muted"></p>
+  <div class="sticky"><button id="send" class="btn primary">ส่งให้เจ้าของ</button>
+  <p id="msg" class="muted"></p></div>
+</div>
+<script>
+(async () => {
+  // audit 27: a failed read shows เปิดไม่ขึ้น + retry, never the form on blank data
+  const failed = (e) => { form.hidden = true; lE.hidden = false; lE.querySelector(".err").textContent = "เปิดไม่ขึ้น\n" + App.errText(e);
+    retry.onclick = () => { retry.disabled = true; location.reload(); }; };
+  try {
+  const { supabase, me } = await App.ready();
+  if (UXS.only(me, ["staff", "owner"], "หน้านี้สำหรับพนักงานในร้าน", "ผู้จัดการดูงานของร้านได้ที่หน้าวันนี้", "owner.html", "ไปหน้าวันนี้")) return;
+  const photos = [];
+  Photo.picker(supabase, ph, { paths: photos, type: "issue", name: "รูป", max: 3, status: phS });
+  send.onclick = async () => {
+    if (!text.value.trim()) { msg.textContent = "เขียนก่อนว่าเกิดอะไรขึ้น"; msg.className = "err"; UXM.shake(text); return; }
+    send.disabled = true; msg.textContent = "กำลังส่ง…"; msg.className = "muted";
+    const { data, error } = await supabase.from("issues").insert({ type: type.value, text: text.value.trim(), photos, created_by: me.userId }).select("id").single();
+    if (error) { msg.textContent = "ส่งไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error); msg.className = "err"; send.disabled = false; return; }
+    await App.fn("issue-notify", { issue_id: data.id }).catch(() => {});
+    msg.textContent = "ส่งให้เจ้าของแล้ว ขอบคุณ"; msg.className = "ok"; text.disabled = ph.disabled = true; // Mos 31 ต.ค.: one green line (ok big overlapped the tick here)
+    send.hidden = true; await UXS.showNext(supabase, msg, true, "afterend");
+    // Mos 31 ต.ค.: staff always gets a way home, not only the next task
+    if (!document.querySelector('.ux-next[href="index.html"]')) msg.parentElement.insertAdjacentHTML("beforeend", '<a class="btn" href="index.html" style="margin-top:10px">กลับหน้าหลัก</a>');
+  };
+  form.hidden = false;
+  } catch (e) { if (e.message !== "denied") failed(e); }
+})();
+</script></body></html>

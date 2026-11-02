@@ -1,0 +1,441 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><script src="lib/demo.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ปิดร้าน</title><meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="lib/ui.css?v=r1101"><link rel="stylesheet" href="lib/ux-staff.css"><link rel="stylesheet" href="lib/ux-data.css">
+<style>
+/* 0047: a row above what the shop had (or with a minus) stays red like an empty one (ux-miss) and loses its ✓ until it is fixed */
+.sheet .grid.ux-over .rf, .sheet .grid.ux-over .rc { background-color: var(--tint-destructive); box-shadow: inset 0 0 0 1.5px var(--color-destructive); }
+.sheet .grid.ux-over:has(.rf)::after { opacity: 0; }
+/* 0054: hint line under a field label (ยอดขายรวมวันนี้) */
+.field small.h { display: block; margin-top: 2px; font-size: 14px; font-weight: 400; color: var(--color-muted-foreground); }
+/* Mos 31 ต.ค.: the alert under the button reads centred, not packed to the left */
+#msg.err:not(:empty) { text-align: center; padding-right: 44px; }
+/* ข้อ 4 (Mos 1 พ.ย.): delivery apps vs WE POS · drawer counted by note and coin */
+/* design round 1 พ.ย.: app name with its brand dot · a gap is a tone pill, not a loose line */
+.dl { display: grid; grid-template-columns: 1fr 92px 92px; gap: 8px; align-items: center; padding: 6px 0; }
+.dl.hd { font: 500 13px/1.3 var(--font-body); color: var(--color-ink-soft); padding: 0; }
+.dl.hd span:not(:first-child) { text-align: center; }
+.dl b { display: flex; align-items: center; gap: 8px; font: 600 16px/1.3 var(--font-head); white-space: nowrap; }
+.dl b::before { content: ""; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--app); }
+.dl input { min-width: 0; text-align: center; font-variant-numeric: tabular-nums; }
+.dl-say { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: -2px 0 6px; font-size: 14px; color: var(--color-ink-soft); }
+.dl-say:empty { display: none; }
+.dl-say .pill { font-size: 14px; font-weight: 600; }
+/* notes and coins look like the real money (Thai note colours) so the eye finds the row without reading */
+/* round 4: notes and coins in one 3×3 grid (1,000 500 100 · 50 20 10 · 5 2 1), shape tells note from coin */
+.notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 10px; margin: 10px 0 12px; }
+.notes label { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.notes label input { width: 100%; }
+.notes label span { flex: none; width: 58px; height: 34px; display: grid; place-items: center; border-radius: 7px; font: 600 15px/1 var(--font-head); color: #fff; background: var(--note); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12); font-variant-numeric: tabular-nums; }
+.notes label.coin span { flex-basis: auto; width: 40px; height: 40px; margin: -3px 0; border-radius: 50%; color: #3B2F1E; background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, .6), transparent 60%), var(--note); box-shadow: inset 0 0 0 2px rgba(0, 0, 0, .14); }
+.notes input { min-width: 0; text-align: center; font-variant-numeric: tabular-nums; }
+/* what the drawer should hold vs what was counted · the result is the biggest thing on the step */
+.cs { margin-top: 6px; padding-top: 10px; border-top: .5px solid var(--color-separator); }
+.cs > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 4px 0; font-size: 17px; }
+.cs > div b { font: 600 22px/1.25 var(--font-head); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cs > small { display: block; margin: -2px 0 2px; font-size: 14px; color: var(--color-muted-foreground); font-variant-numeric: tabular-nums; }
+.cs > small:empty { display: none; }
+#cashDiff:not(:empty) { margin: 10px 0 0; padding: 14px 16px 14px 52px; font: 600 22px/1.3 var(--font-head); font-variant-numeric: tabular-nums; }
+#cashDiff:not(:empty)::before { left: 16px; top: 50%; width: 24px; height: 24px; translate: 0 -50%; }
+.cs a, #cashHint a { font-weight: 600; color: var(--color-primary-dark); }
+#cashHint { margin: 8px 2px 0; font-size: 15px; text-align: center; }
+/* round 4: the drawer count stays in sight above the buttons while counting (step 3 only) */
+#live { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 0 2px 2px; font-size: 15px; color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
+#live b { font: 600 17px/1.2 var(--font-head); color: var(--color-foreground); }
+#live b.bad { color: var(--color-destructive); } #live b.ok { color: var(--color-success); }
+#s3[hidden] ~ .ux-foot #live, #live:empty { display: none; }
+#live.seen { display: none; } /* the ควรมี/นับได้ card is on screen: no need to repeat it in the bar */
+/* 0061 over-count sheet: a check (amber), not an error · the gap is the number on the right */
+#overS .hd b { color: var(--on-wait); }
+#overS .low-l { list-style: none; margin: 8px 0 12px; padding: 2px 14px; border-radius: var(--radius-sm); background: var(--tint-wait); box-shadow: inset 0 0 0 1px var(--border-wait); }
+#overS .low-l li { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 0 12px; }
+#overS .low-l li + li { border-top-color: var(--border-wait); }
+#overS .low-l em { font: 600 17px/1.3 var(--font-head); font-style: normal; color: var(--on-wait); white-space: nowrap; font-variant-numeric: tabular-nums; }
+#overS .low-l span { grid-column: 1 / -1; color: var(--color-ink-soft); }
+/* Mos 1 พ.ย.: the how-to lines under a check sheet read centred */
+:is(#overS, #lowS) .bag-hint { text-align: center; }
+/* 0085 (Mos 30 ต.ค.): after the count, take the cash out down to the float · one big number, the float on one line, one button that must be pressed */
+.tk { position: relative; padding: 14px 16px 16px 22px; overflow: hidden; }
+.tk::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 6px; background: var(--color-wait-mark); }
+.tk[data-tone=ok]::before { background: var(--color-success); }
+.tk h2 { margin: 0; }
+.tk .v { display: block; margin: 4px 0 6px; font: 600 30px/1.15 var(--font-head); font-variant-numeric: tabular-nums; }
+.tk .v small { font-size: 17px; font-weight: 500; }
+.tk .kv { font-size: 17px; font-variant-numeric: tabular-nums; }
+.tk p { margin: 4px 0 0; font-size: 15px; color: var(--color-ink-soft); }
+.tk .btn { margin-top: 12px; }
+.tk .pill { margin-top: 10px; font-size: 15px; }
+</style>
+
+
+<script src="lib/skeleton.js"></script><script src="lib/photo.js?v=r1101b"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js?v=0060b"></script>
+</head><body ontouchstart="">
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ปิดร้าน</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3<span id="d"></span></div></div></header>
+<p id="blocked" class="err" hidden></p>
+<div class="sk"><span class="vh">กำลังเปิด…</span><div class="ux-top"><div class="ux-top-row sk-row"><i class="sk-b" style="--w:44%;--h:22px"></i><i class="sk-b" style="--w:24%;--h:13px"></i></div><div class="ux-prog"></div><div class="ux-steps"><span style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:48px"><i class="sk-b" style="--w:24px;--h:24px;--r:50%;margin:0"></i><i class="sk-b" style="--w:70%;--h:12px;margin:0"></i></span><span style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:48px"><i class="sk-b" style="--w:24px;--h:24px;--r:50%;margin:0"></i><i class="sk-b" style="--w:70%;--h:12px;margin:0"></i></span><span style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:48px"><i class="sk-b" style="--w:24px;--h:24px;--r:50%;margin:0"></i><i class="sk-b" style="--w:70%;--h:12px;margin:0"></i></span><span style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:48px"><i class="sk-b" style="--w:24px;--h:24px;--r:50%;margin:0"></i><i class="sk-b" style="--w:70%;--h:12px;margin:0"></i></span></div></div><div class="ux-step"><div class="sheet"><div class="grid meta sheet-head"><i class="sk-b" style="--w:40%;--h:13px;margin:0"></i><i class="sk-b" style="--w:36px;--h:13px;margin:0 auto"></i><i class="sk-b" style="--w:36px;--h:13px;margin:0 auto"></i><i class="sk-b" style="--w:28px;--h:13px;margin:0 auto"></i></div><div class="grid"><div><i class="sk-b" style="--w:74%;--h:17px"></i><i class="sk-b" style="--w:56%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="grid"><div><i class="sk-b" style="--w:74%;--h:17px"></i><i class="sk-b" style="--w:56%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="grid"><div><i class="sk-b" style="--w:74%;--h:17px"></i><i class="sk-b" style="--w:56%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="grid"><div><i class="sk-b" style="--w:74%;--h:17px"></i><i class="sk-b" style="--w:56%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="grid"><div><i class="sk-b" style="--w:74%;--h:17px"></i><i class="sk-b" style="--w:56%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="grid"><div><i class="sk-b" style="--w:74%;--h:17px"></i><i class="sk-b" style="--w:56%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="grid"><div><i class="sk-b" style="--w:74%;--h:17px"></i><i class="sk-b" style="--w:56%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div></div></div><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
+<section id="done" class="done ld" hidden aria-live="polite"><span class="mascot ok-badge"><img src="img/mascot-240.png" alt="" width="80" height="80"></span><h2 id="doneT">ปิดร้านเรียบร้อย</h2><p id="doneS"></p><p class="warm">วันนี้จบแล้ว ขอบคุณที่ช่วยร้าน</p><div class="acts"><div id="next"></div><a class="btn" href="deposit.html">ลงหลักฐานฝากเงิน</a><a class="btn home" href="index.html">กลับหน้าหลัก</a></div></section>
+<div id="form" class="ld" hidden>
+  <div id="uxTop" class="ux-top">
+    <div class="ux-top-row"><h2 id="stepT" tabindex="-1"></h2><span id="draftT" class="muted"></span></div>
+    <div class="ux-prog" aria-hidden="true"><i id="progBar"></i></div>
+    <nav id="steps" class="ux-steps" aria-label="ขั้นปิดร้าน">
+      <button type="button" data-s="1"><i>1</i>ของเหลือ</button><button type="button" data-s="2"><i>2</i>ของใช้</button><button type="button" data-s="3"><i>3</i>เงินสด</button><button type="button" data-s="4"><i>4</i>รูปและส่ง</button>
+    </nav>
+  </div>
+  <section id="s1" class="ux-step">
+  <div class="sheet">
+  <div class="grid meta sheet-head"><div id="progT">สินค้า</div><div>เหลือสด</div><div>เหลือสุก</div><div>เสีย</div></div>
+  <div id="lines"></div>
+  <div id="fold" class="ux-fold" hidden><span><b id="foldT"></b><small>ยกมา 0 · รับเข้า 0</small><small>นับเป็น 0 ให้แล้ว</small></span><button type="button" id="foldB" class="btn sm" aria-expanded="false">เปิดดู</button></div>
+  </div>
+  </section>
+  <dialog id="wasteGo" class="bsheet" aria-labelledby="wasteGoT"><div class="body"><div class="grab"></div><div class="hd"><b id="wasteGoT">ช่องนี้กรอกเองไม่ได้</b><button type="button" class="x" aria-label="ปิด">✕</button></div>
+  <p class="bag-hint">ของเสียต้องชั่งและถ่ายรูปก่อนบันทึก<br>บันทึกแล้วยอดจะแสดงที่ช่องนี้<br>ยอดที่นับไว้ไม่หาย</p>
+  <a class="btn primary" href="waste.html">ไปบันทึกของเสีย</a></div></dialog>
+  <dialog id="wasteQ" class="bsheet" aria-labelledby="wasteQT"><div class="body"><div class="grab"></div><div class="hd"><b id="wasteQT">วันนี้มีของเสียไหม</b></div>
+  <p class="bag-hint">ลงของเสียก่อน แล้วค่อยนับของเหลือ</p></div>
+  <div class="foot ux-2b"><button type="button" id="wqNo" class="btn">ไม่มี</button><a id="wqYes" class="btn primary" href="waste.html">มี ไปลงของเสีย</a></div></dialog>
+  <dialog id="lowS" class="bsheet bad" aria-labelledby="lowT"><div class="body"><div class="grab"></div><div class="hd"><b id="lowT">ตรวจอีกรอบ นับน้อยกว่าปกติ</b><button type="button" class="x" aria-label="ปิด">✕</button></div>
+  <ul id="lowL" class="low-l"></ul>
+  <p class="bag-hint">เช็กอีกทีว่าพิมพ์ถูกไหม<br>ถ้าขายหมดจริง กดบันทึกได้เลย ไม่ผิด</p></div>
+  <div class="foot"><button type="button" id="lowBack" class="btn primary">กลับไปนับใหม่</button><button type="button" id="lowKeep" class="btn" style="margin-top:8px">นับถูกแล้ว บันทึก</button></div></dialog>
+  <dialog id="overS" class="bsheet" aria-labelledby="overT"><div class="body"><div class="grab"></div><div class="hd"><b id="overT">นับได้มากกว่าที่มี</b><button type="button" class="x" aria-label="ปิด">✕</button></div>
+  <ul id="overL" class="low-l"></ul>
+  <p class="bag-hint">พิมพ์ผิด กดกลับไปแก้<br>ของมีจริง เช่น มีของมาส่งเพิ่ม กดไปต่อได้<br>เจ้าของจะเห็นในการ์ดปิดร้าน</p></div>
+  <div class="foot"><button type="button" id="overBack" class="btn primary">กลับไปแก้ตัวเลข</button><button type="button" id="overKeep" class="btn" style="margin-top:8px">ของมีจริง ไปต่อ</button></div></dialog>
+  <section id="s2" class="ux-step" hidden>
+  <div class="ux-pick" role="radiogroup" aria-label="ของใช้ในร้าน">
+    <button type="button" id="consAll" class="ux-opt" role="radio" aria-checked="false"><b>ของใช้ครบทุกอย่าง</b><small>ถุง ฟอยล์ น้ำจิ้ม ยังพอ</small></button>
+    <button type="button" id="consLow" class="ux-opt" role="radio" aria-checked="false" aria-controls="consBox"><b>มีของใกล้หมด / หมด</b><small>แตะเลือกของที่ต้องเติม</small></button>
+  </div>
+  <div id="consBox" hidden>
+  <p class="ux-hint">ใกล้หมด = ใช้ได้อีกแค่ 3–4 วัน<br>บอกตอนใกล้หมด เจ้าของสั่งของต้องรอ 1–2 วัน<br>แตะ 1 ครั้ง = ใกล้หมด<br>แตะ 2 ครั้ง = หมด<br>แตะ 3 ครั้ง = กลับเป็นมี</p>
+  <div id="cons" class="ux-cgrid"></div>
+  </div>
+  </section>
+  <section id="s3" class="ux-step" hidden>
+  <div class="card">
+  <h2><label for="posTot">ยอดขายวันนี้</label></h2>
+  <p class="muted" style="margin:-4px 0 8px">รวมทุกช่องทาง ดูจอ WE POS</p><div class="in"><input id="posTot" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0" min="0" max="100000"><span class="sfx">บาท</span></div>
+  </div>
+  <div class="card">
+  <h2>เดลิเวอรี่</h2>
+  <div class="dl hd"><span>แอป</span><span>ยอดในแอป</span><span>WE POS</span></div>
+  <div id="dlv"></div>
+  <p class="muted">ไม่ตรง = มีออเดอร์ยังไม่ได้ลง WE POS หาให้เจอก่อนปิด<br>ไม่มีออเดอร์ เว้นว่างได้</p>
+  </div>
+  <div class="card">
+  <h2>เงินในลิ้นชัก</h2>
+  <label class="field" for="cashExp">จำนวนเงินสดที่มี<small class="h">ดูจอ WE POS ตอนปิดรอบ ตัวเลขนี้รวมเงินทอนแล้ว</small></label><div class="in"><input id="cashExp" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0"><span class="sfx">บาท</span></div>
+  <p class="field">นับเงินในลิ้นชัก<small class="h">ใส่จำนวนใบ จำนวนเหรียญ แอปรวมให้<br>นับทั้งหมด รวมเงินทอนด้วย</small></p>
+  <div class="notes" id="notesB"></div>
+  <input id="cashCnt" type="hidden">
+  <div class="cs" aria-live="polite"><div><span>ควรมีในลิ้นชัก</span><b id="csA">-</b></div><small id="csH"></small><div><span>นับได้</span><b id="csB">-</b></div><p id="cashDiff" class="muted"></p><p id="cashHint" hidden>ลืมลงรายจ่ายไหม <a href="expense.html">ไปลงรายจ่าย</a></p></div>
+  </div>
+  <div id="takeC" class="card tk" hidden aria-live="polite"><h2 id="takeT">เอาเงินออก</h2><b class="v" id="takeV"></b>
+  <div class="kv"><span>เหลือไว้ในลิ้นชัก</span><b id="takeF"></b></div><p id="takeH"></p>
+  <button type="button" id="tookB" class="btn primary">เอาเงินออกแล้ว</button><span id="tookP" class="pill" data-tone="ok" hidden>เอาเงินออกแล้ว</span></div>
+  </section>
+  <section id="s4" class="ux-step" hidden>
+  <div id="sum4" class="cl-sum" aria-label="สรุปที่จะส่ง"></div>
+  <div class="cl-shots">
+    <div class="cl-shot"><label class="btn cl-frame" data-again="แตะถ่ายเพิ่ม"><svg class="cl-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6Z"/><path d="M5 10h14"/><path d="M15 7v6"/></svg><b>รูปตู้และถาด</b><small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>แตะเพื่อถ่าย ได้หลายรูป</small><input id="phFridge" type="file" accept="image/*" capture="environment" hidden></label><p id="phStatus" class="muted"></p></div>
+    <div class="cl-shot"><label class="btn cl-frame" data-again="แตะถ่ายใหม่"><svg class="cl-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg><b>รูปจอ POS</b><small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>แตะเพื่อถ่าย</small><input id="phPos" type="file" accept="image/*" capture="environment" hidden></label></div>
+  </div>
+  <label class="field" for="note">ฝากบอกเจ้าของ <small>(ไม่มีก็ข้ามได้)</small></label>
+  <textarea id="note" rows="3" placeholder="เช่น ไก่ต้นตำรับหมด ลูกค้าเอาทรงเครื่องแทน"></textarea>
+  </section>
+  <div class="sticky ux-foot"><p id="live" aria-live="off"></p><button type="button" id="back" class="btn" hidden>ย้อนกลับ</button><button id="send" class="btn primary">ปิดร้าน</button><p id="msg" class="muted"></p></div>
+</div>
+<script>
+(async () => {
+  addEventListener("pageshow", (e) => { if (e.persisted) location.reload(); }); // back from waste.html restores the page from cache → reload so the waste column and guards read the new waste_logs (the draft brings สด/สุก back)
+  const { supabase, me } = await App.ready();
+  if (UXS.only(me, ["staff", "owner"], "หน้านี้สำหรับพนักงานในร้าน", "ผู้จัดการดูงานของร้านได้ที่หน้าวันนี้", "owner.html", "ไปหน้าวันนี้")) return;
+  // 0047 (Mos 30 ต.ค.): the shop day runs until 05:00 (Bangkok − 5 h = UTC + 2 h) · ?d=<yesterday> from open.html = close the day nobody closed (server checks it is that day)
+  const bday = new Date(Date.now() + 2 * 3600e3).toISOString().slice(0, 10), qd = new URLSearchParams(location.search).get("d");
+  const late = /^\d{4}-\d{2}-\d{2}$/.test(qd || "") && qd < bday, today = late ? qd : bday;
+  const dayTh = new Date(today + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" }); // a forgotten close can be 1 or 2 days back (0050) → say the date, never "เมื่อวาน"
+  document.getElementById("d").textContent = (late ? " · ปิดร้านของ " : " · ") + dayTh;
+  // review r2: opened from the menu while yesterday is still open → straight to yesterday's close, before counting anything
+  if (!late) { const { data: un } = await supabase.rpc("unclosed_day"); if (un && un < bday) return location.replace("close.html?d=" + un); }
+  if (!late) await supabase.rpc("ensure_day", { d: today }); // a late day was opened, its rows exist
+  const { data: day } = await supabase.from("shop_days").select("status").eq("date", today).maybeSingle();
+  if (day?.status === "sent" && late) { doneT.textContent = `ปิดร้านของวันที่ ${dayTh} แล้ว`; doneS.textContent = "เปิดร้านวันนี้ได้เลย"; next.innerHTML = '<a class="btn primary" href="open.html">เปิดร้านวันนี้</a>'; document.getElementById("done").hidden = false; return; }
+  if (day?.status === "sent") { doneT.textContent = "วันนี้ปิดร้านแล้ว"; doneS.textContent = "กรอกผิด บอกเจ้าของที่แจ้งปัญหา"; next.innerHTML = '<a class="btn" href="issue.html">แจ้งปัญหา</a>'; document.getElementById("done").hidden = false; return; }
+  const { data: pend } = await supabase.from("orders").select("id, order_items(qty_received, received_at)").eq("for_date", today).in("status", ["sent", "failed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (pend && pend.order_items.some((i) => i.qty_received == null && i.received_at == null)) {
+    const b = document.getElementById("blocked"); b.hidden = false; b.innerHTML = late ? 'ของวันนั้นยังไม่ได้กดรับ<br>บอกเจ้าของก่อน แล้วค่อยปิดร้าน' : 'ต้องกดรับของก่อน ถึงจะปิดร้านได้<br><a class="btn primary" href="receive.html">ไปรับของ</a>'; return;
+  }
+  const { data: prods, error: pErr } = await supabase.from("products").select("id,sort,name,unit,buy_unit,pack_size,stick_size,kind,made_here,count_mode,count_cols,category,supplier").eq("active", true).order("sort");
+  const { data: lines, error: lErr } = await supabase.from("stock_lines").select("product_id,open_fresh,open_cooked,received").eq("date", today);
+  if (pErr || lErr || !prods) { const b = document.getElementById("blocked"); b.hidden = false; b.textContent = "เปิดรายการของไม่ขึ้น\n" + App.errText(pErr || lErr || "no products"); return; }
+  prods.forEach((p) => { p.unit = UXM.unit(p.unit); }); // EA / PC → ตัว / ชิ้น // qa: never show 0s from a failed read
+  const L = Object.fromEntries((lines || []).map((l) => [l.product_id, l]));
+  // 0030: what was thrown away during the day (waste.html) starts the "เสีย" box and is its floor
+  const { data: wl } = await supabase.from("waste_logs").select("product_id,qty").eq("date", today);
+  const W = {}; (wl || []).forEach((w) => { W[w.product_id] = (W[w.product_id] || 0) + +w.qty; });
+  // 0052 (Mos 30 ต.ค.): what each product should have left tonight (under-count check) + "ไม่มีของเสีย" already answered · a failed read = no checks
+  const { data: cc } = await supabase.rpc("close_check", { d: today });
+  const EXP = Object.fromEntries((cc?.items || []).map((i) => [i.product_id, i]));
+  // 0045: ตอนปิดร้าน นับจำนวน (count row) or ติ๊กใกล้หมด (ของใช้ step) comes from count_mode · default from kind for rows saved before it
+  const tick = (p) => (p.count_mode || (p.kind === "consumable" ? "tick" : "count")) === "tick";
+  const stock = prods.filter((p) => !tick(p)), cons = prods.filter(tick);
+  // nothing carried over + nothing received → folded, pre-filled 0 (Mos 23 ต.ค.: submitted as 0, still openable)
+  const zero = (p) => { const l = L[p.id] || {}; return !+l.open_fresh && !+l.open_cooked && !+l.received && !W[p.id]; };
+  // 0057: count_cols says which boxes a product has (ข้าวเหนียวห่อ สุกอย่างเดียว · ข้าวเหนียวดิบ น้ำดื่ม สดอย่างเดียว) · the unused box stays invisible so the grid stays aligned
+  // a สุกอย่างเดียว row is saved as เหลือสด 0 + เหลือสุก n · rows saved before 0057 had สุก only on CPF
+  const cols = (p) => p.count_cols || (p.kind === "cpf" ? "both" : "fresh");
+  const off = ' disabled tabindex="-1" aria-hidden="true" style="visibility:hidden"'; // Mos 1 พ.ย.: drinks have no เสีย box either (one box: เหลือ)
+  const row = (p, z) => { const l = L[p.id] || {}, c = cols(p); return `
+    <div class="grid${z ? " ux-zero" : ""}" data-id="${p.id}" data-cols="${c}"${z ? " hidden" : ""}><div class="nm">${p.name}<div class="meta"><span>ยกมา ${(+l.open_fresh || 0) + (+l.open_cooked || 0)}</span> · <span>${p.made_here ? "ห่อวันนี้" : "รับเข้า"} ${+l.received || 0} ${p.unit || ""}</span>${W[p.id] ? ` · <span>ทิ้งแล้ว ${W[p.id]}</span>` : ""}</div></div>
+    <input type="number" inputmode="decimal" enterkeyhint="next" class="rf" placeholder="ใส่" aria-label="${p.name} เหลือสด"${c === "cooked" ? off : z ? ' value="0"' : ""}><input type="number" inputmode="decimal" enterkeyhint="next" class="rc" placeholder="${c === "cooked" ? "ใส่" : "0"}" aria-label="${p.name} เหลือสุก"${c === "fresh" ? off : c === "cooked" && z ? ' value="0"' : ""}><input type="number" inputmode="decimal" enterkeyhint="next" class="w" placeholder="0" aria-label="${p.name} เสีย แตะเพื่อไปหน้าทิ้งของเสีย" readonly inputmode="none"${W[p.id] ? ` value="${W[p.id]}"` : p.category === "น้ำ เครื่องดื่ม" ? off : ""}></div>`; };
+  // Mos 1 พ.ย.: grouped under category headers · ยกมา 0 rows stay folded inside their own category
+  document.getElementById("lines").innerHTML = UXM.byCat(stock, (p) => p.category, (p) => row(p, zero(p)), zero);
+  UXM.bags(document.getElementById("lines"), stock);
+  // 0046 (Mos 30 ต.ค.): ช่องเสียล็อก · ของเสียลงได้ที่หน้าทิ้งของเสียเท่านั้น (ชั่ง + รูป) · แตะช่อง → sheet บอกและพาไป (ร่างเก็บไว้แล้ว กลับมานับต่อได้)
+  document.getElementById("lines").addEventListener("click", (e) => { if (e.target.closest(".w")) wasteGo.showModal(); });
+  if (late) { wasteGo.querySelector(".bag-hint").innerHTML = "ของเสียของวันนั้นใส่เพิ่มไม่ได้แล้ว<br>ของที่ทิ้งเช้านี้ บันทึกหลังปิดร้านวันนั้น"; wasteGo.querySelector("a.btn").remove(); }
+  wasteGo.addEventListener("click", (e) => { if (e.target === wasteGo || e.target.closest(".x")) wasteGo.close(); }); // 0046: ถุงเต็ม + เศษ for anything packed (ไก่ จ๊อ เป๊ปซี่ น้ำ)
+  const zeros = stock.filter(zero);
+  if (zeros.length) { fold.hidden = false; foldT.textContent = `ไม่มีของค้าง ${zeros.length} อย่าง`; }
+  foldB.onclick = () => { const open = foldB.getAttribute("aria-expanded") !== "true"; foldB.setAttribute("aria-expanded", open); foldB.textContent = open ? "ซ่อน" : "เปิดดู";
+    document.querySelectorAll("#lines .ux-zero").forEach((g) => g.hidden = !open); };
+  const state = {};
+  const SAY = { ok: "มี", low: "ใกล้หมด", out: "หมด" }, NEXT = { ok: "low", low: "out", out: "ok" };
+  const paint = (b) => { const v = state[b.dataset.id]; b.dataset.v = v; b.querySelector("small").textContent = v === "ok" ? "" : SAY[v]; b.setAttribute("aria-label", `${b.dataset.n} ${SAY[v]} แตะเพื่อเปลี่ยน`); };
+  // Mos 1 พ.ย.: two headers only (ของใช้ CPF · ของใช้ซื้อเอง), same tap-to-tick chips
+  const chip = (p) => { state[p.id] = "ok"; return `<button type="button" class="ux-cchip" data-id="${p.id}" data-n="${p.name}">${p.name}<small></small></button>`; };
+  const consH = (t, list) => list.length ? `<b style="grid-column:1/-1;margin:10px 0 0">${t}</b>${list.map(chip).join("")}` : "";
+  document.getElementById("cons").innerHTML = consH("ของใช้ CPF", cons.filter((p) => p.supplier === "cpf")) + consH("ของใช้ซื้อเอง", cons.filter((p) => p.supplier !== "cpf"));
+  document.querySelectorAll("#cons .ux-cchip").forEach(paint);
+  document.getElementById("cons").addEventListener("click", (e) => { const b = e.target.closest(".ux-cchip"); if (!b) return; state[b.dataset.id] = NEXT[state[b.dataset.id]]; paint(b); say(""); save(); update(); });
+  // ข: one big "ครบทุกอย่าง" (= every chip มี) · the chips only open for "มีของใกล้หมด / หมด"
+  let pick = ""; // "" not chosen · "all" · "low"
+  const setPick = (v) => { pick = v;
+    if (v === "all") { Object.keys(state).forEach((id) => state[id] = "ok"); document.querySelectorAll("#cons .ux-cchip").forEach(paint); }
+    consAll.setAttribute("aria-checked", v === "all"); consLow.setAttribute("aria-checked", v === "low"); consBox.hidden = v !== "low"; };
+  consAll.onclick = () => { setPick("all"); say(""); save(); update(); };
+  consLow.onclick = () => { setPick("low"); say(""); save(); update(); };
+  // ข้อ 4 (Mos 1 พ.ย.): LINE MAN / Grab / Shopee typed from the phones and from WE POS · a gap = an order not in WE POS yet
+  const APPS = [["lineman", "LINE MAN", "#06C755"], ["grab", "Grab", "#00B14F"], ["shopee", "Shopee", "#EE4D2D"]], NOTES = [1000, 500, 100, 50, 20], COINS = [10, 5, 2, 1];
+  const MONEY = { 1000: "#86664F", 500: "#7A4E9C", 100: "#C0392B", 50: "#2F6DB5", 20: "#2A7A4B", 10: "#D8B54A", 5: "#C9CDD2", 2: "#D8B54A", 1: "#C9CDD2" }; // Thai note and coin colours
+  const fmtB = (v) => v.toLocaleString("th-TH");
+  dlv.innerHTML = APPS.map(([k, t, c]) => `<div class="dl" data-k="${k}" style="--app:${c}"><b>${t}</b><input type="number" inputmode="decimal" class="dlA" placeholder="0" aria-label="${t} ยอดในแอป"><input type="number" inputmode="decimal" class="dlP" placeholder="0" aria-label="${t} ยอดใน WE POS"><span class="dl-say"></span></div>`).join("");
+  const dlSay = () => dlv.querySelectorAll(".dl").forEach((r) => { const a = r.querySelector(".dlA"), b = r.querySelector(".dlP"), m = r.querySelector(".dl-say");
+    if (a.value === "" || b.value === "") { m.textContent = ""; return; } const d = +a.value - +b.value;
+    m.innerHTML = d === 0 ? `<span class="pill" data-tone="ok">ตรงกัน</span>` : `<span class="pill" data-tone="bad">WE POS ${d > 0 ? "ขาด" : "เกิน"} ${fmtB(Math.abs(d))} บาท</span>${d > 0 ? "หาออเดอร์ที่ยังไม่ได้ลง" : "เช็กออเดอร์ซ้ำหรือยกเลิก"}`; });
+  dlv.addEventListener("input", dlSay);
+  const noteIn = (v) => `<label${v < 20 ? ' class="coin"' : ""}><span style="--note:${MONEY[v]}">${fmtB(v)}</span><input type="number" inputmode="numeric" min="0" step="1" placeholder="0" data-v="${v}" aria-label="${v} บาท กี่${v >= 20 ? "ใบ" : "เหรียญ"}"></label>`;
+  notesB.innerHTML = [...NOTES, ...COINS].map(noteIn).join("");
+  const noteEls = () => [...document.querySelectorAll(".notes input")];
+  const sumNotes = () => { const any = noteEls().some((i) => i.value !== ""); cashCnt.value = any ? noteEls().reduce((t, i) => t + (+i.value || 0) * +i.dataset.v, 0) : ""; diff(); };
+  document.querySelectorAll(".notes").forEach((n) => n.addEventListener("input", sumNotes));
+  // cash paid from the drawer today (หน้ารายจ่าย 0070) comes off what WE POS says the drawer holds
+  let paid = 0;
+  { const { data: ex } = await supabase.from("expenses").select("amount").eq("date", today).eq("paid_by", "cash");
+    paid = (ex || []).reduce((t, e) => t + (+e.amount || 0), 0);
+  }
+  const should = () => cashExp.value === "" ? null : +cashExp.value - paid;
+  // 0085 (Mos 30 ต.ค.): เงินทอนตั้งต้น (settings.cash_float, default 1,000) stays in the drawer, the rest is taken out for the 7-11 deposit (deposit.html)
+  // the staff presses "เอาเงินออก N บาทแล้ว" before going on · a new count asks again · the amount goes up as close_detail.cash.taken_out (0082 reads it)
+  const cf = (await supabase.from("settings").select("value").eq("key", "cash_float").maybeSingle()).data?.value;
+  const FLOAT = cf != null && cf !== "" && Number.isFinite(+cf) && +cf >= 0 ? +cf : 1000;
+  let took = null; // the amount "เอาเงินออก N บาทแล้ว" was pressed for
+  const takeX = () => cashCnt.value === "" ? null : Math.max(+cashCnt.value - FLOAT, 0);
+  const take = () => { const x = takeX(); takeC.hidden = x == null; if (x == null) return;
+    const done = x === 0 || took === x; takeC.dataset.tone = done ? "ok" : "";
+    takeT.textContent = x ? "เอาเงินออก" : "ไม่ต้องเอาเงินออก"; takeV.hidden = !x; takeV.innerHTML = `${fmtB(x)} <small>บาท</small>`;
+    takeF.textContent = `${fmtB(x ? FLOAT : +cashCnt.value)} บาท`;
+    takeH.innerHTML = !x ? "เงินในลิ้นชักไม่เกินเงินทอน<br>เก็บไว้ทั้งหมด" : done ? "ปิดร้านแล้ว เอาไปฝาก 7-11<br>ลงสลิปที่หน้าฝากเงิน" : ""; takeH.hidden = !!x && !done; // Mos 3 พ.ย.: the button already says what to do
+    tookB.textContent = `เอาเงินออก ${fmtB(x)} บาทแล้ว`; // Mos 3 พ.ย.: the button says the amount, not just "เอาออกแล้ว"
+    tookB.hidden = done; tookP.hidden = !(x && done); };
+  tookB.onclick = () => { took = takeX(); take(); say(""); save(); update(); };
+  const detail = () => ({ delivery: Object.fromEntries([...dlv.querySelectorAll(".dl")].map((r) => [r.dataset.k, { app: r.querySelector(".dlA").value === "" ? null : +r.querySelector(".dlA").value, pos: r.querySelector(".dlP").value === "" ? null : +r.querySelector(".dlP").value }])),
+    cash: { pos: cashExp.value === "" ? null : +cashExp.value, paid_out: paid, taken_out: +cashCnt.value < FLOAT ? null : takeX(), notes: Object.fromEntries(noteEls().filter((i) => i.value !== "").map((i) => [i.dataset.v, +i.value])) } });
+  const diff = () => { take(); const a = should() ?? 0, b = +cashCnt.value, has = cashExp.value !== "";
+    csA.textContent = has ? `${fmtB(a)} บาท` : "-"; csB.textContent = cashCnt.value === "" ? "-" : `${fmtB(b)} บาท`;
+    csH.innerHTML = !paid ? "" : (has ? `WE POS ${fmtB(+cashExp.value)} ลบ จ่ายจากลิ้นชัก ${fmtB(paid)} บาท` : `จ่ายจากลิ้นชักวันนี้ ${fmtB(paid)} บาท หักให้แล้ว`) + ` <a href="expense.html?tab=list">ดูรายจ่าย</a>`;
+    const n = cashCnt.value !== "", d = b - a; cashHint.hidden = !(has && n && d < 0);
+    live.innerHTML = has || n ? `<span>ควรมี <b>${has ? fmtB(a) : "-"}</b></span><span>นับได้ <b>${n ? fmtB(b) : "-"}</b></span>${has && n ? `<b class="${d < 0 ? "bad" : "ok"}">${d === 0 ? "ครบ" : d < 0 ? `ขาด ${fmtB(-d)}` : `เกิน ${fmtB(d)}`}</b>` : ""}` : "";
+    cashDiff.textContent = (cashExp.value && cashCnt.value) ? (b - a === 0 ? "เงินสดครบ" : (b - a < 0 ? `เงินสดขาด ${(a - b).toLocaleString("th-TH")} บาท` : `เงินสดเกิน ${(b - a).toLocaleString("th-TH")} บาท`)) : ""; cashDiff.className = b - a < 0 ? "err" : "ok"; };
+  cashExp.oninput = diff; diff();
+  const photos = [], pos = []; // pos: 0 or 1 path
+  // round 2b (Mos 26 ต.ค.): the frame shows the photo just taken (the thumbs under it still view / drop each one)
+  const face = (inp) => { const lab = inp.closest("label"), im = lab.nextElementSibling?.querySelector(".thumb:last-child img"); lab.style.backgroundImage = im ? `url("${im.src}")` : ""; };
+  Photo.picker(supabase, phFridge, { paths: photos, type: "fridge", name: "รูปตู้", need: true, status: phStatus, onChange: () => { face(phFridge); update(); } });
+  Photo.picker(supabase, phPos, { paths: pos, type: "pos", name: "รูปจอ POS", need: true, max: 1, onChange: () => { face(phPos); update(); } });
+  // 0052: the เสีย box is read-only (0046), it only ever holds the logged waste → the proof box for extra waste at close (#wasteBox) is gone
+  const underRows = () => [...document.querySelectorAll("#lines .grid")].filter((g) => +g.querySelector(".w").value < (W[g.dataset.id] || 0));
+
+  // ---- wizard: 4 steps, one on screen · the red button walks forward, a step with gaps stops it ----
+  const NAME = { 1: "นับของเหลือ", 2: "ของใช้ในร้าน", 3: "ยอดขายและเงินสด", 4: "ถ่ายรูปและส่ง" };
+  const GO = { 2: "ไปเช็กของใช้", 3: "ไปนับเงินสด", 4: "ไปถ่ายรูปและส่ง" }; // red button = verb + thing
+  let cur = 1, reached = 1;
+  new IntersectionObserver(([e]) => live.classList.toggle("seen", e.isIntersecting), { rootMargin: "0px 0px -140px 0px" }).observe(document.querySelector(".cs")); // 140 ≈ sticky foot
+  const liveRows = () => [...document.querySelectorAll("#lines .grid:not(.ux-zero)")];
+  // 0057: the box a row must have filled · เหลือสุก on a สุกอย่างเดียว row
+  const req = (g) => g.querySelector(g.dataset.cols === "cooked" ? ".rc" : ".rf");
+  const leftRows = () => liveRows().filter((g) => req(g).value === "");
+  // what stops step n · null = ok to leave (only step 1 was required before · ข adds "pick one")
+  const gap = (n) => {
+    if (n === 1) { const l = leftRows(); return l.length ? { say: [`ยังไม่ได้กรอก ${l.length} รายการ`, ...l.slice(0, 3).map((g) => stock.find((x) => x.id === g.dataset.id)?.name || ""), l.length > 3 ? `+ อีก ${l.length - 3}` : ""].filter(Boolean).join("\n"), el: req(l[0]), first: l[0] } : over(); }
+    if (n === 2 && cons.length) { if (!pick) return { say: "เลือก ของใช้ครบ หรือ มีของใกล้หมด ก่อน", el: consAll };
+      if (pick === "low" && !Object.values(state).some((v) => v !== "ok")) return { say: "แตะของที่ใกล้หมดหรือหมด อย่างน้อย 1 อย่าง", el: document.querySelector("#cons .ux-cchip") }; }
+    // 0054 (Mos 30 ต.ค.): ยอดขายรวม WE POS is required (staff bonus) · the server checks 0 to 100,000 too
+    if (n === 3) { if (posTot.value === "") return { say: "ยังไม่ได้ใส่ยอดขายรวมวันนี้\nดูจอ WE POS ยอดรวมทุกช่องทาง", el: posTot };
+      if (+posTot.value < 0 || +posTot.value > 100000) return { say: "ยอดขายรวมต้องอยู่ระหว่าง 0 ถึง 100,000 บาท\nดูจอ WE POS อีกครั้ง", el: posTot };
+      const x = takeX(); if (x && took !== x) return { say: `เอาเงินออก ${fmtB(x)} บาทก่อน\nแล้วกดปุ่ม เอาเงินออก ${fmtB(x)} บาทแล้ว`, el: tookB, scroll: true }; }
+    return null;
+  };
+  // 0052: counted (สด + สุก) below ควรเหลือ − max(ครึ่งถุง, ขายปกติ 1 วัน) → "ตรวจอีกรอบ" before leaving step 1 · same numbers kept once = not asked again
+  let kept = "", lowTo = 2, lows = [];
+  const lowList = () => [...document.querySelectorAll("#lines .grid")].map((g) => { const e = EXP[g.dataset.id];
+    if (!e || req(g).value === "") return null; const n = (+g.querySelector(".rf").value || 0) + (+g.querySelector(".rc").value || 0); return n < +e.min ? { g, n, e } : null; }).filter(Boolean);
+  const lowSig = (l) => l.map((x) => x.g.dataset.id + ":" + x.n).join();
+  const showLow = (l, n) => { lows = l; lowTo = n;
+    lowL.innerHTML = l.map((x) => `<li><b>${UXS.esc(x.e.name)}</b><span>นับ ${x.n} ควรเหลือราว ${+x.e.expected} ${UXS.esc(x.e.unit || "")}</span></li>`).join("");
+    lowS.showModal(); lowS.querySelector(".body").scrollTop = 0; };
+  lowS.addEventListener("click", (e) => { if (e.target === lowS || e.target.closest(".x")) lowS.close(); });
+  lowBack.onclick = () => { lowS.close(); lows.forEach((x) => { x.g.hidden = false; x.g.classList.add("ux-miss"); }); const f = req(lows[0].g); f.scrollIntoView({ block: "center" }); f.focus({ preventScroll: true }); };
+  lowKeep.onclick = () => { kept = lowSig(lows); lowS.close(); go(lowTo); };
+  const say = (t, bad) => { msg.textContent = t || ""; msg.className = bad ? "err" : "muted"; };
+  // 0047 (Mos 30 ต.ค., server checks the same): no minus
+  const over = () => { for (const g of document.querySelectorAll("#lines .grid")) {
+    const p = stock.find((x) => x.id === g.dataset.id), f = [".rf", ".rc", ".w"].map((c) => g.querySelector(c)), v = f.map((x) => +x.value || 0);
+    const i = v.findIndex((x) => x < 0); if (i >= 0) return { say: `${p.name} ใส่เลขติดลบไม่ได้`, el: f[i], row: g }; }
+    return null; };
+  // 0061 (Mos 1 พ.ย.): more than ยกมา + รับเข้า no longer stops the close · a sheet says why, staff pick แก้ or "ของมีจริง ไปต่อ"
+  // (same numbers confirmed once = not asked again) · confirmed rows go up with over_ok, the owner's close card shows them
+  let overKept = "", overTo = 2, overs = [];
+  const overList = () => [...document.querySelectorAll("#lines .grid")].map((g) => {
+    const p = stock.find((x) => x.id === g.dataset.id), l = L[g.dataset.id] || {}; if (!p || !(p.kind === "cpf" || p.made_here) || req(g).value === "") return null;
+    const has = (+l.open_fresh || 0) + (+l.open_cooked || 0) + (+l.received || 0), sum = [".rf", ".rc", ".w"].reduce((t, c) => t + (+g.querySelector(c).value || 0), 0);
+    return sum > has ? { g, p, has, sum } : null; }).filter(Boolean);
+  const overSig = (l) => l.map((x) => x.g.dataset.id + ":" + x.sum).join();
+  overS.addEventListener("click", (e) => { if (e.target === overS || e.target.closest(".x")) overS.close(); });
+  overBack.onclick = () => { overS.close(); overs.forEach((x) => { x.g.hidden = false; x.g.classList.add("ux-over"); }); const f = overs[0].g.querySelector(".rf"); f.scrollIntoView({ block: "center" }); f.focus({ preventScroll: true }); };
+  overKeep.onclick = () => { overKept = overSig(overs); overS.close(); go(overTo); };
+
+  // ---- draft: every input saved to this phone, per day (LINE can close the page any time) ----
+  // ponytail: photos aren't in the draft (they're already uploaded; thumbnails would need signed URLs) · re-shoot after reopening
+  const KEY = "fs_close_draft_" + today;
+  let wq = 0; // 0052: the waste question was answered on this phone
+  const store = { get: (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); return true; } catch (_) { return false; } }, del: (k) => { try { localStorage.removeItem(k); } catch (_) {} } };
+  try { Object.keys(localStorage).filter((k) => k.startsWith("fs_close_draft_") && k !== KEY).forEach((k) => localStorage.removeItem(k)); } catch (_) {}
+  const showDraft = (t) => { draftT.textContent = t ? `ร่างเก็บไว้ ${UXS.hm(t)} น.` : ""; };
+  const save = () => {
+    const rows = {}; document.querySelectorAll("#lines .grid").forEach((g) => { rows[g.dataset.id] = [g.querySelector(".rf").value, g.querySelector(".rc").value]; }); // .w (เสีย) is never saved · it always comes from waste_logs (W)
+    const at = Date.now();
+    if (store.set(KEY, JSON.stringify({ at, rows, cons: state, pick, pt: posTot.value, ce: cashExp.value, cc: cashCnt.value, dl: [...dlv.querySelectorAll("input")].map((i) => i.value), nt: noteEls().map((i) => i.value), note: note.value, step: cur, reached, wq, lo: kept, tk: took }))) showDraft(at);
+  };
+  let draft = null; try { draft = JSON.parse(store.get(KEY) || "null"); } catch (_) { draft = null; }
+  if (draft) {
+    took = Number.isFinite(draft.tk) ? draft.tk : null;
+    document.querySelectorAll("#lines .grid").forEach((g) => { const v = draft.rows?.[g.dataset.id]; if (v) [".rf", ".rc"].forEach((c, i) => { const x = g.querySelector(c); if (!x.disabled) x.value = v[i] ?? ""; }); });
+    Object.entries(draft.cons || {}).forEach(([id, v]) => { if (id in state && SAY[v]) state[id] = v; });
+    document.querySelectorAll("#cons .ux-cchip").forEach(paint);
+    setPick(Object.values(state).some((v) => v !== "ok") ? "low" : (draft.pick === "all" || draft.pick === "low" ? draft.pick : ""));
+    posTot.value = draft.pt || ""; cashExp.value = draft.ce || ""; cashCnt.value = draft.cc || "";
+    (draft.dl || []).forEach((v, i) => { const x = dlv.querySelectorAll("input")[i]; if (x) x.value = v; }); (draft.nt || []).forEach((v, i) => { const x = noteEls()[i]; if (x) x.value = v; }); if (draft.nt) sumNotes(); dlSay(); note.value = draft.note || ""; diff(); showDraft(draft.at);
+    reached = Math.min(Math.max(+draft.reached || 1, +draft.step || 1), 4);
+    wq = draft.wq || 0; kept = draft.lo || "";
+  }
+
+  function update() {
+    setTimeout(() => Photo.markNext()); // step / waste box visibility changed
+    const rs = liveRows(), n = rs.length, x = n - leftRows().length;
+    const was = +progT.dataset.x || 0; progT.dataset.x = x;
+    progT.textContent = n ? `นับแล้ว ${x} จาก ${n}` : "ไม่มีของต้องนับ";
+    if (x > was) UXM.roll(progT, 1); // round 3: the count ticks up as each row is filled
+    progBar.style.transform = `scaleX(${(cur - 1 + (cur === 1 ? (n ? x / n : 1) : 0)) / 4})`;
+    stepT.innerHTML = `${NAME[cur]} <small>ขั้น ${cur} จาก 4</small>`;
+    // round 2b: step 4 opens with what is about to be sent (steps 1–3), each cell goes back to its step
+    if (cur === 4) { const lf = leftRows().length, nl = Object.values(state).filter((v) => v !== "ok").length, a = should() ?? 0, c = +cashCnt.value, cash = cashExp.value && cashCnt.value ? c - a : null;
+      sum4.innerHTML = [[1, "ของเหลือ", !n ? "ไม่มีของ" : lf ? `ยังขาด ${lf}<small> อย่าง</small>` : `ครบ ${n}<small> อย่าง</small>`, lf ? "bad" : "ok"],
+        [2, "ของใช้", nl ? `เติม ${nl}<small> อย่าง</small>` : "ครบ", nl ? "wait" : "ok"],
+        [3, "เงินสด", cash == null ? "ยังไม่ใส่" : cash === 0 ? "ครบ" : `${cash < 0 ? "ขาด" : "เกิน"} ${Math.abs(cash).toLocaleString("th-TH")}<small> บาท</small>`, cash == null ? "" : cash < 0 ? "bad" : cash > 0 ? "wait" : "ok"]]
+        .map(([s, k, v, t]) => `<button type="button" class="cl-cell ${t}" data-s="${s}"><span class="k"><i class="dot" aria-hidden="true"></i>${k}</span><span class="v">${v}</span></button>`).join(""); }
+    document.querySelectorAll("#steps button").forEach((b) => { const s = +b.dataset.s, done = s !== cur && s < reached && !gap(s);
+      b.classList.toggle("on", s === cur); b.classList.toggle("ok", done); b.querySelector("i").textContent = done ? "✓" : s;
+      b.setAttribute("aria-disabled", s > reached); s === cur ? b.setAttribute("aria-current", "step") : b.removeAttribute("aria-current"); });
+    if (send.disabled) return;
+    back.hidden = cur === 1;
+    send.textContent = cur < 4 ? GO[cur + 1] : "ปิดร้าน";
+  }
+  // move to step n · forward passes through every step's check, stops at the first gap and shows it
+  function go(n, quiet) {
+    for (let s = cur; s < n; s++) { const g = gap(s); if (g) {
+      if (s !== cur) show(s);
+      if (!quiet) { say(g.say, true); document.querySelectorAll("#lines .grid").forEach((r) => r.classList.toggle("ux-miss", s === 1 && !r.classList.contains("ux-zero") && req(r).value === ""));
+        if (g.row) { g.row.hidden = false; g.row.classList.add("ux-over"); g.el.scrollIntoView({ block: "center" }); } if (g.first) g.first.hidden = false; if (g.scroll) g.el.scrollIntoView({ block: "center" }); UXM.shake(g.el); }
+      return false; }
+      if (s === 1 && !quiet) { const o = overList(); if (o.length && overSig(o) !== overKept) { overs = o; overTo = n;
+          overL.innerHTML = o.map((x) => `<li><b>${UXS.esc(x.p.name)}</b><em>เกิน ${x.sum - x.has} ${UXS.esc(x.p.unit || "")}</em><span>มี ${x.has} นับได้ ${x.sum}</span>${x.p.made_here ? "<span>ห่อเพิ่ม กดห่อข้าวเหนียวก่อน</span>" : ""}</li>`).join("");
+          overS.showModal(); overS.querySelector(".body").scrollTop = 0; return false; }
+        const l = lowList(); if (l.length && lowSig(l) !== kept) { showLow(l, n); return false; } } }
+    show(n); return true;
+  }
+  function show(n) {
+    cur = n; reached = Math.max(reached, n);
+    document.querySelectorAll(".ux-step").forEach((el) => el.hidden = el.id !== "s" + n);
+    say(""); scrollTo(0, 0); update(); save();
+    const f3 = n === 3 && [posTot, cashExp].find((x) => !x.value);
+    if (f3) f3.focus({ preventScroll: true }); else stepT.focus({ preventScroll: true });
+  }
+  sum4.onclick = (e) => { const b = e.target.closest("[data-s]"); if (b) go(+b.dataset.s); };
+  steps.onclick = (e) => { const b = e.target.closest("button"); if (b && +b.dataset.s <= reached && +b.dataset.s !== cur) go(+b.dataset.s); };
+  back.onclick = () => go(cur - 1);
+  // P3-3: "ถัดไป" on the keyboard → next row's box (เหลือสด, or เหลือสุก on a สุกอย่างเดียว row) · last row closes the keyboard
+  document.getElementById("lines").addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return; e.preventDefault();
+    const rs = [...document.querySelectorAll("#lines .grid:not([hidden])")], i = rs.indexOf(e.target.closest(".grid"));
+    if (rs[i + 1]) req(rs[i + 1]).focus(); else e.target.blur();
+  });
+  posTot.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); cashExp.focus(); } });
+  cashExp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); noteEls()[0].focus(); } });
+  cashCnt.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); cashCnt.blur(); } });
+  document.getElementById("form").addEventListener("input", (e) => { e.target.closest(".ux-miss")?.classList.remove("ux-miss"); e.target.closest(".ux-over")?.classList.remove("ux-over"); if (msg.className === "err") say(""); save(); update(); });
+
+  send.onclick = async () => {
+    if (cur < 4) { go(cur + 1); return; }
+    const bad = [1, 2, 3].find(gap); if (bad) { show(bad); go(bad + 1); return; } // ponytail: forward moves already check · this only guards odd resumes
+    const rows = [...document.querySelectorAll("#lines .grid")].map((g) => ({ product_id: g.dataset.id, remain_fresh: req(g).value === "" ? null : +g.querySelector(".rf").value || 0, remain_cooked: +g.querySelector(".rc").value || 0, waste: +g.querySelector(".w").value || 0 })).filter((r) => r.remain_fresh !== null);
+    const ok = new Set(overList().map((x) => x.g.dataset.id)); rows.forEach((r) => { if (ok.has(r.product_id)) r.over_ok = true; }); // 0061: only after the sheet (go() asked)
+    if (!rows.length) { msg.textContent = "นับของเหลือ อย่างน้อย 1 อย่าง"; msg.className = "err"; return; }
+    // Mos 30 ต.ค.: the two photos are the timestamp → closing needs both (the server checks the same)
+    const shot = !photos.length ? ["ยังไม่ได้ถ่ายรูปตู้และถาด", phFridge] : !pos.length ? ["ยังไม่ได้ถ่ายรูปจอ POS", phPos] : null;
+    if (shot) { say(shot[0], true); UXM.shake(shot[1].closest("label")); return; }
+    const under = underRows()[0];
+    if (under) { const p = stock.find((x) => x.id === under.dataset.id); go(1); say(`${p.name} ทิ้งไปแล้ว ${W[p.id]} ${p.unit || ""}\nช่องเสียใส่น้อยกว่านี้ไม่ได้`, true); UXM.shake(under.querySelector(".w")); under.querySelector(".w").focus(); return; } // qa2: say after go(), show() clears the message
+    if (!confirm(`ปิดร้านเลยไหม?\nนับของแล้ว ${rows.length} จาก ${stock.length} อย่าง\nยอดขายรวม ${(+posTot.value).toLocaleString("th-TH")} บาท${cashDiff.textContent ? "\n" + cashDiff.textContent : ""}\nกดแล้วแก้ตัวเลขไม่ได้`)) return;
+    send.disabled = true; back.hidden = true; msg.textContent = "กำลังปิดร้าน…";
+    const payload = { date: today, lines: rows, consumables: Object.entries(state).filter(([, v]) => v !== "ok").map(([product_id, status]) => ({ product_id, status })), pos_total: +posTot.value, cash_expected: should(), detail: detail(), cash_counted: cashCnt.value === "" ? null : +cashCnt.value, note: note.value || null, pos_photo: pos[0] ?? null, photos };
+    const { error } = await supabase.rpc("close_day", { p: payload });
+    if (error) { msg.textContent = "ยังปิดร้านไม่ได้\n" + App.errText(error); msg.className = "err"; send.disabled = false; back.hidden = false; return; }
+    store.del(KEY); showDraft(null);
+    await App.fn("close-notify", { date: today }).catch(() => {});
+    // done: the wizard gives way to the mascot screen + next task · first line = how the day ended
+    doneS.textContent = [`นับของแล้ว ${rows.length} จาก ${stock.length} อย่าง`, cashDiff.textContent, takeX() ? `เอาเงินออก ${fmtB(takeX())} บาท ไปฝาก 7-11` : ""].filter(Boolean).join("\n");
+    document.getElementById("form").hidden = true; document.getElementById("done").hidden = false; scrollTo(0, 0);
+    if (late) { doneT.textContent = `ปิดร้านของวันที่ ${dayTh} แล้ว`; next.innerHTML = '<a class="btn primary" href="open.html">เปิดร้านวันนี้</a>'; return; }
+    await UXS.showNext(supabase, next);
+  };
+  document.getElementById("form").hidden = false;
+  // resume where the draft left off, but never past a step that has a gap (stock_lines can change after the draft)
+  cur = 1; let to = draft ? Math.min(Math.max(+draft.step || 1, 1), 4) : 1;
+  for (let s = 1; s < to; s++) if (gap(s)) { to = s; break; }
+  document.querySelectorAll(".ux-step").forEach((el) => el.hidden = el.id !== "s" + to); cur = to; update();
+  // 0052 (Mos 30 ต.ค.): waste is logged before counting → ask first, on a day with no waste log and no answer yet
+  // "ไม่มี" is kept on the day (close card: ของเสีย ไม่มี (พนักงานยืนยัน)) · a late close can't log that day's waste any more (waste.html logs today) → write it in the note
+  if (cc && !cc.waste_none && !+cc.waste_logs && !wq && cur === 1) {
+    if (late) { wasteQT.textContent = `วันที่ ${dayTh} มีของเสียไหม`; wqYes.removeAttribute("href"); wqYes.setAttribute("role", "button"); wqYes.tabIndex = 0; wqYes.textContent = "มีของเสีย";
+      wasteQ.querySelector(".bag-hint").textContent = "ของเสียวันนั้นลงในแอปไม่ได้แล้ว\nถ้ามี เขียนในช่องฝากบอกเจ้าของ";
+      wqYes.onclick = () => { wasteQ.close(); wq = 1; save(); }; }
+    wqNo.onclick = async () => { wasteQ.close(); wq = 1; save(); await supabase.rpc("waste_none", { d: today }); }; // ponytail: a failed save = asked again on another phone, never blocks closing
+    wasteQ.showModal();
+  }
+})();
+</script></body></html>
