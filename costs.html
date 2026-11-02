@@ -29,11 +29,12 @@
 <dialog id="fs" class="bsheet" aria-labelledby="fsh"><div class="body"><div class="grab"></div>
   <div class="hd"><b id="fsh">กรอกยอดขายและค่าใช้จ่าย</b><button class="x" type="button" aria-label="ปิด" autofocus>✕</button></div>
   <p class="meta" style="margin:2px 0 0">ใส่เป็นบาท ช่องที่เว้นว่างนับเป็น 0</p>
+  <p class="meta" id="fxn" style="margin:2px 0 0" hidden>ค่าใช้จ่ายลงที่ <a href="expense.html" style="display:inline-flex;align-items:center;min-height:44px;padding:0 6px;margin:-12px -6px">หน้ารายจ่าย</a><br>เงินเดือน โอที โบนัส แอปคิดเอง</p>
   <div class="g"><label>ยอดหน้าร้าน (POS ไม่รวมเดลิเวอรี่)<span class="in"><input type="number" inputmode="decimal" id="store_sales"><span class="sfx">บาท</span></span></label><label>ยอด LINE MAN<span class="in"><input type="number" inputmode="decimal" id="lineman_sales"><span class="sfx">บาท</span></span></label>
     <label>ยอด Grab<span class="in"><input type="number" inputmode="decimal" id="grab_sales"><span class="sfx">บาท</span></span></label><label>ยอด Shopee<span class="in"><input type="number" inputmode="decimal" id="shopee_sales"><span class="sfx">บาท</span></span></label>
-    <label>ค่าเช่า<span class="in"><input type="number" inputmode="decimal" id="rent"><span class="sfx">บาท</span></span></label><label>ค่าแรง<span class="in"><input type="number" inputmode="decimal" id="wages"><span class="sfx">บาท</span></span></label>
-    <label>ค่าน้ำไฟ<span class="in"><input type="number" inputmode="decimal" id="utilities"><span class="sfx">บาท</span></span></label><label>ค่าแก๊ส<span class="in"><input type="number" inputmode="decimal" id="gas"><span class="sfx">บาท</span></span></label>
-    <label>จิปาถะ<span class="in"><input type="number" inputmode="decimal" id="misc"><span class="sfx">บาท</span></span></label></div>
+    <label class="fx">ค่าเช่า<span class="in"><input type="number" inputmode="decimal" id="rent"><span class="sfx">บาท</span></span></label><label class="fx">ค่าแรง<span class="in"><input type="number" inputmode="decimal" id="wages"><span class="sfx">บาท</span></span></label>
+    <label class="fx">ค่าน้ำไฟ<span class="in"><input type="number" inputmode="decimal" id="utilities"><span class="sfx">บาท</span></span></label><label class="fx">ค่าแก๊ส<span class="in"><input type="number" inputmode="decimal" id="gas"><span class="sfx">บาท</span></span></label>
+    <label class="fx">จิปาถะ<span class="in"><input type="number" inputmode="decimal" id="misc"><span class="sfx">บาท</span></span></label></div>
   <label class="field" for="note">โน้ต</label><textarea id="note" rows="2"></textarea>
   <p class="muted">ค่าคอมแอปส่ง แก้ได้ที่ <a href="settings.html?tab=sys">ตั้งค่า › ร้าน</a></p></div>
   <div class="foot"><button class="btn primary" id="save">บันทึกยอด</button><p id="smsg" class="muted"></p></div></dialog>
@@ -48,9 +49,13 @@
   const money = (n) => n == null ? "-" : Number(n).toLocaleString("th-TH", { maximumFractionDigits: 0 });
   const money2 = (n) => n == null ? "-" : Number(n).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); // 0057: the fee in satang (58.32)
   const IN = ["store_sales", "lineman_sales", "grab_sales", "shopee_sales", "rent", "wages", "utilities", "gas", "misc"];
+  const FX = ["rent", "wages", "utilities", "gas", "misc"]; // 0084: typed only for a month before หน้ารายจ่าย
+  const CAT = { fixed: "ค่าคงที่รายเดือน", gas: "แก๊ส", supply: "ของใช้", raw: "วัตถุดิบ", fee: "ค่าธรรมเนียม", other: "ซ่อม/อื่นๆ" }; // = expense.html
+  let typed = false;
   const now = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 7);
   const qm = new URLSearchParams(location.search).get("m"); // round 4: owner สรุปเดือน links here with ?m=YYYY-MM
-  let cur = /^\d{4}-\d{2}$/.test(qm || "") && qm <= now ? qm : now;
+  const FIRST = "2026-11"; // Mos 2 Nov: Oct 2026 belongs to the previous owner, the shop's books start in Nov
+  let cur = /^\d{4}-\d{2}$/.test(qm || "") && qm <= now && qm >= FIRST ? qm : now;
   const ym = () => cur;
   const mname = (v) => new Date(v + "-01T00:00:00Z").toLocaleDateString("th-TH", { month: "short", year: "numeric", timeZone: "UTC" });
   const shift = (d) => { const [y, m] = cur.split("-").map(Number), t = new Date(Date.UTC(y, m - 1 + d, 1)); cur = t.toISOString().slice(0, 7); load(); };
@@ -61,11 +66,17 @@
 
   async function load() {
     const [y, m] = ym().split("-").map(Number);
-    $("ml").textContent = mname(ym()); $("mn").disabled = ym() >= now;
+    $("ml").textContent = mname(ym()); $("mn").disabled = ym() >= now; $("mp").disabled = ym() <= FIRST;
     $("fsh").textContent = "ยอดเดือน " + mname(ym()); $("save").textContent = "บันทึกยอด " + mname(ym());
     const { data: r, error } = await supabase.rpc("month_costs", { y, m });
     if (error) { $("sum").className = "card"; $("sum").innerHTML = `<p class="err">เปิดไม่ขึ้น: ${esc(App.errText(error))}</p>`; return; }
     IN.forEach((k) => $(k).value = r.inputs[k] ?? "");
+    // 0084: costs come from หน้ารายจ่าย + pay the app works out · a month before it keeps the typed costs (cost_source month_inputs)
+    typed = r.cost_source === "month_inputs";
+    document.querySelectorAll("#fs .fx").forEach((e) => e.hidden = !typed); $("fxn").hidden = typed;
+    const pay = r.pay || {}, payT = (+pay.salary || 0) + (+pay.ot || 0) + (+pay.bonus || 0), miss = r.fixed_missing || [];
+    const fixM = typed ? `ค่าใช้จ่ายประจำ ${money(r.fixed)} บาท<br>(ยอดที่กรอกเอง ก่อนมีหน้ารายจ่าย)`
+      : `รายจ่าย ${money(r.expense_total)} บาท<br>เงินเดือน โอที โบนัส ${money(payT)} บาท`;
     $("note").value = r.inputs.note || "";
     // L6: with a missing cost price the red button is that job (the sheet of month numbers moves to the grey button under it)
     const nc = r.missing_cost.length, editT = (r.has_inputs ? "แก้ยอดเดือน " : "กรอกยอดเดือน ") + mname(ym());
@@ -78,19 +89,22 @@
     const cons = r.cpf_consumables || [];
     $("sum").className = "bento";
     $("sum").innerHTML = `<div class="bt wide hero${r.net >= 0 ? " calm" : ""}"><span class="k">กำไรสุทธิ ${mname(ym())}</span><span class="v"><span class="big">${money(r.net)}</span> <small>บาท</small></span>`
-      + (r.has_inputs ? "" : '<span class="m">ยังไม่กรอกยอดเดือนนี้<br>ค่าเช่า ค่าแรง ใช้ตัวเลขประมาณไปก่อน</span>') + `</div>`
+      + `<span class="m">${r.has_inputs ? "" : "ยังไม่กรอกยอดขายเดือนนี้<br>"}ค่าใช้จ่ายจาก${typed ? "ยอดที่กรอกเอง" : "หน้ารายจ่าย"}</span></div>`
       + t("", "ยอดขายรวม", r.revenue) + t("", "ค่าคอมแอปส่ง", r.gp_cost)
-      + `<button type="button" class="bt wide" id="costT"><span class="k">ต้นทุน</span><span class="v">${money(cpfAll + (+r.fixed || 0))} <small>บาท</small></span><span class="m">ค่าของ CPF ${money(r.cpf_cost)} บาท<br>ของใช้ CPF ${money(r.cpf_consumable_cost)} บาท<br>ค่าการตลาด CPF ${pct}% ${money(r.cpf_fee)} บาท<br>ค่าใช้จ่ายประจำ ${money(r.fixed)} บาท</span><svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>`;
+      + `<button type="button" class="bt wide" id="costT"><span class="k">ต้นทุน</span><span class="v">${money(cpfAll + (+r.fixed || 0))} <small>บาท</small></span><span class="m">ค่าของ CPF ${money(r.cpf_cost)} บาท<br>ของใช้ CPF ${money(r.cpf_consumable_cost)} บาท<br>ค่าการตลาด CPF ${pct}% ${money(r.cpf_fee)} บาท<br>${fixM}</span><svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>`;
     $("costT").onclick = () => { $("prodf").open = true; $("prodf").scrollIntoView({ behavior: "smooth", block: "start" }); };
     // ต้องทำ: things only the owner can fix
     const apps = ["lineman_sales", "grab_sales", "shopee_sales"].reduce((a, k) => a + (+r.inputs[k] || 0), 0);
     const todo = [];
     if (!r.has_inputs || apps === 0) todo.push(`<button type="button" class="chip wait" id="t-in">ยังไม่กรอกยอดแอป ›</button>`);
+    if (!typed && miss.length) todo.push(`<a class="chip wait" href="expense.html">ยังไม่ลง ${esc(miss.slice(0, 2).join(" "))}${miss.length > 2 ? ` อีก ${miss.length - 2} ตัว` : ""} ›</a>`);
     if (r.missing_cost.length) todo.push(`<a class="chip bad" href="settings.html?tab=prod&amp;f=nocost">ยังไม่ใส่ทุน ${r.missing_cost.length} ตัว ›</a>`);
     $("todo").hidden = !todo.length; $("todo").innerHTML = todo.length ? `<span class="lbl">ต้องทำ</span>` + todo.join("") : "";
     if ($("t-in")) $("t-in").onclick = editM;
     const diff = r.revenue > 0 && r.stock_sales_est > 0 ? Math.round((r.stock_sales_est - r.revenue) / r.revenue * 100) : null;
-    const after = [["ของเสีย (รวมอยู่ในค่าของ CPF แล้ว)", money(r.waste_cost), "บาท"], ["เปิดร้าน", r.days_open, "วัน"], ["ยอดขายเฉลี่ยต่อวัน", money(r.avg_daily_sales), "บาท"], ["ยอดขายคิดจากสต็อก (ประมาณ)", money(r.stock_sales_est), "บาท"]];
+    const ex = r.expenses || {}, split = typed ? [] : [...Object.keys(CAT).filter((k) => +ex[k]).map((k) => [CAT[k], money(ex[k]), "บาท"]),
+      ["เงินเดือน", money(pay.salary), "บาท"], ["โอทีที่อนุมัติแล้ว", money(pay.ot), "บาท"], ["โบนัสยอดขาย", money(pay.bonus), "บาท"]];
+    const after = [...split, ["ของเสีย (รวมอยู่ในค่าของ CPF แล้ว)", money(r.waste_cost), "บาท"], ["เปิดร้าน", r.days_open, "วัน"], ["ยอดขายเฉลี่ยต่อวัน", money(r.avg_daily_sales), "บาท"], ["ยอดขายคิดจากสต็อก (ประมาณ)", money(r.stock_sales_est), "บาท"]];
     $("more").innerHTML = `<table>${after.map(([k, v, u]) => `<tr><td>${k}</td><td class="n">${v ?? 0} ${u}</td></tr>`).join("")}</table>`
       + (diff == null ? "" : `<p class="muted">ยอดขายคิดจากสต็อก ต่างจากยอดขายรวม ${diff > 0 ? "+" : ""}${diff}%</p>`);
     $("pc").textContent = r.per_product.length + cons.length ? `(${r.per_product.length + cons.length} ตัว)` : "";
@@ -101,7 +115,7 @@
   }
   $("save").onclick = async () => {
     const row = { ym: ym(), note: $("note").value.trim() || null, updated_at: new Date().toISOString() };
-    IN.forEach((k) => row[k] = +$(k).value || 0);
+    IN.forEach((k) => { if (typed || !FX.includes(k)) row[k] = +$(k).value || 0; });
     $("save").disabled = true;
     const { error } = await supabase.from("month_inputs").upsert(row);
     $("save").disabled = false;

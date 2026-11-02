@@ -1,0 +1,151 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ฝากเงิน</title><meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="lib/ui.css?v=r1101">
+<style>
+/* 0082 (Mos 30 ต.ค. + 1 พ.ย., STATUS ข้อ 12): ลงหลักฐานฝากเงิน after close · one number to match on top, the check right under the two inputs */
+.dp-days { display: flex; gap: 8px; margin: 0 -16px 4px; padding: 2px 16px 6px; overflow-x: auto; scrollbar-width: none; }
+.dp-days::-webkit-scrollbar { display: none; }
+.dp-days button { flex: none; min-height: 44px; padding: 6px 14px; border: 0; border-radius: var(--radius-pill); background: var(--color-card); box-shadow: var(--shadow-raised); font: 500 15px/1.2 var(--font-body); color: var(--color-ink-soft); font-variant-numeric: tabular-nums; cursor: pointer; }
+.dp-days button[aria-pressed=true] { color: var(--color-card); background: var(--color-foreground); }
+.dp-days button i { font-style: normal; margin-left: 4px; }
+.dp-out { padding: 14px 16px; }
+.dp-out h2 { margin: 0; }
+.dp-out .day { margin: 2px 0 0; font-size: 15px; color: var(--color-ink-soft); }
+.dp-out .v { display: block; margin-top: 6px; font: 600 30px/1.15 var(--font-head); font-variant-numeric: tabular-nums; color: var(--color-foreground); }
+.dp-out .v small { font-size: 17px; font-weight: 500; }
+.dp-out .h { margin: 6px 0 0; font-size: 14px; color: var(--color-ink-soft); }
+.dp-out .pill { margin-top: 8px; }
+.dp-chk { position: relative; padding: 12px 16px 12px 22px; overflow: hidden; }
+.dp-chk::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 6px; background: var(--sh-bar); }
+.dp-chk[data-tone=ok]::before { background: var(--color-success); }
+.dp-chk[data-tone=wait]::before { background: var(--color-wait-mark); }
+.dp-chk[data-tone=bad]::before { background: var(--color-destructive); }
+.dp-chk .kv { padding: 3px 0; font-variant-numeric: tabular-nums; }
+.dp-chk .res { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 6px; padding-top: 8px; border-top: .5px solid var(--color-separator); font: 600 20px/1.3 var(--font-head); font-variant-numeric: tabular-nums; }
+.dp-chk[data-tone=ok] .res b { color: var(--color-success); }
+.dp-chk[data-tone=wait] .res b { color: var(--on-wait); }
+.dp-chk[data-tone=bad] .res b { color: var(--color-destructive); }
+.dp-chk .res span { font-size: 17px; }
+.dp-chk p { margin: 4px 0 0; font-size: 14px; color: var(--color-ink-soft); }
+.dp-chk p.fee { margin-top: 8px; padding-top: 8px; border-top: .5px solid var(--color-separator); }
+.dp-see { display: inline-block; min-height: 44px; padding: 12px 2px; color: var(--color-primary-dark); font-weight: 500; }
+.sticky .btn + .btn { margin-top: 8px; }
+</style>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js?v=r1101b"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js?v=0060b"></script>
+</head><body class="pg-fill" ontouchstart="">
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ฝากเงิน</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
+<div class="sk"><span class="vh">กำลังเปิด…</span><i class="sk-b" style="--w:100%;--h:120px;--r:20px"></i><i class="sk-b" style="--w:100%;--h:52px;--r:12px;margin-top:24px"></i><i class="sk-b" style="--w:100%;--h:52px;--r:12px;margin-top:24px"></i><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
+<div id="lE" class="ld" hidden><p class="err" role="alert"></p><button type="button" id="retry" class="btn primary">ลองอีกครั้ง</button></div>
+<div id="none" class="ld" hidden><div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>ยังไม่มีวันที่ปิดร้าน<br>ปิดร้านก่อน แล้วค่อยลงฝากเงิน</p></div><a class="btn" href="close.html">ไปปิดร้าน</a></div>
+<div id="form" class="ld" hidden>
+  <div id="days" class="dp-days" role="group" aria-label="เลือกวัน" hidden></div>
+  <div class="card dp-out"><h2>เงินที่เอาออก</h2><p class="day" id="dayL"></p><b class="v" id="outV"></b><p class="h" id="outH"></p><span class="pill" id="stP"></span></div>
+  <label class="fstep" for="amt"><i>1</i>ยอดฝาก<small>ดูในสลิป</small></label>
+  <div class="in"><input id="amt" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0" min="0" max="100000"><span class="sfx">บาท</span></div>
+  <label class="fstep" for="fee"><i>2</i>ค่าธรรมเนียม 7-11<small>ไม่มีใส่ 0</small></label>
+  <div class="in"><input id="fee" type="number" inputmode="decimal" enterkeyhint="done" placeholder="0" min="0" max="100"><span class="sfx">บาท</span></div>
+  <div class="card dp-chk" id="chk" aria-live="polite"></div>
+  <h3 class="fstep"><i>3</i>รูปสลิป</h3>
+  <label class="btn" id="phL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปสลิป <input id="ph" type="file" accept="image/*" capture="environment" hidden></label>
+  <p id="phS" class="muted"></p>
+  <a href="#" id="seeSlip" class="dp-see" hidden>ดูรูปสลิปที่ลงไว้</a>
+  <div class="sticky"><button id="send" class="btn primary">บันทึกการฝากเงิน</button><button type="button" id="conf" class="btn tonal" hidden>ยืนยันยอดนี้ (ตรวจแล้ว)</button>
+  <p id="msg" class="muted"></p></div>
+</div>
+<script>
+(async () => {
+  const failed = (e) => { form.hidden = true; lE.hidden = false; lE.querySelector(".err").textContent = "เปิดไม่ขึ้น\n" + App.errText(e);
+    retry.onclick = () => { retry.disabled = true; location.reload(); }; };
+  try {
+  const { supabase, me } = await App.ready();
+  // managers don't see money (0027) → same door as หน้ารายจ่าย
+  if (UXS.only(me, ["staff", "owner"], "หน้านี้สำหรับพนักงานในร้านและเจ้าของ", "ผู้จัดการดูงานของร้านได้ที่หน้าวันนี้", "owner.html", "ไปหน้าวันนี้")) return;
+  const OWN = me.role === "owner", bd = UXS.bizDay();
+  const baht = (n) => (+n).toLocaleString("th-TH", { maximumFractionDigits: 2 }) + " บาท";
+  const back = (n) => new Date(Date.parse(bd + "T00:00:00Z") - n * 864e5).toISOString().slice(0, 10);
+  // staff: the closed days of the last 3 (the server allows the same) · owner: 2 weeks
+  const from = back(OWN ? 14 : 3);
+  const [dq, xq] = await Promise.all([
+    supabase.from("shop_days").select("date,status").eq("status", "sent").gte("date", from).lte("date", bd).order("date", { ascending: false }),
+    supabase.from("deposits").select("date,amount,fee,taken_out,gap,slip,updated_at,confirmed_at").gte("date", from)]);
+  if (dq.error || xq.error) throw dq.error || xq.error;
+  const DAYS = (dq.data || []).filter((d) => d.status === "sent" && d.date >= from && d.date <= bd).map((d) => d.date);
+  const DEP = Object.fromEntries((xq.data || []).map((x) => [x.date, x]));
+  if (!DAYS.length) { none.hidden = false; return; }
+
+  const slip = [];
+  Photo.picker(supabase, ph, { paths: slip, type: "deposit", name: "รูปสลิป", max: 1, status: phS, need: "ต้องถ่าย" });
+  let sel = DAYS.find((d) => !DEP[d]) || DAYS[0], OUT = null;
+  const num = (el) => el.value === "" ? null : +el.value;
+
+  // ตรง / ขาด / เกิน: ยอดฝาก + ค่าธรรมเนียม against เงินที่เอาออก (the server checks the same and keeps its own answer)
+  const check = () => {
+    const a = num(amt), f = num(fee) ?? 0;
+    if (a == null) { chk.dataset.tone = ""; chk.innerHTML = `<div class="res"><span>เช็กยอด</span><b>ใส่ยอดฝากก่อน</b></div>`; return; }
+    const sum = Math.round((a + f) * 100) / 100, g = OUT == null ? null : Math.round((sum - OUT) * 100) / 100;
+    const [tone, word, say] = g == null ? ["", "เทียบไม่ได้", "ไม่มียอดเงินที่เอาออกของวันนี้<br>เจ้าของเช็กเอง"]
+      : g === 0 ? ["ok", "ตรง", ""]
+      : g < 0 ? ["bad", `ขาด ${baht(-g)}`, "ฝากน้อยกว่าเงินที่เอาออก<br>ดูสลิปอีกครั้ง ถ้าถูกแล้วบอกเจ้าของ"]
+      : ["wait", `เกิน ${baht(g)}`, "ฝากมากกว่าเงินที่เอาออก<br>ดูสลิปอีกครั้ง"];
+    chk.dataset.tone = tone;
+    chk.innerHTML = `<div class="kv"><span>ฝาก + ค่าธรรมเนียม</span><b>${baht(sum)}</b></div><div class="kv"><span>เงินที่เอาออก</span><b>${OUT == null ? "ไม่มี" : baht(OUT)}</b></div>`
+      + `<div class="res"><span>ผล</span><b>${word}</b></div>${say ? `<p>${say}</p>` : ""}`
+      + (f > 0 ? `<p class="fee">ค่าธรรมเนียม ${baht(f)} ลงรายจ่ายให้เอง<br>ไม่ต้องไปกรอกหน้ารายจ่ายอีก</p>` : "");
+  };
+  amt.oninput = fee.oninput = check;
+
+  const draw = async () => {
+    const x = DEP[sel], lock = !!(x && x.confirmed_at && !OWN);
+    days.hidden = DAYS.length < 2;
+    days.innerHTML = DAYS.map((d) => `<button type="button" data-d="${d}" aria-pressed="${d === sel}">${UXS.thd(d, { weekday: "short" })}${DEP[d] ? `<i aria-label="ลงแล้ว">✓</i>` : ""}</button>`).join("");
+    dayL.textContent = `ของ${UXS.thd(sel, { weekday: "long" })}`;
+    outV.textContent = "…";
+    const r = await supabase.rpc("deposit_taken_out", { d: sel });
+    OUT = r.error || r.data == null || typeof r.data === "object" ? (x ? x.taken_out : null) : +r.data;
+    outV.innerHTML = OUT == null ? "ไม่มียอด" : `${(+OUT).toLocaleString("th-TH", { maximumFractionDigits: 2 })} <small>บาท</small>`;
+    outH.innerHTML = OUT == null ? "ตอนปิดร้านไม่ได้นับเงิน<br>ลงยอดฝากได้ เจ้าของเช็กเอง" : "ฝาก + ค่าธรรมเนียม ต้องเท่ากับยอดนี้";
+    stP.textContent = x ? (x.confirmed_at ? "เจ้าของตรวจแล้ว" : `ลงแล้ว ${UXS.hm(x.updated_at)} น.`) : "ยังไม่ได้ฝาก";
+    stP.dataset.tone = x ? "ok" : "wait";
+    amt.value = x ? +x.amount : ""; fee.value = x ? +x.fee : "";
+    amt.disabled = fee.disabled = ph.disabled = lock; phL.hidden = lock;
+    seeSlip.hidden = !x; send.hidden = lock;
+    send.textContent = x ? "บันทึกที่แก้" : "บันทึกการฝากเงิน";
+    conf.hidden = !(OWN && x && !x.confirmed_at);
+    msg.className = lock ? "err" : "muted"; msg.textContent = lock ? "เจ้าของตรวจแล้ว แก้ไม่ได้\nทักเจ้าของ" : "";
+    check();
+  };
+  days.onclick = (e) => { const b = e.target.closest("[data-d]"); if (!b || b.dataset.d === sel) return; sel = b.dataset.d; slip.length = 0; draw(); };
+  seeSlip.onclick = async (e) => { e.preventDefault(); try { Photo.view(await Photo.url(supabase, DEP[sel].slip)); } catch (_) { UXM.toast("เปิดรูปไม่ได้"); } };
+
+  const bad = (t, el) => { msg.textContent = t; msg.className = "err"; if (el) UXM.shake(el); };
+  send.onclick = async () => {
+    const x = DEP[sel], path = slip[0] || x?.slip;
+    if (amt.value === "") return bad("ใส่ยอดฝากก่อน", amt);
+    if (fee.value === "") return bad("ใส่ค่าธรรมเนียม\nไม่มีใส่ 0", fee);
+    if (!path) return bad("ถ่ายรูปสลิปก่อน", phL);
+    send.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
+    const { data, error } = await supabase.rpc("save_deposit", { p: { date: sel, amount: amt.value, fee: fee.value, slip: path } });
+    send.disabled = false;
+    if (error) return bad("บันทึกไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error));
+    DEP[sel] = { ...(x || {}), date: sel, amount: +amt.value, fee: +fee.value, taken_out: data?.taken_out ?? OUT, gap: data?.gap ?? null, slip: path, updated_at: new Date().toISOString(), confirmed_at: x?.confirmed_at ?? null };
+    slip.length = 0; await draw();
+    msg.className = "ok"; msg.textContent = "บันทึกแล้ว" + (+fee.value > 0 ? `\nค่าธรรมเนียม ${baht(fee.value)} ลงรายจ่ายให้แล้ว` : "");
+    if (!document.getElementById("home")) msg.insertAdjacentHTML("afterend", '<a class="btn" id="home" href="index.html" style="margin-top:10px">กลับหน้าหลัก</a>');
+  };
+  conf.onclick = async () => {
+    conf.disabled = true;
+    const { error } = await supabase.rpc("confirm_deposit", { d: sel });
+    conf.disabled = false;
+    if (error) return bad(App.errText(error));
+    DEP[sel].confirmed_at = new Date().toISOString(); await draw(); UXM.toast("ตรวจแล้ว");
+  };
+  form.hidden = false;
+  await draw();
+  } catch (e) { if (e.message !== "denied") failed(e); }
+})();
+</script></body></html>

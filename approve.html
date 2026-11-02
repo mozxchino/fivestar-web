@@ -20,6 +20,7 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
 .ux-2l{display:flex;flex-direction:column}.ux-2l b{color:var(--color-foreground);font-weight:600;font-variant-numeric:tabular-nums}
 /* 0044 packs first: under the stepper "ถุง = 10 ตัว" · remove an added row · the add sheet rows */
 .ux-stepw{display:flex;flex-direction:column;align-items:center;gap:2px;flex:none}
+.ux-qbox{position:relative;display:inline-flex}.ux-qbox input{padding-bottom:18px!important}.ux-qbox small{position:absolute;left:0;right:0;bottom:5px;text-align:center;font-size:12px;line-height:1;color:var(--color-ink-soft,#6b6b6b);pointer-events:none}
 .ux-eq{font-size:13px;line-height:1.3;color:var(--color-ink-soft);font-variant-numeric:tabular-nums;white-space:nowrap}
 .ux-rm{min-height:44px;margin:0 0 -8px;padding:0;border:0;background:none;color:var(--color-primary-dark);font:500 15px/1.2 var(--font-body);text-decoration:underline;cursor:pointer;touch-action:manipulation}
 .ux-add{margin:12px 0 0}
@@ -57,7 +58,7 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
 </div>
 <dialog id="addS" class="bsheet" aria-labelledby="addH"><div class="body"><div class="grab"></div>
   <div class="hd"><b id="addH">เพิ่มรายการ</b><button class="x" type="button" aria-label="ปิด">✕</button></div>
-  <p class="muted">ของ CPF ที่ยังไม่อยู่ในใบนี้</p><div id="addL" role="radiogroup" aria-labelledby="addH"></div></div>
+  <p class="muted">ของ CPF ที่ยังไม่อยู่ในใบนี้</p><input id="addF" type="text" style="margin:8px 0 4px" placeholder="พิมพ์หา เช่น จ๊อ น้ำพริก" aria-label="ค้นหาสินค้า" enterkeyhint="search" autocomplete="off"><div id="addL" role="radiogroup" aria-labelledby="addH"></div><p id="addNo" class="muted" hidden>ไม่เจอสินค้าที่พิมพ์</p></div>
   <div class="foot"><div class="ux-addq"><div class="in"><input id="addQ" type="number" inputmode="numeric" min="1" step="1" value="1" enterkeyhint="done" aria-label="จำนวนที่เพิ่ม"><span class="sfx" id="addU">ถุง</span></div><span id="addEq" class="muted"></span></div>
   <p id="addM" class="err" role="alert"></p><button id="addGo" class="btn primary" type="button" disabled>เลือกสินค้าก่อน</button></div></dialog>
 <dialog id="okS" class="bsheet" aria-labelledby="okT"><div class="body"><div class="grab"></div>
@@ -114,7 +115,7 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
         const { data: pl, error } = await supabase.rpc("night_order", { d: today });
         const nid = pl && pl.order_id;
         if (pl && pl.existing) return location.replace("approve.html?order=" + nid);   // 0046: tonight's order is already sent or skipped, show it, never touch its rows
-        if (error || !nid) throw error || new Error(`คืนนี้ไม่มีใบสั่ง ${day(pl.arrive)} CPF ไม่ส่ง`);
+        if (error || !nid) throw error || new Error(`คืนนี้ไม่มีใบสั่ง ${day(pl.arrive)} ${pl.reason === "holiday" ? "ร้านหยุด ไม่มีคนรับของ" : "CPF ไม่ส่ง"}`);
         await supabase.from("order_items").delete().eq("order_id", nid);
         const { error: e2 } = await supabase.from("order_items").insert(old.map((o) => ({ order_id: nid, product_id: o.product_id, qty_proposed: o.qty_final ?? o.qty_proposed, qty_final: o.qty_final ?? o.qty_proposed })));
         if (e2) throw e2;
@@ -155,9 +156,10 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
   // 0033: plan rows say how the number came about: left tonight, sold today (× mult) · no sold today = the old owner's average, in grey
   const left = (r) => r.remaining == null ? "" : `เหลือ ${n(r.remaining)} ${E(r.unit_th)} · `;
   // 0038: เหลือ · กำลังมา · ขายวันละ (เฉลี่ย 7 วัน หรือค่าตั้งต้น) · ควรมี (เป้า) — the same numbers the rule in settings describes
+  // Mos 2 พ.ย.: ควรมี on its own line (one line was cramped)
   const base = (r) => r.kind === "consumable" ? `ของใช้ CPF ติ๊กใกล้หมดตอนปิดร้าน 1 ถุง` : r.daily_use != null
-    ? `${left(r)}${Number(r.incoming) > 0 ? `กำลังมา ${n(r.incoming)} ${E(r.unit_th)} · ` : ""}ขายวันละ ${r.daily_use < 1 ? n(r.daily_use) : Math.round(r.daily_use)} ${E(r.unit_th)}${r.use_src === "seed" ? " (ค่าตั้งต้น)" : ""}${r.par != null ? ` · ควรมี ${n(r.par)} ${E(r.unit_th)}` : ""}`
-    : `เหลือ ${r.remaining == null ? "-" : `${n(r.remaining)} ${E(r.unit_th)}`} · ควรมี ${r.par == null ? "-" : n(r.par)} ${E(r.unit_th)}`;   // audit 26: every number with its unit
+    ? `${left(r)}${Number(r.incoming) > 0 ? `กำลังมา ${n(r.incoming)} ${E(r.unit_th)} · ` : ""}ขายวันละ ${r.daily_use < 1 ? n(r.daily_use) : Math.round(r.daily_use)} ${E(r.unit_th)}${r.use_src === "seed" ? " (ค่าตั้งต้น)" : ""}${r.par != null ? `<br>ควรมี ${n(r.par)} ${E(r.unit_th)}` : ""}`
+    : `เหลือ ${r.remaining == null ? "-" : `${n(r.remaining)} ${E(r.unit_th)}`}<br>ควรมี ${r.par == null ? "-" : n(r.par)} ${E(r.unit_th)}`;   // audit 26: every number with its unit
   // Mos 29 ต.ค.: packs first · a row with a bag size edits bags (เซ็ต for the chicken set) · qty_final stays in ตัว/ชิ้น, so send-order and the sales text are unchanged
   // ponytail: a stored qty that is not whole bags (an old order) keeps the plain count, so a reload never changes a number under the owner's thumb
   const pkOf = (r) => Number(r.pack_size) > 1 && Number(r.qty) % r.pack_size === 0 ? Number(r.pack_size) : 1;
@@ -178,7 +180,7 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
   const vals = {};   // product_id → qty typed so far (kept across a re-render after เพิ่มรายการ / เอาออก)
   const rowH = (r, i) => { const pk = pkOf(r), v = Number(vals[r.product_id] ?? r.qty), u = pk > 1 ? word(r) : E(r.unit_th);
     return `<div class="orow" id="r${i}"><div class="grow"><div class="nm">${E(r.label)}</div>${pileOf.has(r.product_id) ? `<span class="ux-pile">${pileSay(pileOf.get(r.product_id))}</span>` : ""}<div class="meta"></div>${added(r) && live() ? `<button type="button" class="ux-rm" data-rm="${i}">เอาออก</button>` : ""}</div>
-    <div class="ux-stepw"><div class="step"><button type="button" data-d="-1" data-s="${i}" aria-label="ลด ${E(r.label)} 1 ${u}">−</button><input type="number" inputmode="${pk > 1 ? "numeric" : "decimal"}" min="0" step="${pk > 1 ? 1 : r.pack_size || 1}" value="${pk > 1 ? Math.round(v / pk) : v}" data-i="${i}" aria-label="${E(r.label)} จำนวนสั่ง (${u})"><button type="button" data-d="1" data-s="${i}" aria-label="เพิ่ม ${E(r.label)} 1 ${u}">+</button></div>${pk > 1 ? `<span class="ux-eq" id="eq${i}" aria-hidden="true"></span>` : ""}</div></div>`; };
+    <div class="ux-stepw"><div class="step"><button type="button" data-d="-1" data-s="${i}" aria-label="ลด ${E(r.label)} 1 ${u}">−</button><span class="ux-qbox"><input type="number" inputmode="${pk > 1 ? "numeric" : "decimal"}" min="0" step="${pk > 1 ? 1 : r.pack_size || 1}" value="${pk > 1 ? Math.round(v / pk) : v}" data-i="${i}" aria-label="${E(r.label)} จำนวนสั่ง (${u})"><small aria-hidden="true">${u}</small></span><button type="button" data-d="1" data-s="${i}" aria-label="เพิ่ม ${E(r.label)} 1 ${u}">+</button></div>${pk > 1 ? `<span class="ux-eq" id="eq${i}" aria-hidden="true"></span>` : ""}</div></div>`; };
   const qv = (i) => { const v = Math.max(0, Number(document.querySelector(`[data-i="${i}"]`).value) || 0), pk = pkOf(rows[i]); return pk > 1 ? Math.round(v) * pk : v; };
   const cur = () => rows.map((r, i) => ({ product_id: r.product_id, qty_final: qv(i), r }));
   // ง3: how far the owner moved from what the system proposed (order_review qty_proposed)
@@ -206,7 +208,7 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
       body: JSON.stringify({ oid: orderId, pid: rows[i].product_id, qty: qv(+i) }) }).catch(() => {}); } };
   addEventListener("pagehide", flushHide); document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushHide(); });
   const mark = (i) => { const q = qv(i), r = rows[i], row = $("r" + i); row.classList.toggle("chg", edited(r, q)); row.querySelector(".meta").innerHTML = meta(r, q);
-    if ($("eq" + i)) $("eq" + i).textContent = `${word(r)} = ${n(q)} ${r.unit_th}`; };
+    if ($("eq" + i)) $("eq" + i).textContent = `รวม ${n(q)} ${r.unit_th}`; }; // Mos 2 พ.ย.: unit sits in the box (4 ถุง), the line under it is the total (รวม 40 เส้น)
   // the sales text = the previous owner's format (same as message.ts buildOrderMessage, Mos 26 ต.ค.)
   const dmy = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
   const wd = (iso) => new Date(iso + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "long", timeZone: "UTC" });
@@ -270,8 +272,13 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
     choices = data || []; pick = null; $("addQ").value = 1; $("addM").textContent = "";
     $("addL").innerHTML = choices.length ? choices.map((c, i) => `<label class="ux-addr"><input type="radio" name="addP" value="${i}"><span class="grow"><span class="nm">${E(c.name)}</span>${c.pack_size > 1 ? `<span class="meta">${c.sets ? "เซ็ตละ" : "ถุงละ"} ${c.pack_size} ${E(c.unit_th)}</span>` : ""}</span>${c.active ? "" : '<span class="chip">ปิดใช้อยู่</span>'}</label>`).join("")
       : '<p class="muted">สินค้า CPF ทุกอย่างอยู่ในใบนี้แล้ว</p>';
-    addEq(); addS.open();
+    $("addF").value = ""; addFind(); addEq(); addS.open();
   };
+  // Mos 2 พ.ย.: type to narrow the list (ไก่ → every row with ไก่) · spaces and case ignored
+  const addFind = () => { const q = $("addF").value.replace(/\s+/g, "").toLowerCase(); let k = 0;
+    $("addL").querySelectorAll(".ux-addr").forEach((l) => { const hit = !q || l.querySelector(".nm").textContent.replace(/\s+/g, "").toLowerCase().includes(q); l.style.display = hit ? "" : "none"; k += hit; });
+    $("addNo").hidden = k > 0 || !choices.length; };
+  $("addF").oninput = addFind;
   $("addL").onchange = (ev) => { pick = choices[+ev.target.value]; addEq(); };
   $("addQ").oninput = addEq;
   $("addGo").onclick = async () => {

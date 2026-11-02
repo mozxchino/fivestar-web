@@ -10,7 +10,10 @@
 <style>
 .g{align-items:end}
 a.cell{text-decoration:none;color:inherit}
-#hd{min-height:44px}
+#hd,#od{min-height:44px}
+/* 0077: หยุด/เปิดเฉพาะวัน rows · the date box gives way so the label and เพิ่ม stay whole at 320–375px */
+.cell .th-date:has(#hd,#od){flex:1 1 0;min-width:0}
+.cell .th-date > #hd,.cell .th-date > #od{width:100%;min-width:0}
 /* 0033 รอบสั่ง CPF: 7 weekday toggles in one row, each a full-height tap target */
 .dow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;width:calc(100% + 20px);margin:0 -10px;padding:4px 0}
 .dow .chip{justify-content:center;padding:0;box-shadow:none;background:var(--color-fill)}
@@ -91,7 +94,7 @@ a.cell{text-decoration:none;color:inherit}
     const last = (us || []).filter((x) => x.active && x.role === "staff").length === 1; // impeccable: promoting the only staff stops shop work in the app
     const mgr = (x) => `<button class="cell act ux-mgr" type="button" data-mgr="${x.role === "manager" ? 0 : 1}" data-id="${x.id}" data-n="${E(x.name)}"><span class="k">${x.role === "manager" ? "เปลี่ยนกลับเป็นพนักงาน" : "ตั้งเป็นผู้จัดการ"}<small>${x.role === "manager" ? "อนุมัติใบสั่ง ลา และปัญหาแทนเจ้าของไม่ได้แล้ว" : `อนุมัติใบสั่ง ลา และรับทราบปัญหาแทนเจ้าของได้\nเปิดร้าน รับของ ปิดร้านไม่ได้\nไม่เห็นต้นทุน กำไร เงินเดือน${last ? "\nเป็นพนักงานคนเดียว ตั้งแล้วจะไม่มีคนเปิดร้านในแอป" : ""}`}</small></span></button>`;
     const u = (x) => x.role === "owner" ? `<div class="gl">${head(x, '<span class="pill">เจ้าของ</span>')}</div>`
-      : !x.active ? `<div class="gl">${head(x, `<button class="txt-btn" type="button" data-on="${x.id}" data-n="${E(x.name)}">เปิดสิทธิ์คืน</button>`)}</div>`
+      : !x.active ? `<div class="gl">${head(x, `<button class="txt-btn" type="button" data-on="${x.id}" data-n="${E(x.name)}">เปิดสิทธิ์คืน</button>`)}${x.salary_month > 0 || x.ended_at ? ci(x.id, "ended_at", x.ended_at, "ออกงานวันที่", "", "date") : ""}</div>`
       : `<div class="person"><div class="gl">${who(x)}
       ${ci(x.id, "salary_month", x.salary_month, "เงินเดือน", "บาท", "money")}${ci(x.id, "off_days_per_month", x.off_days_per_month, "หยุดได้", "วัน/เดือน")}
       ${ci(x.id, "std_hours_per_day", x.std_hours_per_day, "ทำงาน", "ชม./วัน")}${ci(x.id, "ot_rate_hour", x.ot_rate_hour, "โอที", "บาท/ชม.", "money")}
@@ -133,7 +136,7 @@ a.cell{text-decoration:none;color:inherit}
       // ง1: no confirm · the person leaves the list now, the change runs after 5 s unless "เลิกทำ" (both ways can be switched back)
       const box = b.closest(".person") || b.closest(".gl"), off = !!b.dataset.off; box.hidden = true;
       return UXM.later(off ? `ปิดสิทธิ์ ${b.dataset.n} แล้ว` : `เปิดสิทธิ์ ${b.dataset.n} คืนแล้ว`, async () => {
-        const r2 = off ? await supabase.rpc("deactivate_user", { p_user_id: b.dataset.off }) : await supabase.from("users").update({ active: true }).eq("id", b.dataset.on);
+        const r2 = off ? await supabase.rpc("deactivate_user", { p_user_id: b.dataset.off }) : await supabase.from("users").update({ active: true, ended_at: null }).eq("id", b.dataset.on);
         if (r2.error) UXM.toast("บันทึกไม่ได้\n" + App.errText(r2.error), { ms: 4000 });
         else await syncMenu(b.dataset.off || b.dataset.on);
         staff();
@@ -234,6 +237,7 @@ a.cell{text-decoration:none;color:inherit}
       ${seg("count_mode", "ตอนปิดร้าน", [["count", "นับจำนวน"], ["tick", "ติ๊กใกล้หมด"]], modeOf(p))}
       ${seg("count_cols", "ช่องนับ", [["both", "สด และ สุก"], ["fresh", "สดอย่างเดียว"], ["cooked", "สุกอย่างเดียว"]], colsOf(p))}
       <div data-q="low"><label class="field" for="pl"><span id="pll"></span><small class="h">ปิดร้านแล้วเหลือต่ำกว่านี้ ขึ้นในรายการ ของต้องซื้อเอง</small></label>${num("pl", "low_at", p.low_at)}</div>
+      <div data-q="reorder"><label class="field" for="pro"><span id="prl"></span><small class="h">เหลือรวมของที่กำลังมา ไม่เกินนี้ สั่ง 1 ถุงเสมอ · ว่าง = ไม่ใช้</small></label>${num("pro", "reorder_at", p.reorder_at)}</div>
       ${cur ? `<label class="chk"><input type="checkbox" role="switch" name="active" ${p.active ? "checked" : ""}>ยังใช้อยู่ (เอาติ๊กออก = ปิดใช้)</label>` : ""}
       <datalist id="units"><option value="ตัว"><option value="ชิ้น"><option value="แพ็ค"><option value="ขวด"><option value="กก."><option value="ม้วน"><option value="ซอง"></datalist>
       <datalist id="buys"><option value="ถุง"><option value="แพ็ค"><option value="ลัง"><option value="ม้วน"><option value="กระสอบ"><option value="ขวด"></datalist>`;
@@ -249,8 +253,9 @@ a.cell{text-decoration:none;color:inherit}
     $("psb").querySelector("[data-seg=count_mode]").style.display = $("ql-count_mode").style.display = sell ? "none" : "";
     if (sell) setSeg("count_mode", "count");
     $("psb").querySelector("[data-q=low]").hidden = !(sell && src !== "cpf" && F("count_mode").value === "count");
+    $("psb").querySelector("[data-q=reorder]").hidden = !(sell && src === "cpf"); // 0078: CPF ของขาย reorder point (night_plan reads kind cpf only)
     $("psb").querySelector("[data-seg=count_cols]").style.display = $("ql-count_cols").style.display = F("count_mode").value === "count" ? "" : "none"; // a ticked ของใช้ has no boxes
-    $("pcl").textContent = `ราคาทุน ต่อ 1 ${un} (บาท)`; $("pll").textContent = `เตือนเมื่อเหลือต่ำกว่า (${un})`;
+    $("pcl").textContent = `ราคาทุน ต่อ 1 ${un} (บาท)`; $("pll").textContent = `เตือนเมื่อเหลือต่ำกว่า (${un})`; $("prl").textContent = `สั่งเมื่อเหลือไม่เกิน (${un})`;
     // 0043: same unit → 1 locked (the typed number comes back if they differ again) · a CPF ของใช้ with one unit = how many per order (foil 2 ม้วน)
     const order = !sell && src === "cpf" && same(u, b);
     $("pkl").textContent = order ? `สั่ง CPF ทีละกี่ ${un}` : packLabel(u, b);
@@ -287,7 +292,7 @@ a.cell{text-decoration:none;color:inherit}
     // round 3 (item 18): ติ๊กใกล้หมด only for ของใช้ (a tick never reaches the order · DB check products_tick_consumable)
     const row = { name: f.name, kind: !sell ? "consumable" : src === "cpf" ? "cpf" : "self", supplier: src === "cpf" ? "cpf" : "self", made_here: src === "made",
       unit, buy_unit: buyU, count_mode: sell ? "count" : f.count_mode, count_cols: f.count_cols, active, category: f.category };
-    for (const [k, int] of [["pack_size", 1], ["stick_size", 1], ["cost_price"], ["store_price"], ["delivery_price"], ["low_at"]]) {
+    for (const [k, int] of [["pack_size", 1], ["stick_size", 1], ["cost_price"], ["store_price"], ["delivery_price"], ["low_at"], ["reorder_at"]]) {
       row[k] = n(k, int); if (Number.isNaN(row[k])) return bad(k === "pack_size" ? `${$("pkl").textContent} ต้องเป็นเลขเต็ม 1 ขึ้นไป` : k === "stick_size" ? "ชิ้นต่อไม้ ต้องเป็นเลขเต็ม 1 ขึ้นไป\nไม่มีไม้ ให้เว้นว่าง" : "ตัวเลขไม่ถูก\nใส่เลข 0 ขึ้นไป", k);
     }
     if (row.stick_size === 0) return bad("ชิ้นต่อไม้ ต้องเป็นเลขเต็ม 1 ขึ้นไป\nไม่มีไม้ ให้เว้นว่าง", "stick_size");
@@ -296,6 +301,7 @@ a.cell{text-decoration:none;color:inherit}
     if (cur && F("pack_size").disabled && unit === cur.unit && buyU === (cur.buy_unit || null)) delete row.pack_size; // locked "1" saves only when the units just changed
     if (sell && active && row.cost_price == null) return bad(`ใส่ ราคาทุน ต่อ 1 ${un} ก่อน`, "cost_price");
     if ($("psb").querySelector("[data-q=low]").hidden) row.low_at = null; // ponytail: night_plan reads low_at only for ของขาย ซื้อเอง (kind self) counted rows
+    if ($("psb").querySelector("[data-q=reorder]").hidden) delete row.reorder_at; // ponytail: hidden = not CPF ของขาย, night_plan ignores it there · left as is
     // 0060: sort = category × 100 + n · a new product, or one moved to another หมวด, goes last in its หมวด
     const catSort = () => Math.max(100 * (CATS.indexOf(row.category) + 1), ...ps.filter((p) => p.category === row.category && p.id !== cur?.id).map((p) => p.sort)) + 1;
     if (!cur) Object.assign(row, { sort: catSort(), par_weekday: 0, par_weekend: 0 });
@@ -320,11 +326,13 @@ a.cell{text-decoration:none;color:inherit}
   const S = Object.fromEntries((st || []).map((s) => [s.key, s.value]));
   const { data: gs } = await supabase.from("line_sources").select("source_id,display_name").eq("source_type", "group");
   let hol = [...(S.holidays || [])].sort();
+  let opn = [...(S.open_dates || [])].sort();   // 0077: a weekly-holiday date the shop opens anyway (swap day)
   let nod = Array.isArray(S.cpf_no_delivery_dow) ? [...S.cpf_no_delivery_dow] : [1];
   // 0034 (Mos 26 ต.ค.): the shop is closed every Monday · one toggle row per weekday set, same look as "CPF ไม่ส่งของวัน"
   let cld = Array.isArray(S.shop_closed_dow) ? [...S.shop_closed_dow] : [1];
   const buf = Number.isFinite(Number(S.order_buffer_pct)) ? Number(S.order_buffer_pct) : 35;   // 0038: เผื่อวันขายดี %
   const ovd = Number(S.overstock_days) > 0 ? Number(S.overstock_days) : 3;   // 0053: ของกอง = เหลือพอขายเกินกี่วัน
+  const cfl = S.cash_float != null && Number.isFinite(Number(S.cash_float)) ? Number(S.cash_float) : 1000;   // 0085 เงินทอนตั้งต้น (Mos 30 ต.ค.)
   const bth = Number.isFinite(Number(S.bonus_threshold)) ? Number(S.bonus_threshold) : 7000, bpd = Number.isFinite(Number(S.bonus_per_day)) ? Number(S.bonus_per_day) : 100;   // 0054
   const dowRow = (id, on, aria) => `<div class="dow" id="${id}" role="group" aria-label="${aria}">${["จ", "อ", "พ", "พฤ", "ศ", "ส", "อา"].map((w, i) => `<button type="button" class="chip${on.includes(i + 1) ? " on" : ""}" data-d="${i + 1}" aria-pressed="${on.includes(i + 1)}">${w}</button>`).join("")}</div>`;
   const sel = (id, cur) => `<select id="${id}"><option value="">ยังไม่เลือก</option>${(gs || []).map((g) => `<option value="${E(g.source_id)}" ${g.source_id === cur ? "selected" : ""}>${E(g.display_name || g.source_id)}</option>`).join("")}</select>`;
@@ -332,12 +340,13 @@ a.cell{text-decoration:none;color:inherit}
   const send = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>`;
   const thd = (d) => new Date(d + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
   const drawHol = () => { $("hl").innerHTML = hol.map((d, i) => `<div class="cell"><span class="k num">${thd(d)}</span><button class="txt-btn" type="button" data-del="${i}">ลบวันหยุด</button></div>`).join("") || `<div class="cell"><span class="k muted">ยังไม่มีวันหยุด</span></div>`; };
+  const drawOpn = () => { $("ol").hidden = !opn.length; $("ol").innerHTML = opn.map((d, i) => `<div class="cell"><span class="k num">${thd(d)}</span><button class="txt-btn" type="button" data-del="${i}">ลบวันเปิด</button></div>`).join(""); };
   const gp = (id, label) => `<label class="cell"><span class="k">${label}</span><input class="num-in" type="number" inputmode="decimal" step="any" min="0" id="${id}" value="${E(S[id])}" placeholder="ยังไม่ใส่"><span class="unit">%</span></label>`;
   // mock ก (iOS grouped): every setting is a row · pickers open the native list · one red save in the glass bar
   $("sys").innerHTML = `<h2>ร้าน</h2><div class="gl"><label class="cell"><span class="k">ชื่อร้าน</span><input type="text" id="shop" value="${E(S.shop_name)}"></label></div><p class="gf">ชื่อนี้ขึ้นหัวใบสั่ง</p>
     <h2>วันรับร้าน</h2><div class="gl"><a class="cell nav" href="opening.html"><span class="k">นับสต็อกตั้งต้น<small>กรอกของที่นับได้ เป็นยกมาของวันแรก</small></span>${chev}</a></div>
-    <h2>เวลา</h2><div class="gl"><label class="cell"><span class="k">เตือนปิดร้านตอน</span><input type="time" id="rem" value="${E(S.remind_at)}"></label><label class="cell"><span class="k">กันพลาด ส่งให้เองวันถัดไปตอน<small>ถ้าเจ้าของยังไม่กดส่ง</small></span><input type="time" id="auto" value="${E(S.auto_send_at)}"></label></div>
-    <p class="gf">เจ้าของกดส่งเองทุกคืน แอปเตือน 21:30 / 09:00 / 12:00 แล้วส่งให้เองพรุ่งนี้ตามเวลานี้ ถ้ายังไม่กด (ตัดรอบ CPF 13:00)</p>
+    <h2>เวลา</h2><div class="gl"><label class="cell"><span class="k">เตือนปิดร้านตอน</span><input type="time" id="rem" value="${E(S.remind_at ?? "21:00")}"></label><label class="cell"><span class="k">กันพลาด ส่งให้เองวันถัดไปตอน<small>ถ้าเจ้าของยังไม่กดส่ง</small></span><input type="time" id="auto" value="${E(S.auto_send_at)}"></label></div>
+    <p class="gf">เจ้าของกดส่งเองทุกคืน แอปเตือน 22:30 / 09:00 / 12:00 แล้วส่งให้เองพรุ่งนี้ตามเวลานี้ ถ้ายังไม่กด (ตัดรอบ CPF 13:00)</p>
     <h2>รอบสั่ง CPF</h2><div class="gl">
       <label class="cell nav"><span class="k">สั่งคืนนี้ ของมากี่วัน<small>CPF ตัดรอบบ่ายโมง</small></span><span class="v" data-for="lead"></span>${chev}<select id="lead">${[1, 2, 3].map((n) => `<option value="${n}" ${Number(S.order_lead_days ?? 2) === n ? "selected" : ""}>${n === 1 ? "พรุ่งนี้" : n === 2 ? "มะรืน (2 วัน)" : "3 วัน"}</option>`).join("")}</select></label>
       <label class="cell"><span class="k">ของถึงกี่โมง</span><input type="time" id="dlv" value="${E(S.delivery_at ?? "14:00")}"></label>
@@ -355,10 +364,15 @@ a.cell{text-decoration:none;color:inherit}
     <h2>โบนัสพนักงาน</h2><div class="gl"><label class="cell"><span class="k">ยอดขายเกิน<small>ยอดรวม WE POS ที่พนักงานใส่ตอนปิดร้าน</small></span><input class="num-in" type="number" inputmode="numeric" min="0" max="100000" step="100" id="bth" value="${bth}"><span class="unit">บาท</span></label>
       <label class="cell"><span class="k">โบนัสวันละ</span><input class="num-in" type="number" inputmode="numeric" min="0" max="10000" step="10" id="bpd" value="${bpd}"><span class="unit">บาท</span></label></div>
     <p class="gf"><span>วันไหนยอดขายเกินนี้ พนักงานได้โบนัสวันนั้น</span><span>ดูยอดในสรุปเดือน แตะชื่อพนักงานในแท็บพนักงาน</span></p>
+    <h2>เงินสด</h2><div class="gl"><label class="cell"><span class="k">เงินทอนตั้งต้น<small>เก็บไว้ในลิ้นชักทุกคืน</small></span><input class="num-in" type="number" inputmode="numeric" min="0" max="20000" step="100" id="cfl" value="${cfl}"><span class="unit">บาท</span></label></div>
+    <p class="gf"><span>ปิดร้านแล้ว นับเงินได้เกินนี้ พนักงานเอาส่วนเกินออก</span><span>เงินที่เอาออก ไปฝาก 7-11 แล้วลงสลิปหน้าฝากเงิน</span></p>
     <h2>วันหยุดร้าน</h2><div class="gl"><div class="cell" style="flex-wrap:wrap"><span class="k">หยุดทุกสัปดาห์</span>${dowRow("cld", cld, "วันหยุดร้านประจำ")}</div></div>
     <p class="gf"><span>วันหยุดประจำ ไม่มีเตือนปิดร้าน</span><span>คืนนั้นแอปสั่งของจากยอดขายวันเปิดล่าสุด</span><span>หน้าหลักพนักงานขึ้น วันนี้ร้านหยุด</span></p>
-    <div class="gl"><div class="cell"><span class="k" style="white-space:nowrap">เฉพาะวัน</span><input type="date" id="hd" aria-label="วันหยุดที่จะเพิ่ม"><button class="txt-btn" type="button" id="ha">เพิ่มวันหยุด</button></div></div>
-    <div class="gl" id="hl"></div><p class="gf">เพิ่มหรือลบแล้ว กด บันทึกตั้งค่าร้าน ด้านล่าง</p>
+    <div class="gl"><div class="cell"><span class="k" style="white-space:nowrap;flex:none">หยุดเฉพาะวัน</span><input type="date" id="hd" aria-label="วันหยุดที่จะเพิ่ม"><button class="txt-btn" type="button" id="ha">เพิ่ม</button></div></div>
+    <div class="gl" id="hl"></div>
+    <div class="gl"><div class="cell"><span class="k" style="white-space:nowrap;flex:none">เปิดเฉพาะวัน</span><input type="date" id="od" aria-label="วันหยุดประจำที่จะเปิดร้าน"><button class="txt-btn" type="button" id="oa">เพิ่ม</button></div></div>
+    <div class="gl" id="ol" hidden></div><p id="omsg" class="err" role="alert"></p>
+    <p class="gf"><span>สลับวันหยุด: วันที่มาทำงาน ใส่ เปิดเฉพาะวัน</span><span>วันที่หยุดแทน ใส่ หยุดเฉพาะวัน</span><span>ไม่ต้องแก้ หยุดทุกสัปดาห์ ผ่านวันแล้วไม่ต้องแก้คืน</span><span>เพิ่มหรือลบแล้ว กด บันทึกตั้งค่าร้าน ด้านล่าง</span></p>
     <div class="sticky"><button class="btn primary" id="save">บันทึกตั้งค่าร้าน</button><p id="smsg" class="muted"></p></div>`;
   // picker rows show the chosen group's name as the value
   const showSel = (id) => { const o = $(id).selectedOptions[0]; document.querySelector(`[data-for="${id}"]`).textContent = o ? o.textContent : ""; };
@@ -369,6 +383,15 @@ a.cell{text-decoration:none;color:inherit}
   UXM.dateTh($("hd")); // Mos 26 ต.ค.: Thai day over the native picker
   $("ha").onclick = () => { const d = $("hd").value; if (d && !hol.includes(d)) { hol.push(d); hol.sort(); drawHol(); } $("hd").value = ""; };
   $("hl").onclick = (ev) => { const i = ev.target.dataset.del; if (i !== undefined) { hol.splice(i, 1); drawHol(); } };
+  drawOpn(); UXM.dateTh($("od"));
+  // 0077: only a weekday ticked in หยุดทุกสัปดาห์ can be opened · any other day is open already
+  $("oa").onclick = () => {
+    const d = $("od").value, dow = d ? new Date(d + "T00:00:00Z").getUTCDay() || 7 : 0;
+    $("omsg").textContent = d && !cld.includes(dow) ? "วันนั้นร้านเปิดอยู่แล้ว" : "";
+    if (d && cld.includes(dow) && !opn.includes(d)) { opn.push(d); opn.sort(); drawOpn(); }
+    $("od").value = "";
+  };
+  $("ol").onclick = (ev) => { const i = ev.target.dataset.del; if (i !== undefined) { opn.splice(i, 1); drawOpn(); } };
   $("claim").onclick = async () => {
     $("cmsg").className = "muted"; $("cmsg").textContent = "กำลังส่ง…";
     const r = await App.fn("notify", { card: "claim" }).catch((e) => ({ error: e }));
@@ -377,13 +400,14 @@ a.cell{text-decoration:none;color:inherit}
     $("cmsg").textContent = r.ok ? "" : r.error === "staff_group_id not set" ? "ยังไม่ได้ตั้งกลุ่มพนักงาน" : "ส่งไม่ได้: " + App.errText(r.error);
   };
   $("save").onclick = async () => {
-    const rows = [["shop_name", $("shop").value.trim()], ["remind_at", $("rem").value || "20:30"], ["auto_send_at", $("auto").value || "12:30"],
-      ["sales_group_id", $("sg").value || ""], ["staff_group_id", $("fg").value || ""], ["holidays", hol],
+    const rows = [["shop_name", $("shop").value.trim()], ["remind_at", $("rem").value || "21:00"], ["auto_send_at", $("auto").value || "12:30"],
+      ["sales_group_id", $("sg").value || ""], ["staff_group_id", $("fg").value || ""], ["holidays", hol], ["open_dates", opn],
       // 0033 รอบสั่ง CPF · out-of-range numbers fall back to the defaults instead of saving nonsense
       ["order_lead_days", Number($("lead").value) || 2], ["delivery_at", $("dlv").value || "14:00"], ["sales_mention", $("tag").value.trim()], ["cpf_no_delivery_dow", nod], ["shop_closed_dow", cld], ["order_buffer_pct", Math.min(100, Math.max(0, Number($("buf").value) || 0))],
       ["overstock_days", Math.min(14, Math.max(1, Number($("ovd").value) || 3))],
       // 0054 โบนัส · blank = the default, out of range is clamped
       ["bonus_threshold", $("bth").value === "" ? 7000 : Math.min(100000, Math.max(0, Number($("bth").value) || 0))], ["bonus_per_day", $("bpd").value === "" ? 100 : Math.min(10000, Math.max(0, Number($("bpd").value) || 0))],
+      ["cash_float", $("cfl").value === "" ? 1000 : Math.min(20000, Math.max(0, Number($("cfl").value) || 0))],
       // GP: blank = keep what is saved (never write 0 by accident)
       ...["lineman_gp", "grab_gp", "shopee_gp"].filter((k) => $(k).value !== "").map((k) => [k, Number($(k).value)])].map(([key, value]) => ({ key, value }));
     const { error } = await supabase.from("settings").upsert(rows);

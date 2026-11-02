@@ -46,7 +46,7 @@
 <dialog id="xs" class="bsheet" aria-labelledby="xsH"><div class="body"><div class="grab"></div>
   <div class="hd"><b id="xsH">มีของอื่นมาด้วย</b><button class="x" type="button" aria-label="ปิด">✕</button></div>
   <p class="muted">ของ CPF ที่ไม่อยู่ในใบสั่ง หรือมาเกินจากที่สั่ง</p>
-  <label class="field" for="xp">สินค้า</label><select id="xp"></select>
+  <label class="field" for="xp">สินค้า</label><input id="xf" type="text" style="margin-bottom:8px" placeholder="พิมพ์หา เช่น จ๊อ น้ำพริก" aria-label="ค้นหาสินค้า" enterkeyhint="search" autocomplete="off"><select id="xp"></select>
   <label class="field" for="xq">ได้มา</label><div class="in"><input id="xq" type="number" inputmode="decimal" step="any" min="0" placeholder="0"><span class="sfx" id="xu"></span></div>
   <p id="xm" class="err" role="alert"></p></div>
   <div class="foot"><button id="xGo" class="btn primary" type="button">เพิ่มของที่มา</button></div></dialog>
@@ -145,9 +145,15 @@
     if (!P) { const { data: ps, error: pe } = await supabase.from("products").select("id,name,unit,sort,kind,supplier").eq("active", true).order("sort");
       if (pe) { msg.className = "err"; msg.textContent = "เปิดรายการสินค้าไม่ขึ้น\n" + App.errText(pe); return; }
       P = Object.fromEntries((ps || []).filter((p) => p.kind === "cpf" || (p.kind === "consumable" && p.supplier === "cpf")).map((p) => [p.id, p]));
-      xp.innerHTML = '<option value="">เลือกสินค้า</option>' + Object.values(P).map((p) => `<option value="${p.id}">${UXS.esc(p.name)}</option>`).join(""); }
-    xp.value = ""; xu.textContent = ""; xsh.open();
+    }
+    xf.value = ""; xFind(); xp.value = ""; xu.textContent = ""; xsh.open();
   };
+  // Mos 2 พ.ย.: type to narrow the product list · one match is picked for you
+  const xFind = () => { const q = xf.value.replace(/\s+/g, "").toLowerCase(), cur = xp.value;
+    const hit = Object.values(P || {}).filter((p) => !q || p.name.replace(/\s+/g, "").toLowerCase().includes(q));
+    xp.innerHTML = `<option value="">${hit.length ? "เลือกสินค้า" : "ไม่เจอสินค้าที่พิมพ์"}</option>` + hit.map((p) => `<option value="${p.id}">${UXS.esc(p.name)}</option>`).join("");
+    xp.value = hit.length === 1 ? hit[0].id : hit.some((p) => p.id === cur) ? cur : ""; xp.onchange(); };
+  xf.oninput = xFind;
   xp.onchange = () => { xu.textContent = UXM.unit(P[xp.value]?.unit); xm.textContent = ""; };
   xGo.onclick = () => {
     const p = P?.[xp.value], q = +xq.value;

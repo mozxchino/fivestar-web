@@ -80,7 +80,9 @@ td+td{font-weight:600}
   const P = (await supabase.from("product_names").select("id,name,unit,sort,category")).data || [];
   const prods = Object.fromEntries(P.map((p) => [p.id, p.name])), unit = Object.fromEntries(P.map((p) => [p.id, UXM.unit(p.unit)]));
   const PP = Object.fromEntries(P.map((p) => [p.id, p])); // Mos 1 พ.ย.: edit panel sorted + category headers (0060)
-  const remindAt = String(((await supabase.from("settings").select("key,value").eq("key", "remind_at").maybeSingle()).data || {}).value || "20:30");
+  // Mos 1 พ.ย.: a fresh-only row (drinks, count_cols fresh) has no เหลือสุก box in the edit panel · no read (manager) = every box shows
+  const CC = Object.fromEntries(((await supabase.from("products").select("id,count_cols")).data || []).map((p) => [p.id, p.count_cols]));
+  const remindAt = String(((await supabase.from("settings").select("key,value").eq("key", "remind_at").maybeSingle()).data || {}).value || "21:00");
   const TYPE = { waste: "ของเสีย/หมดอายุ", equipment: "เครื่องพัง", customer: "ลูกค้าร้องเรียน", cpf: "ของ CPF มาผิด", edit_request: "กรอกผิด ขอแก้", other: "เรื่องอื่น" };
   const CS = { low: "ใกล้หมด", out: "หมด" };
   const money = (n) => n == null ? "-" : Number(n).toLocaleString("th-TH");
@@ -133,13 +135,14 @@ td+td{font-weight:600}
       isToday ? supabase.from("leave_requests").select("id,user_id,date,type,note,status,users:user_public(name)").gte("date", TODAY.slice(0, 8) + "01").lte("date", U.plus(TODAY, 31)).order("date") : Promise.resolve({ data: [] }),
       // ข้อ 5 (Mos 1 พ.ย.): every photo of the day = the day's storage folder (lib/photo.js: YYYY/MM/DD/<type>-uuid.jpg)
       supabase.storage.from("photos").list(d.replaceAll("-", "/"), { limit: 300, sortBy: { column: "created_at", order: "asc" } }),
+      MGR ? Promise.resolve({ data: null }) : supabase.from("deposits").select("gap,confirmed_at").eq("date", d).maybeSingle(), // 0082: managers don't see money
     ]);
-    const bad = res.find((r) => r.error); if (bad) throw bad.error; // qa: a failed read must not read as "ไม่มีเรื่องต้องจัดการ"
-    const [{ data: days }, { data: sl }, { data: cc }, { data: odAll }, { data: iss }, { data: lv }, { data: pf }] = res;
+    const bad = res.slice(0, -1).find((r) => r.error); if (bad) throw bad.error; // the deposit read (last) failing only hides its row // qa: a failed read must not read as "ไม่มีเรื่องต้องจัดการ"
+    const [{ data: days }, { data: sl }, { data: cc }, { data: odAll }, { data: iss }, { data: lv }, { data: pf }, { data: dep, error: depE }] = res;
     const od = (odAll || []).find((o) => !(o.plan && (o.plan.extra === true || o.plan.extra === "true"))) || (odAll || [])[0] || null; // the real order wins over an extra (off-order delivery) one
     const byDate = Object.fromEntries((days || []).map((x) => [x.date, x]));
     return { d, isToday, sd: byDate[d] || null, yday: byDate[U.plus(d, -1)] || null, days: days || [], sl: sl || [], cc: cc || [], items: od?.order_items || [], od,
-      iss: (iss || []).filter((i) => i.status === "open" && (isToday || (i.date || "").slice(0, 10) === d)), lv: lv || [],
+      dep, depE, iss: (iss || []).filter((i) => i.status === "open" && (isToday || (i.date || "").slice(0, 10) === d)), lv: lv || [],
       pics: (pf || []).filter((o) => /\.jpe?g$/i.test(o.name)).map((o) => `${d.replaceAll("-", "/")}/${o.name}`) };
   }
   const cashOf = (s) => s && s.cash_expected != null && s.cash_counted != null ? s.cash_counted - s.cash_expected : null;
@@ -259,6 +262,10 @@ td+td{font-weight:600}
       + (od.paid_at ? `<div class="ln mk paid"><span>✓ จ่ายแล้ว ${baht(od.paid_amount ?? 0)} บาท<small>${hm(od.paid_at)} น. ${U.dayName(new Date(Date.parse(od.paid_at) + 7 * 3600e3).toISOString().slice(0, 10))}</small></span>${MGR ? "" : `<button type="button" class="ux-cancel" id="unpay">กดผิด ยกเลิก</button>`}</div>`
         : MGR ? "" : `<button type="button" class="btn primary" id="pay">บันทึกว่าจ่ายแล้ว</button>`)) : "";
     const posFold = sd.closed_at ? fold("pos", `<b>ยอดขาย WE POS</b>${fv(posAmt == null ? "wait" : "", posAmt == null ? "ไม่ได้ใส่" : `${posAmt} บาท`)}`, posBody) : "";
+    // 0085 (Mos 30 ต.ค.): a closed day's cash goes to the bank (deposit.html) · ฝาก + ค่าธรรมเนียม − เอาออก = gap
+    const g = c.dep && c.dep.gap != null ? +c.dep.gap : null;
+    const [dt, dv] = !c.dep ? [d >= U.plus(TODAY, -1) ? "wait" : "bad", "ยังไม่ได้ฝาก"] : g == null ? ["", "ฝากแล้ว เทียบไม่ได้"] : g === 0 ? ["ok", "ตรง"] : g < 0 ? ["bad", `ขาด ${money(-g)} บาท`] : ["wait", `เกิน ${money(g)} บาท`];
+    const depRow = MGR || c.depE || sd.status !== "sent" ? "" : `<div class="gl dayrows"><a class="cell nav" href="deposit.html"><span class="k">ฝากเงิน${c.dep ? `<small>${c.dep.confirmed_at ? "ตรวจแล้ว" : "ยังไม่ได้ตรวจ"}</small>` : ""}</span><span class="v"><span class="pill"${dt ? ` data-tone="${dt}"` : ""}>${dv}</span></span>${chev}</a></div>`;
     $("out").innerHTML = bento(c) + todo
       + (sd.note ? `<div class="card"><div class="k muted">พนักงานฝากบอก</div>${esc(sd.note)}</div>` : "")
       + `<div class="card folds">`
@@ -271,6 +278,7 @@ td+td{font-weight:600}
       + posFold
       + (photos.length ? fold("pics", `<b>รูปจากร้าน</b>${fv("", `${photos.length} รูป`)}`, `<div class="sk-row" style="flex-wrap:wrap;gap:8px;padding:8px 0 12px">${sb("72px", 72, ";--r:10px").repeat(photos.length)}</div>`) : "")
       + `</div>`
+      + depRow
       + links(c, !MGR);
     if (!MGR) $("edit").onclick = () => openEdit(c);
     const setPaid = async (row) => { const { error } = await supabase.from("orders").update(row).eq("id", od.id); if (error) return alert("บันทึกไม่ได้\n" + App.errText(error)); dayView(); };
@@ -336,12 +344,13 @@ td+td{font-weight:600}
   });
 
   // ---- edit panel (P2-4): numbers of one day, save button sticky at the bottom ----
+  // Mos 1 พ.ย.: ของใช้ (kind consumable, ติ๊กอย่างเดียว) never in the count rows · received stays editable below (it is money)
   function openEdit(c) {
     const { d, sd, sl } = c, pn = $("panel");
     pn.innerHTML = `<div class="panel-head"><h2 id="ph">แก้ตัวเลข ${U.dayName(d)}</h2><button class="x" id="px" aria-label="ปิด">✕</button></div>
       <div class="panel-body"><div class="colhead"><span>สินค้า</span><span>เหลือสด</span><span>เหลือสุก</span><span>เสีย</span></div>
-      ${UXM.byCat([...sl].sort((a, b) => (PP[a.product_id]?.sort ?? 0) - (PP[b.product_id]?.sort ?? 0)), (l) => PP[l.product_id]?.category, (l) => `<div class="row" data-p="${l.product_id}"><div class="grow">${esc(prods[l.product_id])}</div>
-        <input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เหลือสด" data-f="remain_fresh" value="${l.remain_fresh ?? ""}"><input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เหลือสุก" data-f="remain_cooked" value="${l.remain_cooked ?? ""}"><input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เสีย" data-f="waste" value="${l.waste ?? ""}"></div>`) || `<p class="muted">ไม่มีตัวเลขสินค้าของวันนี้</p>`}
+      ${UXM.byCat(sl.filter((l) => PP[l.product_id]?.kind !== "consumable").sort((a, b) => (PP[a.product_id]?.sort ?? 0) - (PP[b.product_id]?.sort ?? 0)), (l) => PP[l.product_id]?.category, (l) => `<div class="row" data-p="${l.product_id}"><div class="grow">${esc(prods[l.product_id])}</div>
+        <input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เหลือสด" data-f="remain_fresh" value="${l.remain_fresh ?? ""}">${CC[l.product_id] === "fresh" ? "<span></span>" : `<input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เหลือสุก" data-f="remain_cooked" value="${l.remain_cooked ?? ""}">`}${PP[l.product_id]?.category === "น้ำ เครื่องดื่ม" && !+l.waste ? "<span></span>" : `<input class="ed" type="number" inputmode="decimal" aria-label="${esc(prods[l.product_id])} เสีย" data-f="waste" value="${l.waste ?? ""}">`}</div>`) || `<p class="muted">ไม่มีตัวเลขสินค้าของวันนี้</p>`}
       ${["open", "closed"].includes(sd.status) && sl.length ? `<h2>ยอดรับเข้า</h2><p class="muted">CPF ส่งมาเกินที่บันทึก<br>แก้ทีละอย่าง</p>
       <div class="row"><select id="rp" class="grow" aria-label="สินค้าที่จะแก้ยอดรับเข้า">${sl.map((l) => `<option value="${l.product_id}" data-r="${+l.received || 0}">${esc(prods[l.product_id])} (ตอนนี้ ${+l.received || 0} ${esc(unit[l.product_id])})</option>`).join("")}</select>
       <input id="rq" class="ed" type="number" inputmode="decimal" aria-label="รับเข้าที่ถูก" value="${+sl[0].received || 0}"></div>
