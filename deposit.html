@@ -96,13 +96,15 @@
     supabase.from("shop_days").select("date,status").eq("status", "sent").gte("date", from).lte("date", bd).order("date", { ascending: false }),
     supabase.from("deposits").select("date,amount,fee,taken_out,gap,slip,updated_at,confirmed_at").gte("date", from)]);
   if (dq.error || xq.error) throw dq.error || xq.error;
-  const DAYS = (dq.data || []).filter((d) => d.status === "sent" && d.date >= from && d.date <= bd).map((d) => d.date);
   const DEP = Object.fromEntries((xq.data || []).map((x) => [x.date, x]));
-  if (!DAYS.length) { none.hidden = false; return; }
+  // Mos 3 พ.ย.: staff see only the days still to deposit, newest first (the day just closed) · a deposited day drops off the chips · all done = a done screen
+  // owner keeps every closed day (✓ = logged) to check and confirm
+  const DAYS = (dq.data || []).filter((d) => d.status === "sent" && d.date >= from && d.date <= bd).map((d) => d.date).filter((d) => OWN || !DEP[d]);
+  if (!DAYS.length) { none.hidden = false; if (!OWN && (dq.data || []).length) { none.querySelector("p").textContent = "ฝากเงินครบทุกวันแล้ว"; none.querySelector("a").textContent = "กลับหน้าหลัก"; none.querySelector("a").href = "index.html"; } return; }
 
   const slip = [];
   Photo.picker(supabase, ph, { paths: slip, type: "deposit", name: "รูปสลิป", max: 1, status: phS, need: "ต้องถ่าย" });
-  let sel = DAYS.find((d) => !DEP[d]) || DAYS[0], OUT = null;
+  let sel = DAYS[0], OUT = null; // newest first = the latest closed day
   const num = (el) => el.value === "" ? null : +el.value;
 
   // ตรง / ขาด / เกิน: ยอดฝาก + ค่าธรรมเนียม against เงินที่เอาออก (the server checks the same and keeps its own answer)
@@ -173,7 +175,7 @@
   // round 3 พ.ย. (Mos): the account to pay into, from ตั้งค่า › ระบบ › เงินสด (0091 lets staff read these three keys) · no account set = no card
   try { const { data: ac } = await supabase.from("settings").select("key,value").in("key", ["bank_name", "bank_account", "bank_owner"]);
     const A = Object.fromEntries((ac || []).map((x) => [x.key, typeof x.value === "string" ? x.value : ""]));
-    if (A.bank_account) { acB.textContent = (A.bank_name || "").slice(0, 6) || "ธนาคาร"; acN.textContent = A.bank_account; acO.textContent = [A.bank_name, A.bank_owner].filter(Boolean).join(" · "); acct.hidden = false;
+    if (A.bank_account) { acB.textContent = (A.bank_name || "").replace(/ไทย$/, "").replace(/\s.*$/, "").slice(0, 5) || "ธนาคาร"; // "กสิกรไทย" → กสิกร (badge is 36px) acN.textContent = A.bank_account; acO.textContent = [A.bank_name, A.bank_owner].filter(Boolean).join(" · "); acct.hidden = false;
       acC.onclick = async () => { try { await navigator.clipboard.writeText(A.bank_account.replace(/[^0-9]/g, "")); UXM.toast("คัดลอกเลขบัญชีแล้ว ✓"); } catch (_) { UXM.toast("คัดลอกไม่ได้ จดจากหน้าจอ"); } }; }
   } catch (_) {}
   form.hidden = false;
