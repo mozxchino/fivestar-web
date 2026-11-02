@@ -130,7 +130,7 @@ td+td{font-weight:600}
       supabase.from("shop_days").select("*").gte("date", U.plus(d, -7)).lte("date", d).order("date", { ascending: false }),
       supabase.from("stock_lines").select("*").eq("date", d),
       supabase.from("consumable_checks").select("product_id,status").eq("date", d).neq("status", "ok"),
-      supabase.from("orders").select("id,plan,paid_at,paid_amount,order_items(product_id,qty_proposed,qty_final,qty_received,received_at,receipt_photos)").eq("for_date", d).eq("status", "sent").order("created_at", { ascending: false }).limit(5), // item 17: an extra order + a real one on the same day gave 2 rows to maybeSingle → error
+      supabase.from("orders").select("id,plan,paid_at,paid_amount,bill_reads(total,status),order_items(product_id,qty_proposed,qty_final,qty_received,received_at,receipt_photos)").eq("for_date", d).eq("status", "sent").order("created_at", { ascending: false }).limit(5), // item 17: an extra order + a real one on the same day gave 2 rows to maybeSingle → error
       supabase.from("issues").select("id,date,type,text,photos,created_by,created_at,status").eq("status", "open").order("created_at", { ascending: false }),
       isToday ? supabase.from("leave_requests").select("id,user_id,date,type,note,status,users:user_public(name)").gte("date", TODAY.slice(0, 8) + "01").lte("date", U.plus(TODAY, 31)).order("date") : Promise.resolve({ data: [] }),
       // ข้อ 5 (Mos 1 พ.ย.): every photo of the day = the day's storage folder (lib/photo.js: YYYY/MM/DD/<type>-uuid.jpg)
@@ -283,7 +283,9 @@ td+td{font-weight:600}
     if (!MGR) $("edit").onclick = () => openEdit(c);
     const setPaid = async (row) => { const { error } = await supabase.from("orders").update(row).eq("id", od.id); if (error) return alert("บันทึกไม่ได้\n" + App.errText(error)); dayView(); };
     // design round 1 พ.ย.: a sheet with the number pad instead of prompt()
-    if ($("pay")) $("pay").onclick = () => { payV.value = ""; payM.className = "muted"; payM.textContent = ""; paySh.open(); setTimeout(() => { payV.focus(); fitPos(); }, 60); };
+    // 0088: the bill reader's total (layers 1–3 held) fills the amount · a different amount = costs are not changed by themselves
+    const billTotal = [].concat(od?.bill_reads || []).find((r) => r.status === "ready")?.total;
+    if ($("pay")) $("pay").onclick = () => { payV.value = billTotal ?? ""; payM.className = "muted"; payM.textContent = ""; paySh.open(); setTimeout(() => { payV.focus(); fitPos(); }, 60); };
     payOK.onclick = () => { const a = +payV.value; if (!(a > 0 && a <= 100000)) { payM.className = "err"; payM.textContent = "ใส่ยอดเป็นตัวเลข 1 ถึง 100,000 บาท"; return; }
       paySh.close(); setPaid({ paid_at: new Date().toISOString(), paid_amount: a }); };
     if ($("unpay")) $("unpay").onclick = () => { if (confirm("ยกเลิกจ่ายแล้วไหม?")) setPaid({ paid_at: null, paid_amount: null }); };

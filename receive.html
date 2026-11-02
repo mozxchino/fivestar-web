@@ -13,6 +13,14 @@
 <div id="yday" class="card" hidden><p id="ydayT" class="err"></p><a id="ydayA" class="btn sm" href="#">รับของใบนั้น</a></div>
 <section id="done" class="done ld" hidden aria-live="polite"><span class="mascot ok-badge"><img src="img/mascot-240.png" alt="" width="80" height="80"></span><h2 id="doneT">รับของแล้ว</h2><p id="doneS"></p><p class="warm" id="doneW">ขอบคุณที่ช่วยนับของ</p><div class="acts"><div id="next"></div><a class="btn home" href="index.html">กลับหน้าหลัก</a></div></section>
 <div id="none" class="ld" hidden><div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>วันนี้ไม่มีของต้องรับ</p></div><button id="noneX" class="btn" type="button" hidden>บันทึกของที่ CPF มาส่ง</button><a class="btn" href="close.html">ไปปิดร้าน</a></div>
+<div id="rt" class="ld" hidden>
+  <p class="ok">ตัวเลขรับของเดิมยังอยู่ ไม่ต้องนับใหม่</p>
+  <h2 class="sh">ถ่ายใบส่งของใหม่</h2>
+  <label id="rtF" class="op-frame" for="rph"><svg class="op-store" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/></svg><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>แตะเพื่อถ่ายรูป</b><small>วางใบบนโต๊ะ หัวกระดาษอยู่ด้านบน</small><small>ให้เห็นทั้งใบ ไม่มีนิ้วบัง ไม่มีเงา</small><input id="rph" type="file" accept="image/*" capture="environment" hidden></label>
+  <label id="rtMore" class="btn" for="rph" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปเพิ่ม</label>
+  <p id="rtS" class="muted"></p>
+  <div class="sticky"><button id="rtGo" class="btn primary rc-wait" aria-disabled="true">ส่งรูปใหม่</button><p id="rtM" class="muted"></p></div>
+</div>
 <div id="form" class="ld" hidden>
   <p id="st" class="ok"></p>
   <h2 class="rc-q" id="rcQ">ของ CPF มาครบไหม</h2>
@@ -35,7 +43,7 @@
   <p id="phS" class="muted"></p>
   </div>
   <button id="none2" class="btn sm rc-none">วันนี้ไม่มีของมา</button>
-  <div class="sticky"><p id="why" class="rc-why">เลือกก่อน ของมาครบ หรือ มีของขาด</p><p id="sum" class="rc-why" hidden aria-live="polite"></p><label id="shot" class="btn primary" for="ph" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><span id="shotT">ถ่ายใบส่งของ</span></label><button id="save" class="btn primary">บันทึกรับของ</button>
+  <div class="sticky"><p id="why" class="rc-why">เลือกก่อน ของมาครบ หรือ มีของขาด</p><p id="sum" class="rc-why" hidden aria-live="polite"></p><label id="shot" class="btn primary" for="ph" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><span id="shotT">ถ่ายใบส่งของ</span></label><p id="shotH" class="muted" style="margin:6px 0 8px;text-align:center" hidden>หันหัวกระดาษขึ้น ถ่ายให้เห็นทั้งใบ</p><button id="save" class="btn primary">บันทึกรับของ</button>
   <p id="msg" class="muted"></p></div>
 </div>
 <dialog id="nd" class="bsheet" aria-labelledby="ndH"><div class="body"><div class="grab"></div>
@@ -56,6 +64,31 @@
   if (UXS.only(me, ["staff", "owner"], "หน้านี้สำหรับพนักงานในร้าน", "ผู้จัดการดูงานของร้านได้ที่หน้าวันนี้", "owner.html", "ไปหน้าวันนี้")) return;
   const today = Photo.todayPrefix().slice(0, 10).replaceAll("/", "-");
   const fmt = (x) => new Date(x + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
+  // part ค (Mos 3 พ.ย.): "ถ่ายใบส่งของใหม่" in the staff group card → photo only · the received counts stay, only the bill photos are replaced
+  // (the staff guard lets staff change receipt_photos on today's order until the day is sent) · then the bill is read again (receive-notify retake)
+  const rtId = new URLSearchParams(location.search).get("retake");
+  if (rtId) {
+    const bad = (t) => { none.hidden = false; const p = none.querySelector("p"); p.className = "err"; p.textContent = t; none.querySelector("a").hidden = true; };
+    if (!/^[0-9a-f-]{36}$/i.test(rtId)) return bad("ลิงก์ไม่ถูกต้อง\nกดปุ่มในการ์ดอีกครั้ง");
+    const { data: ro, error: re } = await supabase.from("orders").select("id,for_date,order_items(received_at)").eq("id", rtId).maybeSingle();
+    if (re) return bad("เปิดใบรับของไม่ขึ้น\n" + App.errText(re));
+    if (!ro || ro.for_date !== today || !ro.order_items.some((i) => i.received_at)) return bad("ใบนี้ส่งรูปใหม่ไม่ได้แล้ว\nบอกเจ้าของในกลุ่ม");
+    d.textContent = " · " + fmt(ro.for_date);
+    const shots = [];
+    const sync = () => { const has = shots.length > 0; rtF.hidden = has; rtMore.hidden = !has || shots.length >= 3;
+      rtGo.classList.toggle("rc-wait", !has); has ? rtGo.removeAttribute("aria-disabled") : rtGo.setAttribute("aria-disabled", "true"); if (has) rtM.textContent = ""; };
+    Photo.picker(supabase, rph, { paths: shots, type: "receipt", name: "รูปใบส่งของ", max: 3, status: rtS, onChange: sync });
+    rtGo.onclick = async () => {
+      if (!shots.length) { rtM.className = "err"; rtM.textContent = "ถ่ายรูปใบส่งของก่อน"; return UXM.shake(rtF); }
+      rtGo.disabled = true; rtM.className = "muted"; rtM.textContent = "กำลังส่งรูป…";
+      const { data: up, error: ue } = await supabase.from("order_items").update({ receipt_photos: shots }).eq("order_id", ro.id).select("product_id");
+      if (ue || !up?.length) { rtM.className = "err"; rtM.textContent = ue && ue.code !== "42501" ? "ยังส่งไม่ได้\n" + App.errText(ue) : "ส่งไม่ได้ ร้านปิดแล้ว\nบอกเจ้าของในกลุ่ม"; rtGo.disabled = false; return; } // 42501 = the staff guard: the day is sent
+      await App.fn("receive-notify", { order_id: ro.id, retake: true }).catch(() => {});
+      rt.hidden = true; doneT.textContent = "ส่งรูปใหม่แล้ว"; doneS.textContent = "ระบบอ่านใบใหม่เอง"; doneW.textContent = "ขอบคุณที่ช่วยถ่ายใหม่"; done.hidden = false; scrollTo(0, 0);
+      await UXS.showNext(supabase, next);
+    };
+    rt.hidden = false; sync(); return;
+  }
   // round 3 (r2 review): the owner receives an older order (?d=) · on today's page, yesterday not closed and its order not received → a link to it
   const qd = new URLSearchParams(location.search).get("d"), owner = me.role === "owner";
   const day = owner && /^\d{4}-\d{2}-\d{2}$/.test(qd || "") && qd <= today ? qd : today;   // item 17(2): ?d never opens a day after today (Bangkok), it falls back to today
@@ -104,7 +137,7 @@
     sum.textContent = ch ? [`แก้แล้ว ${ch} รายการ`, n ? "ขาด " + Object.entries(miss).map(([u, v]) => `${+v.toFixed(1)} ${u}`).join(" ") : "", over ? `เกิน ${over} รายการ` : ""].filter(Boolean).join("\n") : ex ? "" : "ยังไม่ได้แก้\nแตะช่องที่ได้ไม่ตรง"; // one idea per line (#sum is pre-line)
     if (ex) sum.textContent = [sum.textContent, `ของนอกใบสั่ง ${ex} อย่าง`].filter(Boolean).join("\n");
     const need = !!pick && !photos.length && !save.disabled;
-    shot.hidden = !need; save.hidden = need; shotT.textContent = n ? "ถ่ายรูปใบส่งของ" : "ถ่ายใบส่งของ"; // the shortage is on the line above, not twice on the button
+    shot.hidden = shotH.hidden = !need; save.hidden = need; shotT.textContent = n ? "ถ่ายรูปใบส่งของ" : "ถ่ายใบส่งของ"; // the shortage is on the line above, not twice on the button
     phBox.hidden = !pick; phH.hidden = photos.length > 0; phMore.hidden = !photos.length || photos.length >= 3; // the red button takes the first photo, "ถ่ายรูปเพิ่ม" the 2nd and 3rd
   };
   lines.addEventListener("input", short);
