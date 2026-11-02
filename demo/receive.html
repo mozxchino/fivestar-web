@@ -12,7 +12,7 @@
 <div class="sk"><span class="vh">กำลังเปิด…</span><p></p><div class="sheet"><div class="it meta sheet-head"><i class="sk-b" style="--w:34%;--h:13px;margin:0"></i><i class="sk-b" style="--w:28px;--h:13px;margin:0 auto"></i><i class="sk-b" style="--w:64px;--h:13px;margin:0 auto"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div></div><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
 <div id="yday" class="card" hidden><p id="ydayT" class="err"></p><a id="ydayA" class="btn sm" href="#">รับของใบนั้น</a></div>
 <section id="done" class="done ld" hidden aria-live="polite"><span class="mascot ok-badge"><img src="img/mascot-240.png" alt="" width="80" height="80"></span><h2 id="doneT">รับของแล้ว</h2><p id="doneS"></p><p class="warm" id="doneW">ขอบคุณที่ช่วยนับของ</p><div class="acts"><div id="next"></div><a class="btn home" href="index.html">กลับหน้าหลัก</a></div></section>
-<div id="none" class="ld" hidden><div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>วันนี้ไม่มีของต้องรับ</p></div><button id="noneX" class="btn" type="button" hidden>บันทึกของที่ CPF มาส่ง</button><a class="btn" href="close.html">ไปปิดร้าน</a></div>
+<div id="none" class="ld" hidden><div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>วันนี้ไม่มีของต้องรับ</p></div><button id="noneX" class="btn" type="button" hidden>บันทึกของที่ CPF มาส่ง</button><a class="btn" href="index.html">กลับหน้าหลัก</a></div>
 <div id="rt" class="ld" hidden>
   <p class="ok">ตัวเลขรับของเดิมยังอยู่ ไม่ต้องนับใหม่</p>
   <h2 class="sh">ถ่ายใบส่งของใหม่</h2>
@@ -31,7 +31,7 @@
   <section id="ordBox" class="rc-ord" aria-labelledby="ordH"><h2 class="sh" id="ordH">ใบสั่งวันนี้<span class="n" id="ordN"></span></h2><div class="card" id="ordL"></div></section>
   <div id="recBox" hidden>
   <div class="sheet">
-  <div class="it meta sheet-head"><div>สินค้า</div><div></div><div>ได้รับจริง</div></div>
+  <div class="it meta sheet-head"><div>สินค้า</div><div>ได้รับจริง</div></div>
   <div id="lines"></div>
   </div>
   </div>
@@ -84,8 +84,7 @@
       const { data: up, error: ue } = await supabase.from("order_items").update({ receipt_photos: shots }).eq("order_id", ro.id).select("product_id");
       if (ue || !up?.length) { rtM.className = "err"; rtM.textContent = ue && ue.code !== "42501" ? "ยังส่งไม่ได้\n" + App.errText(ue) : "ส่งไม่ได้ ร้านปิดแล้ว\nบอกเจ้าของในกลุ่ม"; rtGo.disabled = false; return; } // 42501 = the staff guard: the day is sent
       await App.fn("receive-notify", { order_id: ro.id, retake: true }).catch(() => {});
-      rt.hidden = true; doneT.textContent = "ส่งรูปใหม่แล้ว"; doneS.textContent = "ระบบอ่านใบใหม่เอง"; doneW.textContent = "ขอบคุณที่ช่วยถ่ายใหม่"; done.hidden = false; scrollTo(0, 0);
-      await UXS.showNext(supabase, next);
+      rt.hidden = true; doneT.textContent = "ส่งรูปใหม่แล้ว"; doneS.textContent = "แอปอ่านใบใหม่เอง"; doneW.textContent = "ขอบคุณที่ช่วยถ่ายใหม่"; done.hidden = false; scrollTo(0, 0);
     };
     rt.hidden = false; sync(); return;
   }
@@ -111,8 +110,10 @@
   items.forEach((i) => { if (i.products) i.products.unit = UXM.unit(i.products.unit); }); // EA / PC → ตัว / ชิ้น
   const got = items.some((i) => i.received_at);
   if (got) { st.textContent = "รับของแล้ว\nแก้ตัวเลขได้จนกว่าจะกดปิดร้าน"; }
-  const row = (i) => { const ord = i.qty_final ?? i.qty_proposed; const v = got ? (i.qty_received ?? 0) : ord;
-    return `<div class="it${+ord ? "" : " x"}" data-id="${i.product_id}"><div class="nm">${i.products?.name ?? ""}<div class="meta">${+i.products?.pack_size > 1 ? `1 ${UXS.esc(i.products.buy_unit || "ถุง")} = ${+i.products.pack_size} ${i.products.unit ?? ""}` : `นับเป็น${i.products?.unit ?? ""}`}</div><span class="ux-short" data-u="${i.products?.unit ?? ""}"></span></div><div class="ord">${+ord}</div><input class="rf" type="number" inputmode="decimal" step="any" min="0" value="${+v}"></div>`; };
+  // round 3 พ.ย. (Mos): "สั่งมา 2 ถุง = 10 ตัว" under the name (bags only when the order is whole bags) · .ord stays in the DOM for the ขาด/เกิน maths · the unit sits in the box
+  const row = (i) => { const ord = i.qty_final ?? i.qty_proposed; const v = got ? (i.qty_received ?? 0) : ord; const pk = +i.products?.pack_size, u = i.products?.unit ?? "";
+    const bags = pk > 1 && +ord > 0 && +ord % pk === 0 ? `${+ord / pk} ${UXS.esc(i.products.buy_unit || "ถุง")} = ` : "";
+    return `<div class="it${+ord ? "" : " x"}" data-id="${i.product_id}"><div class="nm">${i.products?.name ?? ""}<div class="meta">${+ord ? `สั่งมา <b>${bags}${+ord} ${u}</b>` : `ไม่ได้สั่ง${pk > 1 ? ` · 1 ${UXS.esc(i.products.buy_unit || "ถุง")} = ${pk} ${u}` : ""}`}</div><span class="ux-short" data-u="${u}"></span></div><span class="ord" hidden>${+ord}</span><div class="in u"><input class="rf" type="number" inputmode="decimal" step="any" min="0" value="${+v}" aria-label="${i.products?.name ?? ""} ได้รับจริง"><span class="sfx">${u}</span></div></div>`; };
   lines.innerHTML = UXM.byCat(items, (i) => i.products?.category, row); // Mos 1 พ.ย.: category headers
   // Mos 31 ต.ค.: a product sold by the bag (ซอส 1 ถุง = 250 ซอง) → tapping its box opens the bag card: whole bags + loose pieces, either way · the box still saves pieces
   UXM.bags(lines, items.map((i) => ({ id: i.product_id, name: i.products?.name ?? "", unit: i.products?.unit, pack_size: i.products?.pack_size, buy_unit: i.products?.buy_unit })), { sel: ".it[data-id]", title: "ได้รับจริง", pre: "" });
@@ -154,8 +155,7 @@
   const run = async (p, notify, title, sub, warm) => { save.disabled = none2.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
     const { error } = await p; if (error) { msg.textContent = "ยังบันทึกไม่ได้\n" + App.errText(error); msg.className = "err"; save.disabled = none2.disabled = false; return; }
     await (async () => App.fn("receive-notify", typeof notify === "function" ? await notify() : notify))().catch(() => {});
-    form.hidden = true; doneT.textContent = title; doneS.textContent = sub; doneW.textContent = warm; done.hidden = false; scrollTo(0, 0);
-    await UXS.showNext(supabase, next); };
+    form.hidden = true; doneT.textContent = title; doneS.textContent = sub; doneW.textContent = warm; done.hidden = false; scrollTo(0, 0); }; // round 3 พ.ย. (Mos): no "ไปปิดร้าน" here · the home page shows the next task
   save.onclick = () => {
     if (!pick) { msg.className = "err"; msg.textContent = "เลือก ของมาครบ หรือ มีของขาด ก่อน"; return UXM.shake(recAll.parentElement); }
     if (!photos.length) { msg.className = "err"; msg.textContent = "ต้องถ่ายรูปใบส่งของก่อน"; return short(); }

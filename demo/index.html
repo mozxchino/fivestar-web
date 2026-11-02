@@ -74,13 +74,15 @@
         supabase.from("made_logs").select("qty").eq("date", bd),
       ]);
       if (p.error || m.error || !p.data) return;
-      const P = p.data, u = UXS.esc(P.unit || "ห่อ"), say = (n) => `วันนี้ห่อแล้ว ${n.toLocaleString("th-TH")} ${u}`;
+      // Mos 3 พ.ย.: the unit on screen is always "ห่อ" (the product row may carry EA) · the same tile shape as the other doors, the line says what was wrapped today
+      const P = p.data, u = "ห่อ", say = (n) => `วันนี้ห่อแล้ว ${n.toLocaleString("th-TH")} ${u}`;
       let n = (m.data || []).reduce((a, r) => a + +r.qty, 0);
+      // staff (Mos 3 พ.ย.): keep the shape the staff already know (small head · big count · +) only a little bigger · owner: hub tile
       put(kind === "bt"
-        ? `<button type="button" class="bt wide" id="madeB" aria-haspopup="dialog"><span class="k">ห่อข้าวเหนียวเสร็จ</span><span class="v" id="madeN">${say(n)}</span><span class="go">${svg(I.made)}</span></button>`
+        ? `<button type="button" class="bt wide ux-made" id="madeB" aria-haspopup="dialog"><span class="k">ห่อข้าวเหนียวเสร็จ</span><span class="v" id="madeN">${say(n)}</span><span class="go">${svg(I.made)}</span></button>`
         : `<button type="button" class="btn tile ux-hub primary" id="madeB" aria-haspopup="dialog"><span class="ico">${svg(I.made)}</span><span class="t">ห่อข้าวเหนียวเสร็จ<small id="madeN">${say(n)}</small></span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></button>`);
       const sheet = UXD.sheet(document.getElementById("madeS")), q = document.getElementById("madeQ"), msg = document.getElementById("madeM"), go = document.getElementById("madeGo");
-      document.getElementById("madeU").textContent = P.unit || "ห่อ";
+      document.getElementById("madeU").textContent = u;
       document.getElementById("madeB").onclick = () => { q.value = ""; msg.textContent = ""; sheet.open(); q.focus(); };
       q.onkeydown = (e) => { if (e.key === "Enter") go.click(); };
       // follow-up: after a save, "ยกเลิกรายการล่าสุด" stays 10 minutes (server rule in undo_made) or until used · a plain button, no 5 s toast
@@ -160,13 +162,16 @@
     async function staffHome() {
     // staff: today's real status → strip + next-task tile · "เรื่องของฉัน" (own issues · upcoming leave · last day)
     const { esc, thd, hm } = UXS, today = UXS.today();
-    const [st, iss, lv, last] = await Promise.all([
+    const [st, iss, lv, last, wl, ex] = await Promise.all([
       UXS.status(supabase),
       supabase.from("issues").select("id,date,text,status,created_at").eq("created_by", me.userId).order("created_at", { ascending: false }).limit(50),
       supabase.from("leave_requests").select("id,date,type,status,requested_at").eq("user_id", me.userId).gte("date", UXS.back(30)).neq("status", "cancelled").order("date").limit(50),
       supabase.from("shop_days").select("date,status,closed_at,cash_expected,cash_counted").lt("date", today).order("date", { ascending: false }).limit(1).maybeSingle(),
+      supabase.from("waste_logs").select("qty").eq("date", today),   // round 3 พ.ย.: the quick tiles say what was done today
+      supabase.from("expenses").select("amount").eq("date", today).eq("paid_by", "cash"),
     ]);
     for (const r of [iss, lv, last]) if (r.error) throw r.error; // qa3 #2: no "ยังไม่มีเรื่องที่แจ้ง" when the read failed
+    const wN = wl.error ? 0 : (wl.data || []).length, eN = ex.error ? 0 : (ex.data || []).length, eSum = ex.error ? 0 : (ex.data || []).reduce((t, r) => t + (+r.amount || 0), 0);
     const title = document.getElementById("title");
     title.classList.add("ux-hello"); title.innerHTML = `สวัสดี ${esc(me.name)}<small>${thd(today, { weekday: "long" }).replace(/^วัน(\S+?)ที่ /, "$1 ")} · งานวันนี้</small>`;
     const n = st.next, d = st.day || {}, rest = n.key === "done" || n.key === "holiday";
@@ -191,17 +196,21 @@
     if (all.length > 4) rows.push(`<button type="button" class="row ux-all" id="mineAll" aria-haspopup="dialog"><span class="grow ux-t">ดูทั้งหมด ${all.length} เรื่อง</span><span class="ux-go" aria-hidden="true">›</span></button>`);
     const L = last.data, gap = L && L.cash_counted != null && L.cash_expected != null ? L.cash_counted - L.cash_expected : null;
     rows.push(line("history.html", "ประวัติ 30 วัน", L ? [thd(L.date, { weekday: "short" }), L.closed_at ? `ปิด ${hm(L.closed_at)} น.` : "", gap == null ? "" : gap === 0 ? "เงินสดครบ" : `เงินสด${gap < 0 ? "ขาด" : "เกิน"} ${Math.abs(gap).toLocaleString("th-TH")} บาท`].filter(Boolean).join(" · ") : "ยังไม่มีประวัติ"));
-    rows.push(line("waste.html", "ทิ้งของเสีย", "ถ่ายรูปตาชั่งและตอนทิ้งลงถัง"));
-    rows.push(line("expense.html", "ลงรายจ่าย", "ของที่ซื้อเอง แก๊ส ค่าซ่อม"));
-    rows.push(line("deposit.html", "ฝากเงิน", "หลังปิดร้าน ลงยอดฝากกับรูปสลิป")); // 0082
-    rows.push(line("manual.html", "คู่มือ", "ทำอะไรบ้างในแต่ละวัน"));
-    // Mos 23 ต.ค. รอบ 2: "งานถัดไป" across the top, only as tall as its words · เปิด / รับของ / ปิด in one row of 3 · เรื่องของฉัน below
+    // round 3 พ.ย. (Mos): the four doors (ทิ้งของเสีย ลงรายจ่าย ฝากเงิน คู่มือ) are owner-style tiles with an icon and a live line, above เรื่องของฉัน
+    const dep = L && L.status === "sent" ? await supabase.from("deposits").select("date").eq("date", L.date).maybeSingle() : null;
+    const depS = !L || L.status !== "sent" ? ["หลังปิดร้าน ลงยอดฝากกับรูปสลิป", "-"] : dep?.data ? [`${thd(L.date, { weekday: "short" })} ฝากแล้ว`, "ok"] : dep?.error ? ["หลังปิดร้าน ลงยอดฝากกับรูปสลิป", "-"] : [`${thd(L.date, { weekday: "short" })} ยังไม่ได้ฝาก`, "wait"];
+    const tile = (h, t, ic, [s, tone]) => `<a class="btn tile ux-hub" href="${h}"><span class="ico">${svg(ic)}</span><span class="t">${t}<small data-tone="${tone}">${s}</small></span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></a>`;
+    const quick = tile("waste.html", "ทิ้งของเสีย", '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/>', wN ? [`วันนี้ลงแล้ว ${wN} รายการ`, "ok"] : ["ถ่ายรูปตาชั่งและตอนทิ้งลงถัง", "-"])
+      + tile("expense.html", "ลงรายจ่าย", I.expense, eN ? [`วันนี้ลง ${eN} รายการ ${eSum.toLocaleString("th-TH")} บาท`, "ok"] : ["ของที่ซื้อเอง แก๊ส ค่าซ่อม", "-"])
+      + tile("deposit.html", "ฝากเงิน", I.costs, depS) // 0082
+      + tile("manual.html", "คู่มือ", '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M8 7h8"/><path d="M8 11h6"/>', ["ทำอะไรบ้างในแต่ละวัน", "-"]);
+    // Mos 23 ต.ค. รอบ 2: "งานถัดไป" across the top, only as tall as its words · เปิด / รับของ / ปิด in one row of 3 · (ห่อข้าวเหนียว while open) · the four tiles · เรื่องของฉัน last (Mos 3 พ.ย.)
     document.getElementById("menu").innerHTML = `<div class="bento trio">
       <a class="bt wide hero lead${rest ? " calm" : ""}" href="${n.href}"><span class="ico">${svg(I[icon])}</span><span class="tx"><span class="k">${rest ? "วันนี้" : "งานถัดไป"}</span><span class="v">${n.label}</span><span class="m">${n.sub}</span></span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></a>
       ${c1}${c2}${c3}
-      <section class="bt wide list" aria-labelledby="mine"><h2 class="k" id="mine"${nWait ? ' data-tone="wait"' : ""}>เรื่องของฉัน${nWait ? `<span class="n">รอคำตอบ ${nWait} เรื่อง</span>` : ""}</h2><div>${rows.slice(0, -4).join("")}</div></section>
-      <nav class="bt wide list ux-more-menu" aria-label="เมนูอื่น"><div>${rows.slice(-4).join("")}</div></nav></div>`;
-    await made(d, (h) => document.querySelector("#menu .trio > section").insertAdjacentHTML("beforebegin", h), "bt");
+      <div class="ux-quick">${quick}</div>
+      <section class="bt wide list" aria-labelledby="mine"><h2 class="k" id="mine"${nWait ? ' data-tone="wait"' : ""}>เรื่องของฉัน${nWait ? `<span class="n">รอคำตอบ ${nWait} เรื่อง</span>` : ""}</h2><div>${rows.join("")}</div></section></div>`;
+    await made(d, (h) => document.querySelector("#menu .trio > .ux-quick").insertAdjacentHTML("afterbegin", h), "bt"); // first of the tiles = its old place, right under the 3 cells
     if (all.length > 4) {
       const sheet = UXD.sheet(document.getElementById("mineS")), F = [["all", "ทั้งหมด", () => true], ["iss", "ปัญหา", (x) => x.k === "iss"], ["lv", "ขอหยุด", (x) => x.k === "lv"], ["wait", "รอคำตอบ", (x) => x.wait]];
       let f = "all";

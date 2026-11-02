@@ -366,6 +366,10 @@ a.cell{text-decoration:none;color:inherit}
     <p class="gf"><span>วันไหนยอดขายเกินนี้ พนักงานได้โบนัสวันนั้น</span><span>ดูยอดในสรุปเดือน แตะชื่อพนักงานในแท็บพนักงาน</span></p>
     <h2>เงินสด</h2><div class="gl"><label class="cell"><span class="k">เงินทอนตั้งต้น<small>เก็บไว้ในลิ้นชักทุกคืน</small></span><input class="num-in" type="number" inputmode="numeric" min="0" max="20000" step="100" id="cfl" value="${cfl}"><span class="unit">บาท</span></label></div>
     <p class="gf"><span>ปิดร้านแล้ว นับเงินได้เกินนี้ พนักงานเอาส่วนเกินออก</span><span>เงินที่เอาออก ไปฝาก 7-11 แล้วลงสลิปหน้าฝากเงิน</span></p>
+    <h2>บัญชีรับเงินฝาก</h2><div class="gl"><label class="cell"><span class="k">ธนาคาร</span><input type="text" id="bkn" value="${E(S.bank_name ?? "")}" placeholder="เช่น กสิกร" autocomplete="off"></label>
+      <label class="cell"><span class="k">เลขบัญชี</span><input type="text" id="bka" inputmode="numeric" value="${E(S.bank_account ?? "")}" placeholder="xxx-x-xxxxx-x" autocomplete="off"></label>
+      <label class="cell"><span class="k">ชื่อบัญชี</span><input type="text" id="bko" value="${E(S.bank_owner ?? "")}" placeholder="ชื่อเจ้าของบัญชี" autocomplete="off"></label></div>
+    <p class="gf"><span>ขึ้นในหน้าฝากเงินของพนักงาน กดคัดลอกเลขได้</span><span>เว้นว่าง = ไม่ขึ้น</span></p>
     <h2>วันหยุดร้าน</h2><div class="gl"><div class="cell" style="flex-wrap:wrap"><span class="k">หยุดทุกสัปดาห์</span>${dowRow("cld", cld, "วันหยุดร้านประจำ")}</div></div>
     <p class="gf"><span>วันหยุดประจำ ไม่มีเตือนปิดร้าน</span><span>คืนนั้นแอปสั่งของจากยอดขายวันเปิดล่าสุด</span><span>หน้าหลักพนักงานขึ้น วันนี้ร้านหยุด</span></p>
     <div class="gl"><div class="cell"><span class="k" style="white-space:nowrap;flex:none">หยุดเฉพาะวัน</span><input type="date" id="hd" aria-label="วันหยุดที่จะเพิ่ม"><button class="txt-btn" type="button" id="ha">เพิ่ม</button></div></div>
@@ -408,6 +412,7 @@ a.cell{text-decoration:none;color:inherit}
       // 0054 โบนัส · blank = the default, out of range is clamped
       ["bonus_threshold", $("bth").value === "" ? 7000 : Math.min(100000, Math.max(0, Number($("bth").value) || 0))], ["bonus_per_day", $("bpd").value === "" ? 100 : Math.min(10000, Math.max(0, Number($("bpd").value) || 0))],
       ["cash_float", $("cfl").value === "" ? 1000 : Math.min(20000, Math.max(0, Number($("cfl").value) || 0))],
+      ["bank_name", $("bkn").value.trim().slice(0, 40)], ["bank_account", $("bka").value.trim().slice(0, 30)], ["bank_owner", $("bko").value.trim().slice(0, 60)], // round 3 พ.ย.: shown on deposit.html
       // GP: blank = keep what is saved (never write 0 by accident)
       ...["lineman_gp", "grab_gp", "shopee_gp"].filter((k) => $(k).value !== "").map((k) => [k, Number($(k).value)])].map(([key, value]) => ({ key, value }));
     const { error } = await supabase.from("settings").upsert(rows);

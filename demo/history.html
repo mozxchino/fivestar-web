@@ -45,16 +45,16 @@
     const flagged = (d) => shortD.has(d.date) || !!waste[d.date] || !!gapOf(d);
     const monday = (ds) => { const d = new Date(ds + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7); return d.toISOString().slice(0, 10); };
     const plus = (ds, n) => { const d = new Date(ds + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+    // round 3 พ.ย. (Mos: หน้าจืด ตาไม่สะดุด): one bold main line in its tone (cash first), the rest as a small grey line · tone bar on the row
     const lineOf = (d) => {
-      if (d.status === "holiday") return "";
-      // at most 2 short parts (middle-dot rule): the most important problem first, the rest shows when the day is opened
-      const g = gapOf(d), probs = [];
-      if (g) probs.push(`<span class="pill" data-tone="${g < 0 ? "bad" : "wait"}">เงินสด${g < 0 ? "ขาด" : "เกิน"} ${baht(g)}</span>`); // M6: icon + word, not red text alone (ขาด = bad, เกิน = wait)
-      if (shortD.has(d.date)) probs.push('<span class="pill" data-tone="bad">ของมาไม่ครบ</span>');
-      if (waste[d.date]) probs.push(`ของเสีย ${waste[d.date]} อย่าง`);
-      if (probs.length) return probs.length > 1 ? `${probs[0]} <b>อีก ${probs.length - 1} เรื่อง</b>` : probs[0];
-      const t = d.closed_at ? `ปิด ${hm(d.closed_at)}` : d.opened_at ? `เปิด ${hm(d.opened_at)}` : "";
-      return [g === 0 ? "เงินสดครบ" : "", t].filter(Boolean).join(" ");
+      if (d.status === "holiday") return { main: "ร้านหยุด", tone: "", sub: "" };
+      if (d.status === "open") return { main: "ยังไม่ปิดร้าน", tone: "wait", sub: d.opened_at ? `เปิด ${hm(d.opened_at)}` : "" };
+      const g = gapOf(d), sub = [];
+      if (shortD.has(d.date)) sub.push("ของมาไม่ครบ");
+      if (waste[d.date]) sub.push(`ของเสีย ${waste[d.date]} อย่าง`);
+      if (d.closed_at) sub.push(`ปิด ${hm(d.closed_at)}`);
+      const main = g ? `เงินสด${g < 0 ? "ขาด" : "เกิน"} ${baht(g)}` : g === 0 ? "เงินสดครบ" : d.status === "backfill" ? "กรอกย้อนหลัง" : "ปิดร้านแล้ว";
+      return { main, tone: g ? (g < 0 ? "bad" : "wait") : g === 0 ? (shortD.has(d.date) ? "wait" : "ok") : "", sub: sub.join(" · ") };
     };
     let R = 7, N = 5, only = false, pickD = "";
     const inRange = () => data.filter((d) => R === 30 || d.date > back(7));
@@ -67,7 +67,7 @@
       <div class="ux-tools ux-filter"><button type="button" id="flag" class="chip${only ? " on" : ""}" aria-pressed="${only}">วันที่มีเรื่อง <b>${nFlag}</b></button></div>`;
       const weeks = new Map(); show.forEach((d) => { const k = monday(d.date); if (!weeks.has(k)) weeks.set(k, []); weeks.get(k).push(d); });
       list.innerHTML = (show.length ? [...weeks].map(([k, days]) => `<h2 class="ux-week">สัปดาห์ ${thd(k, { month: undefined })}–${thd(plus(k, 6))}</h2><div class="card list">${days.map((d) => `
-        <details class="ux-day" data-d="${d.date}"><summary><span class="d">${thd(d.date, { weekday: "short", month: undefined })}</span><span class="m">${lineOf(d)}</span>${d.status in TONE ? `<span class="pill" data-tone="${TONE[d.status]}">${ST[d.status]}</span>` : ""}</summary><div class="ux-body"></div></details>`).join("")}</div>`).join("")
+        <details class="ux-day" data-d="${d.date}" data-tone="${lineOf(d).tone}"><summary><span class="d">${new Date(d.date + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "long", timeZone: "UTC" })}<small>${thd(d.date)}</small></span><span class="m"><b>${lineOf(d).main}</b>${lineOf(d).sub ? `<small>${lineOf(d).sub}</small>` : ""}</span></summary><div class="ux-body"></div></details>`).join("")}</div>`).join("")
         : `<div class="empty tight"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>${only ? `ไม่มีวันที่มีเรื่องใน ${R} วัน` : `ไม่มีบันทึกใน ${R} วัน`}</p>${only ? '<p class="muted">ของครบ ไม่มีของเสีย เงินสดตรง</p>' : ""}</div>`)
         + (rows.length > N ? `<button type="button" class="btn ux-more" id="more">ดูเพิ่ม อีก ${rows.length - N} วัน</button>` : "");
     }
