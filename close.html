@@ -46,6 +46,7 @@
 #live b { font: 600 17px/1.2 var(--font-head); color: var(--color-foreground); }
 #live b.bad { color: var(--color-destructive); } #live b.ok { color: var(--color-success); }
 #s3[hidden] ~ .ux-foot #live, #live:empty { display: none; }
+#live.seen { display: none; } /* the ควรมี/นับได้ card is on screen: no need to repeat it in the bar */
 /* 0061 over-count sheet: a check (amber), not an error · the gap is the number on the right */
 #overS .hd b { color: var(--on-wait); }
 #overS .low-l { list-style: none; margin: 8px 0 12px; padding: 2px 14px; border-radius: var(--radius-sm); background: var(--tint-wait); box-shadow: inset 0 0 0 1px var(--border-wait); }
@@ -135,7 +136,7 @@
   </div>
   <div id="takeC" class="card tk" hidden aria-live="polite"><h2 id="takeT">เอาเงินออก</h2><b class="v" id="takeV"></b>
   <div class="kv"><span>เหลือไว้ในลิ้นชัก</span><b id="takeF"></b></div><p id="takeH"></p>
-  <button type="button" id="tookB" class="btn primary">เอาออกแล้ว</button><span id="tookP" class="pill" data-tone="ok" hidden>เอาออกแล้ว</span></div>
+  <button type="button" id="tookB" class="btn primary">เอาเงินออกแล้ว</button><span id="tookP" class="pill" data-tone="ok" hidden>เอาเงินออกแล้ว</span></div>
   </section>
   <section id="s4" class="ux-step" hidden>
   <div id="sum4" class="cl-sum" aria-label="สรุปที่จะส่ง"></div>
@@ -239,16 +240,17 @@
   }
   const should = () => cashExp.value === "" ? null : +cashExp.value - paid;
   // 0085 (Mos 30 ต.ค.): เงินทอนตั้งต้น (settings.cash_float, default 1,000) stays in the drawer, the rest is taken out for the 7-11 deposit (deposit.html)
-  // the staff presses "เอาออกแล้ว" before going on · a new count asks again · the amount goes up as close_detail.cash.taken_out (0082 reads it)
+  // the staff presses "เอาเงินออก N บาทแล้ว" before going on · a new count asks again · the amount goes up as close_detail.cash.taken_out (0082 reads it)
   const cf = (await supabase.from("settings").select("value").eq("key", "cash_float").maybeSingle()).data?.value;
   const FLOAT = cf != null && cf !== "" && Number.isFinite(+cf) && +cf >= 0 ? +cf : 1000;
-  let took = null; // the amount "เอาออกแล้ว" was pressed for
+  let took = null; // the amount "เอาเงินออก N บาทแล้ว" was pressed for
   const takeX = () => cashCnt.value === "" ? null : Math.max(+cashCnt.value - FLOAT, 0);
   const take = () => { const x = takeX(); takeC.hidden = x == null; if (x == null) return;
     const done = x === 0 || took === x; takeC.dataset.tone = done ? "ok" : "";
     takeT.textContent = x ? "เอาเงินออก" : "ไม่ต้องเอาเงินออก"; takeV.hidden = !x; takeV.innerHTML = `${fmtB(x)} <small>บาท</small>`;
     takeF.textContent = `${fmtB(x ? FLOAT : +cashCnt.value)} บาท`;
-    takeH.innerHTML = !x ? "เงินในลิ้นชักไม่เกินเงินทอน<br>เก็บไว้ทั้งหมด" : done ? "ปิดร้านแล้ว เอาไปฝาก 7-11<br>ลงสลิปที่หน้าฝากเงิน" : "หยิบออกจากลิ้นชักตอนนี้<br>แล้วกดปุ่มด้านล่าง";
+    takeH.innerHTML = !x ? "เงินในลิ้นชักไม่เกินเงินทอน<br>เก็บไว้ทั้งหมด" : done ? "ปิดร้านแล้ว เอาไปฝาก 7-11<br>ลงสลิปที่หน้าฝากเงิน" : ""; takeH.hidden = !!x && !done; // Mos 3 พ.ย.: the button already says what to do
+    tookB.textContent = `เอาเงินออก ${fmtB(x)} บาทแล้ว`; // Mos 3 พ.ย.: the button says the amount, not just "เอาออกแล้ว"
     tookB.hidden = done; tookP.hidden = !(x && done); };
   tookB.onclick = () => { took = takeX(); take(); say(""); save(); update(); };
   const detail = () => ({ delivery: Object.fromEntries([...dlv.querySelectorAll(".dl")].map((r) => [r.dataset.k, { app: r.querySelector(".dlA").value === "" ? null : +r.querySelector(".dlA").value, pos: r.querySelector(".dlP").value === "" ? null : +r.querySelector(".dlP").value }])),
@@ -272,6 +274,7 @@
   const NAME = { 1: "นับของเหลือ", 2: "ของใช้ในร้าน", 3: "ยอดขายและเงินสด", 4: "ถ่ายรูปและส่ง" };
   const GO = { 2: "ไปเช็กของใช้", 3: "ไปนับเงินสด", 4: "ไปถ่ายรูปและส่ง" }; // red button = verb + thing
   let cur = 1, reached = 1;
+  new IntersectionObserver(([e]) => live.classList.toggle("seen", e.isIntersecting), { rootMargin: "0px 0px -140px 0px" }).observe(document.querySelector(".cs")); // 140 ≈ sticky foot
   const liveRows = () => [...document.querySelectorAll("#lines .grid:not(.ux-zero)")];
   // 0057: the box a row must have filled · เหลือสุก on a สุกอย่างเดียว row
   const req = (g) => g.querySelector(g.dataset.cols === "cooked" ? ".rc" : ".rf");
@@ -284,7 +287,7 @@
     // 0054 (Mos 30 ต.ค.): ยอดขายรวม WE POS is required (staff bonus) · the server checks 0 to 100,000 too
     if (n === 3) { if (posTot.value === "") return { say: "ยังไม่ได้ใส่ยอดขายรวมวันนี้\nดูจอ WE POS ยอดรวมทุกช่องทาง", el: posTot };
       if (+posTot.value < 0 || +posTot.value > 100000) return { say: "ยอดขายรวมต้องอยู่ระหว่าง 0 ถึง 100,000 บาท\nดูจอ WE POS อีกครั้ง", el: posTot };
-      const x = takeX(); if (x && took !== x) return { say: `เอาเงินออก ${fmtB(x)} บาทก่อน\nแล้วกด เอาออกแล้ว`, el: tookB, scroll: true }; }
+      const x = takeX(); if (x && took !== x) return { say: `เอาเงินออก ${fmtB(x)} บาทก่อน\nแล้วกดปุ่ม เอาเงินออก ${fmtB(x)} บาทแล้ว`, el: tookB, scroll: true }; }
     return null;
   };
   // 0052: counted (สด + สุก) below ควรเหลือ − max(ครึ่งถุง, ขายปกติ 1 วัน) → "ตรวจอีกรอบ" before leaving step 1 · same numbers kept once = not asked again
