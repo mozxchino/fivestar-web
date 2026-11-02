@@ -20,7 +20,9 @@
 .dp-days button i { font-style: normal; margin-left: 4px; }
 .dp-out { padding: 14px 16px; }
 .dp-out h2 { margin: 0; }
-.dp-out .day { margin: 2px 0 0; font-size: 15px; color: var(--color-ink-soft); }
+/* Mos 3 พ.ย.: the day must jump out → a black pill (same look as the chosen chip) right of the heading */
+.dp-out h2 { display: flex; align-items: center; gap: 10px; }
+.dp-out .day { margin: 0 0 0 auto; padding: 5px 12px; border-radius: var(--radius-pill); background: var(--color-foreground); color: var(--color-card); font: 600 15px/1.3 var(--font-head); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .dp-out .v { display: block; margin-top: 6px; font: 600 30px/1.15 var(--font-head); font-variant-numeric: tabular-nums; color: var(--color-foreground); }
 .dp-out .v small { font-size: 17px; font-weight: 500; }
 .dp-out .h { margin: 6px 0 0; font-size: 14px; color: var(--color-ink-soft); }
@@ -63,7 +65,7 @@
 <div id="none" class="ld" hidden><div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>ยังไม่มีวันที่ปิดร้าน<br>ปิดร้านก่อน แล้วค่อยลงฝากเงิน</p></div><a class="btn" href="close.html">ไปปิดร้าน</a></div>
 <div id="form" class="ld" hidden>
   <div id="days" class="dp-days" role="group" aria-label="เลือกวัน" hidden></div>
-  <div class="card dp-out"><h2>เงินที่เอาออกจากลิ้นชัก</h2><p class="day" id="dayL"></p><b class="v" id="outV"></b><p class="h" id="outH" hidden></p><span class="pill" id="stP"></span></div>
+  <div class="card dp-out"><h2>เงินที่เอาออกจากลิ้นชัก<span class="day" id="dayL"></span></h2><b class="v" id="outV"></b><p class="h" id="outH" hidden></p><span class="pill" id="stP"></span></div>
   <div class="card acct" id="acct" hidden><h2>โอนเข้าบัญชี</h2><div class="bank"><i id="acB"></i><div class="nm2" id="acO"></div></div><div class="row2"><div class="no" id="acN"></div><button type="button" class="btn sm" id="acC">คัดลอก</button></div></div>
   <label class="fstep" for="amt"><i>1</i>ยอดฝาก<small>ตามสลิป 7-11</small></label>
   <div class="in"><input id="amt" type="number" inputmode="decimal" enterkeyhint="next" placeholder="เลขบนสลิป" min="0" max="100000"><span class="sfx">บาท</span></div>
@@ -126,7 +128,7 @@
     const x = DEP[sel], lock = !!(x && x.confirmed_at && !OWN);
     days.hidden = DAYS.length < 2;
     days.innerHTML = DAYS.map((d) => `<button type="button" data-d="${d}" aria-pressed="${d === sel}">${UXS.thd(d, { weekday: "short" })}${DEP[d] ? `<i aria-label="ลงแล้ว">✓</i>` : ""}</button>`).join("");
-    dayL.textContent = `ของ${UXS.thd(sel, { weekday: "long" })}`;
+    dayL.textContent = UXS.thd(sel, { weekday: "short" });
     outV.textContent = "…";
     const r = await supabase.rpc("deposit_taken_out", { d: sel });
     OUT = r.error || r.data == null || typeof r.data === "object" ? (x ? x.taken_out : null) : +r.data;
