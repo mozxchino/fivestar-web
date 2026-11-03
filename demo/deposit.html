@@ -1,18 +1,11 @@
 <!doctype html><html lang="th"><head><meta charset="utf-8"><script src="lib/demo.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ฝากเงิน</title><meta name="theme-color" content="#C82128">
+<title>เงินโอนไม่ครบ</title><meta name="theme-color" content="#C82128">
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="lib/ui.css?v=r1101"><link rel="stylesheet" href="lib/ux-data.css">
 <style>
-/* Mos 3 พ.ย.: the confirm is the app's own sheet (same shape as the ปิดร้าน checks), not the iPhone box */
-#okS .kv { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; font-size: 17px; font-variant-numeric: tabular-nums; }
-#okS .kv + .kv { border-top: .5px solid var(--color-separator); }
-#okS .kv b { font: 600 18px/1.3 var(--font-head); white-space: nowrap; }
-#okS .kv.res b { font-size: 20px; }
-#okS .kv.res[data-tone=ok] b { color: var(--color-success); } #okS .kv.res[data-tone=wait] b { color: var(--on-wait); } #okS .kv.res[data-tone=bad] b { color: var(--color-destructive); }
-#okS .foot .btn + .btn { margin-top: 8px; }
-/* 0082 (Mos 30 ต.ค. + 1 พ.ย., STATUS ข้อ 12): ลงหลักฐานฝากเงิน after close · one number to match on top, the check right under the two inputs */
+/* 0082 (Mos 30 ต.ค. + 1 พ.ย., STATUS ข้อ 12) · 0094 (Mos 3 พ.ย.): owner only · staff transfer the cash, the owner types what came in (or presses ได้รับครบ in LINE) */
 .dp-days { display: flex; gap: 8px; margin: 0 -16px 4px; padding: 2px 16px 6px; overflow-x: auto; scrollbar-width: none; }
 .dp-days::-webkit-scrollbar { display: none; }
 .dp-days button { flex: none; min-height: 44px; padding: 6px 14px; border: 0; border-radius: var(--radius-pill); background: var(--color-card); box-shadow: var(--shadow-raised); font: 500 15px/1.2 var(--font-body); color: var(--color-ink-soft); font-variant-numeric: tabular-nums; cursor: pointer; }
@@ -41,45 +34,23 @@
 /* Mos 3 พ.ย.: one short line under the result, in the result's colour, right-aligned like the numbers · no fee line */
 .dp-chk p { margin: 2px 0 0; font-size: 14px; color: var(--color-ink-soft); text-align: right; }
 .dp-chk[data-tone=wait] p { color: var(--on-wait); } .dp-chk[data-tone=bad] p { color: var(--color-destructive); }
-.dp-see { display: inline-block; min-height: 44px; padding: 12px 2px; color: var(--color-primary-dark); font-weight: 500; }
 .sticky .btn + .btn { margin-top: 8px; }
-#amt::placeholder { color: var(--color-foreground); font-weight: 500; opacity: 1; } /* Mos 3 พ.ย.: "เลขบนสลิป" must read as dark as the label */
-/* round 3 พ.ย. (Mos): the bank account on the page, from settings (owner edits it there) · no more "ต้องเท่ากับยอดนี้" / fee lines */
-.acct { margin-top: 12px; padding: 12px 16px 14px; }
-.acct h2 { margin: 0 0 6px; }
-/* row 1: bank badge + bank · owner · row 2: the number big with the copy button beside it (Mos 3 พ.ย.: the number must not wrap) */
-.acct .bank { display: flex; align-items: center; gap: 10px; }
-.acct .bank i { flex: none; width: 36px; height: 36px; border-radius: 10px; background: var(--color-foreground); color: #fff; display: grid; place-items: center; font: 600 11px/1 var(--font-head); font-style: normal; text-align: center; padding: 0 3px; }
-.acct .nm2 { font-size: 15px; color: var(--color-ink-soft); min-width: 0; }
-.acct .row2 { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-.acct .no { flex: 1; min-width: 0; font: 600 24px/1.2 var(--font-head); letter-spacing: .02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.acct .btn.sm { margin: 0; flex: none; }
 </style>
 
 
-<script src="lib/skeleton.js"></script><script src="lib/photo.js?v=r1101b"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js?v=0060b"></script>
+<script src="lib/skeleton.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js?v=0060b"></script>
 </head><body class="pg-fill" ontouchstart="">
-<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ฝากเงิน</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>เงินโอนไม่ครบ</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
 <div class="sk"><span class="vh">กำลังเปิด…</span><i class="sk-b" style="--w:100%;--h:120px;--r:20px"></i><i class="sk-b" style="--w:100%;--h:52px;--r:12px;margin-top:24px"></i><i class="sk-b" style="--w:100%;--h:52px;--r:12px;margin-top:24px"></i><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
 <div id="lE" class="ld" hidden><p class="err" role="alert"></p><button type="button" id="retry" class="btn primary">ลองอีกครั้ง</button></div>
-<div id="none" class="ld" hidden><div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>ยังไม่มีวันที่ปิดร้าน<br>ปิดร้านก่อน แล้วค่อยลงฝากเงิน</p></div><a class="btn" href="close.html">ไปปิดร้าน</a></div>
+<div id="none" class="ld" hidden><div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>ยังไม่มีวันที่ปิดร้าน</p></div><a class="btn" href="index.html">กลับหน้าหลัก</a></div>
 <div id="form" class="ld" hidden>
   <div id="days" class="dp-days" role="group" aria-label="เลือกวัน" hidden></div>
   <div class="card dp-out"><h2>เงินที่เอาออกจากลิ้นชัก<span class="day" id="dayL"></span></h2><b class="v" id="outV"></b><p class="h" id="outH" hidden></p><span class="pill" id="stP"></span></div>
-  <div class="card acct" id="acct" hidden><h2>โอนเข้าบัญชี</h2><div class="bank"><i id="acB"></i><div class="nm2" id="acO"></div></div><div class="row2"><div class="no" id="acN"></div><button type="button" class="btn sm" id="acC">คัดลอก</button></div></div>
-  <label class="fstep" for="amt"><i>1</i>ยอดฝาก<small>ตามสลิป 7-11</small></label>
-  <div class="in"><input id="amt" type="number" inputmode="decimal" enterkeyhint="next" placeholder="เลขบนสลิป" min="0" max="100000"><span class="sfx">บาท</span></div>
-  <label class="fstep" for="fee"><i>2</i>ค่าธรรมเนียม 7-11<small>ตามสลิป ไม่มีใส่ 0</small></label>
-  <div class="in"><input id="fee" type="number" inputmode="decimal" enterkeyhint="done" placeholder="0" min="0" max="100"><span class="sfx">บาท</span></div>
+  <label class="fstep" for="amt">ได้รับจริงเท่าไร<small>ดูในบัญชีธนาคาร</small></label>
+  <div class="in"><input id="amt" type="number" inputmode="decimal" enterkeyhint="done" placeholder="ยอดที่เข้าบัญชี" min="0" max="100000"><span class="sfx">บาท</span></div>
   <div class="card dp-chk" id="chk" aria-live="polite"></div>
-  <h3 class="fstep"><i>3</i>รูปสลิป</h3>
-  <label class="btn" id="phL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>แนบรูปสลิป <input id="ph" type="file" accept="image/*" capture="environment" hidden></label>
-  <p id="phS" class="muted"></p>
-  <a href="#" id="seeSlip" class="dp-see" hidden>ดูรูปสลิปที่ลงไว้</a>
-  <dialog id="okS" class="bsheet" aria-labelledby="okT"><div class="body"><div class="grab"></div><div class="hd"><b id="okT">บันทึกการฝากเงิน</b><button type="button" class="x" aria-label="ปิด">✕</button></div><div id="okL"></div></div>
-  <div class="foot"><button type="button" id="okGo" class="btn primary">ตกลง บันทึก</button><button type="button" id="okNo" class="btn">ยกเลิก</button></div></dialog>
-  <div class="sticky"><button id="send" class="btn primary">บันทึกการฝากเงิน</button><button type="button" id="conf" class="btn tonal" hidden>ยืนยันยอดนี้ (ตรวจแล้ว)</button>
-  <p id="msg" class="muted"></p></div>
+  <div class="sticky"><button id="send" class="btn primary">บันทึกยอดที่ได้</button><p id="msg" class="muted"></p></div>
 </div>
 <script>
 (async () => {
@@ -87,101 +58,65 @@
     retry.onclick = () => { retry.disabled = true; location.reload(); }; };
   try {
   const { supabase, me } = await App.ready();
-  // managers don't see money (0027) → same door as หน้ารายจ่าย
-  if (UXS.only(me, ["staff", "owner"], "หน้านี้สำหรับพนักงานในร้านและเจ้าของ", "ผู้จัดการดูงานของร้านได้ที่หน้าวันนี้", "owner.html", "ไปหน้าวันนี้")) return;
-  const OWN = me.role === "owner", bd = UXS.bizDay();
+  // 0094 (Mos 3 พ.ย.): money goes to the owner's account → the owner's page only (staff transfer and send the slip in LINE)
+  if (UXS.only(me, ["owner"], "หน้านี้สำหรับเจ้าของ", "เงินที่เอาออก โอนให้เจ้าของ แล้วส่งสลิปในไลน์", "index.html", "กลับหน้าหลัก")) return;
+  const bd = UXS.bizDay();
   const baht = (n) => (+n).toLocaleString("th-TH", { maximumFractionDigits: 2 }) + " บาท";
   const back = (n) => new Date(Date.parse(bd + "T00:00:00Z") - n * 864e5).toISOString().slice(0, 10);
-  // staff: the closed days of the last 3 (the server allows the same) · owner: 2 weeks
-  // Mos 3 พ.ย.: money before 1 Nov (31 Oct) was the previous owner's · never shown here · ponytail: fixed date, it never moves
-  const from = [back(OWN ? 14 : 3), "2026-11-01"].sort()[1];
+  // 2 weeks · Mos 3 พ.ย.: money before 1 Nov (31 Oct) was the previous owner's · never shown here · ponytail: fixed date, it never moves
+  const from = [back(14), "2026-11-01"].sort()[1];
   const [dq, xq] = await Promise.all([
     supabase.from("shop_days").select("date,status").eq("status", "sent").gte("date", from).lte("date", bd).order("date", { ascending: false }),
-    supabase.from("deposits").select("date,amount,fee,taken_out,gap,slip,updated_at,confirmed_at").gte("date", from)]);
+    supabase.from("deposits").select("date,amount,taken_out,gap,updated_at").gte("date", from)]);
   if (dq.error || xq.error) throw dq.error || xq.error;
   const DEP = Object.fromEntries((xq.data || []).map((x) => [x.date, x]));
-  // Mos 3 พ.ย.: staff see only the days still to deposit, newest first (the day just closed) · a deposited day drops off the chips · all done = a done screen
-  // owner keeps every closed day (✓ = logged) to check and confirm
-  const DAYS = (dq.data || []).filter((d) => d.status === "sent" && d.date >= from && d.date <= bd).map((d) => d.date).filter((d) => OWN || !DEP[d]);
-  if (!DAYS.length) { none.hidden = false; if (!OWN && (dq.data || []).length) { none.querySelector("p").textContent = "ฝากเงินครบทุกวันแล้ว"; none.querySelector("a").textContent = "กลับหน้าหลัก"; none.querySelector("a").href = "index.html"; } return; }
+  const DAYS = (dq.data || []).map((d) => d.date);
+  if (!DAYS.length) { none.hidden = false; return; }
+  // ?d= from the LINE card / owner.html · else the newest day still waiting, else the newest day
+  const want = new URLSearchParams(location.search).get("d");
+  let sel = DAYS.includes(want) ? want : DAYS.find((d) => !DEP[d]) || DAYS[0], OUT = null;
 
-  const slip = [];
-  Photo.picker(supabase, ph, { paths: slip, type: "deposit", name: "รูปสลิป", max: 1, status: phS, need: "ต้องแนบ", gallery: true });   // Mos 3 Nov: the 7-11 slip photo may already be in the phone
-  let sel = DAYS[0], OUT = null; // newest first = the latest closed day
-  const num = (el) => el.value === "" ? null : +el.value;
-
-  // ตรง / ขาด / เกิน: ยอดฝาก + ค่าธรรมเนียม against เงินที่เอาออก (the server checks the same and keeps its own answer)
+  // ได้รับ against เงินที่เอาออก (the server keeps its own gap)
   const check = () => {
-    const a = num(amt), f = num(fee) ?? 0;
-    if (a == null) { chk.dataset.tone = ""; chk.innerHTML = `<div class="res"><span>เช็กยอด</span><b>ใส่ยอดฝากก่อน</b></div>`; return; }
-    const sum = Math.round((a + f) * 100) / 100, g = OUT == null ? null : Math.round((sum - OUT) * 100) / 100;
-    const [tone, word, say] = g == null ? ["", "เทียบไม่ได้", "ไม่มียอดที่เอาออกของวันนี้ เจ้าของเช็กเอง"]
-      : g === 0 ? ["ok", "ตรง", ""]
-      : g < 0 ? ["bad", `ขาด ${baht(-g)}`, "ฝากน้อยกว่าที่เอาออก ดูสลิปอีกที"]
-      : ["wait", `เกิน ${baht(g)}`, "ฝากมากกว่าที่เอาออก ดูสลิปอีกที"];
+    const a = amt.value === "" ? null : +amt.value;
+    if (a == null) { chk.dataset.tone = ""; chk.innerHTML = `<div class="res"><span>เช็กยอด</span><b>ใส่ยอดที่ได้ก่อน</b></div>`; return; }
+    const g = OUT == null ? null : Math.round((a - OUT) * 100) / 100;
+    const [tone, word] = g == null ? ["", "เทียบไม่ได้"] : g === 0 ? ["ok", "ครบ"] : g < 0 ? ["bad", `ขาด ${baht(-g)}`] : ["wait", `เกิน ${baht(g)}`];
     chk.dataset.tone = tone;
-    chk.innerHTML = `<div class="kv"><span>ฝาก + ค่าธรรมเนียม</span><b>${baht(sum)}</b></div><div class="kv"><span>เงินที่เอาออกจากลิ้นชัก</span><b>${OUT == null ? "ไม่มี" : baht(OUT)}</b></div>`
-      + `<div class="res"><span>ผล</span><b>${word}</b></div>${say ? `<p>${say}</p>` : ""}`; // round 3 พ.ย. (Mos): the fee goes to รายจ่าย by itself, no line about it here
+    chk.innerHTML = `<div class="kv"><span>ได้รับ</span><b>${baht(a)}</b></div><div class="kv"><span>เงินที่เอาออก</span><b>${OUT == null ? "ไม่มี" : baht(OUT)}</b></div><div class="res"><span>ผล</span><b>${word}</b></div>`;
   };
-  amt.oninput = fee.oninput = check;
+  amt.oninput = check;
 
   const draw = async () => {
-    const x = DEP[sel], lock = !!(x && x.confirmed_at && !OWN);
+    const x = DEP[sel];
     days.hidden = DAYS.length < 2;
-    days.innerHTML = DAYS.map((d) => `<button type="button" data-d="${d}" aria-pressed="${d === sel}">${UXS.thd(d, { weekday: "short" })}${DEP[d] ? `<i aria-label="ลงแล้ว">✓</i>` : ""}</button>`).join("");
+    days.innerHTML = DAYS.map((d) => `<button type="button" data-d="${d}" aria-pressed="${d === sel}">${UXS.thd(d, { weekday: "short" })}${DEP[d] ? `<i aria-label="ได้รับแล้ว">✓</i>` : ""}</button>`).join("");
     dayL.textContent = UXS.thd(sel, { weekday: "short" });
     outV.textContent = "…";
     const r = await supabase.rpc("deposit_taken_out", { d: sel });
     OUT = r.error || r.data == null || typeof r.data === "object" ? (x ? x.taken_out : null) : +r.data;
     outV.innerHTML = OUT == null ? "ไม่มียอด" : `${(+OUT).toLocaleString("th-TH", { maximumFractionDigits: 2 })} <small>บาท</small>`;
-    outH.textContent = OUT == null ? "ตอนปิดร้านไม่ได้นับเงิน เจ้าของเช็กเอง" : ""; outH.hidden = OUT != null; // only when there is no amount to compare with (Mos 3 พ.ย.: one line)
-    stP.textContent = x ? (x.confirmed_at ? "เจ้าของตรวจแล้ว" : `ลงแล้ว ${UXS.hm(x.updated_at)} น.`) : "ยังไม่ได้ฝาก";
+    outH.textContent = OUT == null ? "ตอนปิดร้านไม่มีเงินต้องเอาออก" : ""; outH.hidden = OUT != null;
+    stP.textContent = x ? `ได้รับแล้ว ${UXS.hm(x.updated_at)} น.` : "รอเงินโอน";
     stP.dataset.tone = x ? "ok" : "wait";
-    amt.value = x ? +x.amount : ""; fee.value = x ? +x.fee : "";
-    amt.disabled = fee.disabled = ph.disabled = lock; phL.hidden = lock;
-    seeSlip.hidden = !x; send.hidden = lock;
-    send.textContent = x ? "บันทึกที่แก้" : "บันทึกการฝากเงิน";
-    conf.hidden = !(OWN && x && !x.confirmed_at);
-    msg.className = lock ? "err" : "muted"; msg.textContent = lock ? "เจ้าของตรวจแล้ว แก้ไม่ได้\nทักเจ้าของ" : "";
+    // Mos 3 พ.ย.: this page is for "เงินโอนไม่ครบ" (full = the LINE button) → empty until the owner types what came in
+    amt.value = x ? +x.amount : "";
+    send.textContent = x ? "บันทึกยอดที่แก้" : "บันทึกยอดที่ได้";
+    msg.className = "muted"; msg.textContent = "";
     check();
   };
-  days.onclick = (e) => { const b = e.target.closest("[data-d]"); if (!b || b.dataset.d === sel) return; sel = b.dataset.d; slip.length = 0; draw(); };
-  seeSlip.onclick = async (e) => { e.preventDefault(); try { Photo.view(await Photo.url(supabase, DEP[sel].slip)); } catch (_) { UXM.toast("เปิดรูปไม่ได้"); } };
+  days.onclick = (e) => { const b = e.target.closest("[data-d]"); if (!b || b.dataset.d === sel) return; sel = b.dataset.d; draw(); };
 
   const bad = (t, el) => { msg.textContent = t; msg.className = "err"; if (el) UXM.shake(el); };
   send.onclick = async () => {
-    const x = DEP[sel], path = slip[0] || x?.slip;
-    if (amt.value === "") return bad("ใส่ยอดฝากก่อน", amt);
-    if (fee.value === "") return bad("ใส่ค่าธรรมเนียม\nไม่มีใส่ 0", fee);
-    if (!path) return bad("แนบรูปสลิปก่อน", phL);
-    // Mos 3 พ.ย.: the app's own sheet asks first (ตกลง บันทึก / ยกเลิก), then straight home · no green box left on the page
-    const sum = Math.round(((+amt.value) + (+fee.value || 0)) * 100) / 100, g = OUT == null ? null : Math.round((sum - OUT) * 100) / 100;
-    okL.innerHTML = `<div class="kv"><span>ยอดฝาก</span><b>${baht(+amt.value)}</b></div><div class="kv"><span>ค่าธรรมเนียม 7-11</span><b>${baht(+fee.value || 0)}</b></div><div class="kv"><span>เงินที่เอาออกจากลิ้นชัก</span><b>${OUT == null ? "ไม่มี" : baht(OUT)}</b></div>`
-      + `<div class="kv res" data-tone="${g == null ? "" : g === 0 ? "ok" : g < 0 ? "bad" : "wait"}"><span>ผล</span><b>${g == null ? "เทียบไม่ได้" : g === 0 ? "ตรง" : g < 0 ? `ขาด ${baht(-g)}` : `เกิน ${baht(g)}`}</b></div>`;
-    okS.showModal(); okS.querySelector(".body").scrollTop = 0;
-    const go = await new Promise((ok) => { okGo.onclick = () => ok(true); okNo.onclick = okS.querySelector(".x").onclick = () => ok(false); okS.onclick = (e) => { if (e.target === okS) ok(false); }; okS.oncancel = () => ok(false); });
-    okS.close(); if (!go) return;
+    if (amt.value === "" || +amt.value <= 0) return bad("ใส่ยอดที่ได้รับก่อน", amt);
     send.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
-    const { data, error } = await supabase.rpc("save_deposit", { p: { date: sel, amount: amt.value, fee: fee.value, slip: path } });
+    const { data, error } = await supabase.rpc("receive_deposit", { d: sel, a: +amt.value });
     send.disabled = false;
-    if (error) return bad("บันทึกไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error));
-    DEP[sel] = { ...(x || {}), date: sel, amount: +amt.value, fee: +fee.value, taken_out: data?.taken_out ?? OUT, gap: data?.gap ?? null, slip: path, updated_at: new Date().toISOString(), confirmed_at: x?.confirmed_at ?? null };
-    await App.fn("deposit-notify", { date: sel }).catch(() => {}); // group + owner cards (Mos 3 พ.ย.) · a failed card never blocks saving
-    slip.length = 0; UXM.toast("บันทึกการฝากเงินแล้ว ✓"); location.href = "index.html";
+    if (error || !data?.ok) return bad("บันทึกไม่ได้ ลองกดอีกครั้ง" + (error ? "\n" + App.errText(error) : ""));
+    DEP[sel] = { date: sel, amount: +data.amount, taken_out: data.taken_out, gap: data.gap, updated_at: new Date().toISOString() };
+    UXM.toast("บันทึกแล้ว ✓"); await draw();
   };
-  conf.onclick = async () => {
-    conf.disabled = true;
-    const { error } = await supabase.rpc("confirm_deposit", { d: sel });
-    conf.disabled = false;
-    if (error) return bad(App.errText(error));
-    DEP[sel].confirmed_at = new Date().toISOString(); await draw(); UXM.toast("ตรวจแล้ว");
-  };
-  // round 3 พ.ย. (Mos): the account to pay into, from ตั้งค่า › ระบบ › เงินสด (0091 lets staff read these three keys) · no account set = no card
-  try { const { data: ac } = await supabase.from("settings").select("key,value").in("key", ["bank_name", "bank_account", "bank_owner"]);
-    const A = Object.fromEntries((ac || []).map((x) => [x.key, typeof x.value === "string" ? x.value : ""]));
-    if (A.bank_account) { acB.textContent = (A.bank_name || "").replace(/ไทย$/, "").replace(/\s.*$/, "").slice(0, 5) || "ธนาคาร"; // "กสิกรไทย" → กสิกร (badge is 36px) acN.textContent = A.bank_account; acO.textContent = [A.bank_name, A.bank_owner].filter(Boolean).join(" · "); acct.hidden = false;
-      acC.onclick = async () => { try { await navigator.clipboard.writeText(A.bank_account.replace(/[^0-9]/g, "")); UXM.toast("คัดลอกเลขบัญชีแล้ว ✓"); } catch (_) { UXM.toast("คัดลอกไม่ได้ จดจากหน้าจอ"); } }; }
-  } catch (_) {}
   form.hidden = false;
   await draw();
   } catch (e) { if (e.message !== "denied") failed(e); }
