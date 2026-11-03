@@ -18,12 +18,16 @@ a.cell{text-decoration:none;color:inherit}
 .dow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;width:calc(100% + 20px);margin:0 -10px;padding:4px 0}
 .dow .chip{justify-content:center;padding:0;box-shadow:none;background:var(--color-fill)}
 .dow .chip.on{background:var(--color-foreground)} /* qa: the add-holiday field sits in a plain row (not a label), so the field itself is the tap target */
+/* Mos 3 พ.ย. แจ้งเตือน: who gets each private card · ticked = green like the approved mock */
+.who{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.who .chip.on{background:#E8F5E9;color:var(--color-success);border-color:var(--color-success)}
+.who small{color:var(--color-muted-foreground);font-size:13px}
 .g label.chk{display:flex;align-items:center;gap:10px;min-height:var(--field);margin:0;align-self:end;font-size:16px;color:var(--fg)}
 /* 0054: staff bonus row under the 4 month tiles (owner only), full width */
 .ux-4 .ux-bonus{grid-column:1/-1;min-height:0}
 </style></head><body class="grouped" ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ตั้งค่า</h1><div class="sub">สำหรับเจ้าของ</div></div>
-  <div class="tabs sk" aria-hidden="true"><button class="on" tabindex="-1">พนักงาน</button><button tabindex="-1">สินค้า</button><button tabindex="-1">ร้าน</button></div><div class="tabs ld" id="tabs" hidden><button data-t="staff" class="on">พนักงาน</button><button data-t="prod">สินค้า</button><button data-t="sys">ร้าน</button></div></header>
+  <div class="tabs sk" aria-hidden="true"><button class="on" tabindex="-1">พนักงาน</button><button tabindex="-1">สินค้า</button><button tabindex="-1">ร้าน</button><button tabindex="-1">แจ้งเตือน</button></div><div class="tabs ld" id="tabs" hidden><button data-t="staff" class="on">พนักงาน</button><button data-t="prod">สินค้า</button><button data-t="sys">ร้าน</button><button data-t="ntf">แจ้งเตือน</button></div></header>
 <p id="blocked" class="err" hidden></p>
 <div class="sk"><span class="vh">กำลังเปิด…</span><h2 style="display:flow-root"><i class="sk-b" style="--w:30%;--h:13px;margin:4px 0"></i></h2><div class="gl"><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div></div><h2 style="display:flow-root"><i class="sk-b" style="--w:36%;--h:13px;margin:4px 0"></i></h2><div class="gl"><div class="cell has-av"><i class="sk-b" style="--w:36px;--h:36px;--r:50%"></i><i class="sk-b" style="--w:30%;--h:17px;margin:0"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div></div></div>
 <div id="app" class="ld" hidden>
@@ -34,6 +38,7 @@ a.cell{text-decoration:none;color:inherit}
     <div id="plist" class="card list"></div>
   </section>
   <section id="sys" hidden></section>
+  <section id="ntf" hidden></section>
 </div>
 <dialog id="ps" class="bsheet full" role="dialog" aria-modal="true" aria-labelledby="psh"><div class="hd"><button class="txt-btn" type="button" data-close>ยกเลิก</button><b id="psh"></b><span aria-hidden="true"></span></div>
   <div class="body" id="psb"></div>
@@ -321,6 +326,7 @@ a.cell{text-decoration:none;color:inherit}
   const { data: st, error: stErr } = await supabase.from("settings").select("key,value");
   if (stErr) { // qa: saving blank fields here would wipe the shop settings
     $("sys").innerHTML = `<p class="err">เปิดตั้งค่าร้านไม่ขึ้น ลองเปิดหน้าใหม่\n${E(App.errText(stErr))}</p>`;
+    $("ntf").innerHTML = $("sys").innerHTML;
     staff(); const t1 = document.querySelector(`.tabs [data-t="${qs.get("tab")}"]`); if (t1) t1.click(); return;
   }
   const S = Object.fromEntries((st || []).map((s) => [s.key, s.value]));
@@ -345,7 +351,7 @@ a.cell{text-decoration:none;color:inherit}
   // mock ก (iOS grouped): every setting is a row · pickers open the native list · one red save in the glass bar
   $("sys").innerHTML = `<h2>ร้าน</h2><div class="gl"><label class="cell"><span class="k">ชื่อร้าน</span><input type="text" id="shop" value="${E(S.shop_name)}"></label></div><p class="gf">ชื่อนี้ขึ้นหัวใบสั่ง</p>
     <h2>วันรับร้าน</h2><div class="gl"><a class="cell nav" href="opening.html"><span class="k">นับสต็อกตั้งต้น<small>กรอกของที่นับได้ เป็นยกมาของวันแรก</small></span>${chev}</a></div>
-    <h2>เวลา</h2><div class="gl"><label class="cell"><span class="k">เตือนปิดร้านตอน</span><input type="time" id="rem" value="${E(S.remind_at ?? "21:00")}"></label><label class="cell"><span class="k">กันพลาด ส่งให้เองวันถัดไปตอน<small>ถ้าเจ้าของยังไม่กดส่ง</small></span><input type="time" id="auto" value="${E(S.auto_send_at)}"></label></div>
+    <h2>เวลา</h2><div class="gl"><label class="cell"><span class="k">กันพลาด ส่งให้เองวันถัดไปตอน<small>ถ้าเจ้าของยังไม่กดส่ง</small></span><input type="time" id="auto" value="${E(S.auto_send_at)}"></label></div>
     <p class="gf">เจ้าของกดส่งเองทุกคืน แอปเตือน 22:30 / 09:00 / 12:00 แล้วส่งให้เองพรุ่งนี้ตามเวลานี้ ถ้ายังไม่กด (ตัดรอบ CPF 13:00)</p>
     <h2>รอบสั่ง CPF</h2><div class="gl">
       <label class="cell nav"><span class="k">สั่งคืนนี้ ของมากี่วัน<small>CPF ตัดรอบบ่ายโมง</small></span><span class="v" data-for="lead"></span>${chev}<select id="lead">${[1, 2, 3].map((n) => `<option value="${n}" ${Number(S.order_lead_days ?? 2) === n ? "selected" : ""}>${n === 1 ? "พรุ่งนี้" : n === 2 ? "มะรืน (2 วัน)" : "3 วัน"}</option>`).join("")}</select></label>
@@ -403,8 +409,40 @@ a.cell{text-decoration:none;color:inherit}
     $("cmsg").className = r.ok ? "muted" : "err";
     $("cmsg").textContent = r.ok ? "" : r.error === "staff_group_id not set" ? "ยังไม่ได้ตั้งกลุ่มพนักงาน" : "ส่งไม่ได้: " + App.errText(r.error);
   };
+  // ---- แจ้งเตือน (Mos 3 พ.ย.): open/close times + who gets each private card · same keys as open-notify, cron-tick, _shared/line.ts NOTIFY_DEFAULT
+  const NT = [["open_late", "เปิดร้านสาย", "เปิดเลยเวลาที่ตั้งไว้ข้างบน", ["owner"]], ["leave", "คำขอลา", "มีปุ่มอนุมัติ และไม่อนุมัติ", ["owner", "manager"]],
+    ["order", "ใบสั่ง CPF", "มีปุ่มส่งให้เซลล์", ["owner", "manager"]], ["selfbuy", "ของใช้ต้องซื้อเอง", "ของใกล้หมด ที่ต้องซื้อ Shopee หรือ Makro", ["owner"]],
+    ["holiday", "ใบสั่งวันร้านหยุด", "ร้านหยุด แต่ต้องสั่งของคืนนี้", ["owner", "manager"]], ["autosend", "แอปส่งใบสั่งแทน", "ไม่มีใครกดส่ง แอปส่งให้เซลล์ตอนกันพลาด", ["owner"]]];
+  const NM = [["เงินปิดร้าน", "เงินสดขาดเกิน ยอดขาย โบนัส"], ["ยอดฝากเงิน", "ยอดฝากตรงกับเงินที่เอาออกไหม"]];
+  const nto = {}; NT.forEach(([k, , , d]) => { const v = S.notify_to?.[k]; nto[k] = Array.isArray(v) ? v.filter((r) => r === "owner" || r === "manager") : [...d]; });
+  const nchip = (k, r, t) => `<button type="button" class="chip${nto[k].includes(r) ? " on" : ""}" data-k="${k}" data-r="${r}" aria-pressed="${nto[k].includes(r)}">${nto[k].includes(r) ? "✓ " : ""}${t}</button>`;
+  const nmin = (id, v, min, max) => `<input type="number" id="${id}" inputmode="numeric" min="${min}" max="${max}" value="${E(v)}" style="width:4.5em;flex:none;text-align:right"> นาที`;
+  $("ntf").innerHTML = `<h2>เปิดร้าน</h2><div class="gl"><label class="cell"><span class="k">เวลาเปิดร้าน</span><input type="time" id="opa" value="${E(S.open_at ?? "11:00")}"></label>
+      <label class="cell"><span class="k">นับว่าสาย เมื่อเลยเวลาเปิด</span>${nmin("olm", S.open_late_min ?? 15, 0, 120)}</label>
+      <label class="cell"><span class="k">ยังไม่กดเปิด เตือนกลุ่มหลังเวลาเปิด</span>${nmin("orm", S.open_remind_min ?? 30, 5, 180)}</label></div>
+    <p class="gf">ในกลุ่มพนักงานขึ้นแค่เวลาเปิด ไม่บอกว่าสาย</p>
+    <h2>ปิดร้าน</h2><div class="gl"><label class="cell"><span class="k">เวลาปิดร้าน<small>ยังไม่กดปิด เตือนกลุ่มเวลานี้</small></span><input type="time" id="rem" value="${E(S.remind_at ?? "21:00")}"></label></div>
+    <h2>การ์ดส่วนตัว ส่งให้ใคร</h2><p class="gf" style="margin-top:0">ติ๊กคนที่จะได้การ์ดนี้ใน LINE ส่วนตัว เลือกได้ทั้งสองคน</p>
+    <div class="gl" id="nwho">${NT.map(([k, t, sm]) => `<div class="cell" style="display:block;padding-block:10px"><span class="k" style="display:block">${t}<small>${sm}</small></span><span class="who" role="group" aria-label="${t} ส่งให้">${nchip(k, "owner", "เจ้าของ")}${nchip(k, "manager", "ผู้จัดการ")}</span></div>`).join("")}
+      ${NM.map(([t, sm]) => `<div class="cell" style="display:block;padding-block:10px"><span class="k" style="display:block">${t}<small>${sm}</small></span><span class="who"><span class="chip on" aria-label="เจ้าของ">✓ เจ้าของ</span><small>เรื่องเงิน เจ้าของคนเดียว</small></span></div>`).join("")}</div>
+    <p class="gf">การ์ดที่ไม่อยู่ในรายการนี้ ส่งเข้ากลุ่มพนักงาน ทุกคนในกลุ่มเห็น</p>
+    <div class="sticky"><button class="btn primary" id="nsave">บันทึกการแจ้งเตือน</button><p id="nmsg" class="muted"></p></div>`;
+  $("nwho").onclick = (ev) => {
+    const b = ev.target.closest("button[data-k]"); if (!b) return;
+    const { k, r } = b.dataset, on = !nto[k].includes(r);
+    nto[k] = on ? [...nto[k], r] : nto[k].filter((x) => x !== r);
+    b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); b.textContent = (on ? "✓ " : "") + (r === "owner" ? "เจ้าของ" : "ผู้จัดการ");
+  };
+  $("nsave").onclick = async () => {
+    const clamp = (id, d, lo, hi) => $(id).value === "" ? d : Math.min(hi, Math.max(lo, Math.round(Number($(id).value) || 0)));
+    const rows = [["open_at", $("opa").value || "11:00"], ["open_late_min", clamp("olm", 15, 0, 120)], ["open_remind_min", clamp("orm", 30, 5, 180)],
+      ["remind_at", $("rem").value || "21:00"], ["notify_to", nto]].map(([key, value]) => ({ key, value }));
+    const { error } = await supabase.from("settings").upsert(rows);
+    $("nmsg").className = error ? "err" : "muted"; $("nmsg").textContent = error ? "บันทึกไม่ได้: " + App.errText(error) : "";
+    if (!error) UXM.toast("บันทึกแล้ว ✓");
+  };
   $("save").onclick = async () => {
-    const rows = [["shop_name", $("shop").value.trim()], ["remind_at", $("rem").value || "21:00"], ["auto_send_at", $("auto").value || "12:30"],
+    const rows = [["shop_name", $("shop").value.trim()], ["auto_send_at", $("auto").value || "12:30"],
       ["sales_group_id", $("sg").value || ""], ["staff_group_id", $("fg").value || ""], ["holidays", hol], ["open_dates", opn],
       // 0033 รอบสั่ง CPF · out-of-range numbers fall back to the defaults instead of saving nonsense
       ["order_lead_days", Number($("lead").value) || 2], ["delivery_at", $("dlv").value || "14:00"], ["sales_mention", $("tag").value.trim()], ["cpf_no_delivery_dow", nod], ["shop_closed_dow", cld], ["order_buffer_pct", Math.min(100, Math.max(0, Number($("buf").value) || 0))],
