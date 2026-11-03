@@ -137,10 +137,10 @@
     const sendBy = `รอส่ง ก่อน ${esc(S.auto_send_at || "12:30")} น. ${od.data && od.data.for_date <= new Date(Date.parse(today + "T00:00:00Z") + 864e5).toISOString().slice(0, 10) ? "วันนี้" : "พรุ่งนี้"}`; // auto-send is the day after the order's night: an order landing tomorrow was made last night
     const ord = { proposed: [sendBy, "wait", 2], approved: [sendBy, "wait", 2], failed: ["ส่งไม่ออก", "bad", 0], sent: ["ส่งแล้ว", "ok"], skipped: ["ไม่สั่ง", ""] }[od.data?.status] || ["คืนนี้ยังไม่มี", ""];
     const shop = shut ? ["หยุด", ""] : d.closed_at ? [`ปิดแล้ว ${hm(d.closed_at)} น.`, "ok"] : d.opened_at ? [`เปิดอยู่ ตั้งแต่ ${hm(d.opened_at)} น.`, "ok"] : ["ยังไม่เปิด", ""];
-    // ฝากเงิน: the latest closed day not deposited = a waiting row · ขาด = red, เกิน = yellow
+    // ฝากเงิน: the latest closed day not marked received = a waiting row · ขาด = red, เกิน = yellow · 0094: staff transfer it, the owner marks it
     const lday = lc.data?.date, dep = (dp.data || []).find((x) => x.date === lday), dg = dep && dep.gap != null ? +dep.gap : null, dw = lday ? thd(lday, { weekday: "short" }) : "";
-    const depR = dp.error ? ["เปิดไม่ขึ้น", "-", null] : !lday ? ["ยังไม่มีวันที่ปิดร้าน", "-", null] : !dep ? [`${dw} ยังไม่ได้ฝาก`, "bad", 2] : dg == null ? [`${dw} ฝากแล้ว`, "ok", null]
-      : dg === 0 ? [`${dw} ฝากแล้ว ตรง`, "ok", null] : dg < 0 ? [`${dw} ฝากขาด ${(-dg).toLocaleString("th-TH")} บาท`, "bad", 2] : [`${dw} ฝากเกิน ${dg.toLocaleString("th-TH")} บาท`, "wait", null];
+    const depR = dp.error ? ["เปิดไม่ขึ้น", "-", null] : !lday ? ["ยังไม่มีวันที่ปิดร้าน", "-", null] : !dep ? [`${dw} รอเงินโอน`, "bad", 2] : dg == null ? [`${dw} ได้รับแล้ว`, "ok", null]
+      : dg === 0 ? [`${dw} ได้รับครบ`, "ok", null] : dg < 0 ? [`${dw} ได้ขาด ${(-dg).toLocaleString("th-TH")} บาท`, "bad", 2] : [`${dw} ได้เกิน ${dg.toLocaleString("th-TH")} บาท`, "wait", null];
     const R = [ // href, name, icon, status line, tone, rank (null = nothing waits)
       ["owner.html", "วันนี้", "today", `ร้านวันนี้ ${shop[0]}`, shop[1], null],
       ["owner.html?tab=iss", "ปัญหาจากร้าน", "issue", nIss ? `รอรับทราบ ${nIss} เรื่อง` : "ไม่มีเรื่องค้าง", nIss ? "bad" : "ok", nIss ? 1 : null],
@@ -148,7 +148,7 @@
       ["approve.html", "อนุมัติใบสั่ง", "approve", `ใบสั่งของ${od.data ? dd : ""} ${ord[0]}`, ord[1], ord[2] ?? null],
       ["holiday.html", "ขอหยุด/ลา", "holiday", nLv ? `รออนุมัติ ${nLv} เรื่อง` : "ไม่มีคำขอรอ", nLv ? "wait" : "ok", nLv ? 3 : null],
       ["expense.html", "รายจ่าย", "expense", nFix ? `ยังไม่ลง ${esc(fixMiss.slice(0, 2).join(" "))}${nFix > 2 ? ` อีก ${nFix - 2} ตัว` : ""}` : `เดือนนี้ ${(ex.data || []).reduce((s, r) => s + +r.amount, 0).toLocaleString("th-TH")} บาท`, nFix ? "wait" : "-", nFix && +today.slice(8) <= 7 ? 4 : null],
-      ["deposit.html", "ฝากเงิน", "costs", ...depR],
+      ["deposit.html", "เงินโอน", "costs", ...depR],
       ["costs.html", "ต้นทุน/กำไร", "costs", "สรุปกำไรรายเดือน", "-", null],
       ["settings.html", "ตั้งค่า", "settings", "พนักงาน สินค้า กลุ่ม LINE", "-", null],
     ].map((r) => mine([r])[0]).filter(Boolean);
@@ -196,13 +196,11 @@
     if (all.length > 4) rows.push(`<button type="button" class="row ux-all" id="mineAll" aria-haspopup="dialog"><span class="grow ux-t">ดูทั้งหมด ${all.length} เรื่อง</span><span class="ux-go" aria-hidden="true">›</span></button>`);
     const L = last.data, gap = L && L.cash_counted != null && L.cash_expected != null ? L.cash_counted - L.cash_expected : null;
     rows.push(line("history.html", "ประวัติ 30 วัน", L ? [thd(L.date, { weekday: "short" }), L.closed_at ? `ปิด ${hm(L.closed_at)} น.` : "", gap == null ? "" : gap === 0 ? "เงินสดครบ" : `เงินสด${gap < 0 ? "ขาด" : "เกิน"} ${Math.abs(gap).toLocaleString("th-TH")} บาท`].filter(Boolean).join(" · ") : "ยังไม่มีประวัติ"));
-    // round 3 พ.ย. (Mos): the four doors (ทิ้งของเสีย ลงรายจ่าย ฝากเงิน คู่มือ) are owner-style tiles with an icon and a live line, above เรื่องของฉัน
-    const dep = L && L.status === "sent" ? await supabase.from("deposits").select("date").eq("date", L.date).maybeSingle() : null;
-    const depS = !L || L.status !== "sent" ? ["หลังปิดร้าน ลงยอดฝากกับรูปสลิป", "-"] : dep?.data ? [`${thd(L.date, { weekday: "short" })} ฝากแล้ว`, "ok"] : dep?.error ? ["หลังปิดร้าน ลงยอดฝากกับรูปสลิป", "-"] : [`${thd(L.date, { weekday: "short" })} ยังไม่ได้ฝาก`, "wait"];
+    // round 3 พ.ย. (Mos): the doors (ทิ้งของเสีย ลงรายจ่าย คู่มือ) are owner-style tiles with an icon and a live line, above เรื่องของฉัน
+    // 0094 (Mos 3 พ.ย.): no ฝากเงิน tile · staff transfer the cash to the owner from their own phone, the owner marks it received
     const tile = (h, t, ic, [s, tone]) => `<a class="btn tile ux-hub" href="${h}"><span class="ico">${svg(ic)}</span><span class="t">${t}<small data-tone="${tone}">${s}</small></span><span class="go">${svg('<path d="m9 18 6-6-6-6"/>')}</span></a>`;
     const quick = tile("waste.html", "ทิ้งของเสีย", '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/>', wN ? [`วันนี้ลงแล้ว ${wN} รายการ`, "ok"] : ["ถ่ายรูปตาชั่งและตอนทิ้งลงถัง", "-"])
       + tile("expense.html", "ลงรายจ่าย", I.expense, eN ? [`วันนี้ลง ${eN} รายการ ${eSum.toLocaleString("th-TH")} บาท`, "ok"] : ["ของที่ซื้อเอง แก๊ส ค่าซ่อม", "-"])
-      + tile("deposit.html", "ฝากเงิน", I.costs, depS) // 0082
       + tile("manual.html", "คู่มือ", '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M8 7h8"/><path d="M8 11h6"/>', ["ทำอะไรบ้างในแต่ละวัน", "-"]);
     // Mos 23 ต.ค. รอบ 2: "งานถัดไป" across the top, only as tall as its words · เปิด / รับของ / ปิด in one row of 3 · (ห่อข้าวเหนียว while open) · the four tiles · เรื่องของฉัน last (Mos 3 พ.ย.)
     document.getElementById("menu").innerHTML = `<div class="bento trio">

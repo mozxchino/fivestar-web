@@ -317,6 +317,10 @@
     save_deposit: ({ p }) => { const out = RPC.deposit_taken_out({ d: p.date }), amt = +p.amount || 0, fee = +p.fee || 0;
       let x = rows("deposits").find((r) => r.date === p.date); if (!x) rows("deposits").push(x = { id: nid("dp"), date: p.date, created_by: ME.userId, created_at: now(), confirmed_at: null });
       Object.assign(x, { amount: amt, fee, slip: p.slip || x.slip || null, taken_out: out, gap: out == null ? null : amt + fee - out, updated_at: now() }); return { ...x }; },
+    // 0094: owner marks the transfer received (deposit.html "เงินโอนไม่ครบ")
+    receive_deposit: ({ d, a }) => { const out = RPC.deposit_taken_out({ d }), amt = a == null ? out : +a; if (!amt) return { ok: false, why: "amount" };
+      let x = rows("deposits").find((r) => r.date === d); if (!x) rows("deposits").push(x = { id: nid("dp"), date: d, created_by: ME.userId, created_at: now() });
+      Object.assign(x, { amount: amt, fee: 0, slip: null, taken_out: out, gap: out == null ? null : amt - out, confirmed_by: ME.userId, confirmed_at: now(), updated_at: now() }); return { ok: true, ...x }; },
     confirm_deposit: ({ d }) => { Object.assign(rows("deposits").find((r) => r.date === d) || {}, { confirmed_by: ME.userId, confirmed_at: now() }); return null; },
     request_leave: ({ d, p_type, note }) => { const l = { id: nid("l"), user_id: ME.userId, date: d, type: p_type, note, status: "pending", auto: false, requested_at: now() }; rows("leave_requests").push(l); return { id: l.id, status: "pending" }; },
     cancel_leave: ({ p_id }) => { Object.assign(leaveRow(p_id) || {}, { status: "cancelled" }); return null; },

@@ -270,10 +270,10 @@ td+td{font-weight:600}
       + (od.paid_at ? `<div class="ln mk paid"><span>✓ จ่ายแล้ว ${baht(od.paid_amount ?? 0)} บาท<small>${hm(od.paid_at)} น. ${U.dayName(new Date(Date.parse(od.paid_at) + 7 * 3600e3).toISOString().slice(0, 10))}</small></span>${MGR ? "" : `<button type="button" class="ux-cancel" id="unpay">กดผิด ยกเลิก</button>`}</div>`
         : `<button type="button" class="btn primary" id="pay">บันทึกว่าจ่ายแล้ว</button>`)) : ""; // 0092: managers pay bills too (slip required)
     const posFold = sd.closed_at ? fold("pos", `<b>ยอดขาย WE POS</b>${fv(posAmt == null ? "wait" : "", posAmt == null ? "ไม่ได้ใส่" : `${posAmt} บาท`)}`, posBody) : "";
-    // 0085 (Mos 30 ต.ค.): a closed day's cash goes to the bank (deposit.html) · ฝาก + ค่าธรรมเนียม − เอาออก = gap
+    // 0085 (Mos 30 ต.ค.): a closed day's cash goes to the owner (deposit.html) · 0094: staff transfer it, the owner marks it received · ได้รับ − เอาออก = gap
     const g = c.dep && c.dep.gap != null ? +c.dep.gap : null;
-    const [dt, dv] = !c.dep ? [d >= U.plus(TODAY, -1) ? "wait" : "bad", "ยังไม่ได้ฝาก"] : g == null ? ["", "ฝากแล้ว เทียบไม่ได้"] : g === 0 ? ["ok", "ตรง"] : g < 0 ? ["bad", `ขาด ${money(-g)} บาท`] : ["wait", `เกิน ${money(g)} บาท`];
-    const depRow = MGR || c.depE || sd.status !== "sent" ? "" : `<div class="gl dayrows"><a class="cell nav" href="deposit.html"><span class="k">ฝากเงิน${c.dep ? `<small>${c.dep.confirmed_at ? "ตรวจแล้ว" : "ยังไม่ได้ตรวจ"}</small>` : ""}</span><span class="v"><span class="pill"${dt ? ` data-tone="${dt}"` : ""}>${dv}</span></span>${chev}</a></div>`;
+    const [dt, dv] = !c.dep ? [d >= U.plus(TODAY, -1) ? "wait" : "bad", "รอเงินโอน"] : g == null ? ["", "ได้รับแล้ว เทียบไม่ได้"] : g === 0 ? ["ok", "ได้รับครบ"] : g < 0 ? ["bad", `ขาด ${money(-g)} บาท`] : ["wait", `เกิน ${money(g)} บาท`];
+    const depRow = MGR || c.depE || sd.status !== "sent" ? "" : `<div class="gl dayrows"><a class="cell nav" href="deposit.html?d=${d}"><span class="k">เงินโอน</span><span class="v"><span class="pill"${dt ? ` data-tone="${dt}"` : ""}>${dv}</span></span>${chev}</a></div>`;
     $("out").innerHTML = bento(c) + todo
       + (sd.note ? `<div class="card"><div class="k muted">พนักงานฝากบอก</div>${esc(sd.note)}</div>` : "")
       + `<div class="card folds">`
