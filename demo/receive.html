@@ -175,7 +175,7 @@
   const xsh = UXD.sheet(xs); let P = null;
   xB.onclick = async () => {
     xm.textContent = ""; xq.value = "";
-    if (!P) { const { data: ps, error: pe } = await supabase.from("products").select("id,name,unit,sort,kind,supplier").eq("active", true).order("sort");
+    if (!P) { const { data: ps, error: pe } = await supabase.from("products").select("id,name,unit,sort,kind,supplier,active").order("sort");   // 0093: switched-off ones too (CPF sends substitutes)
       if (pe) { msg.className = "err"; msg.textContent = "เปิดรายการสินค้าไม่ขึ้น\n" + App.errText(pe); return; }
       P = Object.fromEntries((ps || []).filter((p) => p.kind === "cpf" || (p.kind === "consumable" && p.supplier === "cpf")).map((p) => [p.id, p]));
     }
@@ -184,7 +184,9 @@
   // Mos 2 พ.ย.: type to narrow the product list · one match is picked for you
   const xFind = () => { const q = xf.value.replace(/\s+/g, "").toLowerCase(), cur = xp.value;
     const hit = Object.values(P || {}).filter((p) => !q || p.name.replace(/\s+/g, "").toLowerCase().includes(q));
-    xp.innerHTML = `<option value="">${hit.length ? "เลือกสินค้า" : "ไม่เจอสินค้าที่พิมพ์"}</option>` + hit.map((p) => `<option value="${p.id}">${UXS.esc(p.name)}</option>`).join("");
+    const op = (l, g) => l.map((p) => `<option value="${p.id}"${g ? ' style="color:var(--color-ink-soft)"' : ""}>${UXS.esc(p.name)}</option>`).join(""), off = hit.filter((p) => !p.active);
+    xp.innerHTML = `<option value="">${hit.length ? "เลือกสินค้า" : "ไม่เจอสินค้าที่พิมพ์"}</option>` + op(hit.filter((p) => p.active))
+      + (off.length ? `<optgroup label="เลิกขายแล้ว">${op(off, 1)}</optgroup>` : "");
     xp.value = hit.length === 1 ? hit[0].id : hit.some((p) => p.id === cur) ? cur : ""; xp.onchange(); };
   xf.oninput = xFind;
   xp.onchange = () => { xu.textContent = UXM.unit(P[xp.value]?.unit); xm.textContent = ""; };
