@@ -365,7 +365,25 @@
     set_opening_stock: ({ d, items }) => { for (const it of items || []) { let l = rows("stock_lines").find((x) => x.date === d && x.product_id === it.product_id);
       if (!l) rows("stock_lines").push(l = { date: d, product_id: it.product_id, open_fresh: 0, open_cooked: 0, received: 0, waste: 0 }); Object.assign(l, { remain_fresh: it.fresh ?? it.remain_fresh ?? it.qty ?? 0, remain_cooked: it.cooked ?? it.remain_cooked ?? 0 }); }
       return (items || []).length; },
+    // 0093 bill check (Mos 3 Nov): the latest received order before today plays a bill paid at its bill total · the bill side is what came in,
+    // with the first product 3 baht above our cost so the owner strip and bill-check.html have a gap · ใช้ราคาบนใบ / ยอมรับส่วนต่าง close it
+    bill_open: () => billDemo().filter((b) => !b.settled_at && Math.abs(b.gap) > 1).map((b) => ({ order_id: b.order_id, for_date: b.for_date, paid: b.paid, system: b.system, gap: b.gap })),
+    bill_check: ({ oid }) => billDemo().find((b) => b.order_id === oid) || null,
+    bill_use_price: ({ pid, cost }) => { const p = rows("products").find((x) => x.id === pid); if (p) p.cost_price = +cost; return { ok: true }; },
+    bill_accept_gap: ({ oid, note }) => { const st = (T.__bill ||= {})[oid]; if (st) Object.assign(st, { settled_at: now(), note }); return { ok: true }; },
   };
+  const r2 = (v) => Math.round(v * 100) / 100;
+  function billDemo() {
+    const o = rows("orders").filter((x) => x.for_date < D && rows("order_items").some((i) => i.order_id === x.id && i.received_at)).sort((a, b) => a.for_date < b.for_date ? -1 : 1).slice(-1)[0];
+    if (!o) return [];
+    const P = Object.fromEntries(rows("products").map((p) => [p.id, p])), its = rows("order_items").filter((i) => i.order_id === o.id && +i.qty_received > 0);
+    const st = ((T.__bill ||= {})[o.id] ||= { unit: Object.fromEntries(its.map((i, k) => [i.product_id, (+P[i.product_id]?.cost_price || 0) + (k === 0 ? 3 : 0)])), settled_at: null, note: null });
+    const rws = its.map((i) => { const p = P[i.product_id] || {}; return { product_id: i.product_id, name: p.name, unit: p.unit, received: +i.qty_received,
+      cost: +p.cost_price || 0, bill_qty: +i.qty_received, bill_amount: r2((st.unit[i.product_id] ?? 0) * i.qty_received) }; });
+    const system = r2(rws.reduce((a, r) => a + r.received * r.cost, 0) * 1.015), paid = r2(rws.reduce((a, r) => a + r.bill_amount, 0) * 1.015);
+    return [{ order_id: o.id, for_date: o.for_date, paid, paid_slip: null, system, gap: r2(paid - system), fee_pct: 1.5, settled_at: st.settled_at, gap_note: st.note,
+      bill_total: paid, photos: its.flatMap((i) => i.receipt_photos || []).filter((v, k, a) => a.indexOf(v) === k), rows: rws }];
+  }
   const calls = (window.__calls = []);
   const client = {
     from,
