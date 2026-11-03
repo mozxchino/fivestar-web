@@ -22,6 +22,7 @@
   async function decideLeave(supabase, id, approve) {
     const { data, error } = await supabase.rpc("owner_decide_leave", { p_id: id, p_approve: approve });
     if (error) return { ok: false, text: "ทำไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error) };
+    if (data && !data.error) App.fn("leave-notify", { leave_id: id, result: true }).catch(() => {}); // result card in the staff group (Mos 3 พ.ย.)
     return { ok: true, text: leaveText(data), data };
   }
   // fold rows: <button class="fold" aria-expanded="false"> + <div class="fold-body"><div>…</div></div>

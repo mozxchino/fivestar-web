@@ -61,6 +61,7 @@
     const { error } = await supabase.rpc("open_shop", { photo: shot[0] });
     if (error) { msg.textContent = "เปิดร้านไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error); msg.className = "err"; go.disabled = false; return; }
     form.hidden = true; doneS.textContent = "เปิดตอน " + hm(Date.now()) + " น."; done.hidden = false; scrollTo(0, 0);
+    App.fn("open-notify", {}).catch(() => {}); // group card (Mos 3 พ.ย.) · a failed card never blocks opening
   };
   } catch (e) { if (e.message !== "denied") failed(e); }
 })();

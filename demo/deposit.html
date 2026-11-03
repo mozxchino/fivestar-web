@@ -165,6 +165,7 @@
     send.disabled = false;
     if (error) return bad("บันทึกไม่ได้ ลองกดอีกครั้ง\n" + App.errText(error));
     DEP[sel] = { ...(x || {}), date: sel, amount: +amt.value, fee: +fee.value, taken_out: data?.taken_out ?? OUT, gap: data?.gap ?? null, slip: path, updated_at: new Date().toISOString(), confirmed_at: x?.confirmed_at ?? null };
+    await App.fn("deposit-notify", { date: sel }).catch(() => {}); // group + owner cards (Mos 3 พ.ย.) · a failed card never blocks saving
     slip.length = 0; UXM.toast("บันทึกการฝากเงินแล้ว ✓"); location.href = "index.html";
   };
   conf.onclick = async () => {
