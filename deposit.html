@@ -93,7 +93,8 @@
   const baht = (n) => (+n).toLocaleString("th-TH", { maximumFractionDigits: 2 }) + " บาท";
   const back = (n) => new Date(Date.parse(bd + "T00:00:00Z") - n * 864e5).toISOString().slice(0, 10);
   // staff: the closed days of the last 3 (the server allows the same) · owner: 2 weeks
-  const from = back(OWN ? 14 : 3);
+  // Mos 3 พ.ย.: money before 1 Nov (31 Oct) was the previous owner's · never shown here · ponytail: fixed date, it never moves
+  const from = [back(OWN ? 14 : 3), "2026-11-01"].sort()[1];
   const [dq, xq] = await Promise.all([
     supabase.from("shop_days").select("date,status").eq("status", "sent").gte("date", from).lte("date", bd).order("date", { ascending: false }),
     supabase.from("deposits").select("date,amount,fee,taken_out,gap,slip,updated_at,confirmed_at").gte("date", from)]);
