@@ -173,7 +173,7 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
   const pileOf = new Map(piles.map((x) => [x.product_id, x]));
   const pileSay = (x) => x.days_left == null ? "ไม่มียอดขาย" : `ขายได้อีก ${n(x.days_left)} วัน`;
   if (piles.length) { $("pile").hidden = false; $("pile").innerHTML = `<b>ของค้างเยอะ ${piles.length} รายการ</b>${piles.map((x) => `<br>${E(x.name)} ${pileSay(x)}`).join("")}`
-    + (piles.some((x) => x.days_left == null) ? (me.role === "owner" ? '<br><a href="settings.html?tab=prod">ตัวที่ไม่มียอดขาย ถ้าเลิกขายแล้ว เอาติ๊ก "ยังใช้อยู่" ออก</a>' : '<br>ตัวที่ไม่มียอดขาย ถ้าเลิกขายแล้ว ให้เจ้าของเอาติ๊ก "ยังใช้อยู่" ออก') : ""); }
+    + (piles.some((x) => x.days_left == null) ? (me.role === "owner" ? '<br><a href="settings.html?tab=prod">ตัวที่ไม่มียอดขาย ถ้าเลิกขายแล้ว เอาติ๊ก "ยังขายอยู่" ออก</a>' : '<br>ตัวที่ไม่มียอดขาย ถ้าเลิกขายแล้ว ให้เจ้าของเอาติ๊ก "ยังขายอยู่" ออก') : ""); }
   const edited = (r, q) => !added(r) && q !== Number(r.qty_proposed);
   const meta = (r, q) => (added(r) ? "เพิ่มเอง ไม่ได้มาจากกติกา" : base(r)) + (r.sets != null && pkOf(r) === 1 ? ` · ${Math.round(q / r.pack_size)} เซ็ต` : "")
     + (edited(r, q) ? `<br><b>ระบบเสนอ ${inU(r, r.qty_proposed)} ตามกติกา แก้เป็น ${inU(r, q)}</b>` : "");   // 0038 Mos: say what the rule proposed and what the owner changed it to
@@ -258,7 +258,7 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
   };
   $("items").oninput = (ev) => { if (ev.target.dataset.i !== undefined) { mark(+ev.target.dataset.i); queue(+ev.target.dataset.i); } prev(); label(); };
   $("items").onchange = (ev) => { if (ev.target.dataset.i !== undefined && timers[ev.target.dataset.i]) save(+ev.target.dataset.i); };
-  // 0044 "เพิ่มรายการ": CPF items + CPF consumables not in the order (inactive ones too, labelled ปิดใช้อยู่) · count in bags
+  // 0044 "เพิ่มรายการ": CPF items + CPF consumables not in the order (inactive ones too, labelled เลิกขายแล้ว) · count in bags
   const addS = UXD.sheet($("addS")); let pick = null, choices = [];
   const addW = () => pick ? (pick.pack_size > 1 ? (pick.sets ? "เซ็ต" : "ถุง") : pick.unit_th) : "ถุง";
   const addEq = () => { const k = Math.max(0, Math.round(Number($("addQ").value) || 0)); $("addU").textContent = addW();
@@ -270,7 +270,7 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
     $("addB").disabled = false;
     if (error) { UXM.toast("เปิดรายการไม่ได้ " + App.errText(error)); return; }
     choices = data || []; pick = null; $("addQ").value = 1; $("addM").textContent = "";
-    $("addL").innerHTML = choices.length ? choices.map((c, i) => `<label class="ux-addr"><input type="radio" name="addP" value="${i}"><span class="grow"><span class="nm">${E(c.name)}</span>${c.pack_size > 1 ? `<span class="meta">${c.sets ? "เซ็ตละ" : "ถุงละ"} ${c.pack_size} ${E(c.unit_th)}</span>` : ""}</span>${c.active ? "" : '<span class="chip">ปิดใช้อยู่</span>'}</label>`).join("")
+    $("addL").innerHTML = choices.length ? choices.map((c, i) => `<label class="ux-addr"><input type="radio" name="addP" value="${i}"><span class="grow"><span class="nm">${E(c.name)}</span>${c.pack_size > 1 ? `<span class="meta">${c.sets ? "เซ็ตละ" : "ถุงละ"} ${c.pack_size} ${E(c.unit_th)}</span>` : ""}</span>${c.active ? "" : '<span class="chip">เลิกขายแล้ว</span>'}</label>`).join("")
       : '<p class="muted">สินค้า CPF ทุกอย่างอยู่ในใบนี้แล้ว</p>';
     $("addF").value = ""; addFind(); addEq(); addS.open();
   };

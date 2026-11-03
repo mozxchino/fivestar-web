@@ -193,7 +193,7 @@ a.cell{text-decoration:none;color:inherit}
   let ps = ps0 || [], cur = null, touched = false;
   const isCons = (p) => p.kind === "consumable";
   const noCost = (p) => p.active && !isCons(p) && p.cost_price == null;
-  const FIL = { sell: ["ของขาย", (p) => p.active && !isCons(p)], cons: ["ของใช้ในร้าน", (p) => p.active && isCons(p)], nocost: ["ยังไม่ใส่ทุน", noCost], off: ["ปิดใช้แล้ว", (p) => !p.active] };
+  const FIL = { sell: ["ของขาย", (p) => p.active && !isCons(p)], cons: ["ของใช้ในร้าน", (p) => p.active && isCons(p)], nocost: ["ยังไม่ใส่ทุน", noCost], off: ["เลิกขายแล้ว", (p) => !p.active] };
   let pf = FIL[qs.get("f")] ? qs.get("f") : "sell";
   // 0043 (Mos 29 ต.ค.): หน่วยใช้ (unit) / หน่วยซื้อ (buy_unit) / 1 หน่วยซื้อมีกี่หน่วยใช้ (pack_size) · same unit or none = nothing to convert
   const same = (u, b) => !b || b === u;
@@ -243,7 +243,7 @@ a.cell{text-decoration:none;color:inherit}
       ${seg("count_cols", "ช่องนับ", [["both", "สด และ สุก"], ["fresh", "สดอย่างเดียว"], ["cooked", "สุกอย่างเดียว"]], colsOf(p))}
       <div data-q="low"><label class="field" for="pl"><span id="pll"></span><small class="h">ปิดร้านแล้วเหลือต่ำกว่านี้ ขึ้นในรายการ ของต้องซื้อเอง</small></label>${num("pl", "low_at", p.low_at)}</div>
       <div data-q="reorder"><label class="field" for="pro"><span id="prl"></span><small class="h">เหลือรวมของที่กำลังมา ไม่เกินนี้ สั่ง 1 ถุงเสมอ · ว่าง = ไม่ใช้</small></label>${num("pro", "reorder_at", p.reorder_at)}</div>
-      ${cur ? `<label class="chk"><input type="checkbox" role="switch" name="active" ${p.active ? "checked" : ""}>ยังใช้อยู่ (เอาติ๊กออก = ปิดใช้)</label>` : ""}
+      ${cur ? `<label class="chk"><input type="checkbox" role="switch" name="active" ${p.active ? "checked" : ""}>ยังขายอยู่ (เอาติ๊กออก = เลิกขาย)</label>` : ""}
       <datalist id="units"><option value="ตัว"><option value="ชิ้น"><option value="แพ็ค"><option value="ขวด"><option value="กก."><option value="ม้วน"><option value="ซอง"></datalist>
       <datalist id="buys"><option value="ถุง"><option value="แพ็ค"><option value="ลัง"><option value="ม้วน"><option value="กระสอบ"><option value="ขวด"></datalist>`;
   }

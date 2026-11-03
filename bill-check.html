@@ -1,0 +1,181 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>เทียบบิล (เจ้าของ)</title><meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="lib/ui.css?v=r1101"><link rel="stylesheet" href="lib/ux-data.css">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js?v=r1103p"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js?v=0060b"></script>
+<style>
+/* 0093 (Mos 3 พ.ย.): approved mock design/r1103/bill-check/page.html */
+.red { background: var(--tint-destructive); }
+.okc { background: var(--tint-success); }
+.big { font: 600 26px/1.25 var(--font-head); color: var(--color-destructive); margin: 6px 0 8px; font-variant-numeric: tabular-nums; }
+.okc .big { color: var(--color-success); }
+.step { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 10px; align-items: start; }
+.step .n { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font: 600 15px var(--font-head); background: var(--color-fill); }
+.step.bad .n { background: var(--color-destructive); color: #fff; }
+.step.ok .n { background: var(--tint-success); color: var(--color-success); }
+.step h3 { margin: 2px 0 2px; font: 600 17px/1.3 var(--font-head); }
+.step .q { margin: 0 0 8px; color: var(--color-ink-soft); font-size: 14px; }
+.cmp { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 4px 14px; align-items: center; font-size: 15px; margin: 8px 0 6px; font-variant-numeric: tabular-nums; }
+.cmp .h { color: var(--color-ink-soft); font-size: 13px; }
+.cmp .x { color: var(--color-destructive); font-weight: 700; }
+.cmp > :nth-child(3n+2), .cmp > :nth-child(3n) { text-align: right; }
+.sys { grid-template-columns: minmax(0, 1fr) auto auto; }
+.step .btn.sm { margin: 8px 0 0; }
+.step .field { margin-top: 10px; }
+.foot-note { color: var(--color-ink-soft); font-size: 14px; text-align: center; margin-top: 16px; }
+</style></head><body ontouchstart="">
+<header class="topbar"><a class="back" href="owner.html" aria-label="กลับหน้าวันนี้"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>เทียบบิล</h1><div class="sub" id="sub">ใบส่งของ CPF</div></div></header>
+<div class="sk"><span class="vh">กำลังเปิด…</span><div class="card"><i class="sk-b" style="--w:30%;--h:14px"></i><i class="sk-b" style="--w:70%;--h:30px;--gap:10px"></i><i class="sk-b" style="--w:100%;--h:16px;--gap:12px"></i><i class="sk-b" style="--w:100%;--h:16px;--gap:8px"></i></div><div class="card"><i class="sk-b" style="--w:50%;--h:18px"></i><i class="sk-b" style="--w:80%;--h:14px;--gap:8px"></i></div><div class="card"><i class="sk-b" style="--w:50%;--h:18px"></i><i class="sk-b" style="--w:80%;--h:14px;--gap:8px"></i></div></div>
+<div id="app" class="ld" hidden></div>
+<dialog id="payS" class="bsheet" aria-labelledby="payT"><div class="body"><div class="grab"></div><div class="hd"><b id="payT">แก้ยอดที่จ่าย</b><button type="button" class="x" aria-label="ปิด">✕</button></div>
+  <label class="field" for="payV">ยอดที่จ่าย</label><div class="in"><input id="payV" type="number" inputmode="decimal" enterkeyhint="done" min="0" max="100000" step="any" placeholder="0"><span class="sfx">บาท</span></div>
+  <p class="muted">ใส่ยอดตามใบส่งของ</p>
+  <div id="paySlipBox" hidden><label class="field" for="payP">รูปสลิปโอน</label><label class="btn" id="payPL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>แนบรูปสลิป <input id="payP" type="file" accept="image/*" hidden></label>
+  <p id="payPS" class="muted"></p></div></div>
+  <div class="foot"><button type="button" class="btn primary" id="payOK">บันทึกยอดที่จ่าย</button><p id="payM" class="muted" role="status"></p></div></dialog>
+<script>
+(async () => {
+  const $ = (i) => document.getElementById(i);
+  const { supabase, me } = await App.ready();
+  if (UXS.only(me, ["owner"], "หน้านี้สำหรับเจ้าของ", "เทียบบิล CPF ดูได้เฉพาะเจ้าของ", "index.html", "กลับหน้าหลัก")) return;
+  const esc = UXS.esc, app = $("app");
+  const b2 = (n) => Number(n).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const nn = (n) => Number(n).toLocaleString("th-TH", { maximumFractionDigits: 2 });
+  const fail = (t) => { app.hidden = false; app.innerHTML = `<p class="err" role="alert" style="white-space:pre-line;margin-top:16px">${esc(t)}</p><a class="btn" href="owner.html">ไปหน้าวันนี้</a>`; };
+  // ?order=<uuid> (red card button, owner strip) · fallback ?d=YYYY-MM-DD → that day's sent order (the paid one first)
+  const q = new URLSearchParams(location.search);
+  let oid = q.get("order");
+  if (oid && !/^[0-9a-f-]{36}$/i.test(oid)) return fail("ลิงก์ไม่ถูกต้อง\nกดปุ่มในการ์ดอีกครั้ง");
+  if (!oid && /^\d{4}-\d{2}-\d{2}$/.test(q.get("d") || "")) {
+    const { data, error } = await supabase.from("orders").select("id,paid_amount").eq("for_date", q.get("d")).eq("status", "sent").order("created_at", { ascending: false }).limit(5);
+    if (error) return fail("เปิดบิลไม่ขึ้น\n" + App.errText(error));
+    oid = ((data || []).find((o) => o.paid_amount != null) || (data || [])[0])?.id;
+  }
+  if (!oid) return fail("ไม่พบบิลของวันนั้น");
+
+  const paySh = UXD.sheet($("payS")), payV = $("payV"), payM = $("payM"), payOK = $("payOK"), paySlip = [];
+  Photo.picker(supabase, $("payP"), { paths: paySlip, type: "payslip", name: "รูปสลิป", max: 1, status: $("payPS"), gallery: true });
+  let B = null, urls = null;
+
+  async function load() {
+    const { data, error } = await supabase.rpc("bill_check", { oid });
+    if (error) return fail("เปิดบิลไม่ขึ้น\n" + App.errText(error));
+    B = data; draw();
+  }
+
+  function draw() {
+    const rows = B.rows || [], paid = B.paid, sys = +B.system || 0, gap = B.gap == null ? null : +B.gap;
+    $("sub").textContent = `ใบส่งของ ${["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."][new Date(B.for_date + "T00:00:00Z").getUTCDay()]} ${UXS.thd(B.for_date)}`;
+    const photoBtn = (cls) => (B.photos || []).length ? `<button type="button" class="btn ${cls}" id="pics">ดูรูปใบส่งของ</button>` : `<p class="muted">ไม่มีรูปใบส่งของ</p>`;
+    const kv = `<div class="kv"><span>จ่ายจริง</span><b>${paid == null ? "-" : b2(paid) + " บาท"}</b></div><div class="kv"><span>ระบบคิด</span><b>${b2(sys)} บาท</b></div>`;
+    let h;
+    if (paid == null) {
+      h = `<div class="card"><span class="pill" data-tone="wait">ยังไม่จ่าย</span><div class="big" style="color:var(--color-foreground)">ยังไม่ได้บันทึกว่าจ่าย</div>${kv}${photoBtn("sm")}</div>
+        <a class="btn" href="owner.html?d=${B.for_date}">ไปจ่ายบิลที่หน้าวันนี้</a>`;
+    } else if (B.settled_at || Math.abs(gap) <= 1) {
+      // matched, or the owner accepted the gap with a reason → the bill is closed
+      h = `<div class="card okc"><span class="pill" data-tone="ok">ตรงแล้ว</span><div class="big">${B.settled_at && Math.abs(gap) > 1 ? `ยอมรับส่วนต่าง ${b2(Math.abs(gap))} บาท` : "บิลตรงแล้ว"}</div>${kv}
+        ${B.gap_note ? `<p class="muted">เหตุผล ${esc(B.gap_note)}</p>` : ""}${photoBtn("sm")}</div>
+        <p class="foot-note">ไม่มีอะไรต้องแก้</p>`;
+    } else {
+      h = `<div class="card red"><span class="pill" data-tone="bad">ไม่ตรง</span><div class="big">ต่างกัน ${b2(Math.abs(gap))} บาท</div>${kv}${hasBill() ? photoBtn("sm") : `<p class="err" style="margin:8px 0 0">อ่านใบส่งของไม่ได้ เทียบรูปกับตัวเลขข้างล่างเอง</p>${photoBtn("tonal")}`}</div>`
+        + (hasBill() ? steps(rows, paid, gap) : noBill(rows, sys));
+    }
+    app.innerHTML = h + `<p id="msg" class="err" role="alert" style="white-space:pre-line"></p>`;
+    app.hidden = false; wire();
+  }
+
+  // the bill side exists when the two readers agreed (bill_reads.reads.bill / bill_total) · otherwise the owner compares with the photo
+  const hasBill = () => B.bill_total != null || (B.rows || []).some((r) => r.bill_qty != null);
+  const unitOf = (r) => +r.bill_qty > 0 && r.bill_amount != null ? +r.bill_amount / +r.bill_qty : null;
+  const pill = (ok, t) => `<span class="pill" data-tone="${ok ? "ok" : "bad"}">${t}</span>`;
+  const step = (n, tone, t, sub, body) => `<div class="card step ${tone}"><span class="n">${n}</span><div><h3>${t}</h3><p class="q">${sub}</p>${body}</div></div>`;
+
+  function steps(rows, paid, gap) {
+    // 1 จำนวน: a row not on the bill (bill_qty null) counts as 0 there · a bill row nobody received (received 0) shows up too
+    const qBad = rows.filter((r) => Math.abs((+r.bill_qty || 0) - (+r.received || 0)) > 1e-9);
+    const s1 = !qBad.length;
+    const b1 = s1 ? pill(true, `ตรงครบ ${rows.length} รายการ`)
+      : pill(false, `ไม่ตรง ${qBad.length} รายการ`) + `<div class="cmp"><span class="h"></span><span class="h">บนใบ</span><span class="h">ลงรับ</span>`
+        + qBad.map((r) => `<span>${esc(r.name)}</span><b>${nn(+r.bill_qty || 0)}</b><span class="x">${nn(+r.received || 0)}</span>`).join("") + `</div>`
+        + `<a class="btn sm${s1 ? "" : " primary"}" href="receive.html?d=${B.for_date}">แก้ใบรับ</a>`;
+    // 2 ราคาต่อตัว: bill line ÷ bill qty vs the cost on that day
+    const pBad = rows.filter((r) => unitOf(r) != null && (r.cost == null || Math.abs(unitOf(r) - +r.cost) > 0.005));
+    const s2 = !pBad.length, prim2 = s1;   // one red button a screen: step 1 first
+    const b2_ = s2 ? pill(true, "ตรงทุกรายการ")
+      : pill(false, `ไม่ตรง ${pBad.length} รายการ`) + `<div class="cmp"><span class="h"></span><span class="h">บนใบ</span><span class="h">ในระบบ</span>`
+        + pBad.map((r) => `<span>${esc(r.name)}</span><b>${nn(unitOf(r))}</b><span class="x">${r.cost == null ? "-" : nn(+r.cost)}</span>`).join("") + `</div>`
+        + pBad.map((r) => `<button type="button" class="btn sm${prim2 ? " primary" : ""}" data-use="${esc(r.product_id)}">ใช้ราคาบนใบ ${pBad.length > 1 ? esc(r.name) + " " : ""}${nn(unitOf(r))} บาท</button>`).join("");
+    // 3 ยอดรวม: bill total vs paid
+    const s3 = B.bill_total != null && Math.abs(+B.bill_total - +paid) <= 1;
+    const b3 = s3 ? pill(true, `ตรง ${b2(paid)} บาท`)
+      : B.bill_total == null ? pill(false, "อ่านยอดรวมบนใบไม่ได้") + `<p class="q">ดูยอดในรูปใบส่งของ</p><button type="button" class="btn sm" id="fixPay">แก้ยอดที่จ่าย</button>`
+      : pill(false, "ไม่ตรง") + `<div class="cmp"><span class="h"></span><span class="h">บนใบ</span><span class="h">ที่จ่าย</span><span>ยอดรวม</span><b>${b2(B.bill_total)}</b><span class="x">${b2(paid)}</span></div>`
+        + `<button type="button" class="btn sm${s1 && s2 ? " primary" : ""}" id="fixPay">แก้ยอดที่จ่าย ${b2(B.bill_total)} บาท</button>`;
+    // 4 ยังต่างอยู่: only once 1–3 are ✅
+    const first = !s1 ? 1 : !s2 ? 2 : !s3 ? 3 : 0;
+    const b4 = first ? `<span class="pill" data-tone="wait">ทำข้อ ${first} ก่อน</span><div><button type="button" class="btn sm" disabled>ยอมรับส่วนต่าง</button></div>` : accept();
+    return `<h2 class="sh">ไล่ทีละขั้น</h2>`
+      + step(1, s1 ? "ok" : "bad", "จำนวน", "บนใบส่งของ กับ ที่ลงรับ", b1)
+      + step(2, s2 ? "ok" : "bad", "ราคาต่อตัว", "บนใบส่งของ กับ ราคาทุนในระบบ", b2_)
+      + step(3, s3 ? "ok" : "bad", "ยอดรวม", "บนใบส่งของ กับ ที่จ่าย", b3)
+      + step(4, first ? "" : "bad", "ยังต่างอยู่", "ทำ 1–3 ครบแล้วยังไม่ตรง<br>ถามเซลล์ CPF หรือยอมรับส่วนต่าง", b4)
+      + `<p class="foot-note">ยอดตรงแล้ว แถบแดงที่หน้าเจ้าของหายเอง</p>`;
+  }
+
+  const accept = () => `<label class="field" for="note">เหตุผล</label><input id="note" type="text" maxlength="300" placeholder="เช่น เซลล์บอกค่าส่งขึ้น" autocomplete="off">`
+    + `<button type="button" class="btn sm primary" id="acc">ยอมรับส่วนต่าง</button>`;
+
+  // no bill side: the photo + what the system counted, the owner compares by eye
+  function noBill(rows, sys) {
+    const got = rows.filter((r) => +r.received > 0), sub = got.reduce((s, r) => s + +r.received * (+r.cost || 0), 0);
+    return `<h2 class="sh">ระบบคิดจาก</h2><div class="card"><div class="cmp sys"><span class="h"></span><span class="h">ลงรับ</span><span class="h">ทุน</span>`
+      + got.map((r) => `<span>${esc(r.name)}</span><b>${nn(r.received)}</b><span>${r.cost == null ? "-" : nn(+r.cost)}</span>`).join("")
+      + `</div><div class="kv"><span>รวม</span><b>${b2(sub)} บาท</b></div><div class="kv"><span>ค่าการตลาด ${nn(B.fee_pct)}%</span><b>${b2(sys - sub)} บาท</b></div>
+      <a class="btn sm" href="receive.html?d=${B.for_date}">แก้ใบรับ</a><button type="button" class="btn sm" id="fixPay">แก้ยอดที่จ่าย</button></div>`
+      + step("!", "bad", "ยังต่างอยู่", "เทียบแล้วยังไม่ตรง<br>ถามเซลล์ CPF หรือยอมรับส่วนต่าง", accept());
+  }
+
+  function wire() {
+    const msg = $("msg"), err = (e) => { msg.textContent = "บันทึกไม่ได้\n" + App.errText(e); };
+    if ($("pics")) $("pics").onclick = async () => {
+      try { urls = urls || await Promise.all(B.photos.map((p) => Photo.url(supabase, p))); Photo.view(urls[0], urls); }
+      catch (e) { msg.textContent = "เปิดรูปไม่ขึ้น\n" + App.errText(e); }
+    };
+    app.querySelectorAll("[data-use]").forEach((b) => b.onclick = async () => {
+      const r = B.rows.find((x) => x.product_id === b.dataset.use); b.disabled = true;
+      const { error } = await supabase.rpc("bill_use_price", { oid, pid: r.product_id, cost: unitOf(r) });
+      if (error) { b.disabled = false; return err(error); }
+      UXM.toast(`ใช้ราคา ${r.name} ${nn(unitOf(r))} บาทแล้ว`); load();
+    });
+    // step 3: the same pay_bill as owner.html · the slip already sent stays (no new post to the CPF group)
+    if ($("fixPay")) $("fixPay").onclick = () => {
+      payV.value = B.bill_total ?? B.paid ?? ""; payM.className = "muted"; payM.textContent = ""; $("paySlipBox").hidden = !!B.paid_slip;
+      paySh.open(); setTimeout(() => payV.focus(), 60);
+    };
+    if ($("acc")) $("acc").onclick = async () => {
+      const n = $("note").value.trim();
+      if (!n) { msg.textContent = "ใส่เหตุผลก่อน"; return UXM.shake($("note")); }
+      $("acc").disabled = true;
+      const { error } = await supabase.rpc("bill_accept_gap", { oid, note: n });
+      if (error) { $("acc").disabled = false; return err(error); }
+      UXM.toast("ยอมรับส่วนต่างแล้ว ✓"); load();
+    };
+  }
+  payOK.onclick = async () => {
+    const a = +payV.value, slip = B.paid_slip || paySlip[0];
+    if (!(a > 0 && a <= 100000)) { payM.className = "err"; payM.textContent = "ใส่ยอดเป็นตัวเลข 1 ถึง 100,000 บาท"; return; }
+    if (!slip) { payM.className = "err"; payM.textContent = "แนบรูปสลิปก่อน"; return; }
+    payOK.disabled = true; payM.className = "muted"; payM.textContent = "กำลังบันทึก…";
+    const { error } = await supabase.rpc("pay_bill", { oid, amount: a, slip });
+    payOK.disabled = false;
+    if (error) { payM.className = "err"; payM.textContent = "บันทึกไม่ได้\n" + App.errText(error); return; }
+    paySh.close(); UXM.toast("แก้ยอดที่จ่ายแล้ว ✓"); load();
+  };
+  await load();
+})().catch((e) => { if (e.message !== "denied") { const a = document.getElementById("app"); a.hidden = false; a.innerHTML = '<p class="err" role="alert"></p>'; a.firstChild.textContent = "เปิดไม่ขึ้น: " + App.errText(e); } });
+</script></body></html>
