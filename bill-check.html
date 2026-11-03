@@ -64,6 +64,7 @@
   async function load() {
     const { data, error } = await supabase.rpc("bill_check", { oid });
     if (error) return fail("เปิดบิลไม่ขึ้น\n" + App.errText(error));
+    if (!data) return fail("ไม่พบบิลนี้\nกลับไปหน้าเจ้าของแล้วกดแถบแดงอีกครั้ง");
     B = data; draw();
   }
 
