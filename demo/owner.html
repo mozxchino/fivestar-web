@@ -56,7 +56,9 @@ td+td{font-weight:600}
 <div id="panel" class="panel" role="dialog" aria-modal="true" aria-labelledby="ph" hidden></div>
 <dialog id="payS" class="bsheet" aria-labelledby="payT"><div class="body"><div class="grab"></div><div class="hd"><b id="payT">จ่ายบิล CPF แล้ว</b><button type="button" class="x" aria-label="ปิด">✕</button></div>
   <label class="field" for="payV">ยอดที่จ่าย</label><div class="in"><input id="payV" type="number" inputmode="decimal" enterkeyhint="done" min="0" max="100000" step="any" placeholder="0"><span class="sfx">บาท</span></div>
-  <p class="muted">ใส่ยอดตามใบส่งของ</p></div>
+  <p class="muted">ใส่ยอดตามใบส่งของ</p>
+  <label class="field" for="payP">รูปสลิปโอน</label><label class="btn" id="payPL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>แนบรูปสลิป <input id="payP" type="file" accept="image/*" hidden></label>
+  <p id="payPS" class="muted"></p><p class="muted">บันทึกแล้ว แอปส่งสลิปเข้ากลุ่มสั่งของ CPF ให้เอง</p></div>
   <div class="foot"><button type="button" class="btn primary" id="payOK">บันทึกว่าจ่ายแล้ว</button><p id="payM" class="muted" role="status"></p></div></dialog>
 <dialog id="posS" class="bsheet" aria-labelledby="posT"><div class="body"><div class="grab"></div><div class="hd"><b id="posT">แก้ยอดขาย WE POS</b><button type="button" class="x" aria-label="ปิด">✕</button></div>
   <p class="muted" id="posD"></p>
@@ -260,7 +262,7 @@ td+td{font-weight:600}
     const bill = od && slips.length ? fold("bill", `<b>บิล CPF</b>${od.paid_at ? fv("ok", `จ่ายแล้ว ${baht(od.paid_amount ?? 0)} บาท`) : fv("wait", "ยังไม่จ่าย")}`,
       `<p class="muted">สแกน QR บนใบส่งของจ่ายได้เลย</p><div id="billPic"></div>`
       + (od.paid_at ? `<div class="ln mk paid"><span>✓ จ่ายแล้ว ${baht(od.paid_amount ?? 0)} บาท<small>${hm(od.paid_at)} น. ${U.dayName(new Date(Date.parse(od.paid_at) + 7 * 3600e3).toISOString().slice(0, 10))}</small></span>${MGR ? "" : `<button type="button" class="ux-cancel" id="unpay">กดผิด ยกเลิก</button>`}</div>`
-        : MGR ? "" : `<button type="button" class="btn primary" id="pay">บันทึกว่าจ่ายแล้ว</button>`)) : "";
+        : `<button type="button" class="btn primary" id="pay">บันทึกว่าจ่ายแล้ว</button>`)) : ""; // 0092: managers pay bills too (slip required)
     const posFold = sd.closed_at ? fold("pos", `<b>ยอดขาย WE POS</b>${fv(posAmt == null ? "wait" : "", posAmt == null ? "ไม่ได้ใส่" : `${posAmt} บาท`)}`, posBody) : "";
     // 0085 (Mos 30 ต.ค.): a closed day's cash goes to the bank (deposit.html) · ฝาก + ค่าธรรมเนียม − เอาออก = gap
     const g = c.dep && c.dep.gap != null ? +c.dep.gap : null;
@@ -286,9 +288,16 @@ td+td{font-weight:600}
     // 0088: the bill reader's total (layers 1–3 held) fills the amount · a different amount = costs are not changed by themselves
     const billTotal = [].concat(od?.bill_reads || []).find((r) => r.status === "ready")?.total;
     if ($("pay")) $("pay").onclick = () => { payV.value = billTotal ?? ""; payM.className = "muted"; payM.textContent = ""; paySh.open(); setTimeout(() => { payV.focus(); fitPos(); }, 60); };
-    payOK.onclick = () => { const a = +payV.value; if (!(a > 0 && a <= 100000)) { payM.className = "err"; payM.textContent = "ใส่ยอดเป็นตัวเลข 1 ถึง 100,000 บาท"; return; }
-      paySh.close(); setPaid({ paid_at: new Date().toISOString(), paid_amount: a }); };
-    if ($("unpay")) $("unpay").onclick = () => { if (confirm("ยกเลิกจ่ายแล้วไหม?")) setPaid({ paid_at: null, paid_amount: null }); };
+    // 0092 (Mos 3 พ.ย.): no slip = no paid · pay_bill checks role + slip again · then pay-notify posts the slip to the CPF order group
+    payOK.onclick = async () => { const a = +payV.value; if (!(a > 0 && a <= 100000)) { payM.className = "err"; payM.textContent = "ใส่ยอดเป็นตัวเลข 1 ถึง 100,000 บาท"; return; }
+      if (!paySlip[0]) { payM.className = "err"; payM.textContent = "แนบรูปสลิปก่อน"; return; }
+      payOK.disabled = true; payM.className = "muted"; payM.textContent = "กำลังบันทึก…";
+      const { error } = await supabase.rpc("pay_bill", { oid: od.id, amount: a, slip: paySlip[0] });
+      payOK.disabled = false;
+      if (error) { payM.className = "err"; payM.textContent = "บันทึกไม่ได้\n" + App.errText(error); return; }
+      const n = await App.fn("pay-notify", { order_id: od.id }).catch(() => null);
+      paySh.close(); UXM.toast(n?.ok ? "บันทึกแล้ว ส่งสลิปเข้ากลุ่มสั่งของแล้ว ✓" : "บันทึกแล้ว ✓ แต่ส่งสลิปเข้ากลุ่มไม่ได้"); dayView(); };
+    if ($("unpay")) $("unpay").onclick = () => { if (confirm("ยกเลิกจ่ายแล้วไหม?")) setPaid({ paid_at: null, paid_amount: null, paid_slip: null, paid_by: null }); };
     U.folds($("out").querySelector(".folds"), async (b) => {
       if (b.dataset.done) return;
       if (b.dataset.f === "pics") { b.dataset.done = 1;
@@ -400,6 +409,7 @@ td+td{font-weight:600}
   // ---- pb-review M2: sheet that corrects a closed day's ยอดขาย WE POS · select on focus (ux-motion focusin) · same 0..100,000 rule as close, the server checks again ----
   const posS = $("posS"), posSh = UXD.sheet(posS), posV = $("posV"), vv = window.visualViewport;
   const payS = $("payS"), paySh = UXD.sheet(payS), payV = $("payV"), payM = $("payM"), payOK = $("payOK");
+  const paySlip = []; Photo.picker(supabase, $("payP"), { paths: paySlip, type: "payslip", name: "รูปสลิป", max: 1, status: $("payPS"), gallery: true });
   const fitPos = () => { if (!vv) return; [posS, payS].filter((s) => s.open).forEach((s) => { s.style.bottom = Math.max(0, innerHeight - vv.height - vv.offsetTop) + "px"; s.style.maxHeight = Math.max(260, vv.height - 12) + "px"; }); }; // keep the save button above the iPhone keyboard (like the bag sheet)
   if (vv) { vv.addEventListener("resize", fitPos); vv.addEventListener("scroll", fitPos); }
   [posS, payS].forEach((s) => s.addEventListener("close", () => { s.style.bottom = ""; s.style.maxHeight = ""; }));
