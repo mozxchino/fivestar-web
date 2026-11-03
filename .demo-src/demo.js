@@ -375,6 +375,10 @@
     bill_check: ({ oid }) => billDemo().find((b) => b.order_id === oid) || null,
     bill_use_price: ({ pid, cost }) => { const p = rows("products").find((x) => x.id === pid); if (p) p.cost_price = +cost; return { ok: true }; },
     bill_accept_gap: ({ oid, note }) => { const st = (T.__bill ||= {})[oid]; if (st) Object.assign(st, { settled_at: now(), note }); return { ok: true }; },
+    // 0092: paying a CPF bill needs the slip (same checks as the real pay_bill; the slip stays in this phone, pay-notify sends nothing)
+    pay_bill: ({ oid, amount, slip }) => { if (!(+amount > 0 && +amount <= 100000)) throw new Error("ใส่ยอดเป็นตัวเลข 1 ถึง 100,000 บาท");
+      if (!/^\d{4}\/\d{2}\/\d{2}\/payslip-[0-9a-f-]{36}\.jpg$/.test(slip || "")) throw new Error("แนบรูปสลิปก่อน");
+      Object.assign(rows("orders").find((o) => o.id === oid) || {}, { paid_at: now(), paid_amount: r2(+amount), paid_slip: slip, paid_by: ME.userId }); return { ok: true }; },
   };
   const r2 = (v) => Math.round(v * 100) / 100;
   function billDemo() {
@@ -395,7 +399,8 @@
       calls.push(["rpc", n]);
       return { then(res, rej) { return Promise.resolve().then(() => {
         if (!(n in RPC)) { (window.__unstub ||= []).push(n); console.warn("demo: rpc not faked", n); return { data: null, error: null }; }
-        const data = RPC[n](a || {}); persist(); return { data, error: null };
+        let data; try { data = RPC[n](a || {}); } catch (e) { return { data: null, error: { message: e.message } }; } // a refused fake shows like a server error
+        persist(); return { data, error: null };
       }).then(res, rej); } };
     },
     storage: { from: () => ({
