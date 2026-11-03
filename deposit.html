@@ -73,7 +73,7 @@
   <div class="in"><input id="fee" type="number" inputmode="decimal" enterkeyhint="done" placeholder="0" min="0" max="100"><span class="sfx">บาท</span></div>
   <div class="card dp-chk" id="chk" aria-live="polite"></div>
   <h3 class="fstep"><i>3</i>รูปสลิป</h3>
-  <label class="btn" id="phL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปสลิป <input id="ph" type="file" accept="image/*" capture="environment" hidden></label>
+  <label class="btn" id="phL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>แนบรูปสลิป <input id="ph" type="file" accept="image/*" capture="environment" hidden></label>
   <p id="phS" class="muted"></p>
   <a href="#" id="seeSlip" class="dp-see" hidden>ดูรูปสลิปที่ลงไว้</a>
   <dialog id="okS" class="bsheet" aria-labelledby="okT"><div class="body"><div class="grab"></div><div class="hd"><b id="okT">บันทึกการฝากเงิน</b><button type="button" class="x" aria-label="ปิด">✕</button></div><div id="okL"></div></div>
@@ -106,7 +106,7 @@
   if (!DAYS.length) { none.hidden = false; if (!OWN && (dq.data || []).length) { none.querySelector("p").textContent = "ฝากเงินครบทุกวันแล้ว"; none.querySelector("a").textContent = "กลับหน้าหลัก"; none.querySelector("a").href = "index.html"; } return; }
 
   const slip = [];
-  Photo.picker(supabase, ph, { paths: slip, type: "deposit", name: "รูปสลิป", max: 1, status: phS, need: "ต้องถ่าย" });
+  Photo.picker(supabase, ph, { paths: slip, type: "deposit", name: "รูปสลิป", max: 1, status: phS, need: "ต้องแนบ", gallery: true });   // Mos 3 Nov: the 7-11 slip photo may already be in the phone
   let sel = DAYS[0], OUT = null; // newest first = the latest closed day
   const num = (el) => el.value === "" ? null : +el.value;
 
@@ -153,7 +153,7 @@
     const x = DEP[sel], path = slip[0] || x?.slip;
     if (amt.value === "") return bad("ใส่ยอดฝากก่อน", amt);
     if (fee.value === "") return bad("ใส่ค่าธรรมเนียม\nไม่มีใส่ 0", fee);
-    if (!path) return bad("ถ่ายรูปสลิปก่อน", phL);
+    if (!path) return bad("แนบรูปสลิปก่อน", phL);
     // Mos 3 พ.ย.: the app's own sheet asks first (ตกลง บันทึก / ยกเลิก), then straight home · no green box left on the page
     const sum = Math.round(((+amt.value) + (+fee.value || 0)) * 100) / 100, g = OUT == null ? null : Math.round((sum - OUT) * 100) / 100;
     okL.innerHTML = `<div class="kv"><span>ยอดฝาก</span><b>${baht(+amt.value)}</b></div><div class="kv"><span>ค่าธรรมเนียม 7-11</span><b>${baht(+fee.value || 0)}</b></div><div class="kv"><span>เงินที่เอาออกจากลิ้นชัก</span><b>${OUT == null ? "ไม่มี" : baht(OUT)}</b></div>`
