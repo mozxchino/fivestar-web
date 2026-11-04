@@ -139,3 +139,16 @@ a.ux-mrow:active, button.ux-mrow:active, .ux-mday:active { background: var(--col
 .fold .fv.pp { margin-left: auto; font-size: 13px; }
 .fold .fv.pp.urgent { color: var(--color-destructive); background: var(--tint-destructive); } /* row values stay tinted · solid red is for the urgent card only */
 .todo.bad:has(.btn.go) ~ .todo.bad .acts .btn.go { color: var(--color-primary-dark); background: var(--tint-primary); } /* one solid red per screen: only the first urgent card with a go-button */
+
+/* A2 · owner ปัญหา + สรุปเดือน: type symbol + 5-level pill on issue cards · lead costs tile + 3 groups + symbol per row on month */
+.iss .day-head { display: flex; align-items: center; gap: 10px; }
+.iss .day-head b { flex: 1; min-width: 0; }
+.iss .day-head .pp { flex: none; }
+.card.iss.urgent { box-shadow: 0 1px 2px rgba(32,24,24,.05), inset 0 0 0 1.5px var(--border-bad); }
+.ux-mon .ux-mrow > .sym:first-child { flex: 0 0 30px; width: 30px; margin-right: 0; }
+.ux-costs.tile { margin: 0 0 4px; }
+.ux-costs.tile .ico { color: var(--color-primary); background: var(--tint-icon); }
+#out > h3.sec { margin-left: 0; margin-right: 0; }
+.ux-mrow > .sym + span { flex: 1; min-width: 0; white-space: normal; }
+.ux-mrow .v.bad.pp { color: var(--color-destructive); background: var(--tint-destructive); font-size: 14px; }
+.ux-mrow .v.bad.pp::before { width: 12px; height: 12px; margin: 0; border-radius: 0; vertical-align: 0; }
