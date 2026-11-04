@@ -3,7 +3,7 @@
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="lib/ui.css?v=r1101"><link rel="stylesheet" href="lib/ux-data.css">
+<link rel="stylesheet" href="lib/ui.css?v=r1104"><link rel="stylesheet" href="lib/ux-data.css">
 
 
 <script src="lib/skeleton.js"></script><script src="lib/ux-motion.js?v=0060b"></script><script src="lib/ux-data.js"></script>
@@ -23,38 +23,65 @@ pre{white-space:pre-wrap;font:15px/1.6 var(--font-body);margin:0;font-variant-nu
 .ux-qbox{position:relative;display:inline-flex}.ux-qbox input{padding-bottom:18px!important}.ux-qbox small{position:absolute;left:0;right:0;bottom:5px;text-align:center;font-size:12px;line-height:1;color:var(--color-ink-soft,#6b6b6b);pointer-events:none}
 .ux-eq{font-size:13px;line-height:1.3;color:var(--color-ink-soft);font-variant-numeric:tabular-nums;white-space:nowrap}
 .ux-rm{min-height:44px;margin:0 0 -8px;padding:0;border:0;background:none;color:var(--color-primary-dark);font:500 15px/1.2 var(--font-body);text-decoration:underline;cursor:pointer;touch-action:manipulation}
-.ux-add{margin:12px 0 0}
 .ux-addr{display:flex;align-items:center;gap:12px;min-height:56px;padding:6px 0;border-bottom:.5px solid var(--color-separator);cursor:pointer}
 .ux-addr:last-child{border-bottom:0}.ux-addr input{flex:none;width:22px;height:22px;margin:0;accent-color:var(--color-primary)}
 .ux-addr .nm{display:block;font-weight:600}.ux-addr .meta{display:block;font-size:13px;color:var(--color-ink-soft)}.ux-addr .chip{flex:none;min-height:0;padding:4px 10px;font-size:13px;box-shadow:none;background:var(--color-fill);color:var(--color-ink-soft)}
 .ux-addq{display:flex;align-items:center;gap:12px;margin:0 0 10px}.ux-addq .in{flex:1;margin:0}#addEq{flex:none;font-variant-numeric:tabular-nums}
-/* 0053 ของกอง: small yellow tag under the row name · the note above the list reuses .ux-nopack */
-.ux-pile{display:inline-block;margin:2px 0 0;padding:2px 8px;border-radius:999px;background:var(--tint-wait);color:var(--on-wait);font-size:13px;line-height:1.4;font-weight:500;font-variant-numeric:tabular-nums}
 #okT,#skT{margin:4px 0 0;font:600 18px/1.45 var(--font-head);text-wrap:balance}
 /* L3: the skip action reads as a quiet dark-red text button, not a white card like "+ เพิ่มรายการ" (a confirm sheet still guards it) */
-body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-dark);min-height:44px}body.grouped #skipB:active{background:var(--tint-primary)}
+/* A2 (4 Nov): brand head with the delivery day as the large title · 5-level pill · symbol on every note/heading · one row for the two side actions */
+.topbar.brand .lt{margin-top:4px}.topbar.brand .lt .d small+small{margin-top:2px}
+#pill{align-self:center}.chips{margin-bottom:10px}
+.ux-lot{flex-direction:row;align-items:center;gap:10px;background:var(--tint-important);color:var(--p-important);box-shadow:none}.ux-lot b{color:var(--p-important)}
+.ux-nopack{display:flex;align-items:flex-start;gap:10px}.ux-nopack .sym{margin-top:-1px}.ux-nopack div{flex:1;min-width:0}.ux-nopack b{display:block;color:var(--color-foreground);font:600 16px/1.35 var(--font-head)}
+.orow .tags{display:flex;flex-wrap:wrap;gap:4px;margin:3px 0 2px}.orow .tags:empty{display:none}.orow .pp{font-size:12px;padding:2px 8px 2px 6px}.orow .pp::before{width:11px;height:11px}
+.orow .meta b.z{color:var(--color-destructive);font-weight:600}
+/* Mos 4 พ.ย. รอบ 3: the tail is rows, not boxes · ของยังพอ folds at the end of the same list · เพิ่มรายการ + ข้อความ are rows in one card · คืนนี้ไม่สั่ง is a quiet text button */
+.ux-row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:4px 0;border:0;background:none;font:500 16px/1.35 var(--font-body);color:var(--color-foreground);text-align:left;cursor:pointer;touch-action:manipulation}
+.ux-row .t{flex:1;min-width:0}.ux-row .t small{display:block;font:400 13px/1.3 var(--font-body);color:var(--color-ink-soft)}.ux-row .chev{flex:none;font:400 22px/1 var(--font-body);color:var(--color-ink-soft);margin-right:2px}
+.ux-tail{margin-top:12px;padding-top:0;padding-bottom:0}.ux-tail>*+*{border-top:.5px solid var(--color-separator)}.ux-tail details.fold>summary{min-height:56px}.ux-tail pre{padding:0 0 14px 42px;font-size:14px}
+.ux-sysf{border-top:.5px solid var(--color-separator);margin:0}.ux-sysf>summary{min-height:56px;gap:12px}.ux-sysf>summary .t{flex:1;min-width:0;font-weight:500}.ux-sysf[open]>summary{border-bottom:.5px solid var(--color-separator)}
+.ux-sysf .nm{font-weight:400;color:var(--color-ink-soft)}.ux-sysf .orow.chg .nm{color:var(--color-foreground)}
+.ux-rules{display:block;text-align:center;margin:10px 0 0;font-size:14px;color:var(--color-ink-soft);text-decoration:underline;min-height:44px;line-height:44px}
+.sticky .btn.copy{margin-bottom:8px}
+/* Mos 4 พ.ย. รอบ 5: no − + (the owner types) · one roomy box, number centred, unit inside, the total in base units under it */
+.ux-q{display:inline-flex;align-items:baseline;justify-content:center;gap:5px;width:auto;min-width:64px;height:46px;margin:0;padding:0 14px;box-sizing:border-box;border-radius:12px;background:var(--color-fill);cursor:text}
+.ux-stepw{align-items:flex-end}.ux-eq{text-align:right}
+.ux-q:focus-within{box-shadow:0 0 0 2px var(--color-primary)}
+.ux-q input{width:1.4ch;min-width:0;height:auto;margin:0;padding:0;border:0;background:none;box-shadow:none;text-align:right;font:600 20px/48px var(--font-head);font-variant-numeric:tabular-nums;-moz-appearance:textfield;outline:none}
+.ux-q input::-webkit-outer-spin-button,.ux-q input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.ux-q small{font:400 14px/1 var(--font-body);color:var(--color-ink-soft);pointer-events:none}
+.ux-stepw{gap:4px}.ux-eq{font-size:13px}.orow{gap:12px}
+/* Mos 4 พ.ย. รอบ 2: no "ต้องดู N" heading, no counts (the list is right there) · a sent / skipped order reads as a list, the number box comes back only after "แก้ใบสั่ง" */
+#items h3.ux-cat .n{display:none}#items>.card.list:first-child{margin-top:4px}
+.qro{display:none;flex:none;font:600 18px/1.2 var(--font-head);text-align:right;font-variant-numeric:tabular-nums}.qro small{display:block;font:400 13px/1.3 var(--font-body);color:var(--color-ink-soft)}
+/* Mos 4 พ.ย. รอบ 2: ของค้างเยอะ = one folded line on top, the names open on tap */
+.ux-pfold{margin:0 0 6px;padding:0 14px;border-radius:14px;background:var(--tint-wait);color:var(--on-wait)}.ux-pfold>summary{gap:10px;font:600 16px/1.35 var(--font-head);color:var(--color-foreground)}.ux-pfold>summary .sym{flex:none}.ux-pfold>summary span.t{flex:1;min-width:0}
+.ux-pfold>div{padding:0 0 12px 40px;font-size:14px;line-height:1.6;text-wrap:pretty}.ux-pfold a{color:inherit;font-weight:600}
+body.ro .ux-stepw,body.ro .ux-rm{display:none}body.ro .qro{display:block}body.ro .orow.chg{background:none;margin:0;padding:8px 0}
 </style></head><body class="grouped" ontouchstart="">
-<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1 id="ttl">อนุมัติใบสั่ง</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div><div class="sk"><i class="sk-b" style="--w:150px;--h:12px;margin:3px 0"></i></div><div id="when" class="ld" hidden><div class="sub ux-2l"><span>สั่ง <span id="sd"></span></span><b>ของถึง <span id="d"></span></b></div><div class="sub" id="cdl" hidden></div><div class="sub" id="sdl" hidden></div><div class="sub"><a class="ux-rl" href="order-rules.html">กติกาใบสั่ง อ่าน 2 นาที</a></div></div></div></header>
+<header class="topbar brand"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div class="sub"><h1 id="ttl" class="vh">ใบสั่งของ</h1>ห้าดาว สาขาอ่อนนุช 44 จุด 3</div>
+<div class="lt sk" aria-hidden="true"><div class="d"><i class="sk-b" style="--w:56%;--h:30px;margin:0 auto"></i><i class="sk-b" style="--w:70%;--h:13px;margin:6px auto 0"></i></div></div>
+<div class="lt ld" id="when" hidden><div class="d"><span id="d"></span><small id="cdl"></small><small id="sdl" hidden></small></div></div></header>
 <p id="blocked" class="err" hidden></p>
 <div class="sk"><span class="vh">กำลังเปิด…</span><div class="chips sk-row"><i class="sk-b" style="--w:72px;--h:34px;--r:999px"></i><i class="sk-b" style="--w:160px;--h:44px;--r:999px"></i></div><div class="card list" style="margin-top:0"><div class="orow"><div class="grow"><i class="sk-b" style="--w:62%;--h:17px"></i><i class="sk-b" style="--w:78%;--h:12px;--gap:7px"></i></div><div class="sk-row" style="gap:4px"><i class="sk-b" style="--w:44px;--h:48px;--r:12px"></i><i class="sk-b" style="--w:60px;--h:52px;--r:12px"></i><i class="sk-b" style="--w:44px;--h:48px;--r:12px"></i></div></div><div class="orow"><div class="grow"><i class="sk-b" style="--w:62%;--h:17px"></i><i class="sk-b" style="--w:78%;--h:12px;--gap:7px"></i></div><div class="sk-row" style="gap:4px"><i class="sk-b" style="--w:44px;--h:48px;--r:12px"></i><i class="sk-b" style="--w:60px;--h:52px;--r:12px"></i><i class="sk-b" style="--w:44px;--h:48px;--r:12px"></i></div></div><div class="orow"><div class="grow"><i class="sk-b" style="--w:62%;--h:17px"></i><i class="sk-b" style="--w:78%;--h:12px;--gap:7px"></i></div><div class="sk-row" style="gap:4px"><i class="sk-b" style="--w:44px;--h:48px;--r:12px"></i><i class="sk-b" style="--w:60px;--h:52px;--r:12px"></i><i class="sk-b" style="--w:44px;--h:48px;--r:12px"></i></div></div><div class="orow"><div class="grow"><i class="sk-b" style="--w:62%;--h:17px"></i><i class="sk-b" style="--w:78%;--h:12px;--gap:7px"></i></div><div class="sk-row" style="gap:4px"><i class="sk-b" style="--w:44px;--h:48px;--r:12px"></i><i class="sk-b" style="--w:60px;--h:52px;--r:12px"></i><i class="sk-b" style="--w:44px;--h:48px;--r:12px"></i></div></div><div class="orow"><div class="grow"><i class="sk-b" style="--w:62%;--h:17px"></i><i class="sk-b" style="--w:78%;--h:12px;--gap:7px"></i></div><div class="sk-row" style="gap:4px"><i class="sk-b" style="--w:44px;--h:48px;--r:12px"></i><i class="sk-b" style="--w:60px;--h:52px;--r:12px"></i><i class="sk-b" style="--w:44px;--h:48px;--r:12px"></i></div></div><div class="orow"><div class="grow"><i class="sk-b" style="--w:62%;--h:17px"></i><i class="sk-b" style="--w:78%;--h:12px;--gap:7px"></i></div><div class="sk-row" style="gap:4px"><i class="sk-b" style="--w:44px;--h:48px;--r:12px"></i><i class="sk-b" style="--w:60px;--h:52px;--r:12px"></i><i class="sk-b" style="--w:44px;--h:48px;--r:12px"></i></div></div><div class="orow"><div class="grow"><i class="sk-b" style="--w:62%;--h:17px"></i><i class="sk-b" style="--w:78%;--h:12px;--gap:7px"></i></div><div class="sk-row" style="gap:4px"><i class="sk-b" style="--w:44px;--h:48px;--r:12px"></i><i class="sk-b" style="--w:60px;--h:52px;--r:12px"></i><i class="sk-b" style="--w:44px;--h:48px;--r:12px"></i></div></div></div><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
 <div id="repeat" class="ld" hidden>
-  <div class="empty"><p>ยังไม่มีใบสั่ง CPF คืนนี้</p><p class="muted">พนักงานยังไม่กดปิดร้าน</p></div>
+  <div class="empty"><span class="sym wait" style="margin:0 auto 8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><p>ยังไม่มีใบสั่ง CPF คืนนี้</p><p class="muted">พนักงานยังไม่กดปิดร้าน</p></div>
   <button id="rep" class="btn primary">สั่งเหมือนครั้งก่อน</button>
   <button id="skip" class="btn">คืนนี้ไม่สั่ง</button>
 </div>
-<div id="none" class="ld empty" hidden></div>
+<div id="none" class="ld empty" hidden><span class="sym later" style="margin:0 auto 8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><div id="noneT"></div></div>
 <div id="form" class="ld" hidden>
-  <div class="chips"><span id="pill" class="pill"></span><span id="self" hidden></span></div>
+  <div class="chips"><span id="pill" class="pp"></span><span id="first" class="pp later" hidden>ใบสั่งแรก</span><span id="self" hidden></span></div>
   <div id="lot"></div>
   <p id="nopack" class="ux-nopack" role="note" hidden></p>
-  <p id="pile" class="ux-nopack" role="note" hidden></p>
+  <details id="pile" class="fold ux-pfold" hidden></details>
   <div id="items"></div>
-  <button id="addB" class="btn ux-add" type="button" aria-haspopup="dialog" hidden>+ เพิ่มรายการ</button>
-  <details class="fold"><summary>ข้อความที่เซลล์จะเห็น<span class="chip">เปิดดู</span></summary>
-    <div class="card preview"><pre id="prev"></pre></div></details>
-  <button id="skipB" class="btn" type="button" aria-haspopup="dialog" hidden>คืนนี้ไม่สั่ง</button>
-  <div class="sticky"><p id="chg" class="ux-chg" aria-live="polite"></p><p id="svd" class="ux-chg" aria-live="polite"></p><button id="send" class="btn primary">ส่งใบสั่งให้เซลล์</button>
-    <p id="msg" class="muted"></p><button id="copy" class="btn" hidden>คัดลอกไปส่งเอง</button></div>
+  <div class="card ux-tail"><button id="addB" class="ux-row" type="button" aria-haspopup="dialog" hidden><span class="sym red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="t">เพิ่มรายการ</span><span class="chev">›</span></button>
+    <details class="fold"><summary class="ux-row"><span class="sym"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span class="t">ข้อความที่ส่งให้เซลล์</span><span class="chev">›</span></summary><pre id="prev"></pre></details>
+    <button id="skipB" class="ux-row" type="button" aria-haspopup="dialog" hidden><span class="sym"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg></span><span class="t">คืนนี้ไม่สั่ง<small>ของ <span id="skD"></span> จะไม่มา</small></span><span class="chev">›</span></button></div>
+  <a class="ux-rules" href="order-rules.html">กติกาใบสั่ง</a>
+  <div class="sticky"><p id="chg" class="ux-chg" aria-live="polite"></p><p id="msg" class="muted"></p><button id="copy" class="btn primary copy" hidden>คัดลอกไปส่งเอง</button><button id="send" class="btn primary">ส่งใบสั่งให้เซลล์</button></div>
 </div>
 <dialog id="addS" class="bsheet" aria-labelledby="addH"><div class="body"><div class="grab"></div>
   <div class="hd"><b id="addH">เพิ่มรายการ</b><button class="x" type="button" aria-label="ปิด">✕</button></div>
@@ -65,7 +92,7 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
   <div class="hd"><b>ใบสั่งแรก</b><button class="x" type="button" aria-label="ปิด">✕</button></div><p id="okT"></p></div>
   <div class="foot"><button id="okGo" class="btn primary" type="button">ใช่ ส่งเลย</button><button id="okBack" class="btn" type="button" style="margin-top:8px">กลับไปแก้</button></div></dialog>
 <dialog id="skS" class="bsheet" aria-labelledby="skH"><div class="body"><div class="grab"></div>
-  <div class="hd"><b id="skH">ไม่สั่งใบนี้</b><button class="x" type="button" aria-label="ปิด">✕</button></div><p id="skT"></p><p class="muted">แอปจะไม่เตือน และไม่ส่งให้เซลล์เอง</p></div>
+  <div class="hd"><b id="skH">ไม่สั่งใบนี้</b><button class="x" type="button" aria-label="ปิด">✕</button></div><p id="skT"></p></div>
   <div class="foot"><p id="skM" class="err" role="alert"></p><button id="skGo" class="btn primary" type="button">ใช่ ไม่สั่ง</button><button id="skBack" class="btn" type="button" style="margin-top:8px">กลับไปแก้</button></div></dialog>
 <script>
 (async () => {
@@ -79,7 +106,9 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
   // Mos 26 ต.ค.: every order is named by its delivery day ("ศ. 6 พ.ย.") · the sales text says "ส่งศุกร์ 6 พ.ย."
   const day = (iso) => new Date(iso + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
   const dayLong = (iso) => new Date(iso + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "long", timeZone: "UTC" }).replace(/^วัน/, "") + " " + new Date(iso + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
-  const ST = { proposed: "รอส่ง", approved: "รอส่ง", sent: "ส่งแล้ว", failed: "ส่งไม่ออก", skipped: "ไม่สั่ง" };
+  const SV = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const ICO = { warn: SV('<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17.5v.5"/>'), ok: SV('<path d="M20 6 9 17l-5-5"/>'), cal: SV('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'), box: SV('<path d="m3 7 9-4 9 4v10l-9 4-9-4z"/><path d="m3 7 9 4 9-4M12 11v10"/>'), bag: SV('<path d="M6 8h12l1 13H5z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>') };
+  const hm = (iso) => new Date(iso).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" });
   let orderId = q.get("order"), order = null, rows = [], shop = "", autoAt = "12:30";
   // Mos 1 พ.ย. (0060): category headers · rows already sort by products.sort (= category × 100)
   const CAT = Object.fromEntries(((await supabase.from("product_names").select("id,category")).data || []).map((p) => [p.id, p.category]));
@@ -97,12 +126,13 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
     if (q.get("repeat") !== "1") {
       // 0033: a night whose delivery day has no CPF delivery (Saturday → Monday) has no order → say why, in delivery days
       const { data: pl } = await supabase.rpc("night_plan", { d: today });
-      $("none").innerHTML = pl && pl.none
+      $("d").textContent = "ใบสั่งของ"; show("when");
+      $("noneT").innerHTML = pl && pl.none
         ? `<p>คืนนี้ไม่มีใบสั่ง</p><p class="muted">${day(pl.arrive)} ${pl.reason === "holiday" ? "ร้านหยุด ไม่มีคนรับของ" : "CPF ไม่ส่ง"}</p><p class="muted">ของ ${day(pl.arrive)} อยู่ในล็อต ${day(pl.covered_by)} แล้ว</p><p class="muted">ใบถัดไป ใบสั่งของ ${day(pl.next_arrive)}</p>`
         : `<p>ยังไม่มีใบสั่ง CPF คืนนี้</p><p class="muted">รอพนักงานกดปิดร้านก่อน</p>`;
       return show("none");
     }
-    show("repeat");
+    $("d").textContent = "ใบสั่งของ"; show("when"); show("repeat");
     $("skip").onclick = () => { $("repeat").innerHTML = "<p>คืนนี้ไม่สั่ง CPF</p>"; };
     $("rep").onclick = async () => {
       $("rep").disabled = true;
@@ -134,12 +164,13 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
   rows = (disp || []).sort((a, b) => a.sort - b.sort);
   // items without a bag size go to the sales group as a plain qty: ask the owner to set ถุงละ (pack_size 1 on a non-chicken item)
   const nop = rows.filter((r) => Number(r.pack_size || 1) <= 1);
-  if (nop.length) { $("nopack").hidden = false; $("nopack").innerHTML = `ยังไม่ได้ใส่ถุงละ ${nop.length} รายการ เซลล์จะเห็นแค่จำนวน<br>${nop.map((r) => E(r.name || r.label)).join(" ")}${me.role === "owner" ? '<br><a href="settings.html?tab=prod">ไปใส่ถุงละในหน้าสินค้า</a>' : "<br>ให้เจ้าของใส่ถุงละในหน้าสินค้า"}`; }
+  if (nop.length) { $("nopack").hidden = false; $("nopack").innerHTML = `<span class="sym wait">${ICO.bag}</span><div>ยังไม่ได้ใส่ถุงละ ${nop.length} รายการ เซลล์จะเห็นแค่จำนวน<br>${nop.map((r) => E(r.name || r.label)).join(" ")}${me.role === "owner" ? '<br><a href="settings.html?tab=prod">ไปใส่ถุงละในหน้าสินค้า</a>' : "<br>ให้เจ้าของใส่ถุงละในหน้าสินค้า"}</div>`; }
   const plan = order.plan;
   // fin (Mos 31 ต.ค.): ของใช้ต้องซื้อเอง lives only on its own LINE card in the staff group (0057) · not on this page
   const cutDay = new Date(Date.parse(order.for_date + "T00:00:00Z") - 864e5).toISOString().slice(0, 10);
-  $("ttl").textContent = "ใบสั่งของ"; document.title = `ใบสั่งของ ${day(order.for_date)}`;
-  $("d").textContent = `${day(order.for_date)}${plan ? ` ${plan.deliver_at} น.` : ""}`; $("sd").textContent = day(cutDay);
+  document.title = `ใบสั่งของ ${day(order.for_date)}`;
+  $("d").textContent = dayLong(order.for_date);   // A2: the delivery day is the large title (every order is named by it, Mos 26 ต.ค.)
+  $("first").hidden = !(plan && plan.opening); $("skD").textContent = day(order.for_date);
   // 0035 weekly holiday night: the order uses the last open day's sales (same line as the card)
   // 0036: the night after a no-order night (Sat → Mon no delivery) uses that day's sales
   const salesDay = plan && plan.sales_day ? new Date(plan.sales_day + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "long", timeZone: "UTC" }) : "";
@@ -149,15 +180,13 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
   // Mos 26 ต.ค. (iPhone): no formula text anywhere · the strip says the time the way people say it
   // ponytail: only whole afternoon hours get words (delivery is 14:00), anything else stays "HH:MM น."
   const hmTh = (hm) => { const [h, m] = String(hm).split(":").map(Number); return h >= 13 && h <= 15 && !m ? `บ่าย ${h - 12}` : `${hm} น.`; };
-  if (mult > 1) $("lot").innerHTML = `<div class="ux-lot" role="note"><b>ล็อตนี้ต้องพอขายถึง ${dayLong(plan.until)} ${hmTh(plan.deliver_at)}</b></div>`;
-  const pill = () => { $("pill").textContent = ST[order.status] || order.status; $("pill").dataset.tone = { sent: "ok", failed: "bad", skipped: "" }[order.status] ?? "wait"; };
-  pill();
+  if (mult > 1) $("lot").innerHTML = `<div class="ux-lot" role="note"><span class="sym important">${ICO.cal}</span><b>ล็อตนี้ต้องพอขายถึง ${dayLong(plan.until)} ${hmTh(plan.deliver_at)}</b></div>`;
   const n = (v) => Number(v).toLocaleString("th-TH", { maximumFractionDigits: 1 });
   // 0033: plan rows say how the number came about: left tonight, sold today (× mult) · no sold today = the old owner's average, in grey
-  const left = (r) => r.remaining == null ? "" : `เหลือ ${n(r.remaining)} ${E(r.unit_th)} · `;
+  const left = (r) => r.remaining == null ? "" : Number(r.remaining) === 0 ? `<b class="z">เหลือ 0 ${E(r.unit_th)}</b> · ` : `เหลือ ${n(r.remaining)} ${E(r.unit_th)} · `;
   // 0038: เหลือ · กำลังมา · ขายวันละ (เฉลี่ย 7 วัน หรือค่าตั้งต้น) · ควรมี (เป้า) — the same numbers the rule in settings describes
   // Mos 2 พ.ย.: ควรมี on its own line (one line was cramped)
-  const base = (r) => r.kind === "consumable" ? `ของใช้ CPF ติ๊กใกล้หมดตอนปิดร้าน 1 ถุง` : r.daily_use != null
+  const base = (r) => r.kind === "consumable" ? `น้องติ๊กใกล้หมดตอนปิดร้าน` : r.daily_use != null
     ? `${left(r)}${Number(r.incoming) > 0 ? `กำลังมา ${n(r.incoming)} ${E(r.unit_th)} · ` : ""}ขายวันละ ${r.daily_use < 1 ? n(r.daily_use) : Math.round(r.daily_use)} ${E(r.unit_th)}${r.use_src === "seed" ? " (ค่าตั้งต้น)" : ""}${r.par != null ? `<br>ควรมี ${n(r.par)} ${E(r.unit_th)}` : ""}`
     : `เหลือ ${r.remaining == null ? "-" : `${n(r.remaining)} ${E(r.unit_th)}`}<br>ควรมี ${r.par == null ? "-" : n(r.par)} ${E(r.unit_th)}`;   // audit 26: every number with its unit
   // Mos 29 ต.ค.: packs first · a row with a bag size edits bags (เซ็ต for the chicken set) · qty_final stays in ตัว/ชิ้น, so send-order and the sales text are unchanged
@@ -172,27 +201,34 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
   const piles = ((plan && plan.items) || []).filter((x) => x.over === true);
   const pileOf = new Map(piles.map((x) => [x.product_id, x]));
   const pileSay = (x) => x.days_left == null ? "ไม่มียอดขาย" : `ขายได้อีก ${n(x.days_left)} วัน`;
-  if (piles.length) { $("pile").hidden = false; $("pile").innerHTML = `<b>ของค้างเยอะ ${piles.length} รายการ</b>${piles.map((x) => `<br>${E(x.name)} ${pileSay(x)}`).join("")}`
-    + (piles.some((x) => x.days_left == null) ? (me.role === "owner" ? '<br><a href="settings.html?tab=prod">ตัวที่ไม่มียอดขาย ถ้าเลิกขายแล้ว เอาติ๊ก "ยังขายอยู่" ออก</a>' : '<br>ตัวที่ไม่มียอดขาย ถ้าเลิกขายแล้ว ให้เจ้าของเอาติ๊ก "ยังขายอยู่" ออก') : ""); }
+  if (piles.length) { $("pile").hidden = false; $("pile").innerHTML = `<summary><span class="sym wait">${ICO.box}</span><span class="t">ของค้างเยอะ ${piles.length} รายการ</span><span class="chip">เปิดดู</span></summary><div>${piles.map((x) => `${E(x.name)} ${pileSay(x)}`).join("<br>")}`
+    + (piles.some((x) => x.days_left == null) ? (me.role === "owner" ? '<br><a href="settings.html?tab=prod">ตัวที่ไม่มียอดขาย ถ้าเลิกขายแล้ว เอาติ๊ก "ยังขายอยู่" ออก</a>' : '<br>ตัวที่ไม่มียอดขาย ถ้าเลิกขายแล้ว ให้เจ้าของเอาติ๊ก "ยังขายอยู่" ออก') : "") + "</div>"; }
   const edited = (r, q) => !added(r) && q !== Number(r.qty_proposed);
-  const meta = (r, q) => (added(r) ? "เพิ่มเอง ไม่ได้มาจากกติกา" : base(r)) + (r.sets != null && pkOf(r) === 1 ? ` · ${Math.round(q / r.pack_size)} เซ็ต` : "")
-    + (edited(r, q) ? `<br><b>ระบบเสนอ ${inU(r, r.qty_proposed)} ตามกติกา แก้เป็น ${inU(r, q)}</b>` : "");   // 0038 Mos: say what the rule proposed and what the owner changed it to
+  // A2 (Mos 4 พ.ย.): the reason a row needs a look is a small pill under the name, not a sentence · the number box already shows what it was changed to
+  const meta = (r, q) => (added(r) ? "" : base(r)) + (r.sets != null && pkOf(r) === 1 ? ` · ${Math.round(q / r.pack_size)} เซ็ต` : "")
+    + (edited(r, q) ? `<br><b>ระบบเสนอ ${inU(r, r.qty_proposed)}</b>` : "");
+  const tags = (r, q) => (added(r) ? '<span class="pp later">เพิ่มเอง</span>' : "") + (edited(r, q) ? '<span class="pp wait">แก้แล้ว</span>' : "") + (pileOf.has(r.product_id) ? `<span class="pp wait">${pileSay(pileOf.get(r.product_id))}</span>` : "");
   const vals = {};   // product_id → qty typed so far (kept across a re-render after เพิ่มรายการ / เอาออก)
   const rowH = (r, i) => { const pk = pkOf(r), v = Number(vals[r.product_id] ?? r.qty), u = pk > 1 ? word(r) : E(r.unit_th);
-    return `<div class="orow" id="r${i}"><div class="grow"><div class="nm">${E(r.label)}</div>${pileOf.has(r.product_id) ? `<span class="ux-pile">${pileSay(pileOf.get(r.product_id))}</span>` : ""}<div class="meta"></div>${added(r) && live() ? `<button type="button" class="ux-rm" data-rm="${i}">เอาออก</button>` : ""}</div>
-    <div class="ux-stepw"><div class="step"><button type="button" data-d="-1" data-s="${i}" aria-label="ลด ${E(r.label)} 1 ${u}">−</button><span class="ux-qbox"><input type="number" inputmode="${pk > 1 ? "numeric" : "decimal"}" min="0" step="${pk > 1 ? 1 : r.pack_size || 1}" value="${pk > 1 ? Math.round(v / pk) : v}" data-i="${i}" aria-label="${E(r.label)} จำนวนสั่ง (${u})"><small aria-hidden="true">${u}</small></span><button type="button" data-d="1" data-s="${i}" aria-label="เพิ่ม ${E(r.label)} 1 ${u}">+</button></div>${pk > 1 ? `<span class="ux-eq" id="eq${i}" aria-hidden="true"></span>` : ""}</div></div>`; };
+    return `<div class="orow" id="r${i}"><div class="grow"><div class="nm">${E(r.label)}</div><div class="tags"></div><div class="meta"></div>${added(r) && live() ? `<button type="button" class="ux-rm" data-rm="${i}">เอาออก</button>` : ""}</div>
+    <div class="ux-stepw"><label class="ux-q"><input type="number" inputmode="${pk > 1 ? "numeric" : "decimal"}" min="0" step="${pk > 1 ? 1 : r.pack_size || 1}" value="${pk > 1 ? Math.round(v / pk) : v}" style="width:${String(pk > 1 ? Math.round(v / pk) : v).length * 1.1 + 0.3}ch" data-i="${i}" aria-label="${E(r.label)} จำนวนสั่ง (${u})" onfocus="this.select()"><small aria-hidden="true">${u}</small></label>${pk > 1 ? `<span class="ux-eq" id="eq${i}" aria-hidden="true"></span>` : ""}</div><b class="qro" id="ro${i}"></b></div>`; };
   const qv = (i) => { const v = Math.max(0, Number(document.querySelector(`[data-i="${i}"]`).value) || 0), pk = pkOf(rows[i]); return pk > 1 ? Math.round(v) * pk : v; };
   const cur = () => rows.map((r, i) => ({ product_id: r.product_id, qty_final: qv(i), r }));
   // ง3: how far the owner moved from what the system proposed (order_review qty_proposed)
   // 0046 (audit 3): each edit is saved to qty_final as the owner types (order_set_qty), so the 12:30 safety send uses the edited numbers
   const live = () => ["proposed", "approved", "failed"].includes(order.status);
-  const timers = {}; let pend = 0, saveErr = "", saved = false;
+  const timers = {}; let pend = 0, saveErr = "", saved = false, unlocked = false;
   const label = () => { const e = rows.filter((r, i) => edited(r, qv(i))).length;
-    const sv = pend ? "กำลังบันทึก…" : saveErr ? "บันทึกไม่ได้ แก้อีกครั้ง" : saved && live() ? "บันทึกแล้ว" : "";
-    $("chg").textContent = e ? `แก้จำนวน ${e} รายการ` : ""; $("svd").textContent = sv;   // one idea per line
-    // every row 0 on an order still to send: the button offers "คืนนี้ไม่สั่ง" instead of a dead button
-    const k = cur().filter((x) => x.qty_final > 0).length; $("send").disabled = k === 0 && !live();
-    $("send").textContent = k === 0 ? (live() ? "คืนนี้ไม่สั่ง" : order.status === "skipped" ? "ไม่สั่งใบนี้แล้ว" : "ไม่มีของที่จะสั่ง") : `ส่งใบสั่งให้เซลล์${order.status === "sent" ? "อีกครั้ง" : ""} ${k} รายการ`;
+    const sv = pend ? "กำลังบันทึก…" : saveErr ? "บันทึกไม่ได้ แก้อีกครั้ง" : saved && live() ? "บันทึกที่แก้แล้ว" : "";
+    $("chg").textContent = sv;
+    // Mos 4 พ.ย. รอบ 2: a sent / skipped order opens as a plain list · one white button unlocks the number boxes · no counts anywhere
+    const ro = !live() && !unlocked; document.body.classList.toggle("ro", ro);
+    const k = cur().filter((x) => x.qty_final > 0).length, fail = order.status === "failed";
+    $("send").disabled = false;
+    $("send").textContent = ro ? (order.status === "sent" ? "แก้ใบสั่ง แล้วส่งใหม่" : "เปลี่ยนใจ สั่งใบนี้")
+      : k === 0 ? (live() ? "คืนนี้ไม่สั่ง" : "ไม่มีของที่จะสั่ง") : fail ? "ลองส่งอีกครั้ง" : order.status === "sent" ? "ส่งใบที่แก้ให้เซลล์" : "ส่งใบสั่งให้เซลล์";
+    $("send").className = "btn" + (!ro && !fail && k > 0 || (live() && k === 0) ? " primary" : "");
+    $("copy").hidden = !fail || k === 0;
     $("skipB").hidden = !live() || k === 0;
     $("addB").hidden = !live(); };   // 0044: order_item_add refuses a sent (or skipped) order
   // ponytail: one save per row after 250 ms quiet (at once on change) · two saves of one row in flight could land out of order (the send carries the numbers anyway)
@@ -207,8 +243,9 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
     fetch(`${C.SUPABASE_URL}/rest/v1/rpc/order_set_qty`, { method: "POST", keepalive: true, headers: { apikey: C.SUPABASE_ANON_KEY, Authorization: `Bearer ${jwt}`, "Content-Type": "application/json" },
       body: JSON.stringify({ oid: orderId, pid: rows[i].product_id, qty: qv(+i) }) }).catch(() => {}); } };
   addEventListener("pagehide", flushHide); document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushHide(); });
-  const mark = (i) => { const q = qv(i), r = rows[i], row = $("r" + i); row.classList.toggle("chg", edited(r, q)); row.querySelector(".meta").innerHTML = meta(r, q);
-    if ($("eq" + i)) $("eq" + i).textContent = `รวม ${n(q)} ${r.unit_th}`; }; // Mos 2 พ.ย.: unit sits in the box (4 ถุง), the line under it is the total (รวม 40 เส้น)
+  const mark = (i) => { const q = qv(i), r = rows[i], row = $("r" + i); row.classList.toggle("chg", edited(r, q)); row.querySelector(".meta").innerHTML = meta(r, q); row.querySelector(".tags").innerHTML = tags(r, q);
+    if ($("eq" + i)) $("eq" + i).textContent = `รวม ${n(q)} ${r.unit_th}`;
+    $("ro" + i).innerHTML = pkOf(r) > 1 ? `${inU(r, q)}<small>${n(q)} ${E(r.unit_th)}</small>` : `${n(q)} ${E(r.unit_th)}`; }; // Mos 2 พ.ย.: unit sits in the box (4 ถุง), the line under it is the total (รวม 40 เส้น)
   // the sales text = the previous owner's format (same as message.ts buildOrderMessage, Mos 26 ต.ค.)
   const dmy = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
   const wd = (iso) => new Date(iso + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "long", timeZone: "UTC" });
@@ -224,11 +261,8 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
     const same = (r) => !added(r) && !pileOf.has(r.product_id) && Number(r.qty) === Number(r.qty_proposed) && r.remaining != null && r.par != null && Number(r.remaining) >= Number(r.par);
     const grp = (keep) => UXM.byCat(rows.map((r, i) => [r, i]).filter(([r]) => keep(same(r))), ([r]) => CAT[r.product_id], ([r, i]) => rowH(r, i)), top = grp((x) => !x), sys = grp((x) => x), nSame = rows.filter(same).length, nTop = rows.length - nSame;
     $("items").innerHTML = (!rows.length ? '<div class="card"><p class="muted">ใบนี้ไม่มีของต้องสั่ง</p></div>'
-      : (nTop ? `<h2 class="ux-gh" data-tone="wait">ต้องดู<span class="n">${nTop} รายการ</span></h2><div class="card list">${top}</div>` : "")
-      + (nSame ? `<section class="ux-sys" aria-labelledby="sysH"><div class="ux-sysh"><div class="grow"><h2 id="sysH">ของยังพอ ${nSame} รายการ</h2><p>ไม่ได้แก้จำนวน</p></div><button type="button" id="sysT" class="chip" aria-expanded="false" aria-controls="sysL">ดู ${nSame} รายการ</button></div><div id="sysL" hidden>${sys}<button type="button" id="sysB" class="ux-sysend">ซ่อน ${nSame} รายการ</button></div></section>` : ""));
+      : `<div class="card list">${top}${nSame ? `<details class="fold ux-sysf"><summary><span class="sym fin">${ICO.ok}</span><span class="t">ของยังพอ ${nSame} รายการ</span><span class="chev">›</span></summary>${sys}</details>` : ""}</div>`);
     // impeccable: a long open box gets a second "ซ่อน" at its end · folding from there brings the box header back into view
-    const fold = (open, back) => { $("sysL").hidden = !open; $("sysT").setAttribute("aria-expanded", open); $("sysT").textContent = open ? "ซ่อน" : `ดู ${nSame} รายการ`; if (back) document.querySelector(".ux-sys").scrollIntoView({ block: "center" }); };
-    if (nSame) { $("sysT").onclick = () => fold($("sysL").hidden); $("sysB").onclick = () => fold(false, true); }
     rows.forEach((_, i) => mark(i)); prev(); label();
   };
   // 0044: re-read the rows after an add / remove · typed numbers stay (vals) · a row taken out (qty 0, not from the rule) disappears
@@ -242,6 +276,7 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
     render();
   };
   rows = rows.filter((r) => !(added(r) && Number(r.qty) === 0));
+  $("copy").onclick = async () => { await navigator.clipboard.writeText(text(false)); $("copy").textContent = "คัดลอกแล้ว"; };
   render();
   $("items").onclick = async (ev) => {
     const rm = ev.target.closest("button[data-rm]");
@@ -256,7 +291,7 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
     const was = Math.max(0, Number(inp.value) || 0); inp.value = Math.max(0, Math.round((was + s * +b.dataset.d) / s) * s);
     UXM.roll(inp, Math.sign(Number(inp.value) - was)); inp.dispatchEvent(new Event("input", { bubbles: true })); // ก3: the number slides, never jumps
   };
-  $("items").oninput = (ev) => { if (ev.target.dataset.i !== undefined) { mark(+ev.target.dataset.i); queue(+ev.target.dataset.i); } prev(); label(); };
+  $("items").oninput = (ev) => { if (ev.target.dataset.i !== undefined) { ev.target.style.width = `${(ev.target.value.length || 1) * 1.1 + 0.3}ch`; mark(+ev.target.dataset.i); queue(+ev.target.dataset.i); } prev(); label(); };
   $("items").onchange = (ev) => { if (ev.target.dataset.i !== undefined && timers[ev.target.dataset.i]) save(+ev.target.dataset.i); };
   // 0044 "เพิ่มรายการ": CPF items + CPF consumables not in the order (inactive ones too, labelled เลิกขายแล้ว) · count in bags
   const addS = UXD.sheet($("addS")); let pick = null, choices = [];
@@ -291,13 +326,18 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
   // audit 11: cron-tick sends by itself at auto_send_at the day after the order's night (0038), first order included (0046)
   const autoDay = plan && plan.night ? new Date(Date.parse(plan.night + "T00:00:00Z") + 864e5).toISOString().slice(0, 10) : cutDay;
   const autoMs = Date.parse(`${autoDay}T${String(autoAt).padStart(5, "0")}:00+07:00`);
-  const tick = () => { const s = Math.floor((autoMs - Date.now()) / 1000);
-    $("sd").parentElement.hidden = live(); // L3: while the countdown line shows, "สั่ง <วัน>" repeats it · 2 lines in the head, not 3
-    if (!live()) { $("cdl").hidden = true; return; }
+  const past = () => live() && autoMs - Date.now() <= 0;
+  // A2 pill: 5 levels · รอส่ง = สำคัญ (the app sends by itself) · เลยเวลา / ส่งไม่ออก = เร่งด่วน (the owner must act) · ส่งแล้ว = เสร็จ · ไม่สั่ง = ไม่เร่งด่วน
+  // the pill says a result, never "รอส่ง": an order still to send shows the red button instead (Mos 4 พ.ย. รอบ 2)
+  const pill = () => { const st = order.status, lv = st === "sent" ? "fin" : st === "failed" ? "urgent" : "later";
+    $("pill").hidden = live() && st !== "failed"; $("pill").className = "pp " + lv; $("pill").textContent = st === "sent" ? `ส่งให้เซลล์แล้ว${order.sent_at ? ` ${hm(order.sent_at)} น.` : ""}` : st === "failed" ? "ส่งเข้ากลุ่มไม่ออก" : "ไม่สั่งใบนี้"; };
+  const tick = () => { const s = Math.floor((autoMs - Date.now()) / 1000), at = plan ? `ของถึง ${plan.deliver_at} น.` : "";
+    pill();
+    if (!live()) { $("cdl").textContent = at; return; }
     const when = autoDay === bkk() ? "วันนี้" : autoDay === bkk(1) ? "พรุ่งนี้" : day(autoDay), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
-    show("cdl", s <= 0 ? "เลยเวลาที่แอปส่งให้แล้ว กดส่งเอง" : `ถ้าไม่กด แอปส่งให้ ${autoAt} น. ${when} (อีก ${h ? `${h} ชม. ` : ""}${m} นาที)`); };
+    $("cdl").textContent = [at, s <= 0 ? "เลยเวลาที่แอปส่งเองแล้ว กดส่งเอง" : `แอปส่งเอง ${autoAt} น. ${when} · อีก ${h >= 48 ? `${Math.floor(h / 24)} วัน` : h ? `${h} ชม.` : `${m} นาที`}`].filter(Boolean).join(" · "); };
   tick(); setInterval(tick, 30000);
-  show("form"); show("when"); document.querySelector(".topbar .sub").hidden = true;
+  show("form"); show("when");
   let busy = false;
   const doSend = async () => {
     if (busy) return; busy = true;
@@ -312,8 +352,9 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
         setTimeout(async () => { const { data: o } = await supabase.from("orders").select("status,sent_at").eq("id", orderId).maybeSingle();
           if (o) Object.assign(order, o); $("msg").textContent = order.status === "sent" ? "ใบนี้ส่งให้เซลล์แล้ว ไม่ได้ส่งซ้ำ" : "ยังส่งไม่สำเร็จ กดส่งอีกครั้ง"; pill(); keep(); render(); tick(); }, 3000); return; }
       if (r.already) { $("msg").className = "muted"; $("msg").textContent = "ใบนี้ส่งให้เซลล์แล้ว ไม่ได้ส่งซ้ำ"; if (r.status) { order.status = r.status; order.sent_at = order.sent_at || new Date().toISOString(); } pill(); keep(); render(); tick(); return; }
-      if (r.ok) { $("msg").className = "muted"; $("msg").textContent = ""; UXM.toast("ส่งใบสั่งให้เซลล์แล้ว ✓"); order.status = "sent"; order.sent_at = order.sent_at || new Date().toISOString(); pill(); keep(); render(); tick(); }
-      else { $("msg").className = "err"; $("msg").textContent = "ส่งไม่ออก\nกดคัดลอก แล้วไปวางในกลุ่มสั่งของเอง"; $("pill").textContent = "ส่งไม่ออก"; $("pill").dataset.tone = "bad"; $("copy").hidden = false; $("copy").onclick = async () => { await navigator.clipboard.writeText(r.message || text(false)); $("copy").textContent = "คัดลอกแล้ว"; }; }
+      if (r.ok) { $("msg").className = "muted"; $("msg").textContent = ""; UXM.toast("ส่งใบสั่งให้เซลล์แล้ว ✓"); order.status = "sent"; order.sent_at = order.sent_at || new Date().toISOString(); pill(); keep(); render(); tick();
+        setTimeout(() => location.replace("index.html"), 900); }   // Mos 4 พ.ย.: sent = done, back to the hub
+      else { $("msg").className = "err"; $("msg").textContent = "ส่งเข้ากลุ่มไม่ออก กดคัดลอกไปวางเอง"; order.status = "failed"; pill(); }
     } catch (e) { $("msg").className = "err"; $("msg").textContent = "ส่งไม่ออก ลองกดอีกครั้ง\n" + App.errText(e); } finally { busy = false; }
     label();
   };
@@ -329,9 +370,9 @@ body.grouped #skipB{background:none;box-shadow:none;color:var(--color-primary-da
     const { error } = await supabase.rpc("order_skip", { oid: orderId });
     $("skGo").disabled = false;
     if (error) { $("skM").textContent = App.errText(error); return; }
-    skS.close(); order.status = "skipped"; pill(); keep(); render(); tick(); UXM.toast("ไม่สั่งใบนี้แล้ว");
+    skS.close(); order.status = "skipped"; pill(); keep(); render(); tick(); UXM.toast("ไม่สั่งใบนี้แล้ว"); setTimeout(() => location.replace("index.html"), 900);
   };
-  $("send").onclick = () => live() && !cur().some((x) => x.qty_final > 0) ? askSkip()
+  $("send").onclick = () => !live() && !unlocked ? (unlocked = true, label()) : live() && !cur().some((x) => x.qty_final > 0) ? askSkip()
     : plan && plan.opening && order.status !== "sent" && !rows.some((r, i) => added(r) || qv(i) !== Number(r.qty_proposed)) ? okS.open() : doSend();
   $("okGo").onclick = () => { okS.close(); doSend(); };
   $("okBack").onclick = () => okS.close();
