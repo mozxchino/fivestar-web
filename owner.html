@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="lib/ui.css?v=r1104">
 <link rel="stylesheet" href="lib/ux-data.css">
-<link rel="stylesheet" href="lib/ux-owner.css?v=r1104">
+<link rel="stylesheet" href="lib/ux-owner.css?v=r1105">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/photo.js?v=r1103p"></script><script src="lib/ux-owner.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js?v=0060b"></script>
@@ -118,6 +118,8 @@ td+td{font-weight:600}
   const ICO = { "เงินสด": SV('<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/>'), "ของขาด": SV('<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>'), "สถานะร้าน": SV('<path d="M3 9h18l-1.5-5h-15z"/><path d="M4 9v11h16V9"/><path d="M9 20v-6h6v6"/>') };
   const FICO = { bill: SV('<path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6"/>'), pos: SV('<path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>'), recv: ICO["ของขาด"], waste: SV('<path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/>'), made: SV('<path d="M4 10c0-4 4-7 8-7s8 3 8 7-4 11-8 11-8-7-8-11z"/>'), cons: SV('<path d="M6 7h12l-1 14H7z"/><path d="M9 7V4h6v3"/>'), pics: SV('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3"/>') };
   const SYMT = { ok: "fin", wait: "wait", bad: "urgent", "": "" };
+  const ISYM = { equipment: SV('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'), waste: FICO.waste, customer: SV('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'), cpf: ICO["ของขาด"], edit_request: SV('<path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/>'), other: SV('<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17.5v.5"/>') };
+  const MSYM = { "เปิดร้าน": ICO["สถานะร้าน"], "ปิดร้านในแอป": ICO["สถานะร้าน"], "เปิดแต่ไม่ได้ปิดในแอป": ICO["สถานะร้าน"], "ร้านหยุด": SV('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'), "โอที": SV('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'), "โอทีที่อนุมัติแล้ว": SV('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'), "เงินสดขาดรวม": ICO["เงินสด"], "ของเสียรวม": FICO.waste, "วันที่ของมาไม่ครบ": ICO["ของขาด"] };
   const EMPTY = (t, m = "") => `<div class="empty tight"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>${t}</p>${m ? `<p class="muted">${m}</p>` : ""}</div>`;
   const ALLDONE = EMPTY("ไม่มีเรื่องต้องจัดการ", "ร้านเรียบร้อยดี");
 
@@ -458,7 +460,8 @@ td+td{font-weight:600}
       // ง4: 2+ new issues → one tonal button acknowledges them all (same per-issue update, one undo)
       $("out").innerHTML = (CHIP === "open" && nNew >= 2 ? `<button class="btn tonal ux-ackall" type="button" id="ackall">รับทราบทั้งหมด (${nNew})</button>` : "") + (await Promise.all(rows.map(async (i) => {
         const d = (i.date || new Date(new Date(i.created_at).getTime() + 7 * 3600e3).toISOString()).slice(0, 10);
-        return `<div class="card iss"><div class="day-head"><b>${TYPE[i.type] || esc(i.type)}</b><span class="pill" data-tone="${{ open: "bad", ack: "wait", closed: "ok" }[i.status] || ""}">${{ open: "ใหม่", ack: "รับทราบแล้ว", closed: "ปิดแล้ว" }[i.status] || esc(i.status)}</span></div>
+        const lv = { open: "urgent", ack: "wait", closed: "fin" }[i.status] || "";
+        return `<div class="card iss ${lv}"><div class="day-head"><span class="sym ${lv}" aria-hidden="true">${ISYM[i.type] || ISYM.other}</span><b>${TYPE[i.type] || esc(i.type)}</b><span class="pp ${lv}">${{ open: "ใหม่", ack: "รับทราบแล้ว", closed: "ปิดแล้ว" }[i.status] || esc(i.status)}</span></div>
         <div style="white-space:pre-line">${esc(i.text)}</div>
         <div class="who"><button class="daylink" data-day="${d}">${U.dayName(d)}</button><span>${hm(i.created_at)} น. · ${esc(names[i.created_by] || "-")}</span></div><div>${await thumbs(i.photos)}</div>
         ${i.status === "open" ? `<button class="btn sm" data-i="${i.id}" data-s="ack">รับทราบ</button>` : ""}${i.status !== "closed" ? `<button class="btn sm" data-i="${i.id}" data-s="closed">ปิดเรื่อง</button>` : ""}</div>`;
@@ -512,22 +515,27 @@ td+td{font-weight:600}
         const shortD = {}; (od || []).filter((o) => inM(o.for_date)).forEach((o) => { const n = (o.order_items || []).filter((i) => i.qty_received != null && +i.qty_received < +(i.qty_final ?? i.qty_proposed)).length; if (n) shortD[o.for_date] = (shortD[o.for_date] || 0) + n; });
         const day = (d, v) => `<button type="button" class="ux-mday" data-day="${d}"><span>${U.dayName(d)}</span><span class="v">${v}</span><span class="go" aria-hidden="true">›</span></button>`;
         const newest = (a) => a.sort((x, z) => z[0].localeCompare(x[0]));
-        const val = (v, u, bad) => `<span class="v${bad && v ? " bad" : ""}">${money(v ?? 0)} ${u}</span>`;
-        const plain = (k, v, u) => `<div class="ux-mrow"><span>${k}</span>${val(v, u)}</div>`;
-        const drill = (id, k, v, u, list) => list.length ? `<button class="fold ux-mrow" aria-expanded="false" data-f="${id}"><span>${k}</span>${val(v, u, 1)}</button><div class="fold-body"><div>${list.join("")}</div></div>` : plain(k, v, u);
+        const val = (v, u, bad) => `<span class="v${bad && v ? " bad pp urgent" : ""}">${money(v ?? 0)} ${u}</span>`;
+        const msym = (k, bad) => `<span class="sym${bad ? " urgent" : ""}" aria-hidden="true">${MSYM[k] || ""}</span>`;
+        const plain = (k, v, u) => `<div class="ux-mrow">${msym(k)}<span>${k}</span>${val(v, u)}</div>`;
+        const drill = (id, k, v, u, list) => list.length ? `<button class="fold ux-mrow" aria-expanded="false" data-f="${id}">${msym(k, v)}<span>${k}</span>${val(v, u, 1)}</button><div class="fold-body"><div>${list.join("")}</div></div>` : plain(k, v, u);
         const cnt = {}; D0.forEach((x) => { if (x.opened_by) cnt[x.opened_by] = (cnt[x.opened_by] || 0) + 1; });
         const mn = `${U.MON[m - 1]} ${y + 543}`;
-        $("out").innerHTML = `<div class="card folds ux-mon">`
+        // A2 mock: costs = the lead tile · the 8 numbers in 3 groups (ร้าน · คน · ของและเงิน) · who opened = rows in คน
+        $("out").innerHTML = `<a class="btn tile ux-costs" href="costs.html?m=${ym}"><span class="ico">${FICO.pos}</span><span class="t">ต้นทุน/กำไร ${mn}<small>สรุปกำไรรายเดือน แตะดู</small></span><span class="go">›</span></a>`
+          + `<h3 class="sec">ร้าน</h3><div class="card folds ux-mon">`
           + plain("เปิดร้าน", r.days_worked, "วัน") + plain("ปิดร้านในแอป", r.days_closed_sent, "วัน")
           + (openD.length ? drill("open", "เปิดแต่ไม่ได้ปิดในแอป", openD.length, "วัน", newest(openD).map(([d]) => day(d, "ดูวันนั้น"))) : "")
-          + `<a class="ux-mrow" href="holiday.html"><span>ร้านหยุด<small>ดูวันหยุดและวันลา</small></span><span class="v">${money(r.days_holiday ?? 0)} วัน</span><span class="go" aria-hidden="true">›</span></a>`
+          + `<a class="ux-mrow" href="holiday.html">${msym("ร้านหยุด")}<span>ร้านหยุด<small>ดูวันหยุดและวันลา</small></span><span class="v">${money(r.days_holiday ?? 0)} วัน</span><span class="go" aria-hidden="true">›</span></a>`
+          + `</div><h3 class="sec">คน</h3><div class="card folds ux-mon">`
           + plain("โอที", r.ot_hours, "ชม.") + plain("โอทีที่อนุมัติแล้ว", r.ot_approved_hours, "ชม.")
+          + (Object.entries(cnt).map(([u, n]) => `<div class="ux-mrow"><span class="sym" aria-hidden="true">${ISYM.customer}</span><span>${esc(names[u] || u)}<small>เปิดร้าน</small></span><span class="v">${n} วัน</span></div>`).join("") || `<div class="ux-mrow"><span class="sym" aria-hidden="true">${ISYM.customer}</span><span class="muted">ยังไม่มีใครเปิดร้าน</span></div>`)
+          + `</div><h3 class="sec">ของและเงิน</h3><div class="card folds ux-mon">`
           + drill("cash", "เงินสดขาดรวม", r.cash_short_total, "บาท", newest(cashD).map(([d, v]) => day(d, `ขาด ${money(v)} บาท`)))
           + drill("waste", "ของเสียรวม", r.waste_total, "หน่วย", newest(Object.entries(wasteD)).map(([d, n]) => day(d, `เสีย ${n} อย่าง`)))
           + drill("short", "วันที่ของมาไม่ครบ", r.cpf_short_days, "วัน", newest(Object.entries(shortD)).map(([d, n]) => day(d, `ขาด ${n} รายการ`)))
-          + `</div><a class="btn tonal ux-costs" href="costs.html?m=${ym}">ดูต้นทุน/กำไร ${mn}</a>`
-          + `<h2>ใครเปิดร้านกี่วัน</h2><div class="card"><table>${Object.entries(cnt).map(([u, n]) => `<tr><td>${esc(names[u] || u)}</td><td>${n} วัน</td></tr>`).join("") || '<tr><td class="muted">ยังไม่มีใครเปิดร้าน</td></tr>'}</table></div>`;
-        U.folds($("out").querySelector(".ux-mon"));
+          + `</div>`;
+        $("out").querySelectorAll(".ux-mon").forEach((el) => U.folds(el));
       };
       $("out").onclick = (e) => { const b = e.target.closest("button[data-day]"); if (b && TAB === "mon") { D = b.dataset.day; show("day"); } };
       $("pm").onchange = go; await go();
