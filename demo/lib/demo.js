@@ -379,6 +379,11 @@
     pay_bill: ({ oid, amount, slip }) => { if (!(+amount > 0 && +amount <= 100000)) throw new Error("ใส่ยอดเป็นตัวเลข 1 ถึง 100,000 บาท");
       if (!/^\d{4}\/\d{2}\/\d{2}\/payslip-[0-9a-f-]{36}\.jpg$/.test(slip || "")) throw new Error("แนบรูปสลิปก่อน");
       Object.assign(rows("orders").find((o) => o.id === oid) || {}, { paid_at: now(), paid_amount: r2(+amount), paid_slip: slip, paid_by: ME.userId }); return { ok: true }; },
+    // 0098: "ใน 1 ชุดมี" for a new WE POS menu (same checks as the real menu_map_save; the demo has no new menus until one is added)
+    menu_map_save: ({ p_name, p_items }) => { if (!p_name || !Array.isArray(p_items)) throw new Error("ข้อมูลไม่ครบ");
+      if (p_items.some((i) => !rows("products").some((p) => p.id === i.product_id) || !(+i.qty > 0))) throw new Error("สินค้าหรือจำนวนไม่ถูก");
+      T.wepos_menu_map = rows("wepos_menu_map").filter((r) => r.wepos_name !== p_name).concat(p_items.length ? p_items.map((i) => ({ wepos_name: p_name, product_id: i.product_id, qty: +i.qty, confidence: "mos" })) : [{ wepos_name: p_name, product_id: null, qty: null, confidence: "mos" }]);
+      rows("wepos_menu_new").filter((r) => r.name === p_name).forEach((r) => { r.decided_at = now(); }); return { ok: true }; },
   };
   const r2 = (v) => Math.round(v * 100) / 100;
   function billDemo() {

@@ -1,0 +1,64 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><script src="lib/demo.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>เมนูใหม่ใน WE POS</title><meta name="theme-color" content="#C82128">
+<link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="lib/ui.css?v=r1101">
+
+
+<script src="lib/skeleton.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js?v=0060b"></script>
+<style>
+/* 0098 (Mos 4 พ.ย.): "ไม่ถูก ไปแก้ในแอป" from the new-menu card · one set = rows of product × qty */
+.menu-key { background: var(--tint-wait); }
+.menu-key b { display: block; font: 600 18px/1.35 var(--font-head); }
+.it { display: grid; grid-template-columns: minmax(0, 1fr) 76px 40px; gap: 8px; align-items: center; margin: 0 0 8px; }
+.it select, .it input { margin: 0; }
+.list a.row { color: inherit; text-decoration: none; }
+.it .x { height: 44px; border: 0; border-radius: 12px; background: var(--color-fill); font-size: 18px; color: var(--color-ink-soft); }
+</style></head><body ontouchstart="">
+<header class="topbar"><a class="back" href="owner.html" aria-label="กลับหน้าวันนี้"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>เมนูใหม่ใน WE POS</h1><div class="sub">ใน 1 ชุดมีอะไร</div></div></header>
+<div class="sk"><span class="vh">กำลังเปิด…</span><div class="card"><i class="sk-b" style="--w:70%;--h:20px"></i><i class="sk-b" style="--w:50%;--h:14px;--gap:10px"></i></div><i class="sk-b" style="--w:100%;--h:52px;--r:12px"></i><i class="sk-b" style="--w:100%;--h:52px;--r:12px;--gap:8px"></i></div>
+<div id="app" class="ld" hidden></div>
+<script>
+(async () => {
+  const $ = (i) => document.getElementById(i);
+  const { supabase, me } = await App.ready();
+  if (UXS.only(me, ["owner"], "หน้านี้สำหรับเจ้าของ", "เมนูใหม่ใน WE POS แก้ได้เฉพาะเจ้าของ", "index.html", "กลับหน้าหลัก")) return;
+  const esc = UXS.esc, app = $("app");
+  const show = (h) => { app.innerHTML = h; app.hidden = false; document.querySelector(".sk")?.remove(); };
+  const id = Number(new URLSearchParams(location.search).get("id"));
+  const [m, p] = await Promise.all([
+    id ? supabase.from("wepos_menu_new").select("id,name,first_day,sold,price,guess,decided_at").eq("id", id).maybeSingle()
+       : supabase.from("wepos_menu_new").select("id,name,sold,decided_at").order("id", { ascending: false }).limit(30),
+    supabase.from("products").select("id,name,unit").eq("active", true).order("sort"),
+  ]);
+  if (m.error || p.error) return show(`<p class="err" role="alert">เปิดไม่ขึ้น\n${esc(App.errText(m.error || p.error))}</p>`);
+  // no id: every menu the card ever asked about, newest first
+  if (!id) return show(m.data.length ? `<div class="card list">${m.data.map((r) => `<a class="row" href="?id=${r.id}"><span class="grow">${esc(r.name)}</span><span class="pill" ${r.decided_at ? "" : 'data-tone="wait"'}>${r.decided_at ? "บันทึกแล้ว" : "รอบอก"}</span></a>`).join("")}</div>`
+    : `<p class="muted">ยังไม่มีเมนูใหม่</p>`);
+  const menu = m.data;
+  if (!menu) return show(`<p class="err" role="alert">ไม่พบเมนูนี้</p><a class="btn" href="menu-map.html">ดูเมนูใหม่ทั้งหมด</a>`);
+  // start from what is saved now, else the card's guess, else one empty row
+  const saved = (await supabase.from("wepos_menu_map").select("product_id,qty").eq("wepos_name", menu.name)).data ?? [];
+  let items = saved.length ? saved.filter((r) => r.product_id) : menu.guess ?? [];
+  if (!items.length && !saved.length) items = [{ product_id: "", qty: 1 }];
+  const opts = (sel) => `<option value="">เลือกสินค้า</option>` + p.data.map((x) => `<option value="${x.id}" ${x.id === sel ? "selected" : ""}>${esc(x.name)} (${esc(UXM.unit(x.unit))})</option>`).join("");
+  const row = (i) => `<div class="it"><select aria-label="สินค้า">${opts(i.product_id)}</select><input type="number" inputmode="decimal" min="0" step="any" value="${i.qty}" aria-label="จำนวนต่อ 1 ชุด"><button type="button" class="x" aria-label="ลบแถวนี้">✕</button></div>`;
+  show(`<div class="card menu-key"><b>${esc(menu.name)}</b><span class="muted">ขาย ${menu.sold} ชุด${menu.price ? `  ราคา ${Number(menu.price).toLocaleString("th-TH")} บาท` : ""}</span></div>
+    <h2 class="sh">ใน 1 ชุดมี</h2><div id="its">${items.map(row).join("")}</div>
+    <button type="button" class="btn" id="add">+ เพิ่มสินค้า</button>
+    <p class="muted">ไม่มีของที่นับในแอป (เช่น ค่าส่ง) ให้ลบทุกแถว แล้วกดบันทึก</p>
+    <button type="button" class="btn primary" id="save">บันทึก ใน 1 ชุดมีตามนี้</button><p id="msg" class="muted" role="status"></p>`);
+  $("add").onclick = () => $("its").insertAdjacentHTML("beforeend", row({ product_id: "", qty: 1 }));
+  $("its").onclick = (e) => e.target.closest(".x")?.parentElement.remove();
+  $("save").onclick = async () => {
+    const rows = [...document.querySelectorAll(".it")].map((d) => ({ product_id: d.querySelector("select").value, qty: Number(d.querySelector("input").value) }));
+    if (rows.some((r) => !r.product_id || !(r.qty > 0))) { $("msg").className = "err"; $("msg").textContent = "เลือกสินค้าและใส่จำนวนให้ครบทุกแถว"; return; }
+    $("save").disabled = true; $("msg").className = "muted"; $("msg").textContent = "กำลังบันทึก…";
+    const { error } = await supabase.rpc("menu_map_save", { p_name: menu.name, p_items: rows });
+    $("save").disabled = false;
+    if (error) { $("msg").className = "err"; $("msg").textContent = "บันทึกไม่ได้\n" + App.errText(error); return; }
+    $("msg").textContent = "บันทึกแล้ว การ์ดนับของคืนต่อไปนับให้ตามนี้";
+  };
+})().catch((e) => { if (e.message !== "denied") { const a = document.getElementById("app"); a.hidden = false; a.innerHTML = '<p class="err" role="alert"></p>'; a.firstChild.textContent = "เปิดไม่ขึ้น: " + App.errText(e); } });
+</script></body></html>
