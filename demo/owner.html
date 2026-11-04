@@ -3,9 +3,9 @@
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="lib/ui.css?v=r1101">
+<link rel="stylesheet" href="lib/ui.css?v=r1104">
 <link rel="stylesheet" href="lib/ux-data.css">
-<link rel="stylesheet" href="lib/ux-owner.css">
+<link rel="stylesheet" href="lib/ux-owner.css?v=r1104">
 
 
 <script src="lib/skeleton.js"></script><script src="lib/photo.js?v=r1103p"></script><script src="lib/ux-owner.js"></script><script src="lib/ux-data.js"></script><script src="lib/ux-motion.js?v=0060b"></script>
@@ -48,13 +48,13 @@ td+td{font-weight:600}
 .strip{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-radius:var(--radius);background:var(--color-destructive);color:#fff;font:600 17px/1.3 var(--font-head);text-decoration:none;margin:12px 0}
 .iss .who{font-size:14px;color:var(--color-ink-soft);display:flex;flex-wrap:wrap;align-items:center;gap:0 6px}
 </style></head><body class="grouped" ontouchstart="">
-<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>วันนี้</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div>
+<header class="topbar brand"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div class="sub">ห้าดาว สาขาอ่อนนุช 44 จุด 3</div><div class="lt daynav" id="lt"><i class="sk-b" style="--w:44px;--h:44px;--r:50%"></i><div class="d"><i class="sk-b" style="--w:56%;--h:30px;margin:0 auto"></i><i class="sk-b" style="--w:40%;--h:13px;margin:6px auto 0"></i></div><i class="sk-b" style="--w:44px;--h:44px;--r:50%"></i></div>
   <div class="tabs sk" aria-hidden="true"><button class="on" tabindex="-1">วัน</button><button tabindex="-1">ปัญหา</button><button tabindex="-1">สรุปเดือน</button></div><div class="tabs ld" id="tabs" hidden><button data-t="day" class="on">วัน</button><button data-t="iss">ปัญหา</button><button data-t="mon">สรุปเดือน</button></div></header>
 <p id="blocked" class="err" hidden></p>
-<div class="sk"><span class="vh">กำลังเปิด…</span><div class="daynav"><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i><div class="d"><i class="sk-b" style="--w:56%;--h:22px;margin:2px auto 0"></i><i class="sk-b" style="--w:40%;--h:13px;margin:6px auto 0"></i></div><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i></div><div class="bento trio"><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div></div><h3 class="sec"><i class="sk-b" style="--w:38%;--h:15px"></i></h3><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div></div>
+<div class="sk"><span class="vh">กำลังเปิด…</span><div class="bento trio"><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div></div><h3 class="sec"><i class="sk-b" style="--w:38%;--h:15px"></i></h3><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div></div>
 <div id="app" class="ld" hidden>
 <a id="billStrip" class="strip" href="bill-check.html" hidden><span id="billStripT"></span><span>เทียบบิล ›</span></a>
-  <div id="bar"><div class="daynav"><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i><div class="d"><i class="sk-b" style="--w:56%;--h:22px;margin:2px auto 0"></i><i class="sk-b" style="--w:40%;--h:13px;margin:6px auto 0"></i></div><i class="sk-b" style="--w:48px;--h:48px;--r:50%"></i></div></div><button id="upd" class="ux-upd" type="button" hidden></button><div id="out"><span class="vh">กำลังเปิด…</span><div class="bento trio"><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div></div><h3 class="sec"><i class="sk-b" style="--w:38%;--h:15px"></i></h3><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div></div>
+  <div id="bar"></div><button id="upd" class="ux-upd" type="button" hidden></button><div id="out"><span class="vh">กำลังเปิด…</span><div class="bento trio"><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div><div class="bt"><i class="sk-b" style="--w:70%;--h:13px"></i><i class="sk-b" style="--w:62%;--h:20px;--gap:6px"></i><i class="sk-b" style="--w:84%;--h:12px;--gap:6px"></i><i class="sk-b" style="--w:60%;--h:12px;--gap:5px"></i></div></div><h3 class="sec"><i class="sk-b" style="--w:38%;--h:15px"></i></h3><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div><div class="card todo"><i class="sk-b" style="--w:62%;--h:18px"></i><i class="sk-b" style="--w:84%;--h:14px;--gap:8px"></i><div class="acts sk-row"><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i><i class="sk-b" style="--w:calc(50% - 4px);--h:44px;--r:12px"></i></div></div></div>
 </div>
 <div id="panel" class="panel" role="dialog" aria-modal="true" aria-labelledby="ph" hidden></div>
 <dialog id="payS" class="bsheet" aria-labelledby="payT"><div class="body"><div class="grab"></div><div class="hd"><b id="payT">จ่ายบิล CPF แล้ว</b><button type="button" class="x" aria-label="ปิด">✕</button></div>
@@ -110,7 +110,14 @@ td+td{font-weight:600}
     iss: `<span class="vh">กำลังเปิด…</span>` + `<div class="card iss"><div class="day-head sk-row">${sb("42%", 18)}${sb("64px", 22, ";--r:999px")}</div>${sb("90%", 15, ";--gap:12px")}${sb("50%", 14, ";--gap:10px")}<div class="sk-row" style="margin-top:14px">${sb("96px", 44, ";--r:12px")}${sb("96px", 44, ";--r:12px")}</div></div>`.repeat(3),
     mon: `<span class="vh">กำลังเปิด…</span><div class="card">${`<div class="sk-row" style="justify-content:space-between;padding:14px 2px">${sb("42%", 15)}${sb("22%", 15)}</div>`.repeat(8)}</div>`,
   };
+  // A2 (Mos 4 Nov): the brand band holds the large title · day = the date navigator · other tabs = the tab name
+  const LT = { day: `<i class="sk-b" style="--w:44px;--h:44px;--r:50%"></i><div class="d"><i class="sk-b" style="--w:56%;--h:30px;margin:0 auto"></i><i class="sk-b" style="--w:40%;--h:13px;margin:6px auto 0"></i></div><i class="sk-b" style="--w:44px;--h:44px;--r:50%"></i>`, iss: `<div class="d">ปัญหา</div>`, mon: `<div class="d">สรุปเดือน</div>` };
   const SKB = { iss: `<div class="chips sk-row">${sb("78px", 44, ";--r:999px").repeat(3)}</div>` };
+  // A2 symbols (DESIGN.md §2): tiles by label · fold rows by id · chosen per row, not guessed from words
+  const SV = (d, w = 2) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const ICO = { "เงินสด": SV('<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/>'), "ของขาด": SV('<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>'), "สถานะร้าน": SV('<path d="M3 9h18l-1.5-5h-15z"/><path d="M4 9v11h16V9"/><path d="M9 20v-6h6v6"/>') };
+  const FICO = { bill: SV('<path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6"/>'), pos: SV('<path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>'), recv: ICO["ของขาด"], waste: SV('<path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/>'), made: SV('<path d="M4 10c0-4 4-7 8-7s8 3 8 7-4 11-8 11-8-7-8-11z"/>'), cons: SV('<path d="M6 7h12l-1 14H7z"/><path d="M9 7V4h6v3"/>'), pics: SV('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3"/>') };
+  const SYMT = { ok: "fin", wait: "wait", bad: "urgent", "": "" };
   const EMPTY = (t, m = "") => `<div class="empty tight"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>${t}</p>${m ? `<p class="muted">${m}</p>` : ""}</div>`;
   const ALLDONE = EMPTY("ไม่มีเรื่องต้องจัดการ", "ร้านเรียบร้อยดี");
 
@@ -127,7 +134,7 @@ td+td{font-weight:600}
   };
   // ง2: "อัปเดต HH:MM น." under the bar · tap = load this tab again (pending undo jobs commit first so the reload sees them)
   const stamp = () => { $("upd").hidden = false; $("upd").disabled = false; $("upd").textContent = `อัปเดต ${hm(new Date())} น. แตะเพื่อโหลดใหม่`; };
-  const show = async (t) => { await UXM.flush(); TAB = t; document.querySelectorAll("#tabs button").forEach((x) => x.classList.toggle("on", x.dataset.t === t)); $("out").innerHTML = SK[t] || ""; $("bar").innerHTML = SKB[t] || ""; sync(); await V[t](); stamp(); };
+  const show = async (t) => { await UXM.flush(); TAB = t; document.querySelectorAll("#tabs button").forEach((x) => x.classList.toggle("on", x.dataset.t === t)); $("lt").className = t === "day" ? "lt daynav" : "lt"; $("lt").innerHTML = LT[t]; $("out").innerHTML = SK[t] || ""; $("bar").innerHTML = SKB[t] || ""; sync(); await V[t](); stamp(); };
   $("upd").onclick = () => { $("upd").disabled = true; $("upd").textContent = "กำลังโหลดใหม่…"; $("bar").onclick = null; $("out").onclick = null; show(TAB); };
 
   // ---- day ----
@@ -192,9 +199,10 @@ td+td{font-weight:600}
   // narrow tiles: each meta part on its own line instead of a dot
   function bento(c) {
     const { sd, items, isToday } = c;
-    const tile = (cls, k, v, m, a) => `<${a ? `button type="button" data-a="${a}"` : "div"} class="bt ${cls}"><span class="k"><i class="dot" aria-hidden="true"></i>${k}</span><span class="v">${v}</span>${m ? `<span class="m">${m}</span>` : ""}</${a ? "button" : "div"}>`;
+    // A2 (Mos 4 Nov): each tile leads with its symbol in the tone of the tile (DESIGN.md §2 ระดับความเร่งด่วน)
+    const tile = (cls, k, v, m, a) => `<${a ? `button type="button" data-a="${a}"` : "div"} class="bt ${cls}"><span class="k"><span class="sym ${SYMT[cls] || ""}" aria-hidden="true">${ICO[k] || ""}</span>${k}</span><span class="v">${v}</span>${m ? `<span class="m">${m}</span>` : ""}</${a ? "button" : "div"}>`;
     const x = cashOf(sd);
-    const cash = !sd ? tile("", "เงินสด", "-", "ไม่มีบันทึก") : x == null ? tile("", "เงินสด", "ยังไม่นับ", "")
+    const cash = !sd ? tile("", "เงินสด", "-", "ไม่มีบันทึก") : x == null ? tile("", "เงินสด", "ยังไม่นับ", isToday ? `<span class="pp wait">รอ</span>` : "")
       : tile(x < 0 ? "bad" : "ok", "เงินสด", x < 0 ? `ขาด ${money(-x)} <small>บาท</small>` : x > 0 ? `เกิน ${money(x)} <small>บาท</small>` : "ครบ", `นับได้ ${baht(sd.cash_counted)}`);
     const recvd = items.filter((i) => i.received_at != null), short = recvd.filter((i) => (+i.qty_received || 0) < (+(i.qty_final ?? i.qty_proposed) || 0));
     const rAt = recvd.length ? hm(recvd.map((i) => i.received_at).sort()[0]) : "", fold = sd && items.length ? "recv" : "";
@@ -211,9 +219,9 @@ td+td{font-weight:600}
 
   async function dayView() {
     const d = D;
-    $("bar").innerHTML = `<div class="daynav"><button id="prev" aria-label="วันก่อน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+    $("bar").innerHTML = ""; $("lt").className = "lt daynav"; $("lt").innerHTML = `<button id="prev" aria-label="วันก่อน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
       <div class="d"><span>${U.dayName(d)}</span><small>${d === TODAY ? "วันนี้ " : d === U.plus(TODAY, -1) ? "เมื่อวาน " : ""}แตะเลือกวัน</small><input id="pd" type="date" value="${d}" max="${TODAY}" aria-label="เลือกวัน"></div>
-      <button id="next" aria-label="วันถัดไป" ${d >= TODAY ? "disabled" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div>`;
+      <button id="next" aria-label="วันถัดไป" ${d >= TODAY ? "disabled" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>`;
     $("prev").onclick = () => go(U.plus(D, -1));
     $("next").onclick = () => go(U.plus(D, 1));
     $("pd").onchange = () => { const v = $("pd").value; if (v) go(v > TODAY ? TODAY : v); };
@@ -224,7 +232,7 @@ td+td{font-weight:600}
     const { sd, sl, cc, items } = c;
     const T = todos(c);
     const todo = `<h3 class="sec" id="todoh"${T.length ? ` data-tone="${T.some((x) => x.bad) ? "bad" : "wait"}"` : ' data-tone="ok"'}>ต้องจัดการ<span class="n">${T.length ? `${T.length} เรื่อง` : "ไม่มี"}</span></h3>` + (T.length
-      ? T.map((x) => `<div class="card todo${x.bad ? " bad" : ""}" data-k="${x.key}"><div class="t">${x.t}</div>${x.b ? `<div class="b">${x.b}</div>` : ""}<div class="s">${x.s}</div>${x.a ? `<div class="acts">${x.a}</div>` : ""}</div>`).join("")
+      ? T.map((x) => `<div class="card todo${x.bad ? " bad" : ""}" data-k="${x.key}"><div class="a2hd"><span class="pp ${x.bad ? "urgent" : "important"}">${x.bad ? "เร่งด่วน" : "สำคัญ"}</span></div><div class="t">${x.t}</div>${x.b ? `<div class="b">${x.b}</div>` : ""}<div class="s">${x.s}</div>${x.a ? `<div class="acts">${x.a}</div>` : ""}</div>`).join("")
       : ALLDONE);
     // L4: the two ways on from the day are rows in one group (like รับของ / ของเสีย above), not loose white chips · edit only where the page binds it
     const chev = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
@@ -254,7 +262,7 @@ td+td{font-weight:600}
     const wKg = (wlog || []).reduce((a, w) => a + +w.kg, 0) + (+sd.waste_kg || 0);
     const wPics = await thumbs([...(wlog || []).flatMap((w) => w.photos), ...(sd.waste_photos || [])]);
     // visual hierarchy rule 3: label left, value right, one line · the value carries the tone (bad act · wait check · ok fine)
-    const fv = (tone, v) => `<span class="fv"${tone ? ` data-tone="${tone}"` : ""}>${v}</span>`;
+    const fv = (tone, v) => `<span class="fv${tone ? ` pp ${SYMT[tone]}` : ""}"${tone ? ` data-tone="${tone}"` : ""}>${v}</span>`;
     // 0047 (Mos 30 ต.ค.): the owner deletes a mistyped waste log so the staff can close · only before the day is sent
     const wl = wlog || [], wDel = !MGR && sd.status !== "sent" && wl.length ? `<p class="muted">พิมพ์ผิด ลบได้จนกว่าจะปิดร้าน</p>` + wl.map((w) => `<div class="ln">${esc(prods[w.product_id])} ${+w.qty} ${esc(unit[w.product_id])} <span class="muted">ทิ้ง ${hm(w.created_at)} น.</span> <button class="btn sm" type="button" data-a="wdel" data-i="${w.id}" data-n="${esc(prods[w.product_id])} ${+w.qty} ${esc(unit[w.product_id])}">ลบรายการนี้</button></div>`).join("") : "";
     // 0050 (Mos 30 ต.ค.): the owner takes back a staff ห่อข้าวเหนียว entry · only the open business day (undo_made reads business_day) · manager: the rpc allows own entries only, so no button
@@ -264,7 +272,7 @@ td+td{font-weight:600}
     // pb-review M2 (Mos 30 ต.ค.): ยอดขาย WE POS the staff typed at close (sets the bonus) · beside the POS screen photo · the owner corrects it (set_pos_total, audit_log)
     const posAmt = sd.pos_total == null ? null : money(sd.pos_total);
     const posBody = `<div class="ln mk"><span>รูปจอ POS<small>เทียบยอดกับรูปนี้</small></span>${MGR ? "" : `<button class="ux-cancel" type="button" data-a="pos">แก้ยอดขาย</button>`}</div><div id="posPic">${sd.pos_photo ? sb("72px", 72, ";--r:10px") : `<p class="muted">ไม่มีรูปจอ POS</p>`}</div>`;
-    const fold = (id, head, body) => `<button class="fold" aria-expanded="false" data-f="${id}">${head}</button><div class="fold-body"><div id="f-${id}">${body}</div></div>`;
+    const fold = (id, head, body) => `<button class="fold" aria-expanded="false" data-f="${id}"><span class="sym ${SYMT[(head.match(/data-tone="(\w+)"/) || [])[1]] || ""}" aria-hidden="true">${FICO[id] || ""}</span>${head}</button><div class="fold-body"><div id="f-${id}">${body}</div></div>`;
     const bill = od && slips.length ? fold("bill", `<b>บิล CPF</b>${od.paid_at ? fv("ok", `จ่ายแล้ว ${baht(od.paid_amount ?? 0)} บาท`) : fv("wait", "ยังไม่จ่าย")}`,
       `<p class="muted">สแกน QR บนใบส่งของจ่ายได้เลย</p><div id="billPic"></div>`
       + (od.paid_at ? `<div class="ln mk paid"><span>✓ จ่ายแล้ว ${baht(od.paid_amount ?? 0)} บาท<small>${hm(od.paid_at)} น. ${U.dayName(new Date(Date.parse(od.paid_at) + 7 * 3600e3).toISOString().slice(0, 10))}</small></span>${MGR ? "" : `<button type="button" class="ux-cancel" id="unpay">กดผิด ยกเลิก</button>`}</div>`

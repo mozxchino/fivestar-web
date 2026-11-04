@@ -126,3 +126,16 @@ a.ux-mrow:active, button.ux-mrow:active, .ux-mday:active { background: var(--col
 .ux-costs { margin-top: 4px; }
 .ux-mrow small, .ux-mday > span:first-child { text-wrap: pretty; }
 .ux-mrow .v, .ux-mday .v { font-variant-numeric: tabular-nums; }
+
+/* ---------- A2 owner วัน (Mos 4 Nov 2026 · DESIGN.md §2 ระดับความเร่งด่วน · §5 brand band) ---------- */
+.topbar.brand .sk-b { background: rgba(255, 255, 255, .22); }
+.todo .a2hd { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.todo .t::before { display: none; }
+.todo .t, .todo .s, .todo .b { padding-left: 0; }
+.todo.bad { box-shadow: 0 1px 2px rgba(32, 24, 24, .05), inset 0 0 0 1.5px var(--border-bad); }
+.todo.bad .acts .btn.go { color: var(--color-on-primary); background: var(--color-primary); }
+.todo.bad .acts .btn.go:active { background: var(--color-primary-dark); }
+.fold { gap: 12px; }
+.fold .fv.pp { margin-left: auto; font-size: 13px; }
+.fold .fv.pp.urgent { color: var(--color-destructive); background: var(--tint-destructive); } /* row values stay tinted · solid red is for the urgent card only */
+.todo.bad:has(.btn.go) ~ .todo.bad .acts .btn.go { color: var(--color-primary-dark); background: var(--tint-primary); } /* one solid red per screen: only the first urgent card with a go-button */

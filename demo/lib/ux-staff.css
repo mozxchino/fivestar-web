@@ -383,3 +383,28 @@ label.btn.cl-frame.ux-next { box-shadow: var(--shadow-card), inset 0 0 0 2.5px v
 .cl-shot > p.muted:empty { display: none; }
 #s4 > .field { margin-top: 20px; }
 @media (max-width: 359px) { label.btn.cl-frame b { font-size: 15px; } .cl-sum { gap: 6px; } .cl-cell { padding: 8px 6px 8px 8px; } .cl-cell .v { font-size: 14px; } .cl-cell .v small { font-size: 11px; } }
+
+/* ---------- A2 owner home (Mos 4 Nov 2026 · DESIGN.md §2 §5): brand band carries the greeting · hub rows: icon square in the row's tone · status line with ✓ ◷ ! ---------- */
+html.own .topbar.home { display: block; padding-bottom: 14px; margin-bottom: 16px; }
+.topbar.home .hb { display: flex; align-items: center; gap: 14px; }
+html.own .topbar.home .hb { gap: 10px; }
+html.own .topbar.home .hb .logo { width: 36px; height: 36px; }
+html.own .topbar.home .hb h1 { font: 500 13px/1.3 var(--font-body); color: rgba(255, 255, 255, .86); letter-spacing: 0; }
+html.own .topbar.home .hb .sub { display: none; }
+.topbar.home .hsk { display: none; }
+html.own .topbar.home .hsk { display: block; margin-top: 10px; }
+html.own .topbar.home .hsk .sk-b { background: rgba(255, 255, 255, .22); }
+html.own .sk-owner .ux-hello { display: none; } /* the greeting skeleton lives in the band */
+html.own .topbar.home #title.ux-hello { margin: 10px 0 0; font: 600 30px/1.1 var(--font-head); letter-spacing: -.02em; color: var(--color-on-primary); }
+html.own .topbar.home #title.ux-hello small { margin-top: 4px; font: 500 14px/1.3 var(--font-body); color: rgba(255, 255, 255, .86); }
+.ux-hub .ico.fin { color: var(--color-success); background: var(--tint-success); }
+.ux-hub .ico.wait { color: var(--on-wait); background: var(--tint-wait); }
+.ux-hub .ico.urgent { color: var(--color-destructive); background: var(--tint-destructive); }
+.ux-hub .ico.nt { color: var(--color-secondary); background: var(--tint-neutral); }
+.ux-hub.primary .ico.urgent { background: var(--color-card); }
+.ux-hub .t small:not([data-tone=ok], [data-tone=wait], [data-tone=bad])::before { display: none; }
+.ux-hub .t small::before { width: 12px; height: 12px; border-radius: 0; margin-right: 5px; vertical-align: -1px; background: currentColor; -webkit-mask: var(--pi) center / contain no-repeat; mask: var(--pi) center / contain no-repeat; }
+.ux-hub .t small[data-tone=ok] { color: var(--color-success); font-weight: 500; }
+.ux-hub .t small[data-tone=ok]::before { background: currentColor; --pi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E"); }
+.ux-hub .t small[data-tone=wait]::before { background: currentColor; --pi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E"); }
+.ux-hub .t small[data-tone=bad]::before { background: currentColor; --pi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round'%3E%3Cpath d='M12 4v10M12 19.5v.5'/%3E%3C/svg%3E"); }
