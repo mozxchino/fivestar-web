@@ -1,11 +1,11 @@
 <!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>เงินโอนไม่ครบ</title><meta name="theme-color" content="#C82128">
+<title>ยอดฝากเงิน</title><meta name="theme-color" content="#C82128">
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="lib/ui.css?v=r1101"><link rel="stylesheet" href="lib/ux-data.css">
 <style>
-/* 0082 (Mos 30 ต.ค. + 1 พ.ย., STATUS ข้อ 12) · 0094 (Mos 3 พ.ย.): owner only · staff transfer the cash, the owner types what came in (or presses ได้รับครบ in LINE) */
+/* 0082 (Mos 30 ต.ค. + 1 พ.ย., STATUS ข้อ 12) · 0100 (Mos 5 พ.ย.): owner only · staff deposit at 7-11 and post the slip in the staff group (the bot saves it) · the owner types it here when the bot could not */
 .dp-days { display: flex; gap: 8px; margin: 0 -16px 4px; padding: 2px 16px 6px; overflow-x: auto; scrollbar-width: none; }
 .dp-days::-webkit-scrollbar { display: none; }
 .dp-days button { flex: none; min-height: 44px; padding: 6px 14px; border: 0; border-radius: var(--radius-pill); background: var(--color-card); box-shadow: var(--shadow-raised); font: 500 15px/1.2 var(--font-body); color: var(--color-ink-soft); font-variant-numeric: tabular-nums; cursor: pointer; }
@@ -40,15 +40,17 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="lib/skeleton.js"></script><script src="lib/config.js"></script><script src="lib/session.js"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-motion.js?v=1106m"></script>
 </head><body class="pg-fill" ontouchstart="">
-<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>เงินโอนไม่ครบ</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
+<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ยอดฝากเงิน</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3</div></div></header>
 <div class="sk"><span class="vh">กำลังเปิด…</span><i class="sk-b" style="--w:100%;--h:120px;--r:20px"></i><i class="sk-b" style="--w:100%;--h:52px;--r:12px;margin-top:24px"></i><i class="sk-b" style="--w:100%;--h:52px;--r:12px;margin-top:24px"></i><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
 <div id="lE" class="ld" hidden><p class="err" role="alert"></p><button type="button" id="retry" class="btn primary">ลองอีกครั้ง</button></div>
 <div id="none" class="ld" hidden><div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>ยังไม่มีวันที่ปิดร้าน</p></div><a class="btn" href="index.html">กลับหน้าหลัก</a></div>
 <div id="form" class="ld" hidden>
   <div id="days" class="dp-days" role="group" aria-label="เลือกวัน" hidden></div>
   <div class="card dp-out"><h2>เงินที่เอาออกจากลิ้นชัก<span class="day" id="dayL"></span></h2><b class="v" id="outV"></b><p class="h" id="outH" hidden></p><span class="pill" id="stP"></span></div>
-  <label class="fstep" for="amt">ได้รับจริงเท่าไร<small>ดูในบัญชีธนาคาร</small></label>
-  <div class="in"><input id="amt" type="number" inputmode="decimal" enterkeyhint="done" placeholder="ยอดที่เข้าบัญชี" min="0" max="100000"><span class="sfx">บาท</span></div>
+  <label class="fstep" for="amt">ยอดฝากบนสลิป<small>ไม่รวมค่าธรรมเนียม</small></label>
+  <div class="in"><input id="amt" type="number" inputmode="decimal" enterkeyhint="next" placeholder="ยอดเงินฝาก" min="0" max="100000"><span class="sfx">บาท</span></div>
+  <label class="fstep" for="fee">ค่าธรรมเนียม 7-11</label>
+  <div class="in"><input id="fee" type="number" inputmode="decimal" enterkeyhint="done" min="0" max="100"><span class="sfx">บาท</span></div>
   <div class="card dp-chk" id="chk" aria-live="polite"></div>
   <div class="sticky"><button id="send" class="btn primary">บันทึกยอดที่ได้</button><p id="msg" class="muted"></p></div>
 </div>
@@ -59,7 +61,7 @@
   try {
   const { supabase, me } = await App.ready();
   // 0094 (Mos 3 พ.ย.): money goes to the owner's account → the owner's page only (staff transfer and send the slip in LINE)
-  if (UXS.only(me, ["owner"], "หน้านี้สำหรับเจ้าของ", "เงินที่เอาออก โอนให้เจ้าของ แล้วส่งสลิปในไลน์", "index.html", "กลับหน้าหลัก")) return;
+  if (UXS.only(me, ["owner"], "หน้านี้สำหรับเจ้าของ", "เงินที่เอาออก ฝาก 7-11 แล้วส่งรูปสลิปในกลุ่มพนักงาน", "index.html", "กลับหน้าหลัก")) return;
   const bd = UXS.bizDay();
   const baht = (n) => (+n).toLocaleString("th-TH", { maximumFractionDigits: 2 }) + " บาท";
   const back = (n) => new Date(Date.parse(bd + "T00:00:00Z") - n * 864e5).toISOString().slice(0, 10);
@@ -67,7 +69,10 @@
   const from = [back(14), "2026-11-01"].sort()[1];
   const [dq, xq] = await Promise.all([
     supabase.from("shop_days").select("date,status").eq("status", "sent").gte("date", from).lte("date", bd).order("date", { ascending: false }),
-    supabase.from("deposits").select("date,amount,taken_out,gap,updated_at").gte("date", from)]);
+    supabase.from("deposits").select("date,amount,fee,taken_out,gap,updated_at").gte("date", from)]);
+  // 0100 (Mos 5 พ.ย.): back to 7-11 · ยอดฝาก + ค่าธรรมเนียม (settings.deposit_fee, 15) = เงินที่เอาออก · the bot fills this from the slip
+  const fv = (await supabase.from("settings").select("value").eq("key", "deposit_fee").maybeSingle()).data?.value;
+  const FEE = fv != null && fv !== "" && Number.isFinite(+fv) && +fv >= 0 ? +fv : 15;
   if (dq.error || xq.error) throw dq.error || xq.error;
   const DEP = Object.fromEntries((xq.data || []).map((x) => [x.date, x]));
   const DAYS = (dq.data || []).map((d) => d.date);
@@ -78,30 +83,29 @@
 
   // ได้รับ against เงินที่เอาออก (the server keeps its own gap)
   const check = () => {
-    const a = amt.value === "" ? null : +amt.value;
-    if (a == null) { chk.dataset.tone = ""; chk.innerHTML = `<div class="res"><span>เช็กยอด</span><b>ใส่ยอดที่ได้ก่อน</b></div>`; return; }
+    const a = amt.value === "" ? null : +amt.value + (+fee.value || 0);
+    if (a == null) { chk.dataset.tone = ""; chk.innerHTML = `<div class="res"><span>เช็กยอด</span><b>ใส่ยอดฝากก่อน</b></div>`; return; }
     const g = OUT == null ? null : Math.round((a - OUT) * 100) / 100;
     const [tone, word] = g == null ? ["", "เทียบไม่ได้"] : g === 0 ? ["ok", "ครบ"] : g < 0 ? ["bad", `ขาด ${baht(-g)}`] : ["wait", `เกิน ${baht(g)}`];
     chk.dataset.tone = tone;
-    chk.innerHTML = `<div class="kv"><span>ได้รับ</span><b>${baht(a)}</b></div><div class="kv"><span>เงินที่เอาออก</span><b>${OUT == null ? "ไม่มี" : baht(OUT)}</b></div><div class="res"><span>ผล</span><b>${word}</b></div>`;
+    chk.innerHTML = `<div class="kv"><span>ฝาก + ค่าธรรมเนียม</span><b>${baht(a)}</b></div><div class="kv"><span>เงินที่เอาออก</span><b>${OUT == null ? "ไม่มี" : baht(OUT)}</b></div><div class="res"><span>ผล</span><b>${word}</b></div>`;
   };
-  amt.oninput = check;
+  amt.oninput = check; fee.oninput = check;
 
   const draw = async () => {
     const x = DEP[sel];
     days.hidden = DAYS.length < 2;
-    days.innerHTML = DAYS.map((d) => `<button type="button" data-d="${d}" aria-pressed="${d === sel}">${UXS.thd(d, { weekday: "short" })}${DEP[d] ? `<i aria-label="ได้รับแล้ว">✓</i>` : ""}</button>`).join("");
+    days.innerHTML = DAYS.map((d) => `<button type="button" data-d="${d}" aria-pressed="${d === sel}">${UXS.thd(d, { weekday: "short" })}${DEP[d] ? `<i aria-label="บันทึกแล้ว">✓</i>` : ""}</button>`).join("");
     dayL.textContent = UXS.thd(sel, { weekday: "short" });
     outV.textContent = "…";
     const r = await supabase.rpc("deposit_taken_out", { d: sel });
     OUT = r.error || r.data == null || typeof r.data === "object" ? (x ? x.taken_out : null) : +r.data;
     outV.innerHTML = OUT == null ? "ไม่มียอด" : `${(+OUT).toLocaleString("th-TH", { maximumFractionDigits: 2 })} <small>บาท</small>`;
     outH.textContent = OUT == null ? "ตอนปิดร้านไม่มีเงินต้องเอาออก" : ""; outH.hidden = OUT != null;
-    stP.textContent = x ? `ได้รับแล้ว ${UXS.hm(x.updated_at)} น.` : "รอเงินโอน";
+    stP.textContent = x ? `บันทึกแล้ว ${UXS.hm(x.updated_at)} น.` : "รอสลิปฝาก";
     stP.dataset.tone = x ? "ok" : "wait";
-    // Mos 3 พ.ย.: this page is for "เงินโอนไม่ครบ" (full = the LINE button) → empty until the owner types what came in
-    amt.value = x ? +x.amount : "";
-    send.textContent = x ? "บันทึกยอดที่แก้" : "บันทึกยอดที่ได้";
+    amt.value = x ? +x.amount : ""; fee.value = x ? +x.fee : FEE;
+    send.textContent = x ? "บันทึกยอดที่แก้" : "บันทึกยอดฝาก";
     msg.className = "muted"; msg.textContent = "";
     check();
   };
@@ -109,12 +113,13 @@
 
   const bad = (t, el) => { msg.textContent = t; msg.className = "err"; if (el) UXM.shake(el); };
   send.onclick = async () => {
-    if (amt.value === "" || +amt.value <= 0) return bad("ใส่ยอดที่ได้รับก่อน", amt);
+    if (amt.value === "" || +amt.value <= 0) return bad("ใส่ยอดฝากก่อน", amt);
+    if (fee.value === "" || +fee.value < 0 || +fee.value > 100) return bad("ค่าธรรมเนียม 0 ถึง 100 บาท", fee);
     send.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
-    const { data, error } = await supabase.rpc("receive_deposit", { d: sel, a: +amt.value });
+    const { data, error } = await supabase.rpc("receive_deposit", { d: sel, a: +amt.value, f: +fee.value });
     send.disabled = false;
     if (error || !data?.ok) return bad("บันทึกไม่ได้ ลองกดอีกครั้ง" + (error ? "\n" + App.errText(error) : ""));
-    DEP[sel] = { date: sel, amount: +data.amount, taken_out: data.taken_out, gap: data.gap, updated_at: new Date().toISOString() };
+    DEP[sel] = { date: sel, amount: +data.amount, fee: +data.fee, taken_out: data.taken_out, gap: data.gap, updated_at: new Date().toISOString() };
     UXM.toast("บันทึกแล้ว ✓"); await draw();
   };
   form.hidden = false;

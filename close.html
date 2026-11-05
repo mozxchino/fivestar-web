@@ -187,7 +187,7 @@
   <div class="sum" aria-live="polite"><div class="kv" id="csProw" hidden><span>จำนวนเงินที่ควรมี (จอ WE POS)</span><b id="csP">-</b></div><div class="kv minus" id="csPaid" hidden><span>จ่ายจากลิ้นชักวันนี้ <small><a href="expense.html?tab=list&amp;from=close">ดูรายจ่าย</a></small></span><b id="csQ"></b></div><div class="kv tot"><span>ควรมีในลิ้นชัก</span><b id="csA">-</b></div><div class="kv tot"><span>นับได้</span><b id="csB">-</b></div><p id="cashDiff" class="res" hidden></p></div>
   </div>
   <div id="takeC" class="card tk2" hidden aria-live="polite"><h2 id="takeT">เอาเงินออก</h2>
-  <div class="tk-row"><div class="tk-cell" id="takeX"><small>โอนให้เจ้าของ</small><b id="takeV"></b></div><div class="tk-cell quiet"><small>เหลือในลิ้นชัก</small><b id="takeF"></b></div></div>
+  <div class="tk-row"><div class="tk-cell" id="takeX"><small>เอาไปฝาก 7-11</small><b id="takeV"></b></div><div class="tk-cell quiet"><small>เหลือในลิ้นชัก</small><b id="takeF"></b></div></div>
   <button type="button" id="tookB" class="btn primary">เอาเงินออกแล้ว</button><span id="tookP" class="pill" data-tone="ok" hidden>เอาเงินออกแล้ว</span></div>
   </section>
   <section id="s4" class="ux-step" hidden>
@@ -300,6 +300,9 @@
   // the staff presses "เอาเงินออก N บาทแล้ว" before going on · a new count asks again · the amount goes up as close_detail.cash.taken_out (0082 reads it)
   const cf = (await supabase.from("settings").select("value").eq("key", "cash_float").maybeSingle()).data?.value;
   const FLOAT = cf != null && cf !== "" && Number.isFinite(+cf) && +cf >= 0 ? +cf : 1000;
+  // 0100 (Mos 5 พ.ย.): 7-11 takes its fee out of the cash → tell the cashier taken out − fee
+  const fv = (await supabase.from("settings").select("value").eq("key", "deposit_fee").maybeSingle()).data?.value;
+  const FEE = fv != null && fv !== "" && Number.isFinite(+fv) && +fv >= 0 ? +fv : 15;
   let took = null; // the amount "เอาเงินออก N บาทแล้ว" was pressed for
   const takeX = () => cashCnt.value === "" ? null : Math.max(+cashCnt.value - FLOAT, 0);
   // Mos 3 พ.ย.: counted below ควรมี = ask first (shortS) · the take-out card waits (its green "ไม่ต้องเอาเงินออก" read as all good under a red ขาด)
@@ -491,9 +494,9 @@
     await App.fn("close-notify", { date: today }).catch(() => {});
     // done: the wizard gives way to the mascot screen + next task · first line = how the day ended
     // Mos 3 พ.ย.: one thing on this screen = the cash that left the drawer (same words as the cash step) · no count / cash lines, no history buttons
-    // 0094 (Mos 3 พ.ย.): no 7-11 · staff transfer it from their own phone, slip to the owner in LINE · nothing more in the app
+    // 0100 (Mos 5 พ.ย.): back to 7-11 · the number to tell the cashier + post the slip photo in the staff group (the bot reads it)
     const tx = takeX();
-    doneS.textContent = tx ? `เอาเงินออกจากลิ้นชัก ${fmtB(tx)} บาท\nโอนให้เจ้าของ แล้วส่งสลิปในไลน์` : "วันนี้ไม่มีเงินต้องเอาออก";
+    doneS.textContent = tx ? `เอาเงินออกจากลิ้นชัก ${fmtB(tx)} บาท\n${tx > FEE ? `ฝาก 7-11 ${fmtB(tx - FEE)} บาท (ค่าธรรมเนียม ${fmtB(FEE)})\n` : ""}แล้วส่งรูปสลิปในกลุ่มพนักงาน` : "วันนี้ไม่มีเงินต้องเอาออก";
     document.getElementById("form").hidden = true; document.getElementById("done").hidden = false; scrollTo(0, 0);
     if (late) { doneT.textContent = `ปิดร้านของวันที่ ${dayTh} แล้ว`; next.innerHTML = '<a class="btn primary" href="open.html">เปิดร้านวันนี้</a>'; return; }
     next.innerHTML = '<a class="btn primary" href="index.html">กลับหน้าหลัก</a>';

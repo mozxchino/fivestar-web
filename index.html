@@ -137,10 +137,10 @@
     const sendBy = `รอส่ง ก่อน ${esc(S.auto_send_at || "12:30")} น. ${od.data && od.data.for_date <= new Date(Date.parse(today + "T00:00:00Z") + 864e5).toISOString().slice(0, 10) ? "วันนี้" : "พรุ่งนี้"}`; // auto-send is the day after the order's night: an order landing tomorrow was made last night
     const ord = { proposed: [sendBy, "wait", 2], approved: [sendBy, "wait", 2], failed: ["ส่งไม่ออก", "bad", 0], sent: ["ส่งแล้ว", "ok"], skipped: ["ไม่สั่ง", ""] }[od.data?.status] || ["คืนนี้ยังไม่มี", ""];
     const shop = shut ? ["หยุด", ""] : d.closed_at ? [`ปิดแล้ว ${hm(d.closed_at)} น.`, "ok"] : d.opened_at ? [`เปิดอยู่ ตั้งแต่ ${hm(d.opened_at)} น.`, "ok"] : ["ยังไม่เปิด", ""];
-    // ฝากเงิน: the latest closed day not marked received = a waiting row · ขาด = red, เกิน = yellow · 0094: staff transfer it, the owner marks it
+    // ฝากเงิน: the latest closed day not marked received = a waiting row · ขาด = red, เกิน = yellow · 0100: 7-11 slip read by the bot (or typed by the owner)
     const lday = lc.data?.date, dep = (dp.data || []).find((x) => x.date === lday), dg = dep && dep.gap != null ? +dep.gap : null, dw = lday ? thd(lday, { weekday: "short" }) : "";
-    const depR = dp.error ? ["เปิดไม่ขึ้น", "-", null] : !lday ? ["ยังไม่มีวันที่ปิดร้าน", "-", null] : !dep ? [`${dw} รอเงินโอน`, "bad", 2] : dg == null ? [`${dw} ได้รับแล้ว`, "ok", null]
-      : dg === 0 ? [`${dw} ได้รับครบ`, "ok", null] : dg < 0 ? [`${dw} ได้ขาด ${(-dg).toLocaleString("th-TH")} บาท`, "bad", 2] : [`${dw} ได้เกิน ${dg.toLocaleString("th-TH")} บาท`, "wait", null];
+    const depR = dp.error ? ["เปิดไม่ขึ้น", "-", null] : !lday ? ["ยังไม่มีวันที่ปิดร้าน", "-", null] : !dep ? [`${dw} รอสลิปฝาก`, "bad", 2] : dg == null ? [`${dw} ฝากแล้ว`, "ok", null]
+      : dg === 0 ? [`${dw} ฝากครบ`, "ok", null] : dg < 0 ? [`${dw} ฝากขาด ${(-dg).toLocaleString("th-TH")} บาท`, "bad", 2] : [`${dw} ฝากเกิน ${dg.toLocaleString("th-TH")} บาท`, "wait", null];
     const R = [ // href, name, icon, status line, tone, rank (null = nothing waits)
       ["owner.html", "วันนี้", "today", `ร้านวันนี้ ${shop[0]}`, shop[1], null],
       ["owner.html?tab=iss", "ปัญหาจากร้าน", "issue", nIss ? `รอรับทราบ ${nIss} เรื่อง` : "ไม่มีเรื่องค้าง", nIss ? "bad" : "ok", nIss ? 1 : null],
