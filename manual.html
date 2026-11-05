@@ -1,5 +1,5 @@
 <!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>คู่มือพนักงาน</title><meta name="manual-ver" content="2026-11-02 14:24"><meta name="theme-color" content="#C82128">
+<title>คู่มือพนักงาน</title><meta name="manual-ver" content="2026-11-05 22:40"><meta name="theme-color" content="#C82128">
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
@@ -83,6 +83,11 @@
   .strip figure.shot img { aspect-ratio: 750 / 1624; }
   .strip .cap { margin: 8px 2px 0; font-size: 14px; line-height: 1.5; text-wrap: pretty; }
   .strip .cap b { display: inline-block; min-width: 24px; height: 24px; margin-right: 6px; border-radius: 12px; padding: 0 6px; box-sizing: border-box; background: var(--color-primary); color: #fff; font: 600 13px/24px var(--font-head); text-align: center; font-variant-numeric: tabular-nums; }
+  .strip .tag { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 2px 8px; }
+  .strip .tag span { font: 600 13px/1.3 var(--font-head); color: var(--color-primary-dark); background: var(--tint-primary); border: 1px solid #F3C9C6; border-radius: 999px; padding: 4px 10px; }
+  .strip .tag i { font: 500 13px/1 var(--font-head); font-style: normal; color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
+  .strip .cap2 { margin: 10px 2px 0; font: 500 15px/1.45 var(--font-head); text-wrap: pretty; }
+  .strip .cap2 small { display: block; margin-top: 2px; font: 400 13px/1.5 var(--font-body, inherit); color: var(--color-ink-soft); }
   .swipe { display: flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 13px; color: var(--color-ink-soft); }
   .swipe::after { content: "›››"; letter-spacing: 1px; color: var(--color-chevron); }
   @media print {
@@ -129,18 +134,13 @@
     </div>
     <p class="hint">22:30 น. ถ้าใบสั่งยังไม่ได้ส่ง แอปเตือนอีกรอบ</p>
     <div class="good"><b>ไม่ต้องสั่งของเอง</b>แอปคิดใบสั่งจากของเหลือที่เรานับ<br>นับให้ตรง ของมาพอดี</div>
-    <figure class="shot"><img src="img/manual/index.png" alt="หน้าแรกของแอป" width="780" height="1688"><i style="left:62%;top:27%">1</i><i style="left:30%;top:35.7%">2</i><i style="left:5%;top:57.2%">3</i></figure>
-    <ol class="steps">
-      <li>กล่องใหญ่บอกงานถัดไป แตะแล้วไปหน้านั้นเลย</li>
-      <li>กล่องเล็กบอกว่าวันนี้ทำอะไรไปแล้ว</li>
-      <li>เรื่องของฉัน: เรื่องที่เราแจ้งไว้ และเจ้าของรับทราบหรือยัง</li>
-    </ol>
+    <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอ หน้าแรก 3 รูป ปัดซ้ายขวาดูรูปถัดไป">
+      <div class="slide"><p class="tag"><span>หน้าแรก</span><i>1/3</i></p><figure class="shot"><img src="img/manual/s-home-1.webp" alt="หน้าแรก กล่องแดงงานถัดไป ปิดร้าน และกล่องเล็ก เปิดร้าน รับของ ปิดร้าน" width="750" height="1624"></figure><p class="cap2">กล่องแดง = งานถัดไป แตะเลย</p></div>
+      <div class="slide"><p class="tag"><span>หน้าแรก</span><i>2/3</i></p><figure class="shot"><img src="img/manual/s-home-2.webp" alt="หน้าแรกเลื่อนลง ปุ่มทิ้งของเสีย ลงรายจ่าย คู่มือ และเรื่องของฉัน" width="750" height="1624"></figure><p class="cap2">เลื่อนลง เจอปุ่มอื่น ๆ</p></div>
+      <div class="slide"><p class="tag"><span>ห่อข้าวเหนียว</span><i>3/3</i></p><figure class="shot"><img src="img/manual/s-home-3.webp" alt="แผ่นห่อข้าวเหนียวเสร็จ ช่องรอบนี้ห่อได้กี่ห่อ และปุ่มบันทึกจำนวนห่อ" width="750" height="1624"></figure><p class="cap2">ห่อเสร็จ ใส่จำนวน กดบันทึก</p></div>
+    </div>
+    <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
     <h3>ปุ่ม "ห่อข้าวเหนียวเสร็จ"</h3>
-    <ol class="steps">
-      <li>ห่อเสร็จแต่ละรอบ กดปุ่ม "ห่อข้าวเหนียวเสร็จ" ที่หน้าแรก</li>
-      <li>ใส่จำนวนห่อของรอบนั้น แล้วกด "บันทึกจำนวนห่อ"</li>
-      <li>ปุ่มบอกยอดรวม "วันนี้ห่อแล้ว" ทั้งวันให้</li>
-    </ol>
     <p class="hint">ปุ่มนี้ขึ้นตอนร้านเปิดอยู่<br>ใส่ผิด กด "ยกเลิกรายการล่าสุด" ภายใน 10 นาที<br>ยกเลิกได้เฉพาะรายการของเราเอง ที่บันทึกล่าสุด<br>เลย 10 นาทีแล้ว แจ้งปัญหา เลือก "กรอกผิด ขอแก้"</p>
   </div>
 </details>
@@ -148,11 +148,11 @@
 <details class="sec">
   <summary><span class="n">2</span><h2>เปิดร้าน</h2><span class="ux-go" aria-hidden="true">›</span></summary>
   <div class="mn-in">
-    <figure class="shot"><img src="img/manual/open.png" alt="หน้าเปิดร้าน" width="780" height="1688"><i style="left:9%;top:89%">1</i></figure>
-    <ol class="steps">
-      <li>กดปุ่มแดง "ถ่ายรูปหน้าร้าน" ต้องถ่ายตอนนั้น เลือกจากอัลบั้มไม่ได้ ไม่มีรูปเปิดร้านไม่ได้</li>
-      <li>ได้รูปแล้ว ปุ่มแดงเปลี่ยนเป็น "เปิดร้าน" กดแล้วเห็นไก่มาสคอตกับติ๊กเขียว คือเสร็จ</li>
-    </ol>
+    <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอ เปิดร้าน 2 รูป ปัดซ้ายขวาดูรูปถัดไป">
+      <div class="slide"><p class="tag"><span>ขั้น 1 ถ่ายรูป</span><i>1/2</i></p><figure class="shot"><img src="img/manual/s-open-1.webp" alt="หน้าเปิดร้าน ขั้น 1 ถ่ายรูปหน้าร้าน" width="750" height="1624"></figure><p class="cap2">กดถ่ายรูปหน้าร้าน</p></div>
+      <div class="slide"><p class="tag"><span>ขั้น 2 กดเปิดร้าน</span><i>2/2</i></p><figure class="shot"><img src="img/manual/s-open-2.webp" alt="หน้าเปิดร้าน ขั้น 2 มีรูปหน้าร้านแล้ว ปุ่มเปิดร้าน" width="750" height="1624"></figure><p class="cap2">กด "เปิดร้าน"</p></div>
+    </div>
+    <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
     <p class="hint">เวลาที่กดเปิดร้าน คือเวลาเข้างานของเรา<br>รูปไม่ชัด กดลบแล้วถ่ายใหม่ได้<br>ถ้าหน้านี้ขึ้น "ยังไม่ได้ปิดร้านวันก่อน"<br>กด "ปิดร้านที่ค้างก่อน" ปิดให้เสร็จ แล้วค่อยเปิดร้านวันนี้</p>
   </div>
 </details>
@@ -160,55 +160,32 @@
 <details class="sec">
   <summary><span class="n">3</span><h2>รับของ</h2><span class="ux-go" aria-hidden="true">›</span></summary>
   <div class="mn-in">
-    <figure class="shot"><img src="img/manual/receive.png" alt="หน้ารับของ" width="780" height="1688"><i style="left:13%;top:22.7%">1</i><i style="left:13%;top:35%">2</i></figure>
-    <div class="pick">
-      <div><b>1 ของมาครบ</b>กด "ของมาครบตามใบสั่ง"<br>กด "ถ่ายใบส่งของ"<br>กด "บันทึก ของมาครบ"</div>
-      <div><b>2 ของมาไม่ครบ</b>กด "มีของขาด / ไม่ตรง"<br>แก้จำนวนแถวที่ไม่ตรง แถวนั้นขึ้น "ขาด N" หรือ "เกิน N"<br>ถ่ายใบส่งของ แล้วกดบันทึก</div>
-      <div><b>3 วันนี้ไม่มีของมา</b>ถามเซลล์ในกลุ่มสั่งของก่อน<br>กด "วันนี้ไม่มีของมา"<br>ติ๊ก "ถามเซลล์ในกลุ่มสั่งของแล้ว" แล้วกดบันทึก</div>
-      <div><b>4 มีของที่ไม่อยู่ในใบสั่ง</b>กด "+ มีของอื่นมาด้วย"<br>เลือกสินค้า ใส่จำนวนที่ได้มา กด "เพิ่มของที่มา"<br>แถวนั้นขึ้น "นอกใบสั่ง" แล้วถ่ายใบส่งของ กดบันทึก</div>
+    <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอ รับของ 5 รูป ปัดซ้ายขวาดูรูปถัดไป">
+      <div class="slide"><p class="tag"><span>เลือกก่อน</span><i>1/5</i></p><figure class="shot"><img src="img/manual/s-rec-1.webp" alt="หน้ารับของ ตัวเลือกของมาครบตามใบสั่ง และมีของขาดไม่ตรง" width="750" height="1624"></figure><p class="cap2">เลือก: ครบ หรือ ขาด</p></div>
+      <div class="slide"><p class="tag"><span>แบบ 1 ของมาครบ</span><i>2/5</i></p><figure class="shot"><img src="img/manual/s-rec-2.webp" alt="หน้ารับของ เลือกของมาครบ ปุ่มบันทึกของมาครบ 13 อย่าง" width="750" height="1624"></figure><p class="cap2">ถ่ายใบส่งของ กดบันทึก<small>ไม่ถ่าย บันทึกไม่ได้</small></p></div>
+      <div class="slide"><p class="tag"><span>แบบ 2 ของขาด / ไม่ตรง</span><i>3/5</i></p><figure class="shot"><img src="img/manual/s-rec-3.webp" alt="หน้ารับของ เลือกมีของขาด ช่องแก้จำนวนแต่ละแถว" width="750" height="1624"></figure><p class="cap2">แก้แถวที่ไม่ตรง</p></div>
+      <div class="slide"><p class="tag"><span>แบบ 3 ไม่มีของมา</span><i>4/5</i></p><figure class="shot"><img src="img/manual/s-rec-4.webp" alt="แผ่นวันนี้ไม่มีของมา ช่องติ๊กถามเซลล์แล้ว" width="750" height="1624"></figure><p class="cap2">ถามเซลล์ก่อน แล้วติ๊ก</p></div>
+      <div class="slide"><p class="tag"><span>แบบ 4 ของนอกใบสั่ง</span><i>5/5</i></p><figure class="shot"><img src="img/manual/s-rec-5.webp" alt="แผ่นมีของอื่นมาด้วย ช่องเลือกสินค้าและจำนวนที่ได้มา" width="750" height="1624"></figure><p class="cap2">เลือกของ ใส่จำนวน</p></div>
     </div>
-    <p class="hint">ปุ่ม "วันนี้ไม่มีของมา" กับ "+ มีของอื่นมาด้วย" อยู่ล่างสุดของหน้า เลื่อนลงไปหา<br>วันที่มีของมา ต้องถ่ายใบส่งของทุกครั้ง ไม่ถ่ายบันทึกไม่ได้<br>ถ่ายได้ถึง 3 รูป<br>รับของแล้ว แก้ตัวเลขได้จนกว่าจะปิดร้าน</p>
+    <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
+    <p class="hint">ปุ่ม "วันนี้ไม่มีของมา" กับ "+ มีของอื่นมาด้วย" อยู่ล่างสุดของหน้า เลื่อนลงไปหา<br>วันที่มีของมา ต้องถ่ายใบส่งของทุกครั้ง ไม่ถ่ายบันทึกไม่ได้<br>ถ่ายได้ถึง 3 รูป<br>CPF ส่งของอื่นมาแทน หาในรายการ "เลิกขายแล้ว"<br>รับของแล้ว แก้ตัวเลขได้จนกว่าจะปิดร้าน</p>
   </div>
 </details>
 
 <details class="sec">
   <summary><span class="n">4</span><h2>ปิดร้าน 4 ขั้น</h2><span class="ux-go" aria-hidden="true">›</span></summary>
   <div class="mn-in">
-    <figure class="shot"><img src="img/manual/close.png" alt="หน้าปิดร้าน ขั้นนับของเหลือ" width="780" height="1688"><i style="left:15.5%;top:16.4%">1</i><i style="left:51.5%;top:31.6%">2</i><i style="left:9%;top:93.6%">3</i></figure>
-    <ol class="steps">
-      <li>แถบบนบอกว่าอยู่ขั้นไหน จาก 4 ขั้น</li>
-      <li>ใส่จำนวนที่เหลือจริง แยกสดกับสุก ช่อง "เสีย" แตะไม่ได้ แอปใส่ยอดจากหน้าทิ้งของเสียให้<br>ข้าวเหนียวห่อมีแค่ช่องสุก ข้าวเหนียวดิบและน้ำดื่มมีแค่ช่องสด</li>
-      <li>กดปุ่มแดงด้านล่าง ไปขั้นถัดไป</li>
-    </ol>
-    <h3>4 ขั้น</h3>
-    <ol class="steps">
-      <li><span><b>นับของเหลือ</b> ทุกอย่างในตู้<br>วันที่ยังไม่ได้ลงของเสีย แอปถามก่อนนับ</span></li>
-      <li><span><b>ของใช้ในร้าน</b> ไม่ต้องนับจำนวน แค่แตะบอก<br>ยังพอทุกอย่าง กด "ของใช้ครบทุกอย่าง"<br>มีของใกล้หมด กด "มีของใกล้หมด / หมด" แล้วแตะชื่อของ<br>ใกล้หมด = ใช้ได้อีกแค่ 3–4 วัน<br>ต้องบอกตอนใกล้หมด เพราะเจ้าของสั่งของต้องรอ 1–2 วัน<br>แตะ 1 ครั้ง = ใกล้หมด<br>แตะ 2 ครั้ง = หมด<br>แตะ 3 ครั้ง = กลับเป็นมี</span></li>
-      <li><span><b>ยอดขาย เดลิเวอรี่ และเงินสด</b> ใส่ "ยอดขายวันนี้" ตามจอ WE POS ยอดรวมทุกช่องทาง (ต้องใส่)<br>ใส่ยอดเดลิเวอรี่ในแอป เทียบกับ WE POS<br>ใส่ "จำนวนเงินสดที่มี" ตามจอ WE POS แล้วนับเงินในลิ้นชัก<br>ดูวิธีทีละจอที่หัวข้อ "ขั้นเงิน" ด้านล่าง</span></li>
-      <li><span><b>ถ่ายรูปและส่ง</b> "รูปตู้และถาด" กับ "รูปจอ POS"<br>ต้องมีทั้ง 2 รูป รูปบอกเวลาที่ปิดร้าน<br>แล้วกด "ปิดร้าน"</span></li>
-    </ol>
+    <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอ ปิดร้าน ขั้น 1 นับของเหลือ 5 รูป ปัดซ้ายขวาดูรูปถัดไป">
+      <div class="slide"><p class="tag"><span>ขั้น 1 นับของเหลือ</span><i>1/5</i></p><figure class="shot"><img src="img/manual/s-c1-1.webp" alt="แผ่นถามวันนี้มีของเสียไหม ปุ่มไม่มี และมี ไปลงของเสีย" width="750" height="1624"></figure><p class="cap2">ตอบเรื่องของเสียก่อน</p></div>
+      <div class="slide"><p class="tag"><span>ขั้น 1 นับของเหลือ</span><i>2/5</i></p><figure class="shot"><img src="img/manual/s-c1-2.webp" alt="หน้านับของเหลือ ใส่ตัวเลขครบ ทุกแถวมีติ๊กเขียว" width="750" height="1624"></figure><p class="cap2">ใส่ที่เหลือจริง</p></div>
+      <div class="slide"><p class="tag"><span>ขั้น 1 ช่องเหลือสด</span><i>3/5</i></p><figure class="shot"><img src="img/manual/s-c1-3.webp" alt="แผ่นใส่ถุงเต็มและนอกถุง รวมเป็นตัว" width="750" height="1624"></figure><p class="cap2">ใส่ถุงเต็ม + นอกถุง</p></div>
+      <div class="slide"><p class="tag"><span>ขั้น 1 ช่องเหลือสุก</span><i>4/5</i></p><figure class="shot"><img src="img/manual/s-c1-4.webp" alt="แผ่นใส่เหลือสุก ปุ่มบวกครึ่ง" width="750" height="1624"></figure><p class="cap2">ใส่ที่เหลือสุก</p></div>
+      <div class="slide"><p class="tag"><span>ขั้น 1 ช่องเสีย</span><i>5/5</i></p><figure class="shot"><img src="img/manual/s-c1-5.webp" alt="แผ่นช่องนี้กรอกเองไม่ได้ ปุ่มไปบันทึกของเสีย" width="750" height="1624"></figure><p class="cap2">ช่องเสีย แอปใส่ให้</p></div>
+    </div>
+    <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
     <p class="hint">ปิดร้านแล้ว การ์ดปิดร้านเข้ากลุ่มพนักงาน<br>ของใช้ที่ต้องซื้อเองที่ใกล้หมดหรือหมด มีการ์ด "ของใช้ต้องซื้อเอง" แยกอีกใบในกลุ่มพนักงาน</p>
-    <h3>ของที่นับเป็นถุง</h3>
-    <ol class="steps">
-      <li>แถวที่ช่อง "เหลือสด" ขึ้นคำว่า "แตะ" ให้แตะช่องนั้น</li>
-      <li>ใส่ "ถุงเต็ม" กี่ถุง และ "นอกถุง (เศษ)" กี่ชิ้น<br>เป๊ปซี่และน้ำดื่มนับเป็นแพ็ค ช่องจะขึ้น "แพ็คเต็ม" กับ "นอกแพ็ค (เศษ)"</li>
-      <li>แอปบวกให้เอง ดูยอดรวมแล้วกด "ตกลง"</li>
-      <li>ไก่จ๊อมีช่อง "ไม้" เพิ่ม 1 ไม้ = 5 ชิ้น<br>ใส่ "ถุงเต็ม" กับ "ไม้" แล้วใส่ชิ้นที่ "นอกถุง ไม่ได้เสียบไม้"</li>
-    </ol>
-    <h3>ช่องเหลือสุก</h3>
-    <ol class="steps">
-      <li>แถวเดียวกัน ช่อง "เหลือสุก" ขึ้น "แตะ" ให้แตะช่องนั้น</li>
-      <li>ใส่จำนวนที่เหลือสุก<br>มีครึ่งตัว กด "+ ครึ่ง" หรือพิมพ์ .5 เช่น 2.5</li>
-      <li>ไก่จ๊อใส่ "ไม้" กับ "ชิ้น" แอปรวมให้</li>
-      <li>กด "ตกลง" แอปเปิดช่องถัดไปให้เอง</li>
-    </ol>
-    <h3>ถาม "วันนี้มีของเสียไหม"</h3>
-    <ol class="steps">
-      <li>เปิดหน้าปิดร้านวันที่ยังไม่มีของเสีย แอปถามก่อนนับ</li>
-      <li>ไม่มีของเสีย กด "ไม่มี"</li>
-      <li>มีของเสีย กด "มี ไปลงของเสีย" ลงให้เสร็จ แล้วกลับมานับ</li>
-    </ol>
-    <p class="hint">ตอบแล้ว แอปไม่ถามซ้ำวันนั้น<br>ปิดร้านย้อนหลัง ของเสียวันนั้นลงในแอปไม่ได้แล้ว<br>ถ้ามี เขียนในช่อง "ฝากบอกเจ้าของ"</p>
+    <p class="hint">เป๊ปซี่ น้ำดื่ม นับเป็นแพ็ค<br>ไก่จ๊อ 1 ไม้ = 5 ชิ้น<br>ครึ่งตัว พิมพ์ .5 เช่น 2.5</p>
+    <p class="hint">ปิดหน้าแล้วเปิดใหม่ แอปถามอีกรอบ จนกว่าจะปิดร้าน<br>ปิดร้านย้อนหลัง ของเสียวันนั้นลงในแอปไม่ได้แล้ว<br>ถ้ามี เขียนในช่อง "ฝากบอกเจ้าของ"</p>
     <h3>นับน้อยกว่าปกติ</h3>
     <figure class="shot"><img src="img/manual/close-low.png" alt="แผ่นเตือนตรวจอีกรอบ นับน้อยกว่าปกติ" width="780" height="1688"><i style="left:91%;top:69%">1</i><i style="left:9%;top:88.1%">2</i><i style="left:9%;top:95.2%">3</i></figure>
     <ol class="steps">
@@ -219,30 +196,36 @@
     <p class="hint">นับขาด ใบสั่งจะสั่งเกิน ของจะค้างตู้<br>ของที่กด "นับถูกแล้ว บันทึก" ไปขึ้นในการ์ดปิดร้านที่เจ้าของเห็น<br>ตัวเลขชุดเดิมไม่ถามซ้ำ</p>
     <h3>นับได้มากกว่าที่มี</h3>
     <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอ นับได้มากกว่าที่มี 3 รูป ปัดซ้ายขวาดูรูปถัดไป">
-      <div class="slide"><figure class="shot"><img src="img/manual/over-1.webp" alt="หน้านับของเหลือ ไก่ย่างต้นตำรับ ช่องเหลือสดใส่ 30 ทั้งที่มี 13" width="750" height="1624"></figure><p class="cap"><b>1</b>ใส่เลขที่นับ ถ้ามากกว่าที่มี กดปุ่มแดงไปขั้นถัดไป</p></div>
-      <div class="slide"><figure class="shot"><img src="img/manual/over-2.webp" alt="แผ่นเหลือง นับได้มากกว่าที่มี ไก่ย่างต้นตำรับ มี 13 นับได้ 30 เกิน 17 ตัว พร้อมปุ่ม กลับไปแก้ตัวเลข และ ของมีจริง ไปต่อ" width="750" height="1624"></figure><p class="cap"><b>2</b>แผ่นเหลืองบอกของที่เกิน เลือกปุ่มใดปุ่มหนึ่ง</p></div>
-      <div class="slide"><figure class="shot"><img src="img/manual/over-3.webp" alt="กลับมาหน้านับ ช่องของไก่ย่างต้นตำรับขึ้นกรอบสีแดง" width="750" height="1624"></figure><p class="cap"><b>3</b>กด "กลับไปแก้ตัวเลข" แถวที่เกินขึ้นกรอบแดง แก้ได้เลย</p></div>
+      <div class="slide"><p class="tag"><span>ขั้น 1 นับเกิน</span><i>1/3</i></p><figure class="shot"><img src="img/manual/over-1.webp" alt="หน้านับของเหลือ ไก่ย่างต้นตำรับ ช่องเหลือสดใส่ 30 ทั้งที่มี 13" width="750" height="1624"></figure><p class="cap2">ใส่เลขเกินที่มี</p></div>
+      <div class="slide"><p class="tag"><span>ขั้น 1 นับเกิน</span><i>2/3</i></p><figure class="shot"><img src="img/manual/over-2.webp" alt="แผ่นเหลือง นับได้มากกว่าที่มี เกิน 17 ตัว" width="750" height="1624"></figure><p class="cap2">เลือก: แก้ หรือ ไปต่อ</p></div>
+      <div class="slide"><p class="tag"><span>ขั้น 1 นับเกิน</span><i>3/3</i></p><figure class="shot"><img src="img/manual/over-3.webp" alt="กลับมาหน้านับ ช่องที่เกินขึ้นกรอบสีแดง" width="750" height="1624"></figure><p class="cap2">แถวที่เกินขึ้นกรอบแดง</p></div>
     </div>
     <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
-    <ol class="steps">
-      <li>นับรวมแล้วมากกว่า "ยกมา" บวก "รับเข้า" แผ่นเหลือง "นับได้มากกว่าที่มี" ขึ้น</li>
-      <li>พิมพ์ผิด กด "กลับไปแก้ตัวเลข"</li>
-      <li>ของมีจริง เช่น ของมาส่งเพิ่ม กด "ของมีจริง ไปต่อ"</li>
-    </ol>
     <p class="hint">ยังไม่กดปุ่มใด ไปขั้นถัดไปไม่ได้<br>กด "ของมีจริง ไปต่อ" ส่วนเกินนับเป็นของที่เข้ามาเพิ่มวันนี้ ยอดขายไม่ติดลบ<br>เจ้าของเห็นในการ์ดปิดร้าน ส่วน "นับเกิน ของมาเพิ่ม"<br>ของที่เราซื้อเอง ลงที่หน้ารายจ่าย ใส่จำนวนที่ซื้อมาด้วย</p>
-    <h3>ขั้นเงิน</h3>
-    <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอ ขั้นเงิน 3 รูป ปัดซ้ายขวาดูรูปถัดไป">
-      <div class="slide"><figure class="shot"><img src="img/manual/cash-1.webp" alt="ขั้นที่ 3 ช่องยอดขายวันนี้ และตารางเดลิเวอรี่ LINE MAN ตรงกัน Grab ขึ้นแดง WE POS ขาด 50 บาท" width="750" height="1624"></figure><p class="cap"><b>1</b>ใส่ยอดขายวันนี้ ตามจอ WE POS แล้วใส่ยอดเดลิเวอรี่ในแอปกับใน WE POS</p></div>
-      <div class="slide"><figure class="shot"><img src="img/manual/cash-2.webp" alt="ช่องจำนวนเงินสดที่มี และปุ่มนับแบงก์เหรียญ 1,000 500 100 50 20 10 5 2 1" width="750" height="1624"></figure><p class="cap"><b>2</b>ใส่ "จำนวนเงินสดที่มี" ตามจอ WE POS แล้วนับแบงก์และเหรียญ</p></div>
-      <div class="slide"><figure class="shot"><img src="img/manual/cash-3.webp" alt="สรุปควรมีในลิ้นชัก 3,270 บาท นับได้ 3,270 บาท แถบล่างขึ้น ครบ" width="750" height="1624"></figure><p class="cap"><b>3</b>แอปรวมให้ ดู "ควรมี" กับ "นับได้" ที่แถบล่างจอ</p></div>
+    <h3>ขั้น 2 ของใช้ในร้าน</h3>
+    <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอ ปิดร้าน ขั้น 2 ของใช้ 2 รูป ปัดซ้ายขวาดูรูปถัดไป">
+      <div class="slide"><p class="tag"><span>ขั้น 2 ของใช้</span><i>1/2</i></p><figure class="shot"><img src="img/manual/s-c2-1.webp" alt="หน้าของใช้ในร้าน ตัวเลือกของใช้ครบทุกอย่าง และมีของใกล้หมด" width="750" height="1624"></figure><p class="cap2">ยังพอ กด "ครบทุกอย่าง"</p></div>
+      <div class="slide"><p class="tag"><span>ขั้น 2 ของใช้</span><i>2/2</i></p><figure class="shot"><img src="img/manual/s-c2-2.webp" alt="หน้าของใช้ ถุงร้อนใกล้หมด ถุงหิ้วใหญ่หมด" width="750" height="1624"></figure><p class="cap2">ใกล้หมด แตะชื่อของ</p></div>
     </div>
     <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
-    <div class="pick">
-      <div><b>เดลิเวอรี่</b>ใส่ยอดในแอป LINE MAN, Grab, Shopee จากมือถือ<br>ใส่ยอดช่องทางนั้นใน WE POS<br>ตรงกัน ขึ้นเขียว "ตรงกัน"<br>ไม่ตรง ขึ้นแดง แปลว่ามีออเดอร์ยังไม่ได้ลง WE POS หาให้เจอก่อนปิด<br>ช่องทางไหนไม่มีออเดอร์ เว้นว่างได้</div>
-      <div><b>นับเงินในลิ้นชัก</b>ใส่จำนวนแบงก์แต่ละชนิด และจำนวนเหรียญ แอปรวมให้<br>นับทั้งหมด รวมเงินทอนด้วย</div>
-      <div><b>ควรมีในลิ้นชัก</b>คือ "จำนวนเงินสดที่มี" ตามจอ WE POS ลบเงินสดที่จ่ายออกจากลิ้นชักวันนี้ (จากหน้ารายจ่าย)<br>ลืมลงรายจ่าย กดลิงก์ "ไปลงรายจ่าย" ลงให้ครบแล้วกลับมา</div>
+    <h3>ขั้น 3 ยอดขายและเงินสด</h3>
+    <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอ ปิดร้าน ขั้น 3 เงิน 5 รูป ปัดซ้ายขวาดูรูปถัดไป">
+      <div class="slide"><p class="tag"><span>ขั้น 3 ข้อ 1–2</span><i>1/5</i></p><figure class="shot"><img src="img/manual/s-c3-1.webp" alt="ข้อ 1 ยอดขายรวม 6240 ข้อ 2 เงินโอน ถุงเงิน LINE MAN ใส่ 2 ช่อง ขึ้นตรงกัน" width="750" height="1624"></figure><p class="cap2">ใส่ยอดขาย + เงินโอน 2 ช่อง</p></div>
+      <div class="slide"><p class="tag"><span>ขั้น 3 ข้อ 2 เงินโอน</span><i>2/5</i></p><figure class="shot"><img src="img/manual/s-c3-2.webp" alt="ใส่เงินโอนช่องเดียว ช่องขวาสั่น กล่องแดงใส่ยอดเงินโอนก่อน" width="750" height="1624"></figure><p class="cap2">เงินโอนต้องครบ 2 ช่อง<small>ไม่มี ใส่ 0</small></p></div>
+      <div class="slide"><p class="tag"><span>ขั้น 3 ข้อ 3–4</span><i>3/5</i></p><figure class="shot"><img src="img/manual/s-c3-3.webp" alt="ข้อ 3 จำนวนเงินที่ควรมี 3420 ข้อ 4 นับแบงก์และเหรียญ" width="750" height="1624"></figure><p class="cap2">ใส่เงินที่ควรมี แล้วนับลิ้นชัก</p></div>
+      <div class="slide"><p class="tag"><span>ขั้น 3 เอาเงินออก</span><i>4/5</i></p><figure class="shot"><img src="img/manual/s-c3-4.webp" alt="สรุปเงินสดครบ กล่องเอาเงินออก โอนให้เจ้าของ 2270 เหลือในลิ้นชัก 1000" width="750" height="1624"></figure><p class="cap2">เอาเงินออกตามช่องเหลือง</p></div>
+      <div class="slide"><p class="tag"><span>ขั้น 3 เงินขาด</span><i>5/5</i></p><figure class="shot"><img src="img/manual/s-c3-5.webp" alt="แผ่นเงินขาด 270 บาท ปุ่มใส่คืนแล้วนับใหม่ ลืมลงรายจ่าย ขาดจริงไปต่อ" width="750" height="1624"></figure><p class="cap2">เงินขาด เลือก 1 ปุ่ม</p></div>
     </div>
-    <p class="hint">แถบล่างบอก "ควรมี" "นับได้" และ ขาด, เกิน หรือ ครบ<br>เงินขาดหรือเกิน นับใหม่อีกรอบก่อนกดไปต่อ</p>
+    <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
+    <p class="hint">เงินโอน ดูยอดในแอปธนาคาร<br>เดลิเวอรี่ช่องไหนไม่มี เว้นว่างได้<br>ไม่ตรง ขึ้นแดง หาให้เจอก่อนปิด<br>เงินสดที่จ่ายจากลิ้นชัก แอปหักให้เอง</p>
+    <div class="good"><b>เงินครบแล้ว เอาเงินออก</b>กดปุ่ม "เอาเงินออก ... บาทแล้ว" ก่อนไปต่อ<br>ไม่ต้องไปฝากเงินที่ 7-11 แล้ว</div>
+    <h3>ขั้น 4 ถ่ายรูปและส่ง</h3>
+    <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอ ปิดร้าน ขั้น 4 รูป 3 รูป ปัดซ้ายขวาดูรูปถัดไป">
+      <div class="slide"><p class="tag"><span>ขั้น 4 ถ่ายรูป</span><i>1/3</i></p><figure class="shot"><img src="img/manual/s-c4-1.webp" alt="หน้าถ่ายรูปและส่ง กล่องรูปตู้และถาด และรูปจอ POS" width="750" height="1624"></figure><p class="cap2">ถ่ายรูปตู้ + จอ POS</p></div>
+      <div class="slide"><p class="tag"><span>ขั้น 4 ส่ง</span><i>2/3</i></p><figure class="shot"><img src="img/manual/s-c4-2.webp" alt="ได้รูปทั้ง 2 แล้ว ช่องฝากบอกเจ้าของ ปุ่มปิดร้าน" width="750" height="1624"></figure><p class="cap2">กด "ปิดร้าน"</p></div>
+      <div class="slide"><p class="tag"><span>ปิดร้านเสร็จ</span><i>3/3</i></p><figure class="shot"><img src="img/manual/s-c4-3.webp" alt="จอปิดร้านเรียบร้อย เอาเงินออก 2270 บาท โอนให้เจ้าของ แล้วส่งสลิปในไลน์" width="750" height="1624"></figure><p class="cap2">โอนเงินให้เจ้าของ ส่งสลิป</p></div>
+    </div>
+    <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
     <div class="bad-note"><b>ของเสีย บันทึกก่อนปิดร้าน</b>ทิ้งเมื่อไหร่ บันทึกที่หน้า "ทิ้งของเสีย" ตอนนั้นเลย พร้อมรูปตาชั่ง<br>ช่อง "เสีย" ตอนปิดร้านแตะไม่ได้ แอปใส่ยอดที่บันทึกไว้ให้เอง<br>แตะช่องนั้น มีปุ่ม "ไปบันทึกของเสีย" ตัวเลขที่นับไว้ไม่หาย<br>เก็บร้านแล้วมีของต้องทิ้ง บันทึกให้เสร็จก่อนกดปิดร้าน</div>
     <p class="hint">ช่องที่ขึ้น 0 แตะแล้วพิมพ์ทับได้เลย ไม่ต้องลบ 0<br>ปิดแอปกลางทางได้ ตัวเลขยังอยู่ แต่รูปต้องถ่ายใหม่<br>กดปิดร้านแล้ว แก้ตัวเลขเองไม่ได้<br>ปิดร้านหลังเที่ยงคืน ยังนับเป็นวันเดิม จนถึงตี 5<br>มีอะไรอยากบอกเจ้าของ เขียนช่อง "ฝากบอกเจ้าของ"</p>
   </div>
@@ -251,13 +234,11 @@
 <details class="sec">
   <summary><span class="n">5</span><h2>แจ้งปัญหา</h2><span class="ux-go" aria-hidden="true">›</span></summary>
   <div class="mn-in">
-    <figure class="shot"><img src="img/manual/issue.png" alt="หน้าแจ้งปัญหา" width="780" height="1688"><i style="left:7.9%;top:11.7%">1</i><i style="left:7.9%;top:24.8%">2</i><i style="left:7.9%;top:45.5%">3</i><i style="left:9%;top:89%">4</i></figure>
-    <ol class="steps">
-      <li>เลือกเรื่อง: เครื่องพัง, ลูกค้าร้องเรียน, ของ CPF มาผิด, กรอกผิด ขอแก้, เรื่องอื่น</li>
-      <li>เขียนสั้น ๆ ว่าเกิดอะไร</li>
-      <li>ถ่ายรูปถ้ามี ไม่เกิน 3 รูป</li>
-      <li>กด "ส่งให้เจ้าของ"</li>
-    </ol>
+    <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอ แจ้งปัญหา 2 รูป ปัดซ้ายขวาดูรูปถัดไป">
+      <div class="slide"><p class="tag"><span>แจ้งปัญหา</span><i>1/2</i></p><figure class="shot"><img src="img/manual/s-iss-1.webp" alt="หน้าแจ้งปัญหา เรื่องอะไร เกิดอะไรขึ้น รูป" width="750" height="1624"></figure><p class="cap2">เลือกเรื่อง เขียนสั้น ๆ</p></div>
+      <div class="slide"><p class="tag"><span>แจ้งปัญหา</span><i>2/2</i></p><figure class="shot"><img src="img/manual/s-iss-2.webp" alt="หน้าแจ้งปัญหา เขียนตู้เย็นช่องล่างไม่เย็น มีรูป 1 รูป" width="750" height="1624"></figure><p class="cap2">กด "ส่งให้เจ้าของ"</p></div>
+    </div>
+    <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
     <p class="hint">เครื่องพัง ลูกค้าร้องเรียน ของ CPF มาผิด การ์ดเข้ากลุ่มพนักงานทันที<br>เรื่องอื่นเจ้าของเห็นตอนปิดร้าน<br>เจ้าของกด "รับทราบ" แล้ว หน้าแรกส่วน "เรื่องของฉัน" ขึ้น "รับทราบแล้ว"</p>
   </div>
 </details>
@@ -265,15 +246,13 @@
 <details class="sec">
   <summary><span class="n">6</span><h2>ทิ้งของเสีย</h2><span class="ux-go" aria-hidden="true">›</span></summary>
   <div class="mn-in">
-    <figure class="shot"><img src="img/manual/waste.png" alt="หน้าทิ้งของเสีย" width="780" height="1688"><i style="left:7.9%;top:24.4%">1</i><i style="left:7.9%;top:37.4%">2</i><i style="left:7.9%;top:50.5%">3</i><i style="left:7.9%;top:70.6%">4</i><i style="left:9%;top:89%">5</i></figure>
-    <ol class="steps">
-      <li>เลือกสินค้า</li>
-      <li>ใส่จำนวน</li>
-      <li>วางบนตาชั่ง กด "ถ่ายรูปบนตาชั่ง" ให้เห็นน้ำหนัก<br>แล้วใส่น้ำหนักเป็นกรัม เช่น ครึ่งกิโล ใส่ 500</li>
-      <li>ทิ้งลงถัง กด "ถ่ายรูปตอนทิ้งลงถัง"</li>
-      <li>กด "บันทึกของเสีย"</li>
-      <li>แผ่น "ตรวจก่อนบันทึก" ขึ้น ถูกแล้วกด "บันทึกของเสีย" ผิดกด "กลับไปแก้"</li>
-    </ol>
+    <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอ ทิ้งของเสีย 4 รูป ปัดซ้ายขวาดูรูปถัดไป">
+      <div class="slide"><p class="tag"><span>ข้อ 1 ทิ้งเพราะอะไร</span><i>1/4</i></p><figure class="shot"><img src="img/manual/s-w-1.webp" alt="หน้าทิ้งของเสีย ข้อ 1 เสีย ขายไม่ได้ หรือ หมดอายุ" width="750" height="1624"></figure><p class="cap2">เลือก: เสีย หรือ หมดอายุ</p></div>
+      <div class="slide"><p class="tag"><span>ข้อ 2–5</span><i>2/4</i></p><figure class="shot"><img src="img/manual/s-w-2.webp" alt="ใส่จำนวน 2 ตัว รูปตาชั่ง 850 กรัม รูปทิ้งลงถัง" width="750" height="1624"></figure><p class="cap2">ชั่ง ถ่ายรูป ทิ้งลงถัง</p></div>
+      <div class="slide"><p class="tag"><span>ตรวจก่อนบันทึก</span><i>3/4</i></p><figure class="shot"><img src="img/manual/s-w-3.webp" alt="แผ่นตรวจก่อนบันทึก ทิ้งเพราะเสีย ไก่ย่างต้นตำรับ 2 ตัว 850 กรัม" width="750" height="1624"></figure><p class="cap2">ถูกแล้ว กดบันทึก</p></div>
+      <div class="slide"><p class="tag"><span>ทิ้งแล้ววันนี้</span><i>4/4</i></p><figure class="shot"><img src="img/manual/s-w-4.webp" alt="แท็บทิ้งแล้ววันนี้" width="750" height="1624"></figure><p class="cap2">ดูของที่ทิ้งวันนี้</p></div>
+    </div>
+    <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
     <p class="hint">ทิ้งเมื่อไหร่ บันทึกตอนนั้นเลย<br>ต้องมีรูปตาชั่ง น้ำหนักอย่างน้อย 10 กรัม และรูปตอนทิ้งลงถัง<br>ทิ้งได้ไม่เกินจำนวนที่มีในร้านวันนี้<br>บันทึกแล้วแก้เองไม่ได้ ผิดให้บอกเจ้าของ<br>ดูของที่ทิ้งไปแล้ว ที่แท็บ "ทิ้งแล้ววันนี้"<br>ตอนปิดร้าน ช่อง "เสีย" แตะไม่ได้ แอปใส่ยอดจากหน้านี้ให้เอง<br>ปิดร้านแล้ว บันทึกของเสียของวันนั้นไม่ได้<br>เก็บร้านแล้วมีของต้องทิ้ง ให้บันทึกก่อนกดปิดร้าน</p>
   </div>
 </details>
@@ -282,18 +261,11 @@
   <summary><span class="n">7</span><h2>ลงรายจ่าย</h2><span class="ux-go" aria-hidden="true">›</span></summary>
   <div class="mn-in">
     <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอ ลงรายจ่าย 3 รูป ปัดซ้ายขวาดูรูปถัดไป">
-      <div class="slide"><figure class="shot"><img src="img/manual/exp-1.webp" alt="หน้ารายจ่าย แท็บลงรายจ่าย ช่องค้นหา และปุ่มรายการสินค้า" width="750" height="1624"></figure><p class="cap"><b>1</b>เปิดหน้า "รายจ่าย" แตะรายการที่ซื้อ หรือพิมพ์ชื่อใหม่ในช่องค้นหา</p></div>
-      <div class="slide"><figure class="shot"><img src="img/manual/exp-2.webp" alt="แผ่นกรอกรายจ่าย ช่องยอดเงิน ปุ่มจ่ายด้วยเงินสดหน้าร้านหรือเจ้าของโอนจ่าย ปุ่มถ่ายรูปใบเสร็จ และปุ่มบันทึกรายจ่าย" width="750" height="1624"></figure><p class="cap"><b>2</b>ใส่ยอดเงิน เลือกจ่ายด้วยอะไร ถ่ายรูปใบเสร็จ แล้วกด "บันทึกรายจ่าย"</p></div>
-      <div class="slide"><figure class="shot"><img src="img/manual/exp-3.webp" alt="แท็บลงแล้ววันนี้ รวมวันนี้ 530 บาท แยกเงินสดหน้าร้านกับเจ้าของโอนจ่าย และรายการที่ลงแล้ว" width="750" height="1624"></figure><p class="cap"><b>3</b>แท็บ "ลงแล้ววันนี้" ดูรายการและยอดรวม</p></div>
+      <div class="slide"><p class="tag"><span>ลงรายจ่าย</span><i>1/3</i></p><figure class="shot"><img src="img/manual/s-exp-1.webp" alt="หน้ารายจ่าย แท็บลงรายจ่าย ช่องค้นหา และปุ่มรายการสินค้า" width="750" height="1624"></figure><p class="cap2">แตะของที่ซื้อ</p></div>
+      <div class="slide"><p class="tag"><span>ลงรายจ่าย</span><i>2/3</i></p><figure class="shot"><img src="img/manual/s-exp-2.webp" alt="แผ่นกรอกรายจ่าย น้ำดื่ม Alife 90 บาท จ่ายด้วยเงินสดหน้าร้าน" width="750" height="1624"></figure><p class="cap2">ใส่ยอด กดบันทึก</p></div>
+      <div class="slide"><p class="tag"><span>ลงแล้ววันนี้</span><i>3/3</i></p><figure class="shot"><img src="img/manual/s-exp-3.webp" alt="แท็บลงแล้ววันนี้ รวม 530 บาท เงินสดหน้าร้าน 150 เจ้าของโอนจ่าย 380" width="750" height="1624"></figure><p class="cap2">ดูที่ลงแล้ววันนี้</p></div>
     </div>
     <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
-    <ol class="steps">
-      <li>จ่ายเงินแล้วลงเลย ไม่ต้องรอตอนปิดร้าน</li>
-      <li>แตะรายการ หรือพิมพ์ชื่อใหม่ในช่องค้นหา</li>
-      <li>ใส่ "ยอดเงิน" ถ้ามีช่อง "ได้มากี่" ใส่จำนวนที่ซื้อมาด้วย</li>
-      <li>เลือก "จ่ายด้วย": เงินสดหน้าร้าน หรือเจ้าของโอนจ่าย</li>
-      <li>ถ่ายรูปใบเสร็จ (ไม่บังคับ) แล้วกด "บันทึกรายจ่าย"</li>
-    </ol>
     <p class="hint">เงินสดหน้าร้าน ถูกหักออกจาก "ควรมีในลิ้นชัก" ตอนปิดร้าน<br>บิล CPF กับเงินเดือน แอปคิดให้ ไม่ต้องลง<br>ลงผิด กด ✕ ที่แถวนั้น ลบได้ มีปุ่มเลิกทำ<br>ลบได้เฉพาะรายการของเรา ก่อนปิดร้าน</p>
   </div>
 </details>
@@ -301,12 +273,11 @@
 <details class="sec">
   <summary><span class="n">8</span><h2>ขอหยุด/ลา</h2><span class="ux-go" aria-hidden="true">›</span></summary>
   <div class="mn-in">
-    <figure class="shot"><img src="img/manual/holiday.png" alt="หน้าขอหยุดหรือลา" width="780" height="1688"><i style="left:92%;top:28%">1</i><i style="left:92%;top:39.6%">2</i><i style="left:9%;top:73.3%">3</i></figure>
-    <ol class="steps">
-      <li>เลือกว่าขออะไร</li>
-      <li>เลือกวัน</li>
-      <li>กด "ส่งคำขอหยุด/ลา"</li>
-    </ol>
+    <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอ ขอหยุดลา 2 รูป ปัดซ้ายขวาดูรูปถัดไป">
+      <div class="slide"><p class="tag"><span>ขอหยุด/ลา</span><i>1/2</i></p><figure class="shot"><img src="img/manual/s-hol-1.webp" alt="หน้าขอหยุดลา ขออะไร วันไหน เหตุผล" width="750" height="1624"></figure><p class="cap2">เลือกขออะไร วันไหน</p></div>
+      <div class="slide"><p class="tag"><span>ขอหยุด/ลา</span><i>2/2</i></p><figure class="shot"><img src="img/manual/s-hol-2.webp" alt="ปุ่มส่งคำขอหยุดลา และรายการวันที่ขอไว้" width="750" height="1624"></figure><p class="cap2">กดส่งคำขอ</p></div>
+    </div>
+    <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
     <div class="pick">
       <div><b>หยุดประจำสัปดาห์</b>1 วันต่อสัปดาห์ ผ่านทันที ไม่ต้องรอ<br>วันที่มีของ CPF เข้า ต้องรอเจ้าของอนุมัติ</div>
       <div><b>ลาป่วย ลากิจ หยุดพิเศษ</b>รอเจ้าของกดอนุมัติในกลุ่มพนักงาน<br>ลาป่วยเลือกวันนี้ได้ อย่างอื่นขอล่วงหน้า 1 วัน</div>
@@ -321,15 +292,15 @@
     <p>เจ้าของไม่ได้อยู่ร้าน ดูร้านจากรูปที่เราถ่าย<br>ถ่ายให้ชัด ถ่ายตรงหมวด</p>
     <h3>รูปจากร้าน</h3>
     <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอเจ้าของ รูปจากร้าน 2 รูป ปัดซ้ายขวาดูรูปถัดไป">
-      <div class="slide"><figure class="shot"><img src="img/manual/owner-pics.webp" alt="หน้าวันของเจ้าของ ส่วนรูปจากร้าน 13 รูป เปิดออกแล้ว" width="750" height="1624"></figure><p class="cap"><b>1</b>ส่วน "รูปจากร้าน" ในหน้าวัน บอกจำนวนรูปทั้งวัน</p></div>
-      <div class="slide"><figure class="shot"><img src="img/manual/owner-pics2.webp" alt="รูปย่อแยกหมวด จอ WE POS ตู้และถาด ของเสีย" width="750" height="1624"></figure><p class="cap"><b>2</b>รูปแยกหมวด แตะรูปดูเต็มจอ</p></div>
+      <div class="slide"><p class="tag"><span>เจ้าของเห็นรูป</span><i>1/2</i></p><figure class="shot"><img src="img/manual/owner-pics.webp" alt="หน้าวันของเจ้าของ ส่วนรูปจากร้าน 13 รูป เปิดออกแล้ว" width="750" height="1624"></figure><p class="cap2">ส่วน "รูปจากร้าน" ในหน้าวัน บอกจำนวนรูปทั้งวัน</p></div>
+      <div class="slide"><p class="tag"><span>เจ้าของเห็นรูป</span><i>2/2</i></p><figure class="shot"><img src="img/manual/owner-pics2.webp" alt="รูปย่อแยกหมวด จอ WE POS ตู้และถาด ของเสีย" width="750" height="1624"></figure><p class="cap2">รูปแยกหมวด แตะรูปดูเต็มจอ</p></div>
     </div>
     <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
     <p class="hint">ทุกรูปที่ถ่ายในวันนั้นขึ้นที่นี่<br>หมวด: เปิดร้าน ใบส่งของ จอ WE POS ตู้และถาด ของเสีย แจ้งปัญหา ใบเสร็จรายจ่าย<br>แตะรูปเต็มจอ แล้วปัดซ้ายขวาดูรูปถัดไป</p>
     <h3>บิล CPF</h3>
     <div class="strip" role="region" tabindex="0" aria-label="ตัวอย่างหน้าจอเจ้าของ บิล CPF 2 รูป ปัดซ้ายขวาดูรูปถัดไป">
-      <div class="slide"><figure class="shot"><img src="img/manual/owner-bill.webp" alt="ส่วนบิล CPF ยังไม่จ่าย รูปใบส่งของเต็มกว้าง และปุ่ม บันทึกว่าจ่ายแล้ว" width="750" height="1624"></figure><p class="cap"><b>1</b>เจ้าของเห็นรูปใบส่งของเต็มกว้าง สแกน QR จ่ายได้เลย</p></div>
-      <div class="slide"><figure class="shot"><img src="img/manual/owner-pay.webp" alt="แผ่นจ่ายบิล CPF แล้ว ช่องยอดที่จ่าย และปุ่มบันทึกว่าจ่ายแล้ว" width="750" height="1624"></figure><p class="cap"><b>2</b>จ่ายแล้ว กด "บันทึกว่าจ่ายแล้ว" ใส่ยอดตามใบ</p></div>
+      <div class="slide"><p class="tag"><span>เจ้าของจ่ายบิล</span><i>1/2</i></p><figure class="shot"><img src="img/manual/owner-bill.webp" alt="ส่วนบิล CPF ยังไม่จ่าย รูปใบส่งของเต็มกว้าง และปุ่ม บันทึกว่าจ่ายแล้ว" width="750" height="1624"></figure><p class="cap2">เจ้าของเห็นรูปใบส่งของเต็มกว้าง สแกน QR จ่ายได้เลย</p></div>
+      <div class="slide"><p class="tag"><span>เจ้าของจ่ายบิล</span><i>2/2</i></p><figure class="shot"><img src="img/manual/owner-pay.webp" alt="แผ่นจ่ายบิล CPF แล้ว ช่องยอดที่จ่าย และปุ่มบันทึกว่าจ่ายแล้ว" width="750" height="1624"></figure><p class="cap2">จ่ายแล้ว กด "บันทึกว่าจ่ายแล้ว" ใส่ยอดตามใบ</p></div>
     </div>
     <p class="swipe">ปัดซ้ายขวาดูรูปถัดไป</p>
     <p class="hint">เพราะฉะนั้นรับของแล้ว ถ่ายใบส่งของให้เห็น QR ชัดทุกครั้ง<br>เจ้าของกดจ่ายผิด ยกเลิกเองได้</p>
