@@ -196,7 +196,7 @@ body.ro .ux-stepw,body.ro .ux-rm{display:none}body.ro .qro{display:block}body.ro
   const inU = (r, x) => pkOf(r) > 1 ? `${n(x / r.pack_size)} ${word(r)}` : n(x);
   // 0044: a row the rule did not propose (owner/manager added it with "เพิ่มรายการ") · can be taken out again
   const planned = new Set(((plan && plan.items) || []).filter((x) => Number(x.qty) > 0).map((x) => x.product_id));
-  const added = (r) => !!plan && !planned.has(r.product_id);
+  const added = (r) => !!r.local || (!!plan && !planned.has(r.product_id));
   // 0053 ของกอง: plan items whose stock left tonight lasts more than overstock_days (most order 0, so they are not rows) · plans before 0053 have no "over"
   const piles = ((plan && plan.items) || []).filter((x) => x.over === true);
   const pileOf = new Map(piles.map((x) => [x.product_id, x]));
@@ -210,7 +210,7 @@ body.ro .ux-stepw,body.ro .ux-rm{display:none}body.ro .qro{display:block}body.ro
   const tags = (r, q) => (added(r) ? '<span class="pp later">เพิ่มเอง</span>' : "") + (edited(r, q) ? '<span class="pp wait">แก้แล้ว</span>' : "") + (pileOf.has(r.product_id) ? `<span class="pp wait">${pileSay(pileOf.get(r.product_id))}</span>` : "");
   const vals = {};   // product_id → qty typed so far (kept across a re-render after เพิ่มรายการ / เอาออก)
   const rowH = (r, i) => { const pk = pkOf(r), v = Number(vals[r.product_id] ?? r.qty), u = pk > 1 ? word(r) : E(r.unit_th);
-    return `<div class="orow" id="r${i}"><div class="grow"><div class="nm">${E(r.label)}</div><div class="tags"></div><div class="meta"></div>${added(r) && live() ? `<button type="button" class="ux-rm" data-rm="${i}">เอาออก</button>` : ""}</div>
+    return `<div class="orow" id="r${i}"><div class="grow"><div class="nm">${E(r.label)}</div><div class="tags"></div><div class="meta"></div>${added(r) && (live() || unlocked) ? `<button type="button" class="ux-rm" data-rm="${i}">เอาออก</button>` : ""}</div>
     <div class="ux-stepw"><label class="ux-q"><input type="number" inputmode="${pk > 1 ? "numeric" : "decimal"}" min="0" step="${pk > 1 ? 1 : r.pack_size || 1}" value="${pk > 1 ? Math.round(v / pk) : v}" style="width:${String(pk > 1 ? Math.round(v / pk) : v).length * 1.1 + 0.3}ch" data-i="${i}" aria-label="${E(r.label)} จำนวนสั่ง (${u})" onfocus="this.select()"><small aria-hidden="true">${u}</small></label>${pk > 1 ? `<span class="ux-eq" id="eq${i}" aria-hidden="true"></span>` : ""}</div><b class="qro" id="ro${i}"></b></div>`; };
   const qv = (i) => { const v = Math.max(0, Number(document.querySelector(`[data-i="${i}"]`).value) || 0), pk = pkOf(rows[i]); return pk > 1 ? Math.round(v) * pk : v; };
   const cur = () => rows.map((r, i) => ({ product_id: r.product_id, qty_final: qv(i), r }));
@@ -218,6 +218,9 @@ body.ro .ux-stepw,body.ro .ux-rm{display:none}body.ro .qro{display:block}body.ro
   // 0046 (audit 3): each edit is saved to qty_final as the owner types (order_set_qty), so the 12:30 safety send uses the edited numbers
   const live = () => ["proposed", "approved", "failed"].includes(order.status);
   const timers = {}; let pend = 0, saveErr = "", saved = false, unlocked = false;
+  // Mos 6 พ.ย.: a sent / skipped order opened with "แก้ใบสั่ง" edits like a new one (เพิ่มรายการ · เอาออก · numbers) but nothing is written
+  // until "ส่งใบที่แก้ให้เซลล์": send-order writes the numbers, inserts the added rows and zeroes the taken-out ones, so the app always holds what the sales rep got
+  const dropped = new Set();   // product ids taken out while editing a sent order (sent as qty 0)
   const label = () => { const e = rows.filter((r, i) => edited(r, qv(i))).length;
     const sv = pend ? "กำลังบันทึก…" : saveErr ? "บันทึกไม่ได้ แก้อีกครั้ง" : saved && live() ? "บันทึกที่แก้แล้ว" : "";
     $("chg").textContent = sv;
@@ -230,7 +233,7 @@ body.ro .ux-stepw,body.ro .ux-rm{display:none}body.ro .qro{display:block}body.ro
     $("send").className = "btn" + (!ro && !fail && k > 0 || (live() && k === 0) ? " primary" : "");
     $("copy").hidden = !fail || k === 0;
     $("skipB").hidden = !live() || k === 0;
-    $("addB").hidden = !live(); };   // 0044: order_item_add refuses a sent (or skipped) order
+    $("addB").hidden = !live() && !unlocked; };   // a sent order adds rows on the page only (order_item_add refuses it), written by send-order
   // ponytail: one save per row after 250 ms quiet (at once on change) · two saves of one row in flight could land out of order (the send carries the numbers anyway)
   const save = (i) => { clearTimeout(timers[i]); delete timers[i]; if (!live() || !rows[i]) return Promise.resolve();
     const pid = rows[i].product_id, qty = qv(i); pend++; label();
@@ -280,6 +283,10 @@ body.ro .ux-stepw,body.ro .ux-rm{display:none}body.ro .qro{display:block}body.ro
   render();
   $("items").onclick = async (ev) => {
     const rm = ev.target.closest("button[data-rm]");
+    if (rm && !live()) {   // editing a sent order: the row leaves the page now, the app writes qty 0 when the edited order is sent
+      const i = +rm.dataset.rm, r = rows[i]; keep(); if (!r.local) dropped.add(r.product_id); rows.splice(i, 1); delete vals[r.product_id];
+      render(); UXM.toast(`เอา ${r.label} ออกแล้ว กดส่งใบที่แก้ให้เซลล์`); return;
+    }
     if (rm) {
       const r = rows[+rm.dataset.rm]; rm.disabled = true;
       const { error } = await supabase.rpc("order_item_remove", { oid: orderId, pid: r.product_id });
@@ -304,7 +311,7 @@ body.ro .ux-stepw,body.ro .ux-rm{display:none}body.ro .qro{display:block}body.ro
     const { data, error } = await supabase.rpc("order_add_list", { oid: orderId });
     $("addB").disabled = false;
     if (error) { UXM.toast("เปิดรายการไม่ได้ " + App.errText(error)); return; }
-    choices = data || []; pick = null; $("addQ").value = 1; $("addM").textContent = "";
+    choices = (data || []).filter((c) => !rows.some((r) => r.product_id === c.product_id)); pick = null; $("addQ").value = 1; $("addM").textContent = "";
     $("addL").innerHTML = choices.length ? choices.map((c, i) => `<label class="ux-addr"><input type="radio" name="addP" value="${i}"><span class="grow"><span class="nm">${E(c.name)}</span>${c.pack_size > 1 ? `<span class="meta">${c.sets ? "เซ็ตละ" : "ถุงละ"} ${c.pack_size} ${E(c.unit_th)}</span>` : ""}</span>${c.active ? "" : '<span class="chip">เลิกขายแล้ว</span>'}</label>`).join("")
       : '<p class="muted">สินค้า CPF ทุกอย่างอยู่ในใบนี้แล้ว</p>';
     $("addF").value = ""; addFind(); addEq(); addS.open();
@@ -318,6 +325,11 @@ body.ro .ux-stepw,body.ro .ux-rm{display:none}body.ro .qro{display:block}body.ro
   $("addQ").oninput = addEq;
   $("addGo").onclick = async () => {
     const k = Math.round(Number($("addQ").value) || 0); if (!pick || k < 1) return;
+    if (!live()) {   // editing a sent order: the row lives on the page until "ส่งใบที่แก้ให้เซลล์"
+      const q = k * pick.pack_size; keep(); dropped.delete(pick.product_id);
+      rows.push({ product_id: pick.product_id, label: pick.name, name: pick.name, qty: q, qty_proposed: q, pack_size: pick.pack_size, unit_th: pick.unit_th, sets: pick.sets ? 1 : null, sort: 1e9, local: true });
+      vals[pick.product_id] = q; const nm = pick.name; addS.close(); render(); UXM.toast(`เพิ่ม ${nm} แล้ว กดส่งใบที่แก้ให้เซลล์`); return;
+    }
     $("addGo").disabled = true; $("addM").textContent = "";
     const { error } = await supabase.rpc("order_item_add", { oid: orderId, pid: pick.product_id, qty: k * pick.pack_size });
     if (error) { $("addM").textContent = App.errText(error); addEq(); return; }
@@ -345,14 +357,14 @@ body.ro .ux-stepw,body.ro .ux-rm{display:none}body.ro .qro{display:block}body.ro
     await flush();   // pending rows saved first (the send carries every number too, written by send-order only when it holds the send key)
     $("send").disabled = true;
     try {
-      const r = await App.fn("send-order", { order_id: orderId, mode: "manual", resend: order.status === "sent", items: cur().map(({ product_id, qty_final }) => ({ product_id, qty_final })) });
+      const r = await App.fn("send-order", { order_id: orderId, mode: "manual", resend: order.status === "sent", items: [...cur().map(({ product_id, qty_final }) => ({ product_id, qty_final })), ...[...dropped].map((product_id) => ({ product_id, qty_final: 0 }))] });
       // 0046 (audit 31): the app's 12:30 send got there first (or another phone pressed): say so, never post twice
       // another press or the 12:30 send holds the send key right now: wait 3 s and read the real status
       if (r.sending) { $("msg").className = "muted"; $("msg").textContent = "กำลังส่งใบนี้อยู่ รอสักครู่";
         setTimeout(async () => { const { data: o } = await supabase.from("orders").select("status,sent_at").eq("id", orderId).maybeSingle();
           if (o) Object.assign(order, o); $("msg").textContent = order.status === "sent" ? "ใบนี้ส่งให้เซลล์แล้ว ไม่ได้ส่งซ้ำ" : "ยังส่งไม่สำเร็จ กดส่งอีกครั้ง"; pill(); keep(); render(); tick(); }, 3000); return; }
       if (r.already) { $("msg").className = "muted"; $("msg").textContent = "ใบนี้ส่งให้เซลล์แล้ว ไม่ได้ส่งซ้ำ"; if (r.status) { order.status = r.status; order.sent_at = order.sent_at || new Date().toISOString(); } pill(); keep(); render(); tick(); return; }
-      if (r.ok) { $("msg").className = "muted"; $("msg").textContent = ""; UXM.toast("ส่งใบสั่งให้เซลล์แล้ว ✓"); order.status = "sent"; order.sent_at = order.sent_at || new Date().toISOString(); pill(); keep(); render(); tick();
+      if (r.ok) { dropped.clear(); $("msg").className = "muted"; $("msg").textContent = ""; UXM.toast("ส่งใบสั่งให้เซลล์แล้ว ✓"); order.status = "sent"; order.sent_at = order.sent_at || new Date().toISOString(); pill(); keep(); render(); tick();
         setTimeout(() => location.replace("index.html"), 900); }   // Mos 4 พ.ย.: sent = done, back to the hub
       else { $("msg").className = "err"; $("msg").textContent = "ส่งเข้ากลุ่มไม่ออก กดคัดลอกไปวางเอง"; order.status = "failed"; pill(); }
     } catch (e) { $("msg").className = "err"; $("msg").textContent = "ส่งไม่ออก ลองกดอีกครั้ง\n" + App.errText(e); } finally { busy = false; }
@@ -372,7 +384,7 @@ body.ro .ux-stepw,body.ro .ux-rm{display:none}body.ro .qro{display:block}body.ro
     if (error) { $("skM").textContent = App.errText(error); return; }
     skS.close(); order.status = "skipped"; pill(); keep(); render(); tick(); UXM.toast("ไม่สั่งใบนี้แล้ว"); setTimeout(() => location.replace("index.html"), 900);
   };
-  $("send").onclick = () => !live() && !unlocked ? (unlocked = true, label()) : live() && !cur().some((x) => x.qty_final > 0) ? askSkip()
+  $("send").onclick = () => !live() && !unlocked ? (unlocked = true, keep(), render()) : live() && !cur().some((x) => x.qty_final > 0) ? askSkip()
     : plan && plan.opening && order.status !== "sent" && !rows.some((r, i) => added(r) || qv(i) !== Number(r.qty_proposed)) ? okS.open() : doSend();
   $("okGo").onclick = () => { okS.close(); doSend(); };
   $("okBack").onclick = () => okS.close();
