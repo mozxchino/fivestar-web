@@ -14,7 +14,7 @@
 #msg.err:not(:empty) { text-align: center; padding-right: 44px; }
 /* ข้อ 4 (Mos 1 พ.ย.): delivery apps vs WE POS · drawer counted by note and coin */
 /* design round 1 พ.ย.: app name with its brand dot · a gap is a tone pill, not a loose line */
-.dl { display: grid; grid-template-columns: 1fr 98px 98px; gap: 8px; align-items: center; padding: 6px 0; }
+.dl { --dc: 98px; display: grid; grid-template-columns: 1fr var(--dc) var(--dc); gap: 8px; align-items: center; padding: 6px 0; }
 .dl.hd { font: 500 13px/1.3 var(--font-body); color: var(--color-ink-soft); padding: 0; }
 .dl.hd span:not(:first-child) { text-align: center; }
 .dl b { display: flex; align-items: center; gap: 8px; font: 600 16px/1.3 var(--font-head); white-space: nowrap; }
@@ -22,7 +22,13 @@
 .dl input { min-width: 0; text-align: center; font-variant-numeric: tabular-nums; }
 .dl-say { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: -2px 0 6px; font-size: 14px; color: var(--color-ink-soft); }
 .dl-say:empty { display: none; }
+@media (max-width: 359px) { .dl { --dc: 80px; grid-template-columns: minmax(0, 1fr) var(--dc) var(--dc); } .dl b, .dl.hd span { white-space: normal; } .dl.hd span { text-align: center; } }
 .dl-say .pill { font-size: 14px; font-weight: 600; }
+.dl-need { position: relative; flex: 1 1 100%; margin-top: 6px; padding: 8px 12px; border-radius: 12px; background: var(--tint-destructive); color: var(--color-foreground); font-size: 14px; line-height: 1.5; text-align: center; }
+.dl-need::before { content: ""; position: absolute; top: -7px; right: calc(var(--dc) / 2 - 7px); border: 7px solid transparent; border-top: 0; border-bottom-color: var(--tint-destructive); }
+.dl-need[data-at=a]::before { right: calc(var(--dc) * 1.5 + 1px); }
+.dl-need strong { display: block; color: var(--color-destructive); font: 600 15px/1.45 var(--font-head); }
+.dl-need span { display: block; }
 /* notes and coins look like the real money (Thai note colours) so the eye finds the row without reading */
 /* round 4: notes and coins in one 3×3 grid (1,000 500 100 · 50 20 10 · 5 2 1), shape tells note from coin */
 .notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 10px; margin: 10px 0 12px; }
@@ -166,11 +172,11 @@
   <section id="s3" class="ux-step" hidden>
   <label class="fstep" for="posTot"><i>1</i>ยอดขายรวมทั้งหมด<small>ตามจอ WE POS</small></label>
   <div class="in"><input id="posTot" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0" min="0" max="100000"><span class="sfx">บาท</span></div>
-  <label class="fstep"><i>2</i>เดลิเวอรี่<small>ยอดในแอป กับ ยอดบน WE POS</small></label>
+  <label class="fstep"><i>2</i>เงินโอนและเดลิเวอรี่<small>แอป กับ WE POS</small></label>
   <div class="card pad">
   <div class="dl hd"><span></span><span>ยอดในแอป</span><span>ยอดบน WE POS</span></div>
   <div id="dlv"></div>
-  <p class="muted" style="margin:6px 0 0">ไม่ตรง = มีออเดอร์ยังไม่ได้ลง WE POS หาให้เจอก่อนปิด</p>
+  <p class="muted" style="margin:6px 0 0">ไม่ตรง = หาให้เจอก่อนปิดรอบ WE POS</p>
   </div>
   <label class="fstep" for="cashExp"><i>3</i>จำนวนเงินที่ควรมี<small>ตามจอ WE POS</small></label>
   <div class="in"><input id="cashExp" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0"><span class="sfx">บาท</span></div>
@@ -269,13 +275,15 @@
   consAll.onclick = () => { setPick("all"); say(""); save(); update(); };
   consLow.onclick = () => { setPick("low"); say(""); save(); update(); };
   // ข้อ 4 (Mos 1 พ.ย.): LINE MAN / Grab / Shopee typed from the phones and from WE POS · a gap = an order not in WE POS yet
-  const APPS = [["lineman", "LINE MAN", "#06C755"], ["grab", "Grab", "#00B14F"], ["shopee", "Shopee", "#EE4D2D"]], NOTES = [1000, 500, 100, 50, 20], COINS = [10, 5, 2, 1];
+  // Mos 5 พ.ย.: เงินโอน + ถุงเงิน join the app ↔ WE POS rows (a customer who never paid 75 baht showed nowhere: only cash and delivery were compared) · 4th item = a payment row (its own words)
+  const APPS = [["transfer", "เงินโอน", "#334155", 1], ["thungngern", "ถุงเงิน", "#00A4E4", 1], ["lineman", "LINE MAN", "#06C755"], ["grab", "Grab", "#00B14F"], ["shopee", "Shopee", "#EE4D2D"]], NOTES = [1000, 500, 100, 50, 20], COINS = [10, 5, 2, 1];
   const MONEY = { 1000: "#86664F", 500: "#7A4E9C", 100: "#C0392B", 50: "#2F6DB5", 20: "#2A7A4B", 10: "#D8B54A", 5: "#C9CDD2", 2: "#D8B54A", 1: "#C9CDD2" }; // Thai note and coin colours
   const fmtB = (v) => v.toLocaleString("th-TH");
-  dlv.innerHTML = APPS.map(([k, t, c]) => `<div class="dl" data-k="${k}" style="--app:${c}"><b>${t}</b><input type="number" inputmode="decimal" class="dlA" placeholder="0" aria-label="${t} ยอดในแอป"><input type="number" inputmode="decimal" class="dlP" placeholder="0" aria-label="${t} ยอดใน WE POS"><span class="dl-say"></span></div>`).join("");
+  dlv.innerHTML = APPS.map(([k, t, c, pay]) => `<div class="dl" data-k="${k}"${pay ? " data-pay" : ""} style="--app:${c}"><b>${t}</b><input type="number" inputmode="decimal" class="dlA" aria-label="${t} ยอดในแอป"><input type="number" inputmode="decimal" class="dlP" aria-label="${t} ยอดใน WE POS"><span class="dl-say"></span></div>`).join("");
   const dlSay = () => dlv.querySelectorAll(".dl").forEach((r) => { const a = r.querySelector(".dlA"), b = r.querySelector(".dlP"), m = r.querySelector(".dl-say");
-    if (a.value === "" || b.value === "") { m.textContent = ""; return; } const d = +a.value - +b.value;
-    m.innerHTML = d === 0 ? `<span class="pill" data-tone="ok">ตรงกัน</span>` : `<span class="pill" data-tone="bad">WE POS ${d > 0 ? "ขาด" : "เกิน"} ${fmtB(Math.abs(d))} บาท</span>${d > 0 ? "หาออเดอร์ที่ยังไม่ได้ลง" : "เช็กออเดอร์ซ้ำหรือยกเลิก"}`; });
+    if (a.value === "" || b.value === "") { const t = r.querySelector("b").textContent; // need = the staff pressed "next" with this row unfinished · the arrow points at the empty box
+      m.innerHTML = !r.dataset.need ? "" : `<div class="dl-need" role="alert" data-at="${a.value === "" ? "a" : "p"}">${"pay" in r.dataset && r.dataset.k === "transfer" ? `<strong>ใส่ยอดเงินโอนก่อน</strong><span>เช็กว่าลูกค้าโอนเข้าครบไหม</span><span>วันนี้ไม่มีเงินโอน ใส่ 0</span>` : `<strong>${t} ใส่ให้ครบ 2 ช่อง</strong><span>ใส่ช่องเดียว เทียบยอดไม่ได้</span><span>ไม่มี ใส่ 0</span>`}</div>`; return; } delete r.dataset.need; const d = +a.value - +b.value;
+    m.innerHTML = d === 0 ? ("pay" in r.dataset && +a.value === 0 ? `<span class="pill">ไม่มี${r.querySelector("b").textContent}</span>` : `<span class="pill" data-tone="ok">ตรงกัน</span>`) : "pay" in r.dataset ? `<span class="pill" data-tone="bad">เงินเข้า${d < 0 ? "ขาด" : "เกิน"} ${fmtB(Math.abs(d))} บาท</span>${d < 0 ? "เช็กว่าลูกค้าจ่ายแล้วหรือยัง" : "มีบิลยังไม่ได้ลง WE POS"}` : `<span class="pill" data-tone="bad">WE POS ${d > 0 ? "ขาด" : "เกิน"} ${fmtB(Math.abs(d))} บาท</span>${d > 0 ? "หาออเดอร์ที่ยังไม่ได้ลง" : "เช็กออเดอร์ซ้ำหรือยกเลิก"}`; });
   dlv.addEventListener("input", dlSay);
   const noteIn = (v) => `<label${v < 20 ? ' class="coin"' : ""}><span style="--note:${MONEY[v]}">${fmtB(v)}</span><input type="number" inputmode="numeric" min="0" step="1" placeholder="0" data-v="${v}" aria-label="${v} บาท กี่${v >= 20 ? "ใบ" : "เหรียญ"}"></label>`;
   notesB.innerHTML = [...NOTES, ...COINS].map(noteIn).join("");
@@ -341,6 +349,9 @@
     // 0054 (Mos 30 ต.ค.): ยอดขายรวม WE POS is required (staff bonus) · the server checks 0 to 100,000 too
     if (n === 3) { if (posTot.value === "") return { say: "ยังไม่ได้ใส่ยอดขายรวมวันนี้\nดูจอ WE POS ยอดรวมทุกช่องทาง", el: posTot };
       if (+posTot.value < 0 || +posTot.value > 100000) return { say: "ยอดขายรวมต้องอยู่ระหว่าง 0 ถึง 100,000 บาท\nดูจอ WE POS อีกครั้ง", el: posTot };
+      // a row with one box filled compares nothing (the card skips it) → both boxes or none · เงินโอน: always both (0 = none today)
+      const hr = [...dlv.querySelectorAll(".dl")].map((r) => [r, [...r.querySelectorAll("input")].filter((i) => i.value === "")]).find(([r, e]) => e.length === 1 || (e.length === 2 && r.dataset.k === "transfer"));
+      if (hr) return { say: hr[0].dataset.k === "transfer" ? "ยังไม่ได้ใส่ยอดเงินโอน" : `${hr[0].querySelector("b").textContent} ใส่ยอดไม่ครบ`, el: hr[1][0], scroll: true, need: hr[0] };
       const x = takeX(); if (x && took !== x && !shortOpen()) return { say: `เอาเงินออก ${fmtB(x)} บาทก่อน\nแล้วกดปุ่ม เอาเงินออก ${fmtB(x)} บาทแล้ว`, el: tookB, scroll: true }; }
     return null;
   };
@@ -387,7 +398,7 @@
   const save = () => {
     const rows = {}; document.querySelectorAll("#lines .grid").forEach((g) => { rows[g.dataset.id] = [g.querySelector(".rf").value, g.querySelector(".rc").value]; }); // .w (เสีย) is never saved · it always comes from waste_logs (W)
     const at = Date.now();
-    if (store.set(KEY, JSON.stringify({ at, rows, cons: state, pick, pt: posTot.value, ce: cashExp.value, cc: cashCnt.value, dl: [...dlv.querySelectorAll("input")].map((i) => i.value), nt: noteEls().map((i) => i.value), note: note.value, step: cur, reached, lo: kept, tk: took, sk: shortKept }))) showDraft(at);
+    if (store.set(KEY, JSON.stringify({ at, rows, cons: state, pick, pt: posTot.value, ce: cashExp.value, cc: cashCnt.value, dl: Object.fromEntries([...dlv.querySelectorAll(".dl")].map((r) => [r.dataset.k, [...r.querySelectorAll("input")].map((i) => i.value)])), nt: noteEls().map((i) => i.value), note: note.value, step: cur, reached, lo: kept, tk: took, sk: shortKept }))) showDraft(at);
   };
   let draft = null; try { draft = JSON.parse(store.get(KEY) || "null"); } catch (_) { draft = null; }
   if (draft) {
@@ -397,7 +408,7 @@
     document.querySelectorAll("#cons .ux-cchip").forEach(paint);
     setPick(Object.values(state).some((v) => v !== "ok") ? "low" : (draft.pick === "all" || draft.pick === "low" ? draft.pick : ""));
     posTot.value = draft.pt || ""; cashExp.value = draft.ce || ""; cashCnt.value = draft.cc || "";
-    (draft.dl || []).forEach((v, i) => { const x = dlv.querySelectorAll("input")[i]; if (x) x.value = v; }); (draft.nt || []).forEach((v, i) => { const x = noteEls()[i]; if (x) x.value = v; }); if (draft.nt) sumNotes(); dlSay(); note.value = draft.note || ""; diff(); showDraft(draft.at);
+    Object.entries(draft.dl || {}).forEach(([k, v]) => dlv.querySelectorAll(`[data-k="${k}"] input`).forEach((x, i) => { x.value = v?.[i] ?? ""; })); (draft.nt || []).forEach((v, i) => { const x = noteEls()[i]; if (x) x.value = v; }); if (draft.nt) sumNotes(); dlSay(); note.value = draft.note || ""; diff(); showDraft(draft.at);
     reached = Math.min(Math.max(+draft.reached || 1, +draft.step || 1), 4);
     kept = draft.lo || ""; shortKept = draft.sk || ""; diff();
   }
@@ -428,7 +439,7 @@
     for (let s = cur; s < n; s++) { const g = gap(s); if (g) {
       if (s !== cur) show(s);
       if (!quiet) { say(g.say, true); document.querySelectorAll("#lines .grid").forEach((r) => r.classList.toggle("ux-miss", s === 1 && !r.classList.contains("ux-zero") && req(r).value === ""));
-        if (g.row) { g.row.hidden = false; g.row.classList.add("ux-over"); g.el.scrollIntoView({ block: "center" }); } if (g.first) g.first.hidden = false; if (g.scroll) g.el.scrollIntoView({ block: "center" }); UXM.shake(g.el); }
+        if (g.row) { g.row.hidden = false; g.row.classList.add("ux-over"); g.el.scrollIntoView({ block: "center" }); } if (g.first) g.first.hidden = false; if (g.need) { g.need.dataset.need = "1"; dlSay(); } if (g.scroll) g.el.scrollIntoView({ block: "center" }); UXM.shake(g.el); }
       return false; }
       if (s === 1 && !quiet) { const o = overList(); if (o.length && overSig(o) !== overKept) { overs = o; overTo = n;
           overL.innerHTML = o.map((x) => `<li><b>${UXS.esc(x.p.name)}</b><em>เกิน ${x.sum - x.has} ${UXS.esc(x.p.unit || "")}</em><span>มี ${x.has} นับได้ ${x.sum}</span>${x.p.made_here ? "<span>ห่อเพิ่ม กดห่อข้าวเหนียวก่อน</span>" : ""}</li>`).join("");
