@@ -83,6 +83,44 @@
 .only { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 4px 8px; font-size: 14px; color: var(--color-ink-soft); }
 .only button { min-height: 44px; padding: 0 4px; border: 0; background: none; font: 500 14px/1 var(--font-body); color: var(--color-primary-dark); cursor: pointer; }
 .go-costs { margin-top: 10px; }
+
+/* bill round (Mos 5 พ.ย.): things bought in one trip = one bill · tick tiles → one sheet, a price each, one slip */
+#items .it.tile, .recent button { position: relative; }
+#items .it.tile[aria-pressed=true], .recent button[aria-pressed=true] { box-shadow: inset 0 0 0 2px var(--color-primary); background: var(--tint-primary); }
+.tk { position: absolute; top: 6px; right: 6px; display: none; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; background: var(--color-primary); }
+.tk svg { width: 13px; height: 13px; }
+[aria-pressed=true] > .tk { display: grid; }
+.recent button .tk { top: -5px; right: -5px; }
+.recent .row { padding-top: 6px; }
+body.picking #pNew { padding-bottom: 96px; }
+.pickbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 4px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)) 6px; border-top: .5px solid var(--color-separator); background: color-mix(in srgb, var(--color-background) 86%, transparent); -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%); }
+.pickbar[hidden] { display: none; }
+.pickbar .clr { flex: none; min-width: 56px; height: 48px; border: 0; background: none; font: 500 16px/1 var(--font-body); color: var(--color-ink-soft); cursor: pointer; }
+.pickbar .btn { flex: 1; margin: 0; }
+.lns .ln { display: grid; grid-template-columns: 40px minmax(0, 1fr) 124px; align-items: center; gap: 8px 10px; padding: 10px 0; }
+.lns.multi .ln { grid-template-columns: 40px minmax(0, 1fr) 124px 28px; }
+.lns .ln + .ln { border-top: .5px solid var(--color-separator); }
+.ln .nm { min-width: 0; font-weight: 500; line-height: 1.3; }
+.ln .nm small { display: block; font-size: 13px; font-weight: 400; color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
+.ln .in { margin: 0; }
+.ln .in.q { grid-column: 2 / 4; }
+.ln .in.q::before { content: attr(data-l); flex: 1; padding-left: 14px; font-size: 15px; color: var(--color-ink-soft); white-space: nowrap; }
+.ln .in.q > input { flex: none; width: 64px; }
+.ln .rm { width: 28px; height: 44px; padding: 0; border: 0; background: none; font-size: 16px; color: var(--color-ink-soft); cursor: pointer; }
+.ln .cats { grid-column: 2 / -1; margin: 0; }
+.tot2 { display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px; padding: 12px 0 0; border-top: 1.5px solid var(--color-foreground); font: 600 17px/1.3 var(--font-head); font-variant-numeric: tabular-nums; }
+.tot2 b { font-size: 26px; line-height: 1.15; }
+.tot2[hidden] { display: none; }
+#es .slip { margin-top: 14px; }
+#es .slip.need { box-shadow: inset 0 0 0 1.5px var(--color-primary); color: var(--color-primary-dark); background: var(--tint-primary); }
+#phH { margin: 6px 0 0; font-size: 14px; }
+.bill { margin: 6px -8px; padding: 0 8px; border-radius: 14px; background: var(--color-fill); }
+.bill .it + .it { border-top: .5px solid var(--color-separator); }
+.bill + .it { border-top: 0; }
+.billf { display: flex; align-items: center; gap: 8px; min-height: 44px; border-top: .5px solid var(--color-separator); font-size: 14px; color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
+.billf span { flex: 1; }
+.billf b { font: 600 16px/1.2 var(--font-head); color: var(--color-foreground); }
+.billf a { padding: 12px 0; }
 </style>
 
 
@@ -95,20 +133,21 @@
 <div id="form" class="ld" hidden>
   <div class="tabs" id="tabs" role="tablist" aria-label="รายจ่าย"><button type="button" role="tab" data-t="new" class="on" aria-selected="true">ลงรายจ่าย</button><button type="button" role="tab" data-t="list" aria-selected="false" id="tList">ลงแล้ว<b id="cnt"></b></button></div>
   <div id="pNew" role="tabpanel">
-    <p class="fhint">จ่ายเงินแล้วลงเลย<br>บิล CPF กับเงินเดือน แอปคิดให้ ไม่ต้องลง</p>
+    <p class="fhint">ซื้อรอบเดียวหลายอย่าง ติ๊กให้ครบแล้วลงเป็นบิลเดียว<br>บิล CPF กับเงินเดือน แอปคิดให้ ไม่ต้องลง</p>
     <div class="recent" id="recent" hidden></div>
     <div class="in"><input id="q" type="search" enterkeyhint="search" placeholder="ค้นหา หรือพิมพ์ชื่อใหม่" autocomplete="off" aria-label="ค้นหารายการ"></div>
     <div class="card el" id="items"></div>
   </div>
   <div id="pList" role="tabpanel" hidden></div>
+  <div class="pickbar" id="pb" hidden><button type="button" class="clr" id="pbX">ล้าง</button><button type="button" class="btn primary" id="pbGo"></button></div>
   <dialog id="es" class="bsheet" aria-labelledby="esH"><div class="body"><div class="grab"></div>
     <div class="hd"><b id="esH"></b><button class="x" type="button" aria-label="ปิด">✕</button></div>
-    <div id="fCat" hidden><label class="fl">หมวด</label><div class="cats" id="cats"></div></div>
-    <div id="fQty" hidden><label class="fl" for="qty" id="qtyL">ได้มากี่</label><div class="in"><input id="qty" type="number" inputmode="decimal" placeholder="0"><span class="sfx" id="qtyU"></span></div></div>
-    <label class="fl" for="amt">ยอดเงิน</label><div class="in"><input id="amt" type="number" inputmode="decimal" placeholder="0"><span class="sfx">บาท</span></div><p id="amtH" class="muted" hidden>ยอดครั้งก่อน ใส่ไว้ให้ แก้ได้</p>
+    <div class="lns" id="lns"></div>
+    <div class="tot2" id="tot" hidden><span>รวมทั้งบิล</span><span><b id="totN">0</b> บาท</span></div>
     <label class="fl">จ่ายด้วย</label><div class="seg" id="paid"><button type="button" data-p="cash">เงินสดหน้าร้าน</button><button type="button" data-p="owner">เจ้าของโอนจ่าย</button></div>
     <div id="fDate" hidden><label class="fl" for="dt">วันที่จ่าย</label><input id="dt" type="date"></div>
-    <label class="btn" style="margin-top:14px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>ถ่ายรูปใบเสร็จ (ไม่บังคับ) <input id="ph" type="file" accept="image/*" capture="environment" hidden></label>
+    <label class="btn slip" id="phL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg><span id="phT"></span><input id="ph" type="file" accept="image/*" hidden></label>
+    <p id="phH" class="muted"></p>
     <p id="phS" class="muted"></p></div>
     <div class="foot"><button id="save" class="btn primary" type="button">บันทึกรายจ่าย</button><p id="msg" class="muted"></p></div></dialog>
 </div>
@@ -168,47 +207,81 @@
     // ลงล่าสุด: the last 4 used on this phone, with the amount paid last time
     const L = last(), rc = Object.entries(L).sort((a, b) => b[1].t - a[1].t).map(([k, v]) => [ITEMS.find((x) => keyOf(x) === k), v]).filter(([x]) => x).slice(0, 4);
     recent.hidden = !!t || !rc.length;
+    setTimeout(mark);
     recent.innerHTML = rc.length ? `<h3>ลงล่าสุด</h3><div class="row">${rc.map(([x, v]) => `<button type="button" data-k="${ITEMS.indexOf(x)}">${ci(x.cat)}<span><b>${esc(x.name)}</b><small>${baht(v.a)}</small></span></button>`).join("")}</div>` : "";
   };
   q.oninput = draw;
-  recent.onclick = (e) => { const b = e.target.closest("[data-k]"); if (b) open(ITEMS[+b.dataset.k]); };
 
-  // ---- the sheet: one expense
+  // ---- the sheet: one bill = everything ticked, a price each, one pay source, one slip (Mos 5 พ.ย.)
   const sheet = UXD.sheet(es), photo = [];
-  Photo.picker(supabase, ph, { paths: photo, type: "expense", name: "รูปใบเสร็จ", max: 1, status: phS });
-  let cur = null, cat = null, paidBy = null;
-  const pick = (p) => { paidBy = p; paid.querySelectorAll("button").forEach((b) => { b.classList.toggle("on-ok", b.dataset.p === p); b.setAttribute("aria-pressed", b.dataset.p === p); }); };
-  paid.onclick = (e) => { const b = e.target.closest("[data-p]"); if (b) pick(b.dataset.p); };
-  const pickCat = (c) => { cat = c; cats.querySelectorAll("button").forEach((b) => { b.classList.toggle("on", b.dataset.c === c); b.setAttribute("aria-pressed", b.dataset.c === c); }); };
-  cats.innerHTML = KEYS.filter((k) => k !== "fee").map((k) => `<button type="button" class="chip" data-c="${k}" aria-pressed="false">${CAT[k]}</button>`).join(""); // round 3 พ.ย. (Mos): the 7-11 fee comes from หน้าฝากเงิน by itself · no fee chip here
-  cats.onclick = (e) => { const b = e.target.closest("[data-c]"); if (b) pickCat(b.dataset.c); };
-  if (OWN) { fDate.hidden = false; dt.max = UXS.today(); dt.value = bday; UXM.dateTh(dt); }
-  const open = (x) => {
-    cur = x; esH.textContent = x.name; fCat.hidden = !x.isNew; fQty.hidden = !x.count;
-    qtyL.textContent = `ได้มากี่${x.unit || "หน่วย"}`; qtyU.textContent = x.unit || "";
-    pickCat(x.isNew ? null : x.cat); pick(OWN ? "owner" : "cash");   // staff mostly pay from the drawer, the owner by transfer · one tap to change
-    const l = last()[keyOf(x)]; qty.value = ""; amt.value = l ? l.a : ""; amtH.hidden = !l; msg.textContent = ""; msg.className = "muted";
-    es.querySelectorAll(".thumb .x").forEach((b) => b.click());
-    sheet.open();
+  // gallery (owner only): his transfer slip is a bank-app screenshot, so the photo library is allowed (same as the CPF pay slip, 0092)
+  // staff pay from the drawer → still a photo taken now (an old receipt can't be reused)
+  Photo.picker(supabase, ph, { paths: photo, type: "expense", name: "รูปหลักฐาน", max: 1, status: phS, gallery: OWN, onChange: (ps) => { phH.hidden = !!ps.length; phL.classList.remove("need"); } });
+  const CHK = '<i class="tk" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></i>';
+  let sel = [], paidBy = null; const vals = {}; // vals: what was typed per item, kept while the sheet is closed
+  const isSel = (x) => sel.some((s) => keyOf(s) === keyOf(x));
+  const mark = () => {
+    document.querySelectorAll("#items [data-k], #recent [data-k]").forEach((b) => { b.setAttribute("aria-pressed", isSel(ITEMS[+b.dataset.k])); if (!b.querySelector(".tk")) b.insertAdjacentHTML("beforeend", CHK); });
+    pb.hidden = !sel.length; document.body.classList.toggle("picking", !!sel.length);
+    pbGo.textContent = sel.length === 1 ? `ใส่ราคา ${sel[0].name}` : `ใส่ราคา ${sel.length} รายการ`;
   };
-  items.onclick = (e) => { const b = e.target.closest(".it"); if (!b) return; if (b.dataset.focus) { q.focus(); q.placeholder = "พิมพ์ชื่อรายการใหม่"; return; } open(b.dataset.new ? { name: q.value.trim(), isNew: true } : ITEMS[+b.dataset.k]); };
-  const bad = (t, el) => { msg.textContent = t; msg.className = "err"; if (el) UXM.shake(el); };
+  const toggle = (x) => { sel = isSel(x) ? sel.filter((s) => keyOf(s) !== keyOf(x)) : [...sel, x]; mark(); };
+  pbX.onclick = () => { sel = []; mark(); fresh(); };
+  const pick = (p) => { paidBy = p; paid.querySelectorAll("button").forEach((b) => { b.classList.toggle("on-ok", b.dataset.p === p); b.setAttribute("aria-pressed", b.dataset.p === p); });
+    // Mos 6 พ.ย.: every expense carries proof · the owner's own transfer = the slip · anything else = the receipt,
+    // and where a market stall gives no paper, a photo of what was bought
+    phT.textContent = slip() ? "แนบสลิปโอนเงิน" : OWN ? "แนบใบเสร็จ" : "ถ่ายใบเสร็จ"; phL.classList.remove("need");
+    phH.textContent = slip() ? "ถ่ายใหม่ หรือเลือกรูปในเครื่องก็ได้" : "ไม่มีใบเสร็จ ถ่ายของที่ซื้อแทนได้"; };
+  const slip = () => OWN && paidBy === "owner";
+  // a new bill starts clean: the slip and the pay choice belong to one bill, and stay while its sheet is closed to tick one more thing
+  const fresh = () => { paidBy = null; es.querySelectorAll(".thumb .x").forEach((b) => b.click()); };
+  paid.onclick = (e) => { const b = e.target.closest("[data-p]"); if (b) pick(b.dataset.p); };
+  if (OWN) { fDate.hidden = false; dt.max = UXS.today(); dt.value = bday; UXM.dateTh(dt); }
+  const total = () => { const t = sel.reduce((s, x) => s + (+vals[keyOf(x)]?.a || 0), 0); totN.textContent = t.toLocaleString("th-TH", { maximumFractionDigits: 2 }); tot.hidden = sel.length < 2;
+    save.textContent = sel.length > 1 ? `บันทึก ${sel.length} รายการ` : "บันทึกรายจ่าย"; };
+  const lines = () => {
+    esH.textContent = sel.length === 1 ? sel[0].name : `ลงรายจ่าย ${sel.length} รายการ`;
+    lns.innerHTML = sel.map((x, i) => { const k = keyOf(x), l = last()[k], v = (vals[k] ||= { a: l ? l.a : "", q: "", cat: x.isNew ? null : x.cat });
+      return `<div class="ln" data-i="${i}">${ci(v.cat || "new")}<span class="nm">${esc(x.name)}${l ? `<small>ครั้งก่อน ${baht(l.a)}</small>` : ""}</span>`
+        + `<div class="in"><input class="a" type="number" inputmode="decimal" placeholder="0" value="${v.a}" aria-label="ราคา ${esc(x.name)}"><span class="sfx">บาท</span></div>`
+        + (sel.length > 1 ? `<button type="button" class="rm" aria-label="เอา ${esc(x.name)} ออกจากบิล">✕</button>` : "")
+        + (x.count ? `<div class="in q" data-l="ได้มากี่${x.unit || "หน่วย"} เข้าสต็อก"><input class="qy" type="number" inputmode="decimal" placeholder="0" value="${v.q}" aria-label="จำนวน ${esc(x.name)}"><span class="sfx">${x.unit || ""}</span></div>` : "")
+        + (x.isNew ? `<div class="cats">${KEYS.filter((c) => c !== "fee").map((c) => `<button type="button" class="chip${v.cat === c ? " on" : ""}" data-c="${c}" aria-pressed="${v.cat === c}">${CAT[c]}</button>`).join("")}</div>` : "") + `</div>`; }).join("");
+    lns.classList.toggle("multi", sel.length > 1); total();
+  };
+  lns.oninput = (e) => { const r = e.target.closest(".ln"), v = vals[keyOf(sel[+r.dataset.i])]; if (e.target.classList.contains("a")) v.a = e.target.value; else v.q = e.target.value; total(); };
+  lns.onclick = (e) => { const r = e.target.closest(".ln"); if (!r) return; const x = sel[+r.dataset.i];
+    if (e.target.closest(".rm")) { sel = sel.filter((s) => s !== x); mark(); if (sel.length) lines(); else { sheet.close(); fresh(); } return; }
+    const c = e.target.closest("[data-c]"); if (c) { vals[keyOf(x)].cat = c.dataset.c; lines(); } };
+  const open = () => { if (!paidBy) pick(OWN ? "owner" : "cash");   // staff mostly pay from the drawer, the owner by transfer · one tap to change
+    msg.textContent = ""; msg.className = "muted"; lines(); sheet.open(); };
+  pbGo.onclick = open;
+  recent.onclick = (e) => { const b = e.target.closest("[data-k]"); if (b) toggle(ITEMS[+b.dataset.k]); };
+  items.onclick = (e) => { const b = e.target.closest(".it"); if (!b) return; if (b.dataset.focus) { q.focus(); q.placeholder = "พิมพ์ชื่อรายการใหม่"; return; }
+    // a typed new name joins the bill and opens the sheet at once (it has no tile to untick · ✕ on its line takes it out)
+    if (b.dataset.new) { sel = [...sel, { name: q.value.trim(), isNew: true }]; q.value = ""; draw(); return open(); }
+    toggle(ITEMS[+b.dataset.k]); };
+  const bad = (t, el) => { msg.textContent = t; msg.className = "err"; if (el) { el.scrollIntoView({ block: "center", behavior: "smooth" }); UXM.shake(el); } };
   save.onclick = async () => {
-    if (cur.isNew && !cat) return bad("เลือกหมวดก่อน", cats);
-    if (cur.count && !(+qty.value > 0)) return bad(`ใส่จำนวน${cur.name}ที่ได้มา`, qty);
-    if (!(+amt.value > 0)) return bad("ใส่ยอดเงินที่จ่าย", amt);
-    if (+amt.value > 100000) return bad("ยอดเงินเกิน 100,000 บาท ตรวจตัวเลขอีกครั้ง", amt);
-    const p = { amount: amt.value, paid_by: paidBy, photo: photo[0] || null, ...(OWN && dt.value ? { date: dt.value } : {}) };
-    if (cur.pid) Object.assign(p, { product_id: cur.pid, qty: cur.count ? qty.value : null });
-    else if (cur.iid) p.item_id = cur.iid; else Object.assign(p, { name: cur.name, category: cat });
+    for (const [i, x] of sel.entries()) { const v = vals[keyOf(x)], r = lns.children[i];
+      if (x.isNew && !v.cat) return bad(`เลือกหมวดของ ${x.name}`, r.querySelector(".cats"));
+      if (x.count && !(+v.q > 0)) return bad(`ใส่จำนวน${x.name}ที่ได้มา`, r.querySelector(".in.q"));
+      if (!(+v.a > 0)) return bad(`ใส่ราคา ${x.name}`, r.querySelector(".in"));
+      if (+v.a > 100000) return bad("ยอดเงินเกิน 100,000 บาท ตรวจตัวเลขอีกครั้ง", r.querySelector(".in")); }
+    // ponytail: the proof rule lives in this page only (add_expense_bill accepts no photo) · move it into the function once the rule has settled
+    if (!photo[0]) { phL.classList.add("need"); return bad(slip() ? "แนบสลิปโอนเงินก่อน" : "ถ่ายใบเสร็จก่อน ไม่มีใบเสร็จ ถ่ายของที่ซื้อแทน", phL); }
+    const p = { paid_by: paidBy, photo: photo[0] || null, ...(OWN && dt.value ? { date: dt.value } : {}),
+      lines: sel.map((x) => { const v = vals[keyOf(x)]; return { amount: v.a, ...(x.pid ? { product_id: x.pid, qty: x.count ? v.q : null } : x.iid ? { item_id: x.iid } : { name: x.name, category: v.cat }) }; }) };
     save.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
-    const { error } = await supabase.rpc("add_expense", { p });
+    const { error } = await supabase.rpc("add_expense_bill", { p });
     save.disabled = false;
     if (error) return bad(App.errText(error));
-    sheet.close(); remember(cur, +amt.value);
-    UXM.toast(cur.count ? `ลง${cur.name}แล้ว ✓ เข้าสต็อก ${+qty.value} ${cur.unit || ""}` : "ลงรายจ่ายแล้ว ✓");
+    sheet.close(); const n = sel.length, sum = sel.reduce((s, x) => s + +vals[keyOf(x)].a, 0), hadNew = sel.some((x) => x.isNew);
+    const one = sel[0], oneQ = +vals[keyOf(one)].q;
+    sel.forEach((x) => { remember(x, +vals[keyOf(x)].a); delete vals[keyOf(x)]; }); sel = []; fresh();
+    UXM.toast(n > 1 ? `ลง ${n} รายการแล้ว ✓ รวม ${baht(sum)}` : one.count ? `ลง${one.name}แล้ว ✓ เข้าสต็อก ${oneQ} ${one.unit || ""}` : "ลงรายจ่ายแล้ว ✓");
     q.value = "";
-    if (cur.isNew) await load();
+    if (hadNew) await load();
     draw(); await list();
   };
 
@@ -216,7 +289,7 @@
   let ym = bday.slice(0, 7), only = null;
   const list = async () => {
     const m0 = ym + "-01", m1 = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 1)).toISOString().slice(0, 10);
-    let rq = supabase.from("expenses").select("id,date,category,name,qty,amount,paid_by,photo,created_by,created_at,product_id").order("date", { ascending: false }).order("created_at", { ascending: false });
+    let rq = supabase.from("expenses").select("id,date,category,name,qty,amount,paid_by,photo,created_by,created_at,product_id,bill_id").order("date", { ascending: false }).order("created_at", { ascending: false });
     rq = OWN ? rq.gte("date", m0).lt("date", m1) : rq.eq("date", bday);
     const p0 = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7) - 2, 1)).toISOString().slice(0, 10);
     const [{ data, error }, day, prev] = await Promise.all([rq, supabase.from("shop_days").select("status").eq("date", bday).maybeSingle(),
@@ -238,11 +311,19 @@
     const feeIds = rows.filter((r) => r.category === "fee").map((r) => r.id);
     const dep = new Set(feeIds.length ? ((await supabase.from("deposits").select("expense_id").in("expense_id", feeIds)).data || []).map((x) => x.expense_id) : []);
     const can = (r) => !dep.has(r.id) && (OWN ? !(r.qty != null && r.date === bday && sent) : r.created_by === me.userId && !sent); // server re-checks (a stock row of any sent day is refused)
-    const row = (r) => `<div class="it" data-id="${r.id}">${ci(r.category)}<span class="grow"><b>${esc(r.name)}${r.qty != null ? ` ${+r.qty}` : ""}</b><small><span class="pill"${r.paid_by === "cash" ? ' data-tone="ok"' : ""}>${PAY_S[r.paid_by]}</span>${hm(r.created_at)} น.${r.photo ? ` · <a href="#" data-ph="${esc(r.photo)}">ดูใบเสร็จ</a>` : ""}${dep.has(r.id) ? ` · <a href="deposit.html">จากหน้าฝากเงิน</a>` : ""}</small></span><span class="amt">${baht(r.amount)}</span>${can(r) ? `<button type="button" class="del" data-del="${r.id}" aria-label="ลบ ${esc(r.name)}">✕</button>` : ""}</div>`;
+    const row = (r) => `<div class="it" data-id="${r.id}">${ci(r.category)}<span class="grow"><b>${esc(r.name)}${r.qty != null ? ` ${+r.qty}` : ""}</b><small><span class="pill"${r.paid_by === "cash" ? ' data-tone="ok"' : ""}>${PAY_S[r.paid_by]}</span>${hm(r.created_at)} น.${r.photo && !inBill(r) ? ` · <a href="#" data-ph="${esc(r.photo)}">ดูใบเสร็จ</a>` : ""}${dep.has(r.id) ? ` · <a href="deposit.html">จากหน้าฝากเงิน</a>` : ""}</small></span><span class="amt">${baht(r.amount)}</span>${can(r) ? `<button type="button" class="del" data-del="${r.id}" aria-label="ลบ ${esc(r.name)}">✕</button>` : ""}</div>`;
+    // a bill = 2+ lines saved together: one tinted block, the slip and the bill total once at its foot
+    const nb = {}; rows.forEach((r) => { if (r.bill_id) nb[r.bill_id] = (nb[r.bill_id] || 0) + 1; });
+    function inBill(r) { return r.bill_id && nb[r.bill_id] > 1; }
+    const blocks = (rs) => { let out = "", i = 0; while (i < rs.length) { const r = rs[i]; if (!inBill(r)) { out += row(r); i++; continue; }
+      const g = []; while (i < rs.length && rs[i].bill_id === r.bill_id) g.push(rs[i++]);
+      const ph = g.find((x) => x.photo)?.photo;
+      out += `<div class="bill">${g.map(row).join("")}<div class="billf"><span>บิลเดียวกัน ${nb[r.bill_id]} รายการ${ph ? ` · <a href="#" data-ph="${esc(ph)}">${r.paid_by === "owner" ? "ดูสลิป" : "ดูใบเสร็จ"}</a>` : ""}</span><b>${baht(rows.filter((x) => x.bill_id === r.bill_id).reduce((s, x) => s + +x.amount, 0))}</b></div></div>`; }
+      return out; };
     let body = "";
     if (!rows.length) body = `<div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>${OWN ? "เดือนนี้ยังไม่มีรายจ่าย" : "วันนี้ยังไม่มีรายจ่าย"}</p></div>`;
-    else if (OWN) { const g = {}; shown.forEach((r) => (g[r.date] ||= []).push(r)); body = (only ? `<div class="only"><span>แสดงเฉพาะ${CAT[only]}</span><button type="button" data-all="1">ดูทั้งหมด</button></div>` : "") + `<div class="card el">` + Object.entries(g).map(([d, rs]) => `<h3 class="sec day"><span>${UXS.thd(d, { weekday: "short" })}</span><span>${baht(rs.reduce((s, r) => s + +r.amount, 0))}</span></h3>` + rs.map(row).join("")).join("") + `</div>`; }
-    else body = `<div class="card el">${rows.map(row).join("")}</div>`;
+    else if (OWN) { const g = {}; shown.forEach((r) => (g[r.date] ||= []).push(r)); body = (only ? `<div class="only"><span>แสดงเฉพาะ${CAT[only]}</span><button type="button" data-all="1">ดูทั้งหมด</button></div>` : "") + `<div class="card el">` + Object.entries(g).map(([d, rs]) => `<h3 class="sec day"><span>${UXS.thd(d, { weekday: "short" })}</span><span>${baht(rs.reduce((s, r) => s + +r.amount, 0))}</span></h3>` + blocks(rs)).join("") + `</div>`; }
+    else body = `<div class="card el">${blocks(rows)}</div>`;
     pList.innerHTML = nav + head + body; tick();
     pList.querySelectorAll("[data-f], [data-all]").forEach((b) => { b.onclick = () => { only = b.dataset.all || only === b.dataset.f ? null : b.dataset.f; list(); }; });
     if (OWN) { const step = (k) => { const d = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7) - 1 + k, 1)); ym = d.toISOString().slice(0, 7); list(); }; mp.onclick = () => step(-1); mn.onclick = () => step(1); }
