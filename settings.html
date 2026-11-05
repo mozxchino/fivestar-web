@@ -25,8 +25,42 @@ a.cell{text-decoration:none;color:inherit}
 .g label.chk{display:flex;align-items:center;gap:10px;min-height:var(--field);margin:0;align-self:end;font-size:16px;color:var(--fg)}
 /* 0054: staff bonus row under the 4 month tiles (owner only), full width */
 .ux-4 .ux-bonus{grid-column:1/-1;min-height:0}
+
+/* A2 round (Mos 6 พ.ย.): ร้าน = 4 groups (what the setting drives), a jump row on top · group title with a brand symbol, the old section names become sub-heads */
+.st-jump{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 16px 0}
+.st-jump a{display:flex;align-items:center;justify-content:center;min-height:44px;padding:0 4px;border-radius:20px;background:var(--color-card);box-shadow:var(--shadow-sm);font:500 15px/1 var(--font-body);color:var(--color-foreground);text-decoration:none}
+.st-jump a:active{background:var(--color-fill-pressed)}
+body.grouped h2.st-g{display:flex;align-items:center;gap:10px;margin:30px 16px 0;font:600 21px/1.25 var(--font-head);letter-spacing:-.01em;scroll-margin-top:150px}
+body.grouped h2.st-g::before{display:none}
+.st-jump + h2.st-g{margin-top:20px}
+body.grouped h2.st-g .pp{margin-left:auto}
+body.grouped #staff > h2.st-g:first-child, body.grouped #ntf > h2.st-g:first-child{margin-top:18px}
+body.grouped h2.st-g + .gl, body.grouped h2.st-g + .person, body.grouped h2.st-g + .card{margin-top:10px}
+/* แจ้งเตือน: one row per card · symbol left, who gets it underneath the name */
+.cell.nrow{display:grid;grid-template-columns:30px minmax(0,1fr);gap:8px 12px;align-items:start;padding-block:12px}
+.cell.nrow .k{display:block}
+.cell.nrow .who{grid-column:2;margin-top:0}
+/* the unit sits inside the entry box (Mos 6 พ.ย.) · one width down a card so the right edges line up */
+.cell .ubox{flex:none;display:inline-flex;align-items:center;justify-content:flex-end;gap:6px;width:136px;min-height:40px;padding:0 12px;border-radius:10px;background:var(--color-fill);cursor:text}
+.cell .ubox > input.num-in{flex:1 1 0;width:0;min-width:0;min-height:0;padding:0;border-radius:0;background:none;text-align:right}
+.cell .ubox > input.num-in:focus{background:none}
+.cell .ubox .unit{font-size:15px;color:var(--color-ink-soft)}
+.cell .ubox:focus-within{background:var(--tint-primary)}
+h3.st-s{margin:16px 16px 6px;font:600 15px/1.35 var(--font-head);color:var(--color-foreground)}
+/* สินค้า: the name, one grey line (where it comes from · how it is bought · CPF code), the cost on the right */
+.prow .cst{flex:none;text-align:right;font:500 17px/1.2 var(--font-head);font-variant-numeric:tabular-nums;white-space:nowrap}
+.prow .cst small{margin-left:3px;font:400 13px/1 var(--font-body);color:var(--color-ink-soft)}
+.prow .meta .pp{margin-top:4px}
+/* product form: CPF codes printed on the delivery bill (0089 cpf_codes) */
+.codes{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.codes:empty{display:none}
+.codes .code{display:inline-flex;align-items:center;gap:2px;min-height:40px;padding:0 4px 0 14px;border-radius:20px;background:var(--color-fill);font:500 16px/1 var(--font-body);font-variant-numeric:tabular-nums}
+.codes .code button{width:36px;height:40px;border:0;background:none;font-size:15px;color:var(--color-ink-soft);cursor:pointer}
+.code-add{display:flex;align-items:center;gap:8px;margin-top:8px}
+.code-add input{flex:1;min-width:0}
+.code-add .btn{flex:none;width:auto;margin:0}
 </style></head><body class="grouped" ontouchstart="">
-<header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ตั้งค่า</h1><div class="sub">สำหรับเจ้าของ</div></div>
+<header class="topbar brand"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>ตั้งค่า</h1><div class="sub">ห้าดาว สาขาอ่อนนุช 44 จุด 3</div></div>
   <div class="tabs sk" aria-hidden="true"><button class="on" tabindex="-1">พนักงาน</button><button tabindex="-1">สินค้า</button><button tabindex="-1">ร้าน</button><button tabindex="-1">แจ้งเตือน</button></div><div class="tabs ld" id="tabs" hidden><button data-t="staff" class="on">พนักงาน</button><button data-t="prod">สินค้า</button><button data-t="sys">ร้าน</button><button data-t="ntf">แจ้งเตือน</button></div></header>
 <p id="blocked" class="err" hidden></p>
 <div class="sk"><span class="vh">กำลังเปิด…</span><h2 style="display:flow-root"><i class="sk-b" style="--w:30%;--h:13px;margin:4px 0"></i></h2><div class="gl"><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div></div><h2 style="display:flow-root"><i class="sk-b" style="--w:36%;--h:13px;margin:4px 0"></i></h2><div class="gl"><div class="cell has-av"><i class="sk-b" style="--w:36px;--h:36px;--r:50%"></i><i class="sk-b" style="--w:30%;--h:17px;margin:0"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div><div class="cell"><i class="sk-b" style="--w:38%;--h:16px"></i><i class="sk-b" style="--w:22%;--h:16px;margin:0 0 0 auto"></i></div></div></div>
@@ -60,6 +94,24 @@ a.cell{text-decoration:none;color:inherit}
   tabs.forEach((b) => b.onclick = () => { tabs.forEach((x) => { x.classList.toggle("on", x === b); $(x.dataset.t).hidden = x !== b; }); });
   const qs = new URLSearchParams(location.search);
   const fail = (e) => alert("บันทึกไม่ได้\n" + App.errText(e));
+  // A2 (Mos 6 พ.ย.): a group title = brand symbol + name · tone "" = grey (nothing to do), "urgent" = someone is waiting
+  const IC = {
+    cpf: '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
+    money: '<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
+    shop: '<path d="M3 9 4.5 4h15L21 9"/><path d="M3 9v1a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0V9"/><path d="M5 12.5V20h14v-7.5"/><path d="M10 20v-4h4v4"/>',
+    link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    userplus: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
+    userx: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m17 8 5 5M22 8l-5 5"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+    cal: '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+    bag: '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+    moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+    send: '<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/>',
+    slip: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 8h8M8 12h8M8 16h5"/>' };
+  const sym = (k, tone = "") => `<span class="sym${tone ? " " + tone : ""}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg></span>`;
+  const G = (k, t, o = {}) => `<h2 class="st-g"${o.id ? ` id="${o.id}"` : ""}>${sym(k, o.tone ?? "red")}${t}${o.extra || ""}</h2>`;
   const money = (n) => Number(n).toLocaleString("th-TH", { maximumFractionDigits: 2 }); // qa: openSum (manager too) needs it before the manager return
 
   // M9: pay boxes show 15,000 · digits only while the cursor is in the box, so the saved number is plain
@@ -90,7 +142,7 @@ a.cell{text-decoration:none;color:inherit}
     if (e1 || e2) { $("staff").innerHTML = `<p class="err">เปิดรายชื่อไม่ขึ้น ลองเปิดหน้าใหม่\n${E(App.errText(e1 || e2))}</p>`; return; }
     // owner row: name + เจ้าของ only (no pay fields, can't be switched off · DB guard 0024)
     // mock ก: one grouped list per person · label left, value right, unit after the number · save on change (toast at the bottom)
-    const ci = (id, f, val, label, unit, type = "number") => `<label class="cell"><span class="k">${label}</span><input class="${type === "number" ? "num-in" : type === "money" ? "num-in money-in" : ""}" type="${type === "money" ? "text" : type}" ${type === "number" ? 'inputmode="decimal" step="any" placeholder="ยังไม่ใส่"' : type === "money" ? 'inputmode="decimal" placeholder="ยังไม่ใส่"' : ""} value="${E(type === "money" && val != null && val !== "" ? money(val) : val)}" data-t="users" data-id="${id}" data-f="${f}" aria-label="${label}">${unit ? `<span class="unit">${unit}</span>` : ""}</label>`;
+    const ci = (id, f, val, label, unit, type = "number") => `<label class="cell"><span class="k">${label}</span>${unit ? '<span class="ubox">' : ""}<input class="${type === "number" ? "num-in" : type === "money" ? "num-in money-in" : ""}" type="${type === "money" ? "text" : type}" ${type === "number" ? 'inputmode="decimal" step="any" placeholder="ยังไม่ใส่"' : type === "money" ? 'inputmode="decimal" placeholder="ยังไม่ใส่"' : ""} value="${E(type === "money" && val != null && val !== "" ? money(val) : val)}" data-t="users" data-id="${id}" data-f="${f}" aria-label="${label}">${unit ? `<span class="unit">${unit}</span></span>` : ""}</label>`;
     const av = (x) => `<span class="av${x.active ? "" : " off"}" aria-hidden="true">${E((x.name || "?").slice(0, 1).toUpperCase())}</span>`;
     const head = (x, pill) => `<div class="cell has-av${x.active ? "" : " dim"}">${av(x)}<span class="k name">${E(x.name)}</span>${pill}</div>`;
     // round 4: a working staff member's name row opens this month's summary (bottom sheet)
@@ -107,10 +159,10 @@ a.cell{text-decoration:none;color:inherit}
       ${mgr(x)}
       <button class="cell act danger" type="button" data-off="${x.id}" data-n="${E(x.name)}">ปิดสิทธิ์ใช้แอป</button></div></div>`;
     const off = (us || []).filter((x) => !x.active);
-    $("staff").innerHTML = `<h2${(pend || []).length ? ' data-tone="bad"' : ""}>คนขอใช้แอป<span class="n">${(pend || []).length} คน</span></h2>` + ((pend || []).map((p, i) => `<div class="card gl" data-src="${E(p.source_id)}"><label class="cell"><span class="k">ชื่อ</span><input type="text" value="${E(p.display_name)}" placeholder="ชื่อที่เรียกในร้าน" aria-label="ชื่อที่เรียกในร้าน"></label>
-      <button class="cell act${i ? "" : " ux-prim"}" type="button" data-ok><span class="k">อนุมัติเป็นพนักงาน</span></button></div>`).join("") || `<p class="gf">ไม่มีคนขอ</p>`)
-      + `<h2>คนที่ใช้แอปอยู่<span class="n">${(us || []).filter((x) => x.active).length} คน</span></h2>` + (us || []).filter((x) => x.active).map(u).join("")
-      + (off.length ? `<h2>ปิดสิทธิ์แล้ว<span class="n">${off.length} คน</span></h2>` + off.map(u).join("") : "");
+    $("staff").innerHTML = ((pend || []).length ? G("userplus", "คนขอใช้แอป", { tone: "urgent", extra: `<span class="pp urgent">รออนุมัติ ${pend.length} คน</span>` }) : "") + ((pend || []).map((p, i) => `<div class="card gl" data-src="${E(p.source_id)}"><label class="cell"><span class="k">ชื่อ</span><input type="text" value="${E(p.display_name)}" placeholder="ชื่อที่เรียกในร้าน" aria-label="ชื่อที่เรียกในร้าน"></label>
+      <button class="cell act${i ? "" : " ux-prim"}" type="button" data-ok><span class="k">อนุมัติเป็นพนักงาน</span></button></div>`).join(""))
+      + G("users", "คนที่ใช้แอปอยู่") + (us || []).filter((x) => x.active).map(u).join("")
+      + (off.length ? G("userx", "ปิดสิทธิ์แล้ว", { tone: "" }) + off.map(u).join("") : "");
   }
   // LINE menu follows the role: manager → เมนูผู้จัดการ · staff / ปิดสิทธิ์ → เมนูร้าน (the role itself is already saved)
   async function syncMenu(id) {
@@ -157,7 +209,7 @@ a.cell{text-decoration:none;color:inherit}
     const av = (x) => `<span class="av" aria-hidden="true">${E((x.name || "?").slice(0, 1).toUpperCase())}</span>`;
     $("staff").innerHTML = `<h2>พนักงาน</h2><p class="gf">ผู้จัดการแก้ได้แค่วันหยุดต่อเดือน</p>` + ((us || []).map((x) => `<div class="person"><div class="gl">
       <button class="cell has-av ux-who" type="button" data-sum="${x.id}" data-n="${E(x.name)}" aria-haspopup="dialog">${av(x)}<span class="k name">${E(x.name)}<small>ดูสรุปเดือนนี้</small></span><span class="pill">พนักงาน</span><span class="go" aria-hidden="true">›</span></button>
-      <label class="cell"><span class="k">หยุดได้</span><input class="num-in" type="number" inputmode="numeric" min="0" max="31" step="1" placeholder="ยังไม่ใส่" value="${E(x.off_days_per_month)}" data-offd="${x.id}" aria-label="${E(x.name)} หยุดได้ วันต่อเดือน"><span class="unit">วัน/เดือน</span></label></div></div>`).join("")
+      <label class="cell"><span class="k">หยุดได้</span><span class="ubox"><input class="num-in" type="number" inputmode="numeric" min="0" max="31" step="1" placeholder="ยังไม่ใส่" value="${E(x.off_days_per_month)}" data-offd="${x.id}" aria-label="${E(x.name)} หยุดได้ วันต่อเดือน"><span class="unit">วัน/เดือน</span></span></label></div></div>`).join("")
       || `<div class="empty tight"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>ยังไม่มีพนักงาน</p></div>`);
   }
 
@@ -206,14 +258,16 @@ a.cell{text-decoration:none;color:inherit}
   const modeOf = (p) => p.count_mode || (isCons(p) ? "tick" : "count");
   // 0057: which count boxes opening / close show (ข้าวเหนียวห่อ สุกอย่างเดียว) · a new product starts with both
   const colsOf = (p) => p.count_cols || (p.id && p.kind !== "cpf" ? "fresh" : "both");
-  const pmeta = (p) => [isCons(p) ? "ของใช้" : "ของขาย", SRC[srcOf(p)], ...(isCons(p) ? [] : [`หน่วยใช้ ${E(UXM.unit(p.unit))}`]), buyTxt(p),
-    ...(isCons(p) ? [] : [p.cost_price == null ? '<b class="err">ยังไม่ใส่ทุน</b>' : `ทุน ${money(p.cost_price)} บาท`]), modeOf(p) === "tick" ? "ติ๊กใกล้หมด" : "นับจำนวน"].join(" · ");
+  // A2: the chip above already says ของขาย / ของใช้, and ของขาย is always counted → the grey line keeps only what tells two rows apart
+  const code = (p) => p.supplier === "cpf" && !p.made_here ? (p.cpf_codes?.length ? [`รหัส ${E(p.cpf_codes[0])}${p.cpf_codes.length > 1 ? ` +${p.cpf_codes.length - 1}` : ""}`] : ['<span class="pp important">ยังไม่มีรหัส CPF</span>']) : [];
+  const pmeta = (p) => [SRC[srcOf(p)], buyTxt(p), ...(isCons(p) ? [modeOf(p) === "tick" ? "ติ๊กใกล้หมด" : "นับจำนวน"] : []), ...code(p)].join(" · ");
+  const pcost = (p) => isCons(p) ? "" : p.cost_price == null ? '<span class="pp important">ยังไม่ใส่ทุน</span>' : `<span class="cst">${money(p.cost_price)}<small>บาท</small></span>`;
   function drawProd() {
     const q = $("q").value.trim().toLowerCase();
     $("pf").innerHTML = Object.entries(FIL).map(([k, [t, f]]) => { const c = ps.filter(f).length; return k === "off" && !c ? "" : `<button type="button" class="chip${k === "nocost" ? " bad" : ""}${!q && k === pf ? " on" : ""}" data-f="${k}" aria-pressed="${!q && k === pf}">${t} <b>${c}</b></button>`; }).join("");
     // ponytail: search looks through every product (ignores the chip) so a hit is never hidden by the wrong filter
     const list = q ? ps.filter((p) => p.name.toLowerCase().includes(q)) : ps.filter(FIL[pf][1]);
-    $("plist").innerHTML = list.map((p) => `<button type="button" class="prow${p.active ? "" : " off"}" data-id="${p.id}" aria-haspopup="dialog"><div class="grow"><div class="nm">${E(p.name)}</div><div class="meta">${pmeta(p)}</div></div><span class="go" aria-hidden="true">›</span></button>`).join("")
+    $("plist").innerHTML = list.map((p) => `<button type="button" class="prow${p.active ? "" : " off"}" data-id="${p.id}" aria-haspopup="dialog"><div class="grow"><div class="nm">${E(p.name)}</div><div class="meta">${pmeta(p)}</div></div>${pcost(p)}<span class="go" aria-hidden="true">›</span></button>`).join("")
       || (!psErr && !q && pf !== "nocost" ? `<div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>ยังไม่มีสินค้า</p><p class="muted">เพิ่มสินค้าที่ขายหรือใช้ในร้านก่อน</p><button type="button" class="btn sm" data-add-empty>เพิ่มสินค้า</button></div>`
       : `<p class="${psErr ? "err" : "muted"}">${psErr ? "เปิดรายการสินค้าไม่ขึ้น ลองเปิดหน้าใหม่" : q ? "ไม่เจอสินค้าชื่อนี้" : "ใส่ราคาทุนครบแล้ว ✓"}</p>`);
     $("plist").querySelector("[data-add-empty]")?.addEventListener("click", () => $("add").click()); // L10: the empty list has its own add button, same sheet as the one above
@@ -232,6 +286,8 @@ a.cell{text-decoration:none;color:inherit}
       <label class="field" for="pg">หมวด <small>(หัวข้อในหน้านับ รับของ ใบสั่ง)</small></label><select id="pg" name="category">${CATS.map((c) => `<option${c === (p.category || (sell ? "ของทานเสริม" : "ของใช้")) ? " selected" : ""}>${c}</option>`).join("")}</select>
       ${seg("sell", "ของขาย หรือ ของใช้", [["sell", "ของขาย"], ["use", "ของใช้"]], sell ? "sell" : "use")}
       ${seg("src", "ซื้อจากไหน", [["cpf", "CPF"], ["self", "ซื้อเอง"], ["made", "ทำในร้าน"]], src)}
+      <div data-q="codes"><label class="field" for="pca">รหัส CPF บนใบส่งของ<small class="h">ตัวอ่านใบส่งของจับคู่สินค้าด้วยรหัสนี้</small></label><div class="codes" id="pcd"></div>
+        <div class="code-add"><input type="text" id="pca" inputmode="numeric" maxlength="12" placeholder="พิมพ์รหัสที่จะเพิ่ม" autocomplete="off"><button type="button" class="btn sm" id="pcb">เพิ่มรหัส</button></div></div>
       <label class="field" for="pu">หน่วยใช้ <small>(ที่พนักงานนับ)</small></label><input type="text" id="pu" name="unit" list="units" placeholder="ชิ้น" value="${E(UXM.unit(p.unit))}" required>
       <label class="field" for="pb">หน่วยซื้อ</label><input type="text" id="pb" name="buy_unit" list="buys" placeholder="ถุง" value="${E(UXM.unit(p.buy_unit))}">
       <label class="field" for="pk" id="pkl"></label><input type="number" id="pk" inputmode="numeric" min="1" step="1" name="pack_size" value="${E(p.pack_size ?? 1)}" data-v="${E(p.pack_size ?? 1)}">
@@ -253,6 +309,7 @@ a.cell{text-decoration:none;color:inherit}
     const sell = F("sell").value === "sell", src = F("src").value, u = F("unit").value.trim(), b = F("buy_unit").value.trim(), un = UXM.unit(u) || "หน่วยใช้", k = F("pack_size");
     $("psb").querySelector("[data-seg=src] [data-v=made]").hidden = !sell;
     $("psb").querySelector("[data-q=sell]").hidden = !sell;
+    $("psb").querySelector("[data-q=codes]").hidden = src !== "cpf";
     $("psb").querySelector("[data-q=stick]").hidden = !sell; // 0055: ไม้ only on ของขาย (ไก่จ๊อ) · ของใช้ saves none
     // round 3 (item 18): ของขาย is always counted, the question shows only for ของใช้
     $("psb").querySelector("[data-seg=count_mode]").style.display = $("ql-count_mode").style.display = sell ? "none" : "";
@@ -279,8 +336,19 @@ a.cell{text-decoration:none;color:inherit}
     cur = p; touched = !!p; $("psm").textContent = "";
     $("psh").textContent = p ? p.name : "เพิ่มสินค้า";
     $("psb").innerHTML = form(p || { kind: "cpf", supplier: "cpf", unit: "", buy_unit: "", pack_size: 1 });
+    codes = [...(p?.cpf_codes || [])]; drawCodes();
     syncForm(); sheet.open();
   }
+  // 0089 cpf_codes: the bill reader matches a priced line by its code · one product can carry several (CPF renumbers, sets) · a code belongs to one product
+  let codes = [];
+  const drawCodes = () => { $("pcd").innerHTML = codes.map((c, i) => `<span class="code">${E(c)}<button type="button" data-rm="${i}" aria-label="ลบรหัส ${E(c)}">✕</button></span>`).join(""); };
+  const addCode = () => { const el = $("pca"), c = el.value.trim(), own = ps.find((x) => x !== cur && x.cpf_codes?.includes(c));
+    const no = (t) => { $("psm").textContent = t; UXM.shake(el); };
+    if (!c) return; if (!/^\d{6,12}$/.test(c)) return no("รหัส CPF เป็นตัวเลข 6 ถึง 12 หลัก");
+    if (codes.includes(c)) return no("มีรหัสนี้แล้ว"); if (own) return no(`รหัสนี้เป็นของ ${own.name} แล้ว`);
+    codes.push(c); el.value = ""; $("psm").textContent = ""; drawCodes(); };
+  $("psb").addEventListener("click", (ev) => { const r = ev.target.closest("[data-rm]"); if (r) { codes.splice(+r.dataset.rm, 1); drawCodes(); } else if (ev.target.id === "pcb") addCode(); });
+  $("psb").addEventListener("keydown", (ev) => { if (ev.key === "Enter" && ev.target.id === "pca") { ev.preventDefault(); addCode(); } });
   $("plist").onclick = (ev) => { const b = ev.target.closest(".prow"); if (b) openForm(ps.find((p) => p.id === b.dataset.id)); };
   $("add").onclick = () => openForm(null);
   $("pss").onclick = async () => {
@@ -302,6 +370,8 @@ a.cell{text-decoration:none;color:inherit}
     }
     if (row.stick_size === 0) return bad("ชิ้นต่อไม้ ต้องเป็นเลขเต็ม 1 ขึ้นไป\nไม่มีไม้ ให้เว้นว่าง", "stick_size");
     if (!sell) row.stick_size = null;
+    if ($("pca").value.trim()) return bad("กด เพิ่มรหัส ก่อน หรือลบตัวเลขในช่องรหัส", "pca");
+    if (src === "cpf") row.cpf_codes = codes; // not CPF = the codes stay as they were (switching back keeps them)
     if (!(row.pack_size >= 1)) return bad(`${$("pkl").textContent} ต้องเป็นเลขเต็ม 1 ขึ้นไป`, "pack_size");
     if (cur && F("pack_size").disabled && unit === cur.unit && buyU === (cur.buy_unit || null)) delete row.pack_size; // locked "1" saves only when the units just changed
     if (sell && active && row.cost_price == null) return bad(`ใส่ ราคาทุน ต่อ 1 ${un} ก่อน`, "cost_price");
@@ -347,46 +417,54 @@ a.cell{text-decoration:none;color:inherit}
   const thd = (d) => new Date(d + "T00:00:00Z").toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
   const drawHol = () => { $("hl").innerHTML = hol.map((d, i) => `<div class="cell"><span class="k num">${thd(d)}</span><button class="txt-btn" type="button" data-del="${i}">ลบวันหยุด</button></div>`).join("") || `<div class="cell"><span class="k muted">ยังไม่มีวันหยุด</span></div>`; };
   const drawOpn = () => { $("ol").hidden = !opn.length; $("ol").innerHTML = opn.map((d, i) => `<div class="cell"><span class="k num">${thd(d)}</span><button class="txt-btn" type="button" data-del="${i}">ลบวันเปิด</button></div>`).join(""); };
-  const gp = (id, label) => `<label class="cell"><span class="k">${label}</span><input class="num-in" type="number" inputmode="decimal" step="any" min="0" id="${id}" value="${E(S[id])}" placeholder="ยังไม่ใส่"><span class="unit">%</span></label>`;
+  const gp = (id, label) => `<label class="cell"><span class="k">${label}</span><span class="ubox"><input class="num-in" type="number" inputmode="decimal" step="any" min="0" id="${id}" value="${E(S[id])}" placeholder="ยังไม่ใส่"><span class="unit">%</span></span></label>`;
   // mock ก (iOS grouped): every setting is a row · pickers open the native list · one red save in the glass bar
-  $("sys").innerHTML = `<h2>ร้าน</h2><div class="gl"><label class="cell"><span class="k">ชื่อร้าน</span><input type="text" id="shop" value="${E(S.shop_name)}"></label></div><p class="gf">ชื่อนี้ขึ้นหัวใบสั่ง</p>
-    <h2>วันรับร้าน</h2><div class="gl"><a class="cell nav" href="opening.html"><span class="k">นับสต็อกตั้งต้น<small>กรอกของที่นับได้ เป็นยกมาของวันแรก</small></span>${chev}</a></div>
-    <h2>เวลา</h2><div class="gl"><label class="cell"><span class="k">กันพลาด ส่งให้เองวันถัดไปตอน<small>ถ้าเจ้าของยังไม่กดส่ง</small></span><input type="time" id="auto" value="${E(S.auto_send_at)}"></label></div>
-    <p class="gf">เจ้าของกดส่งเองทุกคืน แอปเตือน 22:30 / 09:00 / 12:00 แล้วส่งให้เองพรุ่งนี้ตามเวลานี้ ถ้ายังไม่กด (ตัดรอบ CPF 13:00)</p>
-    <h2>รอบสั่ง CPF</h2><div class="gl">
+  $("sys").innerHTML = `<nav class="st-jump" aria-label="ไปที่หมวด"><a href="#g-cpf">สั่งของ</a><a href="#g-money">เงิน</a><a href="#g-shop">ร้าน</a><a href="#g-link">เชื่อมต่อ</a></nav>
+    ${G("cpf", "สั่งของ CPF", { id: "g-cpf" })}
+    <h3 class="st-s">รอบสั่ง</h3><div class="gl">
       <label class="cell nav"><span class="k">สั่งคืนนี้ ของมากี่วัน<small>CPF ตัดรอบบ่ายโมง</small></span><span class="v" data-for="lead"></span>${chev}<select id="lead">${[1, 2, 3].map((n) => `<option value="${n}" ${Number(S.order_lead_days ?? 2) === n ? "selected" : ""}>${n === 1 ? "พรุ่งนี้" : n === 2 ? "มะรืน (2 วัน)" : "3 วัน"}</option>`).join("")}</select></label>
       <label class="cell"><span class="k">ของถึงกี่โมง</span><input type="time" id="dlv" value="${E(S.delivery_at ?? "14:00")}"></label>
-      <label class="cell"><span class="k">แท็กเซลล์ท้ายใบสั่ง<small>ข้อความนี้ไม่ใช่การแท็กจริง บอกเซลล์ครั้งเดียวว่าใบสั่งมาจากร้านเรา</small></span><input type="text" id="tag" value="${E(S.sales_mention ?? "@new")}" placeholder="@new" style="max-width:9em"></label>
+      <label class="cell"><span class="k">แท็กเซลล์ท้ายใบสั่ง<small>ข้อความท้ายใบสั่ง ไม่ใช่การแท็กจริง</small></span><input type="text" id="tag" value="${E(S.sales_mention ?? "@new")}" placeholder="@new" style="max-width:9em"></label>
       <div class="cell" style="flex-wrap:wrap"><span class="k">CPF ไม่ส่งของวัน</span>${dowRow("nod", nod, "วันที่ CPF ไม่ส่งของ")}</div>
-      <label class="cell"><span class="k">เผื่อวันขายดี<small>เป้า = ขายเฉลี่ย 7 วัน × 2.5 วัน + เผื่อ</small></span><input type="number" id="buf" inputmode="numeric" min="0" max="100" step="5" value="${buf}" style="width:5.5em;flex:none;text-align:right"> %</label>
-      <label class="cell"><span class="k">เตือนของค้างเยอะ<small>ของที่มีขายได้อีกเกินกี่วัน ขึ้นเตือนในใบสั่ง</small></span><input type="number" id="ovd" inputmode="decimal" min="1" max="14" step="0.5" value="${ovd}" style="width:5.5em;flex:none;text-align:right"> วัน</label></div>
+      <label class="cell"><span class="k">เผื่อวันขายดี<small>เป้า = ขายเฉลี่ย 7 วัน × 2.5 วัน + เผื่อ</small></span><span class="ubox"><input type="number" id="buf" inputmode="numeric" min="0" max="100" step="5" value="${buf}" class="num-in"><span class="unit">%</span></span></label>
+      <label class="cell"><span class="k">เตือนของค้างเยอะ<small>ของพอขายเกินกี่วัน ขึ้นเตือนในใบสั่ง</small></span><span class="ubox"><input type="number" id="ovd" inputmode="decimal" min="1" max="14" step="0.5" value="${ovd}" class="num-in"><span class="unit">วัน</span></span></label>
+      <label class="cell"><span class="k">ค่าการตลาด CPF ท้ายบิล<small>แอปใช้เช็กว่าบิล CPF ตรงไหม</small></span><span class="ubox"><input class="num-in" type="number" inputmode="decimal" step="0.1" min="0" max="20" id="fee" value="${E(S.cpf_fee_pct ?? 1.5)}"><span class="unit">%</span></span></label></div>
     <div class="gl"><a class="cell nav" href="order-rules.html"><span class="k">กติกาใบสั่ง<small>ดูแบบเห็นภาพ พร้อมตัวอย่างตัวเลข</small></span>${chev}</a></div>
-    <h2>กลุ่ม LINE</h2><div class="gl"><label class="cell nav"><span class="k">กลุ่มสั่งของ<small>มีเซลล์อยู่</small></span><span class="v" data-for="sg"></span>${chev}${sel("sg", S.sales_group_id)}</label>
-      <label class="cell nav"><span class="k">กลุ่มพนักงาน</span><span class="v" data-for="fg"></span>${chev}${sel("fg", S.staff_group_id)}</label>
-      <button class="cell act" type="button" id="claim"><span class="ic">${send}</span><span class="k">ส่งการ์ดยืนยันตัวตนเข้ากลุ่มพนักงาน</span></button></div>
-    <p id="cmsg" class="muted" aria-live="polite"></p>
-    <p class="gf"><span>ใช้เมื่อ: พนักงานยังไม่ได้กด หรือการ์ดจมไปแล้ว</span><span>กดปุ่มนี้ → การ์ดเด้งในกลุ่มพนักงาน</span><span>พนักงานกด 'ฉันเป็นพนักงาน' ในกลุ่ม → ใช้แอปได้เลย</span></p>
-    <h2>ค่าคอมแอปส่งอาหาร</h2><div class="gl">${gp("lineman_gp", "LINE MAN")}${gp("grab_gp", "Grab")}${gp("shopee_gp", "Shopee")}</div><p class="gf">หน้าต้นทุน/กำไรใช้ตัวเลขนี้คิดค่าคอมแอปส่ง</p>
-    <h2>โบนัสพนักงาน</h2><div class="gl"><label class="cell"><span class="k">ยอดขายเกิน<small>ยอดรวม WE POS ที่พนักงานใส่ตอนปิดร้าน</small></span><input class="num-in" type="number" inputmode="numeric" min="0" max="100000" step="100" id="bth" value="${bth}"><span class="unit">บาท</span></label>
-      <label class="cell"><span class="k">โบนัสวันละ</span><input class="num-in" type="number" inputmode="numeric" min="0" max="10000" step="10" id="bpd" value="${bpd}"><span class="unit">บาท</span></label></div>
-    <p class="gf"><span>วันไหนยอดขายเกินนี้ พนักงานได้โบนัสวันนั้น</span><span>ดูยอดในสรุปเดือน แตะชื่อพนักงานในแท็บพนักงาน</span></p>
-    <h2>เงินสด</h2><div class="gl"><label class="cell"><span class="k">เงินทอนตั้งต้น<small>เก็บไว้ในลิ้นชักทุกคืน</small></span><input class="num-in" type="number" inputmode="numeric" min="0" max="20000" step="100" id="cfl" value="${cfl}"><span class="unit">บาท</span></label></div>
-    <p class="gf"><span>ปิดร้านแล้ว นับเงินได้เกินนี้ พนักงานเอาส่วนเกินออก</span><span>เงินที่เอาออก พนักงานฝาก 7-11 แล้วส่งรูปสลิปในกลุ่ม</span></p>
-    <h2>บัญชีรับเงินฝาก</h2><div class="gl"><label class="cell"><span class="k">ธนาคาร</span><input type="text" id="bkn" value="${E(S.bank_name ?? "")}" placeholder="เช่น กสิกร" autocomplete="off"></label>
+    <h3 class="st-s">ส่งใบสั่ง</h3><div class="gl"><label class="cell"><span class="k">กันพลาด ส่งให้เองวันถัดไปตอน<small>ถ้าเจ้าของยังไม่กดส่ง</small></span><input type="time" id="auto" value="${E(S.auto_send_at)}"></label></div>
+    <p class="gf">แอปเตือนให้กดส่งก่อน 3 รอบ คือ 22:30 09:00 และ 12:00</p>
+    ${G("money", "เงิน", { id: "g-money" })}
+    <h3 class="st-s">ค่าคอมแอปส่งอาหาร</h3><div class="gl">${gp("lineman_gp", "LINE MAN")}${gp("grab_gp", "Grab")}${gp("shopee_gp", "Shopee")}</div><p class="gf">หน้าต้นทุน/กำไรใช้ตัวเลขนี้คิดค่าคอมแอปส่ง</p>
+    <h3 class="st-s">โบนัสพนักงาน</h3><div class="gl"><label class="cell"><span class="k">ยอดขายเกิน<small>ยอดรวม WE POS ที่พนักงานใส่ตอนปิดร้าน</small></span><span class="ubox"><input class="num-in" type="number" inputmode="numeric" min="0" max="100000" step="100" id="bth" value="${bth}"><span class="unit">บาท</span></span></label>
+      <label class="cell"><span class="k">โบนัสวันละ</span><span class="ubox"><input class="num-in" type="number" inputmode="numeric" min="0" max="10000" step="10" id="bpd" value="${bpd}"><span class="unit">บาท</span></span></label></div>
+    <p class="gf">ดูโบนัสรายคน แตะชื่อพนักงานในแท็บพนักงาน</p>
+    <h3 class="st-s">เงินสด</h3><div class="gl"><label class="cell"><span class="k">เงินทอนตั้งต้น<small>เก็บไว้ในลิ้นชักทุกคืน</small></span><span class="ubox"><input class="num-in" type="number" inputmode="numeric" min="0" max="20000" step="100" id="cfl" value="${cfl}"><span class="unit">บาท</span></span></label></div>
+    <p class="gf">นับเงินได้เกินนี้ พนักงานเอาส่วนเกินไปฝาก 7-11 แล้วส่งรูปสลิปในกลุ่ม</p>
+    <h3 class="st-s">บัญชีรับเงินฝาก</h3><div class="gl"><label class="cell"><span class="k">ธนาคาร</span><input type="text" id="bkn" value="${E(S.bank_name ?? "")}" placeholder="เช่น กสิกร" autocomplete="off"></label>
       <label class="cell"><span class="k">เลขบัญชี</span><input type="text" id="bka" inputmode="numeric" value="${E(S.bank_account ?? "")}" placeholder="xxx-x-xxxxx-x" autocomplete="off"></label>
       <label class="cell"><span class="k">ชื่อบัญชี</span><input type="text" id="bko" value="${E(S.bank_owner ?? "")}" placeholder="ชื่อเจ้าของบัญชี" autocomplete="off"></label></div>
-    <p class="gf"><span>ขึ้นในการ์ดปิดร้านกลุ่มพนักงาน ใต้ยอดที่ต้องโอน</span><span>เว้นว่าง = ไม่ขึ้น</span></p>
-    <h2>วันหยุดร้าน</h2><div class="gl"><div class="cell" style="flex-wrap:wrap"><span class="k">หยุดทุกสัปดาห์</span>${dowRow("cld", cld, "วันหยุดร้านประจำ")}</div></div>
-    <p class="gf"><span>วันหยุดประจำ ไม่มีเตือนปิดร้าน</span><span>คืนนั้นแอปสั่งของจากยอดขายวันเปิดล่าสุด</span><span>หน้าหลักพนักงานขึ้น วันนี้ร้านหยุด</span></p>
+    <p class="gf">ขึ้นในการ์ดปิดร้านกลุ่มพนักงาน เว้นว่างไว้จะไม่ขึ้น</p>
+    ${G("shop", "ร้านและวันหยุด", { id: "g-shop" })}
+    <h3 class="st-s">ชื่อร้าน</h3><div class="gl"><label class="cell"><span class="k">ชื่อร้าน<small>ขึ้นหัวใบสั่ง</small></span><input type="text" id="shop" value="${E(S.shop_name)}"></label></div>
+    <h3 class="st-s">วันหยุดร้าน</h3><div class="gl"><div class="cell" style="flex-wrap:wrap"><span class="k">หยุดทุกสัปดาห์</span>${dowRow("cld", cld, "วันหยุดร้านประจำ")}</div></div>
+    <p class="gf">วันหยุดประจำไม่มีเตือนปิดร้าน หน้าหลักพนักงานขึ้นว่าร้านหยุด</p>
     <div class="gl"><div class="cell"><span class="k" style="white-space:nowrap;flex:none">หยุดเฉพาะวัน</span><input type="date" id="hd" aria-label="วันหยุดที่จะเพิ่ม"><button class="txt-btn" type="button" id="ha">เพิ่ม</button></div></div>
     <div class="gl" id="hl"></div>
     <div class="gl"><div class="cell"><span class="k" style="white-space:nowrap;flex:none">เปิดเฉพาะวัน</span><input type="date" id="od" aria-label="วันหยุดประจำที่จะเปิดร้าน"><button class="txt-btn" type="button" id="oa">เพิ่ม</button></div></div>
     <div class="gl" id="ol" hidden></div><p id="omsg" class="err" role="alert"></p>
-    <p class="gf"><span>สลับวันหยุด: วันที่มาทำงาน ใส่ เปิดเฉพาะวัน</span><span>วันที่หยุดแทน ใส่ หยุดเฉพาะวัน</span><span>ไม่ต้องแก้ หยุดทุกสัปดาห์ ผ่านวันแล้วไม่ต้องแก้คืน</span><span>เพิ่มหรือลบแล้ว กด บันทึกตั้งค่าร้าน ด้านล่าง</span></p>
+    <p class="gf"><span>สลับวันหยุด: วันที่มาทำงานใส่ เปิดเฉพาะวัน วันที่หยุดแทนใส่ หยุดเฉพาะวัน</span><span>เพิ่มหรือลบแล้ว กดบันทึกตั้งค่าร้าน</span></p>
+    <h3 class="st-s">วันรับร้าน</h3><div class="gl"><a class="cell nav" href="opening.html"><span class="k">นับสต็อกตั้งต้น<small>กรอกของที่นับได้ เป็นยกมาของวันแรก</small></span>${chev}</a></div>
+    ${G("link", "เชื่อมต่อ", { id: "g-link" })}
+    <h3 class="st-s">กลุ่ม LINE</h3><div class="gl"><label class="cell nav"><span class="k">กลุ่มสั่งของ<small>มีเซลล์อยู่</small></span><span class="v" data-for="sg"></span>${chev}${sel("sg", S.sales_group_id)}</label>
+      <label class="cell nav"><span class="k">กลุ่มพนักงาน</span><span class="v" data-for="fg"></span>${chev}${sel("fg", S.staff_group_id)}</label>
+      <button class="cell act" type="button" id="claim"><span class="ic">${send}</span><span class="k">ส่งการ์ดยืนยันตัวตนเข้ากลุ่มพนักงาน</span></button></div>
+    <p id="cmsg" class="muted" aria-live="polite"></p>
+    <p class="gf">ใช้เมื่อพนักงานยังไม่ได้กดยืนยัน หรือการ์ดจมไปแล้ว</p>
+    <h3 class="st-s">WE POS</h3><div class="gl"><a class="cell nav" href="menu-map.html"><span class="k">เมนูใหม่ใน WE POS<small>เมนูที่แอปถามว่า ใน 1 ชุดมีอะไร</small></span>${chev}</a></div>
     <p class="gf" id="appVer" hidden></p><div class="sticky"><button class="btn primary" id="save">บันทึกตั้งค่าร้าน</button><p id="smsg" class="muted"></p></div>`;
   fetch("lib/version.json", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((v) => { const el = document.getElementById("appVer"); if (!v || !el) return; // lib/version.json is written by the fivestar-web Action on every push (Mos 5 Nov: the system has a version) · missing (local, harness) = no line
     const [d, t] = v.at.split(" "), p = d.split("-"); el.textContent = `แอปฉบับ ${+p[2]} ${["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."][p[1] - 1]} ${(+p[0] + 543) % 100} ${t} น. (${v.sha})`; el.hidden = false; }).catch(() => {});
   // picker rows show the chosen group's name as the value
+  $("sys").querySelector(".st-jump").onclick = (ev) => { const l = ev.target.closest("a"); if (!l) return; ev.preventDefault(); document.querySelector(l.getAttribute("href")).scrollIntoView({ behavior: "smooth", block: "start" }); };
   const showSel = (id) => { const o = $(id).selectedOptions[0]; document.querySelector(`[data-for="${id}"]`).textContent = o ? o.textContent : ""; };
   ["sg", "fg", "lead"].forEach((id) => { showSel(id); $(id).addEventListener("change", () => showSel(id)); });
   const dowTap = (get, put) => (ev) => { const b = ev.target.closest("[data-d]"); if (!b) return; const d = +b.dataset.d, a = get(); put(a.includes(d) ? a.filter((x) => x !== d) : [...a, d].sort()); b.classList.toggle("on"); b.setAttribute("aria-pressed", get().includes(d)); };
@@ -415,18 +493,19 @@ a.cell{text-decoration:none;color:inherit}
   const NT = [["open_late", "เปิดร้านสาย", "เปิดเลยเวลาที่ตั้งไว้ข้างบน", ["owner"]], ["leave", "คำขอลา", "มีปุ่มอนุมัติ และไม่อนุมัติ", ["owner", "manager"]],
     ["order", "ใบสั่ง CPF", "มีปุ่มส่งให้เซลล์", ["owner", "manager"]], ["selfbuy", "ของใช้ต้องซื้อเอง", "ของใกล้หมด ที่ต้องซื้อ Shopee หรือ Makro", ["owner"]],
     ["holiday", "ใบสั่งวันร้านหยุด", "ร้านหยุด แต่ต้องสั่งของคืนนี้", ["owner", "manager"]], ["autosend", "แอปส่งใบสั่งแทน", "ไม่มีใครกดส่ง แอปส่งให้เซลล์ตอนกันพลาด", ["owner"]]];
+  const NI = { open_late: "clock", leave: "cal", order: "cpf", selfbuy: "bag", holiday: "moon", autosend: "send" };
   const NM = [["เงินปิดร้าน", "เงินสดขาดเกิน ยอดขาย โบนัส"], ["ฝากเงิน 7-11", "ผลเทียบสลิปฝาก เตือนเมื่อยอดไม่ตรง"]];
   const nto = {}; NT.forEach(([k, , , d]) => { const v = S.notify_to?.[k]; nto[k] = Array.isArray(v) ? v.filter((r) => r === "owner" || r === "manager") : [...d]; });
   const nchip = (k, r, t) => `<button type="button" class="chip${nto[k].includes(r) ? " on" : ""}" data-k="${k}" data-r="${r}" aria-pressed="${nto[k].includes(r)}">${nto[k].includes(r) ? "✓ " : ""}${t}</button>`;
-  const nmin = (id, v, min, max) => `<input type="number" id="${id}" inputmode="numeric" min="${min}" max="${max}" value="${E(v)}" style="width:4.5em;flex:none;text-align:right"> นาที`;
-  $("ntf").innerHTML = `<h2>เปิดร้าน</h2><div class="gl"><label class="cell"><span class="k">เวลาเปิดร้าน</span><input type="time" id="opa" value="${E(S.open_at ?? "11:00")}"></label>
+  const nmin = (id, v, min, max) => `<span class="ubox"><input class="num-in" type="number" id="${id}" inputmode="numeric" min="${min}" max="${max}" value="${E(v)}"><span class="unit">นาที</span></span>`;
+  $("ntf").innerHTML = `${G("clock", "เวลาเปิดปิดร้าน")}<h3 class="st-s">เปิดร้าน</h3><div class="gl"><label class="cell"><span class="k">เวลาเปิดร้าน</span><input type="time" id="opa" value="${E(S.open_at ?? "11:00")}"></label>
       <label class="cell"><span class="k">นับว่าสาย เมื่อเลยเวลาเปิด</span>${nmin("olm", S.open_late_min ?? 15, 0, 120)}</label>
       <label class="cell"><span class="k">ยังไม่กดเปิด เตือนกลุ่มหลังเวลาเปิด</span>${nmin("orm", S.open_remind_min ?? 30, 5, 180)}</label></div>
     <p class="gf">ในกลุ่มพนักงานขึ้นแค่เวลาเปิด ไม่บอกว่าสาย</p>
-    <h2>ปิดร้าน</h2><div class="gl"><label class="cell"><span class="k">เวลาปิดร้าน<small>ยังไม่กดปิด เตือนกลุ่มเวลานี้</small></span><input type="time" id="rem" value="${E(S.remind_at ?? "21:00")}"></label></div>
-    <h2>การ์ดส่วนตัว ส่งให้ใคร</h2><p class="gf" style="margin-top:0">ติ๊กคนที่จะได้การ์ดนี้ใน LINE ส่วนตัว เลือกได้ทั้งสองคน</p>
-    <div class="gl" id="nwho">${NT.map(([k, t, sm]) => `<div class="cell" style="display:block;padding-block:10px"><span class="k" style="display:block">${t}<small>${sm}</small></span><span class="who" role="group" aria-label="${t} ส่งให้">${nchip(k, "owner", "เจ้าของ")}${nchip(k, "manager", "ผู้จัดการ")}</span></div>`).join("")}
-      ${NM.map(([t, sm]) => `<div class="cell" style="display:block;padding-block:10px"><span class="k" style="display:block">${t}<small>${sm}</small></span><span class="who"><span class="chip on" aria-label="เจ้าของ">✓ เจ้าของ</span><small>เรื่องเงิน เจ้าของคนเดียว</small></span></div>`).join("")}</div>
+    <h3 class="st-s">ปิดร้าน</h3><div class="gl"><label class="cell"><span class="k">เวลาปิดร้าน<small>ยังไม่กดปิด เตือนกลุ่มเวลานี้</small></span><input type="time" id="rem" value="${E(S.remind_at ?? "21:00")}"></label></div>
+    ${G("bell", "การ์ดส่วนตัว ส่งให้ใคร")}<p class="gf" style="margin-top:6px">ติ๊กคนที่จะได้การ์ดใน LINE ส่วนตัว</p>
+    <div class="gl" id="nwho">${NT.map(([k, t, sm]) => `<div class="cell nrow">${sym(NI[k])}<span class="k">${t}<small>${sm}</small></span><span class="who" role="group" aria-label="${t} ส่งให้">${nchip(k, "owner", "เจ้าของ")}${nchip(k, "manager", "ผู้จัดการ")}</span></div>`).join("")}
+      ${NM.map(([t, sm], i) => `<div class="cell nrow">${sym(i ? "slip" : "money")}<span class="k">${t}<small>${sm}</small></span><span class="who"><span class="chip on" aria-label="เจ้าของ">✓ เจ้าของ</span><small>เรื่องเงิน เจ้าของคนเดียว</small></span></div>`).join("")}</div>
     <p class="gf">การ์ดที่ไม่อยู่ในรายการนี้ ส่งเข้ากลุ่มพนักงาน ทุกคนในกลุ่มเห็น</p>
     <div class="sticky"><button class="btn primary" id="nsave">บันทึกการแจ้งเตือน</button><p id="nmsg" class="muted"></p></div>`;
   $("nwho").onclick = (ev) => {
@@ -447,7 +526,7 @@ a.cell{text-decoration:none;color:inherit}
     const rows = [["shop_name", $("shop").value.trim()], ["auto_send_at", $("auto").value || "12:30"],
       ["sales_group_id", $("sg").value || ""], ["staff_group_id", $("fg").value || ""], ["holidays", hol], ["open_dates", opn],
       // 0033 รอบสั่ง CPF · out-of-range numbers fall back to the defaults instead of saving nonsense
-      ["order_lead_days", Number($("lead").value) || 2], ["delivery_at", $("dlv").value || "14:00"], ["sales_mention", $("tag").value.trim()], ["cpf_no_delivery_dow", nod], ["shop_closed_dow", cld], ["order_buffer_pct", Math.min(100, Math.max(0, Number($("buf").value) || 0))],
+      ["order_lead_days", Number($("lead").value) || 2], ["delivery_at", $("dlv").value || "14:00"], ["sales_mention", $("tag").value.trim()], ["cpf_no_delivery_dow", nod], ["shop_closed_dow", cld], ["order_buffer_pct", Math.min(100, Math.max(0, Number($("buf").value) || 0))], ["cpf_fee_pct", Math.min(20, Math.max(0, Number($("fee").value) || 0))],
       ["overstock_days", Math.min(14, Math.max(1, Number($("ovd").value) || 3))],
       // 0054 โบนัส · blank = the default, out of range is clamped
       ["bonus_threshold", $("bth").value === "" ? 7000 : Math.min(100000, Math.max(0, Number($("bth").value) || 0))], ["bonus_per_day", $("bpd").value === "" ? 100 : Math.min(10000, Math.max(0, Number($("bpd").value) || 0))],
