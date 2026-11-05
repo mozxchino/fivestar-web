@@ -371,8 +371,8 @@ a.cell{text-decoration:none;color:inherit}
       <label class="cell"><span class="k">โบนัสวันละ</span><input class="num-in" type="number" inputmode="numeric" min="0" max="10000" step="10" id="bpd" value="${bpd}"><span class="unit">บาท</span></label></div>
     <p class="gf"><span>วันไหนยอดขายเกินนี้ พนักงานได้โบนัสวันนั้น</span><span>ดูยอดในสรุปเดือน แตะชื่อพนักงานในแท็บพนักงาน</span></p>
     <h2>เงินสด</h2><div class="gl"><label class="cell"><span class="k">เงินทอนตั้งต้น<small>เก็บไว้ในลิ้นชักทุกคืน</small></span><input class="num-in" type="number" inputmode="numeric" min="0" max="20000" step="100" id="cfl" value="${cfl}"><span class="unit">บาท</span></label></div>
-    <p class="gf"><span>ปิดร้านแล้ว นับเงินได้เกินนี้ พนักงานเอาส่วนเกินออก</span><span>เงินที่เอาออก พนักงานโอนให้เจ้าของ</span></p>
-    <h2>บัญชีรับเงินโอน</h2><div class="gl"><label class="cell"><span class="k">ธนาคาร</span><input type="text" id="bkn" value="${E(S.bank_name ?? "")}" placeholder="เช่น กสิกร" autocomplete="off"></label>
+    <p class="gf"><span>ปิดร้านแล้ว นับเงินได้เกินนี้ พนักงานเอาส่วนเกินออก</span><span>เงินที่เอาออก พนักงานฝาก 7-11 แล้วส่งรูปสลิปในกลุ่ม</span></p>
+    <h2>บัญชีรับเงินฝาก</h2><div class="gl"><label class="cell"><span class="k">ธนาคาร</span><input type="text" id="bkn" value="${E(S.bank_name ?? "")}" placeholder="เช่น กสิกร" autocomplete="off"></label>
       <label class="cell"><span class="k">เลขบัญชี</span><input type="text" id="bka" inputmode="numeric" value="${E(S.bank_account ?? "")}" placeholder="xxx-x-xxxxx-x" autocomplete="off"></label>
       <label class="cell"><span class="k">ชื่อบัญชี</span><input type="text" id="bko" value="${E(S.bank_owner ?? "")}" placeholder="ชื่อเจ้าของบัญชี" autocomplete="off"></label></div>
     <p class="gf"><span>ขึ้นในการ์ดปิดร้านกลุ่มพนักงาน ใต้ยอดที่ต้องโอน</span><span>เว้นว่าง = ไม่ขึ้น</span></p>
@@ -415,7 +415,7 @@ a.cell{text-decoration:none;color:inherit}
   const NT = [["open_late", "เปิดร้านสาย", "เปิดเลยเวลาที่ตั้งไว้ข้างบน", ["owner"]], ["leave", "คำขอลา", "มีปุ่มอนุมัติ และไม่อนุมัติ", ["owner", "manager"]],
     ["order", "ใบสั่ง CPF", "มีปุ่มส่งให้เซลล์", ["owner", "manager"]], ["selfbuy", "ของใช้ต้องซื้อเอง", "ของใกล้หมด ที่ต้องซื้อ Shopee หรือ Makro", ["owner"]],
     ["holiday", "ใบสั่งวันร้านหยุด", "ร้านหยุด แต่ต้องสั่งของคืนนี้", ["owner", "manager"]], ["autosend", "แอปส่งใบสั่งแทน", "ไม่มีใครกดส่ง แอปส่งให้เซลล์ตอนกันพลาด", ["owner"]]];
-  const NM = [["เงินปิดร้าน", "เงินสดขาดเกิน ยอดขาย โบนัส"], ["รอเงินโอน", "เงินที่พนักงานเอาออก กดได้รับครบในไลน์"]];
+  const NM = [["เงินปิดร้าน", "เงินสดขาดเกิน ยอดขาย โบนัส"], ["ฝากเงิน 7-11", "ผลเทียบสลิปฝาก เตือนเมื่อยอดไม่ตรง"]];
   const nto = {}; NT.forEach(([k, , , d]) => { const v = S.notify_to?.[k]; nto[k] = Array.isArray(v) ? v.filter((r) => r === "owner" || r === "manager") : [...d]; });
   const nchip = (k, r, t) => `<button type="button" class="chip${nto[k].includes(r) ? " on" : ""}" data-k="${k}" data-r="${r}" aria-pressed="${nto[k].includes(r)}">${nto[k].includes(r) ? "✓ " : ""}${t}</button>`;
   const nmin = (id, v, min, max) => `<input type="number" id="${id}" inputmode="numeric" min="${min}" max="${max}" value="${E(v)}" style="width:4.5em;flex:none;text-align:right"> นาที`;
