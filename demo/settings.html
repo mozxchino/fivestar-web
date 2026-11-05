@@ -383,7 +383,9 @@ a.cell{text-decoration:none;color:inherit}
     <div class="gl"><div class="cell"><span class="k" style="white-space:nowrap;flex:none">เปิดเฉพาะวัน</span><input type="date" id="od" aria-label="วันหยุดประจำที่จะเปิดร้าน"><button class="txt-btn" type="button" id="oa">เพิ่ม</button></div></div>
     <div class="gl" id="ol" hidden></div><p id="omsg" class="err" role="alert"></p>
     <p class="gf"><span>สลับวันหยุด: วันที่มาทำงาน ใส่ เปิดเฉพาะวัน</span><span>วันที่หยุดแทน ใส่ หยุดเฉพาะวัน</span><span>ไม่ต้องแก้ หยุดทุกสัปดาห์ ผ่านวันแล้วไม่ต้องแก้คืน</span><span>เพิ่มหรือลบแล้ว กด บันทึกตั้งค่าร้าน ด้านล่าง</span></p>
-    <div class="sticky"><button class="btn primary" id="save">บันทึกตั้งค่าร้าน</button><p id="smsg" class="muted"></p></div>`;
+    <p class="gf" id="appVer" hidden></p><div class="sticky"><button class="btn primary" id="save">บันทึกตั้งค่าร้าน</button><p id="smsg" class="muted"></p></div>`;
+  fetch("lib/version.json", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((v) => { const el = document.getElementById("appVer"); if (!v || !el) return; // lib/version.json is written by the fivestar-web Action on every push (Mos 5 Nov: the system has a version) · missing (local, harness) = no line
+    const [d, t] = v.at.split(" "), p = d.split("-"); el.textContent = `แอปฉบับ ${+p[2]} ${["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."][p[1] - 1]} ${(+p[0] + 543) % 100} ${t} น. (${v.sha})`; el.hidden = false; }).catch(() => {});
   // picker rows show the chosen group's name as the value
   const showSel = (id) => { const o = $(id).selectedOptions[0]; document.querySelector(`[data-for="${id}"]`).textContent = o ? o.textContent : ""; };
   ["sg", "fg", "lead"].forEach((id) => { showSel(id); $(id).addEventListener("change", () => showSel(id)); });
