@@ -5,7 +5,7 @@ name: demo
 on:
   push:
     branches: [main]
-    paths-ignore: ["demo/**"]
+    paths-ignore: ["demo/**", "lib/version.json"]
   workflow_dispatch:
 permissions:
   contents: write
@@ -15,11 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # the app's version = this push (Mos 5 Nov 2026) · shown at the bottom of manual.html and settings › ร้าน · no room edits it, so branches never clash
+      - name: write lib/version.json
+        run: printf '{"at":"%s","sha":"%s"}\n' "$(TZ=Asia/Bangkok git log -1 --date=format-local:'%Y-%m-%d %H:%M' --format=%cd)" "${GITHUB_SHA::7}" > lib/version.json
       - run: python3 .demo-src/build.py
       - name: commit demo/ if it changed
         run: |
-          git add -A demo
+          git add -A demo lib/version.json
           git diff --cached --quiet && { echo "demo/ unchanged"; exit 0; }
           git -c user.name="demo-bot" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-            commit -q -m "demo: rebuild from ${GITHUB_SHA::7}"
+            commit -q -m "demo + version: rebuild from ${GITHUB_SHA::7}"
           git pull -q --rebase origin main && git push -q origin HEAD:main

@@ -1,5 +1,5 @@
 <!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>คู่มือพนักงาน</title><meta name="theme-color" content="#C82128">
+<title>คู่มือพนักงาน</title><meta name="manual-ver" content="2026-11-02 14:24"><meta name="theme-color" content="#C82128">
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
@@ -405,11 +405,18 @@
 
 <p class="hint" style="text-align:center"><a href="order-rules.html">กติกาใบสั่ง CPF</a></p>
 <p class="hint" style="text-align:center">ยังไม่รู้ ถามในกลุ่มพนักงาน</p>
+<p class="hint" style="text-align:center" id="mnVer"></p>
+<p class="hint" style="text-align:center;margin-top:0" id="appVer" hidden></p>
 </main>
 <script>
   // ?print=1 (PDF export) opens every section; printing from the browser does the same
   const openAll = () => document.querySelectorAll("details.sec").forEach((d) => d.open = true);
   if (new URLSearchParams(location.search).has("print")) openAll();
   addEventListener("beforeprint", openAll);
+  // the version line comes from <meta name="manual-ver"> so it can never disagree with tools/manual_drift.py
+  const mv = document.querySelector('meta[name="manual-ver"]').content.split(" ")[0].split("-");
+  fetch("lib/version.json", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((v) => { const el = document.getElementById("appVer"); if (!v || !el) return; // lib/version.json is written by the fivestar-web Action on every push (Mos 5 Nov: the system has a version) · missing (local, harness) = no line
+    const [d, t] = v.at.split(" "), p = d.split("-"); el.textContent = `แอปฉบับ ${+p[2]} ${["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."][p[1] - 1]} ${(+p[0] + 543) % 100} ${t} น. (${v.sha})`; el.hidden = false; }).catch(() => {});
+  document.getElementById("mnVer").textContent = `คู่มือฉบับ ${+mv[2]} ${["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."][mv[1] - 1]} ${(+mv[0] + 543) % 100}`;
 </script>
 </body></html>
