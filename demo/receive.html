@@ -21,7 +21,9 @@
   <p id="rtS" class="muted"></p>
   <div class="sticky"><button id="rtGo" class="btn primary rc-wait" aria-disabled="true">ส่งรูปใหม่</button><p id="rtM" class="muted"></p></div>
 </div>
+<div id="pick" class="ld" hidden><h2 class="rc-q">ของวันนี้ <span id="pickN" style="font-weight:400;color:var(--color-ink-soft)"></span></h2><div class="ux-pick rc-pick" id="pickL"></div><p class="muted" style="text-align:center">รับทีละใบ ถ่ายใบส่งของของใบนั้น</p></div>
 <div id="form" class="ld" hidden>
+  <p id="which" class="ok" style="display:flex;justify-content:space-between;align-items:center;gap:8px" hidden><span id="whichT"></span><a href="receive.html" id="whichX" style="font-size:14px;white-space:nowrap;color:var(--color-primary-dark)">เปลี่ยนใบ</a></p>
   <p id="st" class="ok"></p>
   <h2 class="rc-q" id="rcQ">ของ CPF มาครบไหม</h2>
   <div class="ux-pick rc-pick" role="radiogroup" aria-labelledby="rcQ">
@@ -48,9 +50,13 @@
 </div>
 <dialog id="nd" class="bsheet" aria-labelledby="ndH"><div class="body"><div class="grab"></div>
   <div class="hd"><b id="ndH">วันนี้ไม่มีของมา</b><button class="x" type="button" aria-label="ปิด">✕</button></div>
-  <p class="ux-nd">ถ้าแค่มาช้า ไม่ต้องกด รอรับของตามปกติ</p>
-  <label class="chk ux-ndc"><input id="ndOk" type="checkbox"><span>ถามเซลล์ในกลุ่มสั่งของแล้ว<br>เซลล์ยืนยันว่าวันนี้ไม่มาส่ง</span></label></div>
-  <div class="foot"><button id="ndGo" class="btn primary" disabled>บันทึก วันนี้ไม่มีของมา</button></div></dialog>
+  <p class="ux-nd">มาช้า ไม่ต้องกด รอรับตามปกติ</p>
+  <h2 class="rc-q" id="ndQ" style="margin-top:8px">ของวันนี้</h2>
+  <div class="ux-pick rc-pick" id="ndP" role="radiogroup" aria-labelledby="ndQ">
+    <button type="button" class="ux-opt" role="radio" aria-checked="false" data-v="move"><b id="ndM">ส่งวันถัดไป</b><small id="ndMs">วันนั้นรับ 2 ใบ</small></button>
+    <button type="button" class="ux-opt" role="radio" aria-checked="false" data-v="cancel"><b>ไม่ส่งแล้ว ยกเลิก</b><small>วันถัดไปรับตามปกติ</small></button>
+  </div></div>
+  <div class="foot"><button id="ndGo" class="btn primary" disabled>เลือกก่อน</button></div></dialog>
 <dialog id="xs" class="bsheet" aria-labelledby="xsH"><div class="body"><div class="grab"></div>
   <div class="hd"><b id="xsH">มีของอื่นมาด้วย</b><button class="x" type="button" aria-label="ปิด">✕</button></div>
   <p class="muted">ของ CPF ที่ไม่อยู่ในใบสั่ง หรือมาเกินจากที่สั่ง</p>
@@ -99,9 +105,24 @@
       if (yo && !yo.order_items.some((i) => i.received_at)) { ydayT.textContent = `ใบสั่ง ${fmt(un)} ยังไม่ได้รับของ\nวันนั้นยังไม่ได้ปิดร้าน`; ydayA.href = "receive.html?d=" + un; yday.hidden = false; }
     }
   }
-  const { data: o, error: oErr } = await supabase.from("orders").select("id").eq("for_date", day).in("status", ["sent", "failed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  // 0102 (Mos 7 พ.ย.): a CPF order that did not come can be moved to the next delivery day, so a day can hold 2 orders ·
+  // then this page first asks which one (?order=<id> opens it straight) · each is received on its own with its own bill photo
+  const { data: os, error: oErr } = await supabase.from("orders").select("id,for_date,plan,created_at,order_items(received_at,qty_received,qty_proposed,qty_final)").eq("for_date", day).in("status", ["sent", "failed"]).order("created_at", { ascending: false });
   const cant = (e) => { none.hidden = false; const p = none.querySelector("p"); p.className = "err"; p.textContent = "เปิดใบสั่งไม่ขึ้น\n" + App.errText(e); none.querySelector("a").hidden = true; }; // qa: not "no delivery" when the read failed
   if (oErr) return cant(oErr);
+  const label = (x) => x.plan?.moved_from ? `ใบของ ${fmt(x.plan.moved_from)}` : `ใบของวันนี้ ${fmt(x.for_date)}`;
+  const state = (x) => { const g = x.order_items.filter((i) => i.received_at); if (!g.length) return "ยังไม่รับ";
+    if (x.plan?.no_delivery === "cancel" && !g.some((i) => +i.qty_received > 0)) return "ไม่มา · ยกเลิกแล้ว"; return `รับแล้ว ${new Date(g.map((i) => i.received_at).sort()[0]).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" })}`; };
+  const qo = new URLSearchParams(location.search).get("order");
+  let o = os.length > 1 ? os.find((x) => x.id === qo) : os[0];
+  if (!o && os.length > 1) {
+    pickN.textContent = os.every((x) => !x.order_items.some((i) => i.received_at)) ? `${os.length} ใบ` : `รับแล้ว ${os.filter((x) => x.order_items.some((i) => i.received_at)).length} จาก ${os.length} ใบ`;
+    pickL.innerHTML = os.map((x) => `<button type="button" class="ux-opt${x.order_items.some((i) => i.received_at) ? " done" : ""}" data-id="${x.id}"><b>${label(x)}${x.order_items.some((i) => i.received_at) ? " ✓" : ""}</b><small>${[x.plan?.moved_from ? "เลื่อนมาวันนี้" : "", `${x.order_items.length} รายการ`, state(x)].filter(Boolean).join(" · ")}</small></button>`).join("");
+    pick.hidden = false;
+    o = await new Promise((r) => { pickL.onclick = (e) => { const b = e.target.closest("[data-id]"); if (b) r(os.find((x) => x.id === b.dataset.id)); }; });
+    pick.hidden = true; history.replaceState(null, "", "receive.html?order=" + o.id);
+  }
+  if (o && os.length > 1) { whichT.textContent = label(o) + (o.plan?.moved_from ? " · เลื่อนมาวันนี้" : ""); which.hidden = false; }
   // round 3 (item 17): CPF came with no order → the form opens empty, staff add what came (receive_order(null) makes today's order)
   if (!o) { none.hidden = false; if (day !== today) { none.querySelector("p").textContent = `ไม่มีใบสั่ง ${fmt(day)}`; return; } noneX.hidden = false; await new Promise((r) => { noneX.onclick = r; }); none.hidden = true; }
   const { data: items, error } = o ? await supabase.from("order_items").select("product_id,qty_proposed,qty_final,qty_received,received_at,products(name,unit,pack_size,buy_unit,sort,category)").eq("order_id", o.id) : { data: [] };
@@ -120,6 +141,7 @@
   // round 2 (Mos 26 ต.ค.): what was ordered, read-only, fills the screen while the staff checks the delivery note (hidden once ขาด opens the editable rows)
   ordN.textContent = `${items.length} อย่าง`;
   if (day !== today) ordH.firstChild.textContent = `ใบสั่ง ${fmt(day)}`;
+  if (o && os.length > 1) ordH.firstChild.textContent = label(o);
   ordL.innerHTML = items.map((i) => `<div class="kv"><span>${UXS.esc(i.products?.name ?? "")}</span><b>${+(i.qty_final ?? i.qty_proposed)} ${UXS.esc(i.products?.unit ?? "")}</b></div>`).join("");
   const photos = []; let pick = "";
   Photo.picker(supabase, ph, { paths: photos, type: "receipt", name: "รูปใบส่งของ", max: 3, status: phS, onChange: () => short() });
@@ -155,7 +177,9 @@
   const run = async (p, notify, title, sub, warm) => { save.disabled = none2.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
     const { error } = await p; if (error) { msg.textContent = "ยังบันทึกไม่ได้\n" + App.errText(error); msg.className = "err"; save.disabled = none2.disabled = false; return; }
     await (async () => App.fn("receive-notify", typeof notify === "function" ? await notify() : notify))().catch(() => {});
-    form.hidden = true; doneT.textContent = title; doneS.textContent = sub; doneW.textContent = warm; done.hidden = false; scrollTo(0, 0); }; // round 3 พ.ย. (Mos): no "ไปปิดร้าน" here · the home page shows the next task
+    form.hidden = true; doneT.textContent = title; doneS.textContent = sub; doneW.textContent = warm; done.hidden = false; scrollTo(0, 0);
+    const rest = (os || []).filter((x) => x.id !== o?.id && !x.order_items.some((i) => i.received_at));   // 0102: another order of today still waiting → go there next
+    if (rest.length) next.innerHTML = `<a class="btn primary ux-next" href="receive.html?order=${rest[0].id}">รับ${UXS.esc(label(rest[0]))}</a>`; }; // round 3 พ.ย. (Mos): no "ไปปิดร้าน" here · the home page shows the next task
   save.onclick = () => {
     if (!pick) { msg.className = "err"; msg.textContent = "เลือก ของมาครบ หรือ มีของขาด ก่อน"; return UXM.shake(recAll.parentElement); }
     if (!photos.length) { msg.className = "err"; msg.textContent = "ต้องถ่ายรูปใบส่งของก่อน"; return short(); }
@@ -167,10 +191,19 @@
     run(supabase.rpc("receive_order", { oid: o?.id ?? null, items: arr, photos }), body, "รับของแล้ว", n ? `ของมาไม่ครบ ${n} อย่าง` : "", "ขอบคุณที่ช่วยนับของ");
   };
   // round 6 (Mos 23 ต.ค.): a sheet instead of confirm() · late ≠ not coming, so the save stays off until the sales rep confirmed in the order group
-  const nd = UXD.sheet(document.getElementById("nd"));
-  ndOk.onchange = () => { ndGo.disabled = !ndOk.checked; };
-  none2.onclick = () => { ndOk.checked = false; ndGo.disabled = true; nd.open(); };
-  ndGo.onclick = () => { if (!ndOk.checked) return; nd.close(); run(supabase.rpc("no_delivery_today"), { no_delivery: true }, "บันทึกแล้ว", "วันนี้ไม่มีของมา", "ขอบคุณที่แจ้ง"); };
+  // 0102 (Mos 7 พ.ย.): the staff member asked the sales rep, so they say what happens to this order: CPF brings it on the next
+  // delivery day (Monday and shop holidays skipped, rpc next_delivery_day) or never (cancel) · the owner's card says which
+  const nd = UXD.sheet(document.getElementById("nd")); let ndV = "", ndDay = "";
+  const ndPick = (v) => { ndV = v; for (const b of ndP.children) b.setAttribute("aria-checked", String(b.dataset.v === v)); ndGo.disabled = !v; ndGo.textContent = v === "move" ? `บันทึก ส่ง${ndDay}` : v === "cancel" ? "บันทึก ยกเลิก" : "เลือกก่อน"; };
+  ndP.onclick = (e) => { const b = e.target.closest("[data-v]"); if (b) ndPick(b.dataset.v); };
+  none2.onclick = async () => { ndPick("");
+    if (!ndDay) { const { data: nx } = await supabase.rpc("next_delivery_day", { d: today }), tmr = new Date(Date.parse(today + "T00:00:00Z") + 864e5).toISOString().slice(0, 10);
+      ndDay = nx ? fmt(nx) : "วันถัดไป"; ndM.textContent = nx ? `ส่ง${nx === tmr ? "พรุ่งนี้" : "วันถัดไป"} ${ndDay}` : "ส่งวันถัดไป"; ndMs.textContent = `ใบนี้ไปรวมกับของ${ndDay} รับวันนั้น`; }
+    ndH.textContent = os.length > 1 ? `${label(o)} ไม่มา` : "วันนี้ไม่มีของมา"; ndQ.textContent = os.length > 1 ? label(o) : `ของวันนี้ ${fmt(today)}`; nd.open(); };
+  ndGo.onclick = () => { if (!ndV || !o) return; nd.close();
+    run(supabase.rpc("no_delivery", { p_order: o.id, p_action: ndV }), { order_id: o.id, no_delivery: ndV },
+      ndV === "move" ? `บันทึกแล้ว ส่ง${ndDay}` : "บันทึกแล้ว ยกเลิก",
+      ndV === "move" ? `${label(o)} มา${ndDay}แทน\nวันนั้นรับ 2 ใบ · เจ้าของได้การ์ดแล้ว` : `${label(o)} ไม่ส่งแล้ว\nเจ้าของได้การ์ดแล้ว`, "ขอบคุณที่แจ้ง"); };
   // round 3 (item 17, Mos 30 ต.ค.): "มีของอื่นมาด้วย" · a CPF product not on the order gets its own row (ordered 0), one on it gets the amount added
   const xsh = UXD.sheet(xs); let P = null;
   xB.onclick = async () => {
@@ -200,6 +233,7 @@
     xsh.close(); setPick("short"); msg.textContent = ""; short(); UXM.toast(`เพิ่ม ${p.name} ${q} ${UXM.unit(p.unit)} แล้ว`);
   };
   if (day !== today) none2.hidden = true;   // "วันนี้ไม่มีของมา" is about today
+  if (o && os.length > 1) none2.textContent = "ใบนี้ไม่มา";
   if (!o) { rcQ.hidden = true; recAll.parentElement.hidden = true; ordBox.hidden = true; none2.hidden = true; st.className = "muted"; st.textContent = "CPF มาส่งของ ทั้งที่ไม่มีใบสั่ง\nเพิ่มของที่มาทีละอย่าง"; setPick("short"); }
   form.hidden = false; short();
   if (!o) xB.click();
