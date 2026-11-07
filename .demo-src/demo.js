@@ -302,6 +302,13 @@
     unclosed_day: () => null, ensure_day: ({ d }) => { if (!dayRow(d)) rows("shop_days").push({ date: d, status: "open", opened_at: null, closed_at: null, photos: [] }); return null; },
     open_shop: ({ photo }) => { Object.assign(dayRow(D) || {}, { opened_at: now(), opened_by: ME.userId, open_photo: photo || null, status: "open" }); return null; },
     receive_order: ({ items, photos }) => { receiveToday(T, now(), items, photos); return null; },
+    // 0102: the staff picks move (next delivery day, Monday skipped) or cancel · demo keeps it simple: cancel = received 0, move = order date + 1 (or +2 over Monday)
+    next_delivery_day: ({ d }) => { const x = new Date(d + "T00:00:00Z"); x.setUTCDate(x.getUTCDate() + 1); if (x.getUTCDay() === 1) x.setUTCDate(x.getUTCDate() + 1); return x.toISOString().slice(0, 10); },
+    no_delivery: ({ p_order, p_action }) => { const o = rows("orders").find((r) => r.id === p_order); if (!o) return null;
+      if (p_action === "cancel") { receiveToday(T, now(), rows("order_items").filter((i) => i.order_id === o.id).map((i) => ({ product_id: i.product_id, qty_received: 0 }))); o.plan = Object.assign({}, o.plan, { no_delivery: "cancel" }); return { action: "cancel", date: o.for_date }; }
+      const was = o.for_date; const x = new Date(was + "T00:00:00Z"); x.setUTCDate(x.getUTCDate() + 1); if (x.getUTCDay() === 1) x.setUTCDate(x.getUTCDate() + 1); o.for_date = x.toISOString().slice(0, 10);
+      o.plan = Object.assign({}, o.plan, { moved_from: (o.plan && o.plan.moved_from) || was }); rows("order_items").filter((i) => i.order_id === o.id).forEach((i) => { i.qty_received = null; i.received_at = null; i.receipt_photos = []; });
+      return { action: "move", from: was, to: o.for_date }; },
     no_delivery_today: () => { receiveToday(T, now(), rows("order_items").filter((i) => i.order_id === "o" + D.replaceAll("-", "")).map((i) => ({ product_id: i.product_id, qty_received: 0 }))); return null; },
     close_check: ({ d }) => ({ waste_none: !!dayRow(d)?.waste_none, waste_logs: rows("waste_logs").filter((w) => w.date === d).length,
       items: rows("stock_lines").filter((l) => l.date === d && P[l.product_id]?.seed_daily >= 3).map((l) => { const p = P[l.product_id], e = Math.max(0, +l.open_fresh + +l.open_cooked + +l.received - Math.round(p.seed_daily));
