@@ -44,6 +44,11 @@
 .sum .kv { padding: 7px 0; font-size: 16px; }
 .sum .kv b { font: 600 18px/1.3 var(--font-head); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .sum .kv.minus b { color: var(--color-ink-soft); }
+/* Mos 7 พ.ย.: paid from the drawer today → ask if WE POS "นำเงินออก" took it off already (else the app takes it off twice) */
+.po-q { margin: 12px 0 4px; }
+.po-t { margin: 0; font: 600 17px/1.45 var(--font-head); }
+.po-t small { display: block; font: 400 14px/1.4 var(--font-body); color: var(--color-ink-soft); }
+.sum .kv.po-note b { font: 500 15px/1.3 var(--font-body); color: var(--color-ink-soft); white-space: normal; text-align: right; }
 .sum .kv.tot { border-top: .5px solid var(--color-separator); margin-top: 2px; padding-top: 9px; }
 .sum .kv.tot b { font-size: 22px; }
 .sum .kv small a { font-weight: 600; color: var(--color-primary-dark); }
@@ -180,6 +185,10 @@
   </div>
   <label class="fstep" for="cashExp"><i>3</i>จำนวนเงินที่ควรมี<small>ตามจอ WE POS</small></label>
   <div class="in"><input id="cashExp" type="number" inputmode="decimal" enterkeyhint="next" placeholder="0"><span class="sfx">บาท</span></div>
+  <div id="poQ" class="ux-pick po-q" role="radiogroup" aria-labelledby="poT" hidden><p id="poT" class="po-t"></p>
+    <button type="button" id="poNo" class="ux-opt" role="radio" aria-checked="false"><b>ยังไม่ได้กด</b><small id="poNoS"></small></button>
+    <button type="button" id="poYes" class="ux-opt" role="radio" aria-checked="false"><b>กดแล้ว</b><small>จอ WE POS หักไปแล้ว แอปไม่หักซ้ำ</small></button>
+    <p class="muted" style="margin:0">ไม่แน่ใจ ดูที่ WE POS เมนูขวา "ประวัติเงินเข้าออก"</p></div>
   <label class="fstep"><i>4</i>นับเงินจริงในลิ้นชัก<small>ยังไม่เอาเงินออก นับทั้งลิ้นชัก</small></label>
   <div class="card pad">
   <div class="notes" id="notesB"></div>
@@ -291,11 +300,21 @@
   const sumNotes = () => { const any = noteEls().some((i) => i.value !== ""); cashCnt.value = any ? noteEls().reduce((t, i) => t + (+i.value || 0) * +i.dataset.v, 0) : ""; diff(); };
   document.querySelectorAll(".notes").forEach((n) => n.addEventListener("input", sumNotes));
   // cash paid from the drawer today (หน้ารายจ่าย 0070) comes off what WE POS says the drawer holds
-  let paid = 0;
-  { const { data: ex } = await supabase.from("expenses").select("amount").eq("date", today).eq("paid_by", "cash");
+  let paid = 0, paidWhat = "";
+  { const { data: ex } = await supabase.from("expenses").select("amount,name").eq("date", today).eq("paid_by", "cash");
     paid = (ex || []).reduce((t, e) => t + (+e.amount || 0), 0);
+    paidWhat = [...new Set((ex || []).map((e) => e.name).filter(Boolean))].join(" ");
   }
-  const should = () => cashExp.value === "" ? null : +cashExp.value - paid;
+  // Mos 7 พ.ย.: staff may also press WE POS "นำเงินออก" → its ควรมี already has it off · ask, null = not answered yet (ควรมี waits)
+  // ponytail: one answer for all of today's paid-out, split per expense if staff ever key some in WE POS and not others
+  let po = null;
+  const setPo = (v) => { po = v; poNo.setAttribute("aria-checked", v === false); poYes.setAttribute("aria-checked", v === true); };
+  poQ.hidden = !paid;
+  poT.innerHTML = `วันนี้จ่ายจากลิ้นชัก ${fmtB(paid)} บาท<small>${UXS.esc(paidWhat)}</small>กด "นำเงินออก" ใน WE POS แล้วหรือยัง`;
+  poNoS.textContent = `แอปหัก ${fmtB(paid)} บาทให้`;
+  poNo.onclick = () => { setPo(false); say(""); diff(); save(); update(); };
+  poYes.onclick = () => { setPo(true); say(""); diff(); save(); update(); };
+  const should = () => cashExp.value === "" || (paid && po == null) ? null : +cashExp.value - (po ? 0 : paid);
   // 0085 (Mos 30 ต.ค.): เงินทอนตั้งต้น (settings.cash_float, default 1,000) stays in the drawer, the rest is taken out for the 7-11 deposit (deposit.html)
   // the staff presses "เอาเงินออก N บาทแล้ว" before going on · a new count asks again · the amount goes up as close_detail.cash.taken_out (0082 reads it)
   const cf = (await supabase.from("settings").select("value").eq("key", "cash_float").maybeSingle()).data?.value;
@@ -307,9 +326,9 @@
   const takeX = () => cashCnt.value === "" ? null : Math.max(+cashCnt.value - FLOAT, 0);
   // Mos 3 พ.ย.: counted below ควรมี = ask first (shortS) · the take-out card waits (its green "ไม่ต้องเอาเงินออก" read as all good under a red ขาด)
   let shortKept = "";
-  const shortSig = () => cashExp.value === "" || cashCnt.value === "" || +cashCnt.value >= (should() ?? 0) ? "" : `${cashExp.value}:${cashCnt.value}:${paid}`;
+  const shortSig = () => cashExp.value === "" || cashCnt.value === "" || +cashCnt.value >= (should() ?? 0) ? "" : `${cashExp.value}:${cashCnt.value}:${paid}:${po}`;
   const shortOpen = () => { const s = shortSig(); return s && s !== shortKept; };
-  const take = () => { const x = takeX(); takeC.hidden = x == null || shortOpen(); if (takeC.hidden) return;
+  const take = () => { const x = takeX(); takeC.hidden = x == null || shortOpen() || (paid && po == null); if (takeC.hidden) return;
     const done = x === 0 || took === x; takeC.dataset.tone = done ? "ok" : "";
     takeT.textContent = x ? "เอาเงินออก" : "ไม่ต้องเอาเงินออก"; takeX_.hidden = !x; takeV.innerHTML = `${fmtB(x)} <i>บาท</i>`;
     takeF.innerHTML = `${fmtB(x ? FLOAT : +cashCnt.value)} <i>บาท</i>`;
@@ -318,12 +337,12 @@
   const takeX_ = document.getElementById("takeX");
   tookB.onclick = () => { took = takeX(); take(); say(""); save(); update(); };
   const detail = () => ({ delivery: Object.fromEntries([...dlv.querySelectorAll(".dl")].map((r) => [r.dataset.k, { app: r.querySelector(".dlA").value === "" ? null : +r.querySelector(".dlA").value, pos: r.querySelector(".dlP").value === "" ? null : +r.querySelector(".dlP").value }])),
-    cash: { pos: cashExp.value === "" ? null : +cashExp.value, paid_out: paid, taken_out: +cashCnt.value < FLOAT ? null : takeX(), notes: Object.fromEntries(noteEls().filter((i) => i.value !== "").map((i) => [i.dataset.v, +i.value])) } });
+    cash: { pos: cashExp.value === "" ? null : +cashExp.value, paid_out: paid, ...(paid ? { pos_paid: po === true } : {}), taken_out: +cashCnt.value < FLOAT ? null : takeX(), notes: Object.fromEntries(noteEls().filter((i) => i.value !== "").map((i) => [i.dataset.v, +i.value])) } });
   // round 3 พ.ย.: one column of numbers · the WE POS line and the paid-out line show only when something was paid from the drawer (otherwise ควรมี = the WE POS number)
   const ICO = { ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>', bad: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>' };
-  const diffT = () => { if (cashExp.value === "" || cashCnt.value === "") return ""; const d = +cashCnt.value - (should() ?? 0); return d === 0 ? "เงินสดครบ" : d < 0 ? `เงินสดขาด ${fmtB(-d)} บาท` : `เงินสดเกิน ${fmtB(d)} บาท`; };
-  const diff = () => { take(); const a = should() ?? 0, b = +cashCnt.value, has = cashExp.value !== "", n = cashCnt.value !== "", d = b - a;
-    csProw.hidden = csPaid.hidden = !paid; csP.textContent = has ? fmtB(+cashExp.value) : "-"; csQ.textContent = `− ${fmtB(paid)}`;
+  const diffT = () => { if (should() == null || cashCnt.value === "") return ""; const d = +cashCnt.value - (should() ?? 0); return d === 0 ? "เงินสดครบ" : d < 0 ? `เงินสดขาด ${fmtB(-d)} บาท` : `เงินสดเกิน ${fmtB(d)} บาท`; };
+  const diff = () => { take(); const a = should() ?? 0, b = +cashCnt.value, has = should() != null, n = cashCnt.value !== "", d = b - a;
+    csProw.hidden = csPaid.hidden = !paid; csP.textContent = cashExp.value !== "" ? fmtB(+cashExp.value) : "-"; csQ.textContent = po == null ? "รอคำตอบข้างบน" : po ? "WE POS หักแล้ว" : `− ${fmtB(paid)}`; csPaid.classList.toggle("minus", po === false); csPaid.classList.toggle("po-note", po !== false);
     csA.textContent = has ? `${fmtB(a)} บาท` : "-"; csB.textContent = n ? `${fmtB(b)} บาท` : "-";
     cashDiff.hidden = !(has && n); cashDiff.className = "res " + (d < 0 ? "bad" : d > 0 ? "wait" : ""); // .res is green already · "ok" on a <p> picked up ui.css p.ok's own icon (two ticks)
     cashDiff.innerHTML = `${ICO[d < 0 ? "bad" : "ok"]}<span>${diffT()}</span>${d < 0 ? '<a class="btn sm tonal" href="expense.html?tab=list&amp;from=close">ลืมลงรายจ่ายไหม ไปลง</a>' : ""}`; };
@@ -355,6 +374,7 @@
       // a row with one box filled compares nothing (the card skips it) → both boxes or none · เงินโอน: always both (0 = none today)
       const hr = [...dlv.querySelectorAll(".dl")].map((r) => [r, [...r.querySelectorAll("input")].filter((i) => i.value === "")]).find(([r, e]) => e.length === 1 || (e.length === 2 && r.dataset.k === "transfer"));
       if (hr) return { say: hr[0].dataset.k === "transfer" ? "ยังไม่ได้ใส่ยอดเงินโอน" : `${hr[0].querySelector("b").textContent} ใส่ยอดไม่ครบ`, el: hr[1][0], scroll: true, need: hr[0] };
+      if (paid && po == null) return { say: "ตอบก่อน กดนำเงินออกใน WE POS แล้วหรือยัง", el: poNo, scroll: true };
       const x = takeX(); if (x && took !== x && !shortOpen()) return { say: `เอาเงินออก ${fmtB(x)} บาทก่อน\nแล้วกดปุ่ม เอาเงินออก ${fmtB(x)} บาทแล้ว`, el: tookB, scroll: true }; }
     return null;
   };
@@ -401,7 +421,7 @@
   const save = () => {
     const rows = {}; document.querySelectorAll("#lines .grid").forEach((g) => { rows[g.dataset.id] = [g.querySelector(".rf").value, g.querySelector(".rc").value]; }); // .w (เสีย) is never saved · it always comes from waste_logs (W)
     const at = Date.now();
-    if (store.set(KEY, JSON.stringify({ at, rows, cons: state, pick, pt: posTot.value, ce: cashExp.value, cc: cashCnt.value, dl: Object.fromEntries([...dlv.querySelectorAll(".dl")].map((r) => [r.dataset.k, [...r.querySelectorAll("input")].map((i) => i.value)])), nt: noteEls().map((i) => i.value), note: note.value, step: cur, reached, lo: kept, tk: took, sk: shortKept }))) showDraft(at);
+    if (store.set(KEY, JSON.stringify({ at, rows, cons: state, pick, pt: posTot.value, ce: cashExp.value, cc: cashCnt.value, dl: Object.fromEntries([...dlv.querySelectorAll(".dl")].map((r) => [r.dataset.k, [...r.querySelectorAll("input")].map((i) => i.value)])), nt: noteEls().map((i) => i.value), note: note.value, step: cur, reached, lo: kept, tk: took, sk: shortKept, po }))) showDraft(at);
   };
   let draft = null; try { draft = JSON.parse(store.get(KEY) || "null"); } catch (_) { draft = null; }
   if (draft) {
@@ -413,7 +433,7 @@
     posTot.value = draft.pt || ""; cashExp.value = draft.ce || ""; cashCnt.value = draft.cc || "";
     Object.entries(draft.dl || {}).forEach(([k, v]) => dlv.querySelectorAll(`[data-k="${k}"] input`).forEach((x, i) => { x.value = v?.[i] ?? ""; })); (draft.nt || []).forEach((v, i) => { const x = noteEls()[i]; if (x) x.value = v; }); if (draft.nt) sumNotes(); dlSay(); note.value = draft.note || ""; diff(); showDraft(draft.at);
     reached = Math.min(Math.max(+draft.reached || 1, +draft.step || 1), 4);
-    kept = draft.lo || ""; shortKept = draft.sk || ""; diff();
+    kept = draft.lo || ""; shortKept = draft.sk || ""; if (paid && typeof draft.po === "boolean") setPo(draft.po); diff();
   }
 
   function update() {
