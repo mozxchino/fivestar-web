@@ -78,8 +78,8 @@ body:has(> #form:not([hidden])) { display: flex; flex-direction: column; min-hei
   transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out);
 }
 .ux-opt:active { transform: scale(.98); }
-:is(#consAll, #recAll)[aria-checked=true] { background: var(--tint-success); border-color: var(--border-ok); }
-:is(#consAll, #recAll)[aria-checked=true]::before { border-color: var(--color-success); background-color: var(--color-success);
+:is(#consAll, #recAll, #poNo, #poYes)[aria-checked=true] { background: var(--tint-success); border-color: var(--border-ok); }
+:is(#consAll, #recAll, #poNo, #poYes)[aria-checked=true]::before { border-color: var(--color-success); background-color: var(--color-success);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E"); }
 :is(#consLow, #recShort)[aria-checked=true] { background: var(--tint-wait); border-color: var(--border-wait); }
 :is(#consLow, #recShort)[aria-checked=true]::before { border: 8px solid var(--on-wait); }
