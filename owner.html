@@ -195,7 +195,7 @@ td+td{font-weight:600}
       T.push({ r: 4, at: s.date, key: "o" + s.date, t: `${when(s.date)} โอที ${+s.ot_hours} ชม.`, s: s.closed_at ? `ปิดร้าน ${hm(s.closed_at)} น. · ${esc(names[s.closed_by] || "-")}` : "ยังไม่ปิดร้าน",
         a: `<button class="btn sm" data-a="ot" data-d="${s.date}">อนุมัติโอที</button>` }); }
     // several days waiting → one card, one press (approve_ot per day)
-    if (ot.length > 1) T.push({ r: 4, at: ot[0].date, key: "o", t: `โอทีรออนุมัติ ${ot.length} วัน รวม ${ot.reduce((n, s) => n + +s.ot_hours, 0)} ชม.`,
+    if (ot.length > 1) T.push({ r: 4, at: ot[0].date, key: "o", t: `โอทีรออนุมัติ ${ot.length} วัน รวม ${Math.round(ot.reduce((n, s) => n + +s.ot_hours, 0) * 100) / 100} ชม.`, // Mos 8 พ.ย.: 12.299999999999999 → 12.3
       s: `${U.short(ot[0].date)} – ${U.short(ot[ot.length - 1].date)}`, a: `<button class="btn sm" data-a="ot" data-d="${ot.map((s) => s.date).join(",")}">อนุมัติโอทีทั้ง ${ot.length} วัน</button>` });
     return T.sort((a, b) => a.r - b.r || String(a.at || "").localeCompare(String(b.at || "")));
   }
