@@ -226,8 +226,9 @@
   const { data: day } = await supabase.from("shop_days").select("status").eq("date", today).maybeSingle();
   if (day?.status === "sent" && late) { doneT.textContent = `ปิดร้านของวันที่ ${dayTh} แล้ว`; doneS.textContent = "เปิดร้านวันนี้ได้เลย"; next.innerHTML = '<a class="btn primary" href="open.html">เปิดร้านวันนี้</a>'; document.getElementById("done").hidden = false; return; }
   if (day?.status === "sent") { doneT.textContent = "วันนี้ปิดร้านแล้ว"; doneS.textContent = "กรอกผิด บอกเจ้าของที่แจ้งปัญหา"; next.innerHTML = '<a class="btn" href="issue.html">แจ้งปัญหา</a>'; document.getElementById("done").hidden = false; return; }
-  const { data: pend } = await supabase.from("orders").select("id, order_items(qty_received, received_at)").eq("for_date", today).in("status", ["sent", "failed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
-  if (pend && pend.order_items.some((i) => i.qty_received == null && i.received_at == null)) {
+  // 0102 (Mos 8 พ.ย.): a moved order + the day's own one = 2 orders on one day · every one must be received (or marked no-delivery) before the shop closes
+  const { data: pend } = await supabase.from("orders").select("id, order_items(qty_received, received_at)").eq("for_date", today).in("status", ["sent", "failed"]).order("created_at", { ascending: false });
+  if ((pend || []).some((o) => (o.order_items || []).some((i) => i.qty_received == null && i.received_at == null))) {
     const b = document.getElementById("blocked"); b.hidden = false; b.innerHTML = late ? 'ของวันนั้นยังไม่ได้กดรับ<br>บอกเจ้าของก่อน แล้วค่อยปิดร้าน' : 'ต้องกดรับของก่อน ถึงจะปิดร้านได้<br><a class="btn primary" href="receive.html">ไปรับของ</a>'; return;
   }
   const { data: prods, error: pErr } = await supabase.from("products").select("id,sort,name,unit,buy_unit,pack_size,stick_size,kind,made_here,count_mode,count_cols,category,supplier").eq("active", true).order("sort");

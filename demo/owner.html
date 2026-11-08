@@ -147,7 +147,7 @@ td+td{font-weight:600}
       supabase.from("shop_days").select("*").gte("date", U.plus(d, -7)).lte("date", d).order("date", { ascending: false }),
       supabase.from("stock_lines").select("*").eq("date", d),
       supabase.from("consumable_checks").select("product_id,status").eq("date", d).neq("status", "ok"),
-      supabase.from("orders").select("id,plan,paid_at,paid_amount,bill_reads(total,status),order_items(product_id,qty_proposed,qty_final,qty_received,received_at,receipt_photos)").eq("for_date", d).eq("status", "sent").order("created_at", { ascending: false }).limit(5), // item 17: an extra order + a real one on the same day gave 2 rows to maybeSingle → error
+      supabase.from("orders").select("id,plan,paid_at,paid_amount,created_at,bill_reads(total,status),order_items(product_id,qty_proposed,qty_final,qty_received,received_at,receipt_photos)").eq("for_date", d).eq("status", "sent").order("created_at", { ascending: false }).limit(5), // item 17: an extra order + a real one on the same day gave 2 rows to maybeSingle → error
       supabase.from("issues").select("id,date,type,text,photos,created_by,created_at,status").eq("status", "open").order("created_at", { ascending: false }),
       isToday ? supabase.from("leave_requests").select("id,user_id,date,type,note,status,users:user_public(name)").gte("date", TODAY.slice(0, 8) + "01").lte("date", U.plus(TODAY, 31)).order("date") : Promise.resolve({ data: [] }),
       // ข้อ 5 (Mos 1 พ.ย.): every photo of the day = the day's storage folder (lib/photo.js: YYYY/MM/DD/<type>-uuid.jpg)
@@ -156,9 +156,12 @@ td+td{font-weight:600}
     ]);
     const bad = res.slice(0, -1).find((r) => r.error); if (bad) throw bad.error; // the deposit read (last) failing only hides its row // qa: a failed read must not read as "ไม่มีเรื่องต้องจัดการ"
     const [{ data: days }, { data: sl }, { data: cc }, { data: odAll }, { data: iss }, { data: lv }, { data: pf }, { data: dep, error: depE }] = res;
-    const od = (odAll || []).find((o) => !(o.plan && (o.plan.extra === true || o.plan.extra === "true"))) || (odAll || [])[0] || null; // the real order wins over an extra (off-order delivery) one
+    // 0102 (Mos 8 พ.ย.): a moved order + the day's own one = 2 bills on one day · every sent order shows: real ones first (oldest first), an extra (off-order delivery) one last
+    const extra = (o) => o.plan && (o.plan.extra === true || o.plan.extra === "true") ? 1 : 0;
+    const ods = (odAll || []).slice().sort((a, b) => extra(a) - extra(b) || String(a.created_at).localeCompare(String(b.created_at)));
+    const od = ods[0] || null;
     const byDate = Object.fromEntries((days || []).map((x) => [x.date, x]));
-    return { d, isToday, sd: byDate[d] || null, yday: byDate[U.plus(d, -1)] || null, days: days || [], sl: sl || [], cc: cc || [], items: od?.order_items || [], od,
+    return { d, isToday, sd: byDate[d] || null, yday: byDate[U.plus(d, -1)] || null, days: days || [], sl: sl || [], cc: cc || [], items: ods.flatMap((o) => o.order_items || []), od, ods,
       dep, depE, iss: (iss || []).filter((i) => i.status === "open" && (isToday || (i.date || "").slice(0, 10) === d)), lv: lv || [],
       pics: (pf || []).filter((o) => /\.jpe?g$/i.test(o.name)).map((o) => `${d.replaceAll("-", "/")}/${o.name}`) };
   }
@@ -244,15 +247,19 @@ td+td{font-weight:600}
       return;
     }
     // ข้อ 6 (Mos 1 พ.ย.): CPF bill = the QR on the delivery slip · slip big enough to scan from this screen · "จ่ายแล้ว" keeps time + amount
-    const od = c.od, slips = [...new Set(items.flatMap((i) => i.receipt_photos || []))];
+    // 0102 (Mos 8 พ.ย.): 2 orders on one day (a moved one + the day's own) = one บิล CPF fold per order, each with its own slip + pay button · รับของ groups the rows by order
+    const ods = c.ods || [], multi = ods.length > 1, fmt = (x) => new Date(x + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
+    const oLbl = (o) => o.plan?.moved_from ? `ใบของ ${fmt(o.plan.moved_from)}` : `ใบของ${c.isToday ? "วันนี้" : " " + fmt(c.d)}`;
+    const slipsOf = (o) => [...new Set((o.order_items || []).flatMap((i) => i.receipt_photos || []))];
     const baht = (v) => (+v).toLocaleString("th-TH");
     const waste = sl.filter((l) => +l.waste > 0);
-    const recv = items.map((i) => {
+    const recvLn = (i) => {
       const o = +(i.qty_final ?? i.qty_proposed) || 0;
       if (i.received_at == null) return `<div class="ln">${esc(prods[i.product_id])} สั่ง ${o} ${esc(unit[i.product_id])} <span class="muted">ยังไม่รับของ</span></div>`;
       const r = +i.qty_received || 0;
       return `<div class="ln">${esc(prods[i.product_id])} สั่ง ${o} ได้ ${r} ${esc(unit[i.product_id])}${r < o ? ` <b class="err">ขาด ${o - r} ${esc(unit[i.product_id])}</b>` : ""}</div>`;
-    }).join("");
+    };
+    const recv = ods.map((o) => (multi ? `<div class="ln"><b>${oLbl(o)}</b>${o.plan?.moved_from ? ` <span class="muted">เลื่อนมา${c.isToday ? "วันนี้" : "วันนั้น"}</span>` : ""}</div>` : "") + (o.order_items || []).map(recvLn).join("")).join("");
     const nShort = items.filter((i) => i.received_at != null && (+i.qty_received || 0) < (+(i.qty_final ?? i.qty_proposed) || 0)).length;
     const nLow = cc.filter((x) => x.status === "low").length, nOut = cc.filter((x) => x.status === "out").length;
     // ข้อ 5: the day's folder + the day's own photo columns (an after-midnight close uploads into the next date's folder)
@@ -274,11 +281,12 @@ td+td{font-weight:600}
     // pb-review M2 (Mos 30 ต.ค.): ยอดขาย WE POS the staff typed at close (sets the bonus) · beside the POS screen photo · the owner corrects it (set_pos_total, audit_log)
     const posAmt = sd.pos_total == null ? null : money(sd.pos_total);
     const posBody = `<div class="ln mk"><span>รูปจอ POS<small>เทียบยอดกับรูปนี้</small></span>${MGR ? "" : `<button class="ux-cancel" type="button" data-a="pos">แก้ยอดขาย</button>`}</div><div id="posPic">${sd.pos_photo ? sb("72px", 72, ";--r:10px") : `<p class="muted">ไม่มีรูปจอ POS</p>`}</div>`;
-    const fold = (id, head, body) => `<button class="fold" aria-expanded="false" data-f="${id}"><span class="sym ${SYMT[(head.match(/data-tone="(\w+)"/) || [])[1]] || ""}" aria-hidden="true">${FICO[id] || ""}</span>${head}</button><div class="fold-body"><div id="f-${id}">${body}</div></div>`;
-    const bill = od && slips.length ? fold("bill", `<b>บิล CPF</b>${od.paid_at ? fv("ok", `จ่ายแล้ว ${baht(od.paid_amount ?? 0)} บาท`) : fv("wait", "ยังไม่จ่าย")}`,
-      `<p class="muted">สแกน QR บนใบส่งของจ่ายได้เลย</p><div id="billPic"></div>`
-      + (od.paid_at ? `<div class="ln mk paid"><span>✓ จ่ายแล้ว ${baht(od.paid_amount ?? 0)} บาท<small>${hm(od.paid_at)} น. ${U.dayName(new Date(Date.parse(od.paid_at) + 7 * 3600e3).toISOString().slice(0, 10))}</small></span>${MGR ? "" : `<button type="button" class="ux-cancel" id="unpay">กดผิด ยกเลิก</button>`}</div>`
-        : `<button type="button" class="btn primary" id="pay">บันทึกว่าจ่ายแล้ว</button>`)) : ""; // 0092: managers pay bills too (slip required)
+    const fold = (id, head, body) => `<button class="fold" aria-expanded="false" data-f="${id}"><span class="sym ${SYMT[(head.match(/data-tone="(\w+)"/) || [])[1]] || ""}" aria-hidden="true">${FICO[id.replace(/\d+$/, "")] || ""}</span>${head}</button><div class="fold-body"><div id="f-${id}">${body}</div></div>`;
+    const billOf = (o, k) => !slipsOf(o).length ? "" : fold(`bill${k}`, `<b>บิล CPF${multi ? ` ${oLbl(o)}` : ""}</b>${o.paid_at ? fv("ok", `จ่ายแล้ว ${baht(o.paid_amount ?? 0)} บาท`) : fv("wait", "ยังไม่จ่าย")}`,
+      `<p class="muted">สแกน QR บนใบส่งของจ่ายได้เลย</p><div id="billPic${k}"></div>`
+      + (o.paid_at ? `<div class="ln mk paid"><span>✓ จ่ายแล้ว ${baht(o.paid_amount ?? 0)} บาท<small>${hm(o.paid_at)} น. ${U.dayName(new Date(Date.parse(o.paid_at) + 7 * 3600e3).toISOString().slice(0, 10))}</small></span>${MGR ? "" : `<button type="button" class="ux-cancel" data-unpay="${o.id}">กดผิด ยกเลิก</button>`}</div>`
+        : `<button type="button" class="btn primary" data-pay="${o.id}">บันทึกว่าจ่ายแล้ว</button>`)); // 0092: managers pay bills too (slip required)
+    const bill = ods.map(billOf).join("");
     const posFold = sd.closed_at ? fold("pos", `<b>ยอดขาย WE POS</b>${fv(posAmt == null ? "wait" : "", posAmt == null ? "ไม่ได้ใส่" : `${posAmt} บาท`)}`, posBody) : "";
     // 0085 (Mos 30 ต.ค.): a closed day's cash goes to the owner (deposit.html) · 0100: 7-11 slip (bot) or typed · ฝาก + ค่าธรรมเนียม − เอาออก = gap
     const g = c.dep && c.dep.gap != null ? +c.dep.gap : null;
@@ -288,7 +296,7 @@ td+td{font-weight:600}
       + (sd.note ? `<div class="card"><div class="k muted">พนักงานฝากบอก</div>${esc(sd.note)}</div>` : "")
       + `<div class="card folds">`
       + bill
-      + fold("recv", items.length ? `<b>รับของ</b>${fv(nShort ? "bad" : "ok", nShort ? `ขาด ${nShort} จาก ${items.length}` : `ครบ ${items.length} รายการ`)}` : `<b>ใบสั่ง</b>${fv("", "ไม่มี")}`, recv || `<p class="muted">ไม่มีใบสั่ง</p>`)
+      + fold("recv", items.length ? `<b>รับของ${multi ? ` ${ods.length} ใบ` : ""}</b>${fv(nShort ? "bad" : "ok", nShort ? `ขาด ${nShort} จาก ${items.length}` : `ครบ ${items.length} รายการ`)}` : `<b>ใบสั่ง</b>${fv("", "ไม่มี")}`, recv || `<p class="muted">ไม่มีใบสั่ง</p>`)
       + (waste.length || wDel ? fold("waste", `<b>ของเสีย</b>${fv("wait", waste.length ? `${waste.length} รายการ` : `ทิ้งแล้ว ${wl.length} ครั้ง`)}`, waste.map((l) => `<div class="ln">${esc(prods[l.product_id])} ${l.waste} ${esc(unit[l.product_id])}</div>`).join("") + wDel + (wKg ? `<div class="ln">หนักรวม ${Math.round(wKg * 100) / 100} กก.</div>` : "") + (wPics ? `<div>${wPics}</div>` : `<p class="muted">ไม่มีรูปของเสีย</p>`)) : "")
       + (mk.length ? fold("made", `<b>ห่อข้าวเหนียว</b>${fv("", `${mk.length} ครั้ง`)}`, mkBody) : "")
       + fold("cons", `<b>ของใช้ในร้าน</b>${!cc.length ? fv("ok", "มีครบ") : nOut && nLow ? fv("bad", `หมด/ใกล้หมด ${nOut + nLow} อย่าง`) : nOut ? fv("bad", `หมด ${nOut} อย่าง`) : fv("wait", `ใกล้หมด ${nLow} อย่าง`)}`,
@@ -299,21 +307,25 @@ td+td{font-weight:600}
       + depRow
       + links(c, !MGR);
     if (!MGR) $("edit").onclick = () => openEdit(c);
-    const setPaid = async (row) => { const { error } = await supabase.from("orders").update(row).eq("id", od.id); if (error) return alert("บันทึกไม่ได้\n" + App.errText(error)); dayView(); };
+    const setPaid = async (oid, row) => { const { error } = await supabase.from("orders").update(row).eq("id", oid); if (error) return alert("บันทึกไม่ได้\n" + App.errText(error)); dayView(); };
+    let payO = null; // the order the pay sheet is for (2 bills on one day = the one whose button was pressed)
     // design round 1 พ.ย.: a sheet with the number pad instead of prompt()
     // 0088: the bill reader's total (layers 1–3 held) fills the amount · a different amount = costs are not changed by themselves
-    const billTotal = [].concat(od?.bill_reads || []).find((r) => r.status === "ready")?.total;
-    if ($("pay")) $("pay").onclick = () => { payV.value = billTotal ?? ""; payM.className = "muted"; payM.textContent = ""; paySh.open(); setTimeout(() => { payV.focus(); fitPos(); }, 60); };
+    // · applied (0090: the cost already changed from it) still holds the total, so it fills too (8 พ.ย.: both bills were applied and the field came up empty)
+    const billTotal = (o) => [].concat(o?.bill_reads || []).find((r) => r.status === "ready" || r.status === "applied")?.total;
+    $("out").querySelectorAll("[data-pay]").forEach((b) => b.onclick = () => { payO = ods.find((o) => o.id === b.dataset.pay) || null; if (!payO) return;
+      $("payT").textContent = multi ? `จ่ายบิล CPF แล้ว (${oLbl(payO)})` : "จ่ายบิล CPF แล้ว";
+      payV.value = billTotal(payO) ?? ""; payM.className = "muted"; payM.textContent = ""; paySh.open(); setTimeout(() => { payV.focus(); fitPos(); }, 60); });
     // 0092 (Mos 3 พ.ย.): no slip = no paid · pay_bill checks role + slip again · then pay-notify posts the slip to the CPF order group
     payOK.onclick = async () => { const a = +payV.value; if (!(a > 0 && a <= 100000)) { payM.className = "err"; payM.textContent = "ใส่ยอดเป็นตัวเลข 1 ถึง 100,000 บาท"; return; }
       if (!paySlip[0]) { payM.className = "err"; payM.textContent = "แนบรูปสลิปก่อน"; return; }
       payOK.disabled = true; payM.className = "muted"; payM.textContent = "กำลังบันทึก…";
-      const { error } = await supabase.rpc("pay_bill", { oid: od.id, amount: a, slip: paySlip[0] });
+      if (!payO) return; const { error } = await supabase.rpc("pay_bill", { oid: payO.id, amount: a, slip: paySlip[0] });
       payOK.disabled = false;
       if (error) { payM.className = "err"; payM.textContent = "บันทึกไม่ได้\n" + App.errText(error); return; }
-      const n = await App.fn("pay-notify", { order_id: od.id }).catch(() => null);
+      const n = await App.fn("pay-notify", { order_id: payO.id }).catch(() => null);
       paySh.close(); UXM.toast(n?.ok ? "บันทึกแล้ว ส่งสลิปเข้ากลุ่มสั่งของแล้ว ✓" : "บันทึกแล้ว ✓ แต่ส่งสลิปเข้ากลุ่มไม่ได้"); dayView(); };
-    if ($("unpay")) $("unpay").onclick = () => { if (confirm("ยกเลิกจ่ายแล้วไหม?")) setPaid({ paid_at: null, paid_amount: null, paid_slip: null, paid_by: null }); };
+    $("out").querySelectorAll("[data-unpay]").forEach((b) => b.onclick = () => { if (confirm("ยกเลิกจ่ายแล้วไหม?")) setPaid(b.dataset.unpay, { paid_at: null, paid_amount: null, paid_slip: null, paid_by: null }); });
     U.folds($("out").querySelector(".folds"), async (b) => {
       if (b.dataset.done) return;
       if (b.dataset.f === "pics") { b.dataset.done = 1;
@@ -321,7 +333,7 @@ td+td{font-weight:600}
           .map(([k, t]) => [t, photos.filter((p) => picOf(p) === k)]).filter(([, ps]) => ps.length);
         const html = (await Promise.all(groups.map(async ([t, ps]) => `<h3 class="sec">${t}<span class="n">${ps.length} รูป</span></h3>${await gal(ps)}`))).join("");
         $("f-pics").innerHTML = html || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
-      if (b.dataset.f === "bill") { b.dataset.done = 1; $("billPic").innerHTML = (await big(slips)) || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
+      if (b.dataset.f.startsWith("bill")) { b.dataset.done = 1; const k = +b.dataset.f.slice(4); $("billPic" + k).innerHTML = (await big(slipsOf(ods[k]))) || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
       if (b.dataset.f === "pos" && sd.pos_photo) { b.dataset.done = 1; $("posPic").innerHTML = (await big([sd.pos_photo])) || `<p class="muted">เปิดรูปไม่ขึ้น</p>`; }
     });
   }
