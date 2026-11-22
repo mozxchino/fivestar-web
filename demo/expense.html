@@ -146,6 +146,7 @@ body.picking #pNew { padding-bottom: 96px; }
     <div class="tot2" id="tot" hidden><span>รวมทั้งบิล</span><span><b id="totN">0</b> บาท</span></div>
     <label class="fl">จ่ายด้วย</label><div class="seg" id="paid"><button type="button" data-p="cash">เงินสดหน้าร้าน</button><button type="button" data-p="owner">เจ้าของโอนจ่าย</button></div>
     <div id="fDate" hidden><label class="fl" for="dt">วันที่จ่าย</label><input id="dt" type="date"></div>
+    <div id="fArr" hidden><label class="fl" for="ar">ของมาถึงวันไหน</label><input id="ar" type="date"><p id="arH" class="muted"></p></div>
     <label class="btn slip" id="phL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg><span id="phT"></span><input id="ph" type="file" accept="image/*" hidden></label>
     <p id="phH" class="muted"></p>
     <p id="phS" class="muted"></p></div>
@@ -234,9 +235,15 @@ body.picking #pNew { padding-bottom: 96px; }
     phH.textContent = slip() ? "ถ่ายใหม่ หรือเลือกรูปในเครื่องก็ได้" : "ไม่มีใบเสร็จ ถ่ายของที่ซื้อแทนได้"; };
   const slip = () => OWN && paidBy === "owner";
   // a new bill starts clean: the slip and the pay choice belong to one bill, and stay while its sheet is closed to tick one more thing
-  const fresh = () => { paidBy = null; es.querySelectorAll(".thumb .x").forEach((b) => b.click()); };
+  const fresh = () => { paidBy = null; ar.value = bday; es.querySelectorAll(".thumb .x").forEach((b) => b.click()); };
   paid.onclick = (e) => { const b = e.target.closest("[data-p]"); if (b) pick(b.dataset.p); };
   if (OWN) { fDate.hidden = false; dt.max = UXS.today(); dt.value = bday; UXM.dateTh(dt); }
+  // 0104: paid today, delivered later (Makro online) → a counted item goes into stock on the day it arrives · owner only, one day for the whole bill
+  const plus = (n) => { const d = new Date(bday + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const dTh = (v, wd = true) => new Date(v + "T00:00:00Z").toLocaleDateString("th-TH", { ...(wd ? { weekday: "long" } : {}), day: "numeric", month: "short", timeZone: "UTC" }).replace(/^วัน(\S+?)ที่ /, "$1 ");
+  const counted = () => OWN && sel.some((x) => x.count), late = () => counted() && ar.value > bday;
+  const arr = () => { fArr.hidden = !counted(); arH.textContent = late() ? `ไม่เข้าสต็อกวันนี้ จะเข้าเองวัน${dTh(ar.value)}` : "เข้าสต็อกวันนี้"; };
+  if (OWN) { ar.min = bday; ar.max = plus(30); ar.value = bday; UXM.dateTh(ar); ar.onchange = arr; }
   const total = () => { const t = sel.reduce((s, x) => s + (+vals[keyOf(x)]?.a || 0), 0); totN.textContent = t.toLocaleString("th-TH", { maximumFractionDigits: 2 }); tot.hidden = sel.length < 2;
     save.textContent = sel.length > 1 ? `บันทึก ${sel.length} รายการ` : "บันทึกรายจ่าย"; };
   const lines = () => {
@@ -247,7 +254,7 @@ body.picking #pNew { padding-bottom: 96px; }
         + (sel.length > 1 ? `<button type="button" class="rm" aria-label="เอา ${esc(x.name)} ออกจากบิล">✕</button>` : "")
         + (x.count ? `<div class="in q" data-l="ได้มากี่${x.unit || "หน่วย"} เข้าสต็อก"><input class="qy" type="number" inputmode="decimal" placeholder="0" value="${v.q}" aria-label="จำนวน ${esc(x.name)}"><span class="sfx">${x.unit || ""}</span></div>` : "")
         + (x.isNew ? `<div class="cats">${KEYS.filter((c) => c !== "fee").map((c) => `<button type="button" class="chip${v.cat === c ? " on" : ""}" data-c="${c}" aria-pressed="${v.cat === c}">${CAT[c]}</button>`).join("")}</div>` : "") + `</div>`; }).join("");
-    lns.classList.toggle("multi", sel.length > 1); total();
+    lns.classList.toggle("multi", sel.length > 1); total(); arr();
   };
   lns.oninput = (e) => { const r = e.target.closest(".ln"), v = vals[keyOf(sel[+r.dataset.i])]; if (e.target.classList.contains("a")) v.a = e.target.value; else v.q = e.target.value; total(); };
   lns.onclick = (e) => { const r = e.target.closest(".ln"); if (!r) return; const x = sel[+r.dataset.i];
@@ -270,16 +277,16 @@ body.picking #pNew { padding-bottom: 96px; }
       if (+v.a > 100000) return bad("ยอดเงินเกิน 100,000 บาท ตรวจตัวเลขอีกครั้ง", r.querySelector(".in")); }
     // ponytail: the proof rule lives in this page only (add_expense_bill accepts no photo) · move it into the function once the rule has settled
     if (!photo[0]) { phL.classList.add("need"); return bad(slip() ? "แนบสลิปโอนเงินก่อน" : "ถ่ายใบเสร็จก่อน ไม่มีใบเสร็จ ถ่ายของที่ซื้อแทน", phL); }
-    const p = { paid_by: paidBy, photo: photo[0] || null, ...(OWN && dt.value ? { date: dt.value } : {}),
+    const p = { paid_by: paidBy, photo: photo[0] || null, ...(OWN && dt.value ? { date: dt.value } : {}), ...(counted() && ar.value ? { arrive: ar.value } : {}),
       lines: sel.map((x) => { const v = vals[keyOf(x)]; return { amount: v.a, ...(x.pid ? { product_id: x.pid, qty: x.count ? v.q : null } : x.iid ? { item_id: x.iid } : { name: x.name, category: v.cat }) }; }) };
     save.disabled = true; msg.textContent = "กำลังบันทึก…"; msg.className = "muted";
     const { error } = await supabase.rpc("add_expense_bill", { p });
     save.disabled = false;
     if (error) return bad(App.errText(error));
     sheet.close(); const n = sel.length, sum = sel.reduce((s, x) => s + +vals[keyOf(x)].a, 0), hadNew = sel.some((x) => x.isNew);
-    const one = sel[0], oneQ = +vals[keyOf(one)].q;
+    const one = sel[0], oneQ = +vals[keyOf(one)].q, lateDay = late() ? dTh(ar.value) : "";
     sel.forEach((x) => { remember(x, +vals[keyOf(x)].a); delete vals[keyOf(x)]; }); sel = []; fresh();
-    UXM.toast(n > 1 ? `ลง ${n} รายการแล้ว ✓ รวม ${baht(sum)}` : one.count ? `ลง${one.name}แล้ว ✓ เข้าสต็อก ${oneQ} ${one.unit || ""}` : "ลงรายจ่ายแล้ว ✓");
+    UXM.toast(n > 1 ? `ลง ${n} รายการแล้ว ✓ รวม ${baht(sum)}` : one.count ? lateDay ? `ลง${one.name}แล้ว ✓ ${oneQ} ${one.unit || ""} จะเข้าสต็อกวัน${lateDay}` : `ลง${one.name}แล้ว ✓ เข้าสต็อก ${oneQ} ${one.unit || ""}` : "ลงรายจ่ายแล้ว ✓");
     q.value = "";
     if (hadNew) await load();
     draw(); await list();
@@ -289,7 +296,7 @@ body.picking #pNew { padding-bottom: 96px; }
   let ym = bday.slice(0, 7), only = null;
   const list = async () => {
     const m0 = ym + "-01", m1 = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 1)).toISOString().slice(0, 10);
-    let rq = supabase.from("expenses").select("id,date,category,name,qty,amount,paid_by,photo,created_by,created_at,product_id,bill_id").order("date", { ascending: false }).order("created_at", { ascending: false });
+    let rq = supabase.from("expenses").select("id,date,arrive_date,category,name,qty,amount,paid_by,photo,created_by,created_at,product_id,bill_id").order("date", { ascending: false }).order("created_at", { ascending: false });
     rq = OWN ? rq.gte("date", m0).lt("date", m1) : rq.eq("date", bday);
     const p0 = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7) - 2, 1)).toISOString().slice(0, 10);
     const [{ data, error }, day, prev] = await Promise.all([rq, supabase.from("shop_days").select("status").eq("date", bday).maybeSingle(),
@@ -310,8 +317,8 @@ body.picking #pNew { padding-bottom: 96px; }
     // 0082: a fee row made by หน้าฝากเงิน is edited / removed there only (the server refuses the delete) → no ✕, says where it came from
     const feeIds = rows.filter((r) => r.category === "fee").map((r) => r.id);
     const dep = new Set(feeIds.length ? ((await supabase.from("deposits").select("expense_id").in("expense_id", feeIds)).data || []).map((x) => x.expense_id) : []);
-    const can = (r) => !dep.has(r.id) && (OWN ? !(r.qty != null && r.date === bday && sent) : r.created_by === me.userId && !sent); // server re-checks (a stock row of any sent day is refused)
-    const row = (r) => `<div class="it" data-id="${r.id}">${ci(r.category)}<span class="grow"><b>${esc(r.name)}${r.qty != null ? ` ${+r.qty}` : ""}</b><small><span class="pill"${r.paid_by === "cash" ? ' data-tone="ok"' : ""}>${PAY_S[r.paid_by]}</span>${hm(r.created_at)} น.${r.photo && !inBill(r) ? ` · <a href="#" data-ph="${esc(r.photo)}">ดูใบเสร็จ</a>` : ""}${dep.has(r.id) ? ` · <a href="deposit.html">จากหน้าฝากเงิน</a>` : ""}</small></span><span class="amt">${baht(r.amount)}</span>${can(r) ? `<button type="button" class="del" data-del="${r.id}" aria-label="ลบ ${esc(r.name)}">✕</button>` : ""}</div>`;
+    const can = (r) => !dep.has(r.id) && (OWN ? !(r.qty != null && (r.arrive_date || r.date) === bday && sent) : r.created_by === me.userId && !sent); // server re-checks (a stock row of any sent day is refused)
+    const row = (r) => `<div class="it" data-id="${r.id}">${ci(r.category)}<span class="grow"><b>${esc(r.name)}${r.qty != null ? ` ${+r.qty}` : ""}</b><small><span class="pill"${r.paid_by === "cash" ? ' data-tone="ok"' : ""}>${PAY_S[r.paid_by]}</span>${r.arrive_date ? `<span class="pill"${r.arrive_date > bday ? ' data-tone="wait"' : ""}>ของถึง ${dTh(r.arrive_date, false)}</span>` : ""}${hm(r.created_at)} น.${r.photo && !inBill(r) ? ` · <a href="#" data-ph="${esc(r.photo)}">ดูใบเสร็จ</a>` : ""}${dep.has(r.id) ? ` · <a href="deposit.html">จากหน้าฝากเงิน</a>` : ""}</small></span><span class="amt">${baht(r.amount)}</span>${can(r) ? `<button type="button" class="del" data-del="${r.id}" aria-label="ลบ ${esc(r.name)}">✕</button>` : ""}</div>`;
     // a bill = 2+ lines saved together: one tinted block, the slip and the bill total once at its foot
     const nb = {}; rows.forEach((r) => { if (r.bill_id) nb[r.bill_id] = (nb[r.bill_id] || 0) + 1; });
     function inBill(r) { return r.bill_id && nb[r.bill_id] > 1; }
