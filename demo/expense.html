@@ -106,6 +106,9 @@ body.picking #pNew { padding-bottom: 96px; }
 .ln .in.q { grid-column: 2 / 4; }
 .ln .in.q::before { content: attr(data-l); flex: 1; padding-left: 14px; font-size: 15px; color: var(--color-ink-soft); white-space: nowrap; }
 .ln .in.q > input { flex: none; width: 64px; }
+.ln .up { grid-column: 2 / 4; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: -2px 0 0; font-size: 13px; color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
+.ln .up:empty { display: none; }
+.ln .up b { font-weight: 600; color: var(--color-ink); }
 .ln .rm { width: 28px; height: 44px; padding: 0; border: 0; background: none; font-size: 16px; color: var(--color-ink-soft); cursor: pointer; }
 .ln .cats { grid-column: 2 / -1; margin: 0; }
 .tot2 { display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px; padding: 12px 0 0; border-top: 1.5px solid var(--color-foreground); font: 600 17px/1.3 var(--font-head); font-variant-numeric: tabular-nums; }
@@ -186,8 +189,10 @@ body.picking #pNew { padding-bottom: 96px; }
   const stop = (t) => { blocked.hidden = false; blocked.innerHTML = t + '<br><a class="btn" href="index.html">กลับหน้าหลัก</a>'; };
 
   // the list = remembered names + self-bought products (ตั้งค่า › สินค้า) · CPF goods never (their cost is received × price)
-  let ITEMS = [];
+  let ITEMS = []; const PREV = {}; // PREV: price per unit of the last buy of a counted product (owner · staff read today only)
   const load = async () => {
+    if (OWN) ((await supabase.from("expenses").select("product_id,qty,amount").not("qty", "is", null).order("date", { ascending: false }).order("created_at", { ascending: false }).limit(60)).data || [])
+      .forEach((r) => { if (r.product_id && +r.qty > 0 && !(r.product_id in PREV)) PREV[r.product_id] = r.amount / r.qty; });
     const [p, e] = await Promise.all([
       supabase.from("products").select("id,name,unit,kind,count_mode,supplier,made_here").eq("active", true).eq("supplier", "self").eq("made_here", false).in("kind", ["self", "consumable"]).order("sort"),
       supabase.from("expense_items").select("id,name,category").eq("active", true).order("name")]);
@@ -242,21 +247,27 @@ body.picking #pNew { padding-bottom: 96px; }
   const plus = (n) => { const d = new Date(bday + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
   const dTh = (v, wd = true) => new Date(v + "T00:00:00Z").toLocaleDateString("th-TH", { ...(wd ? { weekday: "long" } : {}), day: "numeric", month: "short", timeZone: "UTC" }).replace(/^วัน(\S+?)ที่ /, "$1 ");
   const counted = () => OWN && sel.some((x) => x.count), late = () => counted() && ar.value > bday;
-  const arr = () => { fArr.hidden = !counted(); arH.textContent = late() ? `ไม่เข้าสต็อกวันนี้ จะเข้าเองวัน${dTh(ar.value)}` : "เข้าสต็อกวันนี้"; };
+  const arr = () => { fArr.hidden = !counted(); arH.textContent = late() ? `ไม่เข้าสต็อกวันนี้ เข้าเมื่อพนักงานกดรับวัน${dTh(ar.value)}` : "เข้าสต็อกวันนี้"; };
   if (OWN) { ar.min = bday; ar.max = plus(30); ar.value = bday; UXM.dateTh(ar); ar.onchange = arr; }
   const total = () => { const t = sel.reduce((s, x) => s + (+vals[keyOf(x)]?.a || 0), 0); totN.textContent = t.toLocaleString("th-TH", { maximumFractionDigits: 2 }); tot.hidden = sel.length < 2;
     save.textContent = sel.length > 1 ? `บันทึก ${sel.length} รายการ` : "บันทึกรายจ่าย"; };
+  // price per unit next to the last buy: a dearer sack or a typo in the amount shows before saving
+  const f2 = (n) => n.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const up = (i) => { const x = sel[i], el = lns.children[i]?.querySelector(".up"); if (!el) return;
+    const v = vals[keyOf(x)], u = +v.a > 0 && +v.q > 0 ? v.a / v.q : 0, p = PREV[x.pid], d = p && u ? Math.round((u - p) / p * 100) : 0, un = x.unit || "หน่วย";
+    el.innerHTML = (u ? `<b>${f2(u)} บาท/${un}</b>` : "") + (p ? `<span>ครั้งก่อน ${f2(p)}${u ? "" : ` บาท/${un}`}</span>` : "")
+      + (u && p ? `<span class="pill" data-tone="${d > 0 ? "wait" : "ok"}">${d > 0 ? `แพงขึ้น ${d}%` : d < 0 ? `ถูกลง ${-d}%` : "เท่าเดิม"}</span>` : ""); };
   const lines = () => {
     esH.textContent = sel.length === 1 ? sel[0].name : `ลงรายจ่าย ${sel.length} รายการ`;
     lns.innerHTML = sel.map((x, i) => { const k = keyOf(x), l = last()[k], v = (vals[k] ||= { a: l ? l.a : "", q: "", cat: x.isNew ? null : x.cat });
       return `<div class="ln" data-i="${i}">${ci(v.cat || "new")}<span class="nm">${esc(x.name)}${l ? `<small>ครั้งก่อน ${baht(l.a)}</small>` : ""}</span>`
         + `<div class="in"><input class="a" type="number" inputmode="decimal" placeholder="0" value="${v.a}" aria-label="ราคา ${esc(x.name)}"><span class="sfx">บาท</span></div>`
         + (sel.length > 1 ? `<button type="button" class="rm" aria-label="เอา ${esc(x.name)} ออกจากบิล">✕</button>` : "")
-        + (x.count ? `<div class="in q" data-l="ได้มากี่${x.unit || "หน่วย"} เข้าสต็อก"><input class="qy" type="number" inputmode="decimal" placeholder="0" value="${v.q}" aria-label="จำนวน ${esc(x.name)}"><span class="sfx">${x.unit || ""}</span></div>` : "")
+        + (x.count ? `<div class="in q" data-l="ได้มากี่${x.unit || "หน่วย"} เข้าสต็อก"><input class="qy" type="number" inputmode="decimal" placeholder="0" value="${v.q}" aria-label="จำนวน ${esc(x.name)}"><span class="sfx">${x.unit || ""}</span></div><p class="up"></p>` : "")
         + (x.isNew ? `<div class="cats">${KEYS.filter((c) => c !== "fee").map((c) => `<button type="button" class="chip${v.cat === c ? " on" : ""}" data-c="${c}" aria-pressed="${v.cat === c}">${CAT[c]}</button>`).join("")}</div>` : "") + `</div>`; }).join("");
-    lns.classList.toggle("multi", sel.length > 1); total(); arr();
+    lns.classList.toggle("multi", sel.length > 1); total(); arr(); sel.forEach((_, i) => up(i));
   };
-  lns.oninput = (e) => { const r = e.target.closest(".ln"), v = vals[keyOf(sel[+r.dataset.i])]; if (e.target.classList.contains("a")) v.a = e.target.value; else v.q = e.target.value; total(); };
+  lns.oninput = (e) => { const r = e.target.closest(".ln"), v = vals[keyOf(sel[+r.dataset.i])]; if (e.target.classList.contains("a")) v.a = e.target.value; else v.q = e.target.value; total(); up(+r.dataset.i); };
   lns.onclick = (e) => { const r = e.target.closest(".ln"); if (!r) return; const x = sel[+r.dataset.i];
     if (e.target.closest(".rm")) { sel = sel.filter((s) => s !== x); mark(); if (sel.length) lines(); else { sheet.close(); fresh(); } return; }
     const c = e.target.closest("[data-c]"); if (c) { vals[keyOf(x)].cat = c.dataset.c; lines(); } };
@@ -286,7 +297,7 @@ body.picking #pNew { padding-bottom: 96px; }
     sheet.close(); const n = sel.length, sum = sel.reduce((s, x) => s + +vals[keyOf(x)].a, 0), hadNew = sel.some((x) => x.isNew);
     const one = sel[0], oneQ = +vals[keyOf(one)].q, lateDay = late() ? dTh(ar.value) : "";
     sel.forEach((x) => { remember(x, +vals[keyOf(x)].a); delete vals[keyOf(x)]; }); sel = []; fresh();
-    UXM.toast(n > 1 ? `ลง ${n} รายการแล้ว ✓ รวม ${baht(sum)}` : one.count ? lateDay ? `ลง${one.name}แล้ว ✓ ${oneQ} ${one.unit || ""} จะเข้าสต็อกวัน${lateDay}` : `ลง${one.name}แล้ว ✓ เข้าสต็อก ${oneQ} ${one.unit || ""}` : "ลงรายจ่ายแล้ว ✓");
+    UXM.toast(n > 1 ? `ลง ${n} รายการแล้ว ✓ รวม ${baht(sum)}` : one.count ? lateDay ? `ลง${one.name}แล้ว ✓ ${oneQ} ${one.unit || ""} รอพนักงานกดรับวัน${lateDay}` : `ลง${one.name}แล้ว ✓ เข้าสต็อก ${oneQ} ${one.unit || ""}` : "ลงรายจ่ายแล้ว ✓");
     q.value = "";
     if (hadNew) await load();
     draw(); await list();
@@ -296,7 +307,7 @@ body.picking #pNew { padding-bottom: 96px; }
   let ym = bday.slice(0, 7), only = null;
   const list = async () => {
     const m0 = ym + "-01", m1 = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 1)).toISOString().slice(0, 10);
-    let rq = supabase.from("expenses").select("id,date,arrive_date,category,name,qty,amount,paid_by,photo,created_by,created_at,product_id,bill_id").order("date", { ascending: false }).order("created_at", { ascending: false });
+    let rq = supabase.from("expenses").select("id,date,arrive_date,received_day,received_qty,category,name,qty,amount,paid_by,photo,created_by,created_at,product_id,bill_id").order("date", { ascending: false }).order("created_at", { ascending: false });
     rq = OWN ? rq.gte("date", m0).lt("date", m1) : rq.eq("date", bday);
     const p0 = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7) - 2, 1)).toISOString().slice(0, 10);
     const [{ data, error }, day, prev] = await Promise.all([rq, supabase.from("shop_days").select("status").eq("date", bday).maybeSingle(),
@@ -317,8 +328,8 @@ body.picking #pNew { padding-bottom: 96px; }
     // 0082: a fee row made by หน้าฝากเงิน is edited / removed there only (the server refuses the delete) → no ✕, says where it came from
     const feeIds = rows.filter((r) => r.category === "fee").map((r) => r.id);
     const dep = new Set(feeIds.length ? ((await supabase.from("deposits").select("expense_id").in("expense_id", feeIds)).data || []).map((x) => x.expense_id) : []);
-    const can = (r) => !dep.has(r.id) && (OWN ? !(r.qty != null && (r.arrive_date || r.date) === bday && sent) : r.created_by === me.userId && !sent); // server re-checks (a stock row of any sent day is refused)
-    const row = (r) => `<div class="it" data-id="${r.id}">${ci(r.category)}<span class="grow"><b>${esc(r.name)}${r.qty != null ? ` ${+r.qty}` : ""}</b><small><span class="pill"${r.paid_by === "cash" ? ' data-tone="ok"' : ""}>${PAY_S[r.paid_by]}</span>${r.arrive_date ? `<span class="pill"${r.arrive_date > bday ? ' data-tone="wait"' : ""}>ของถึง ${dTh(r.arrive_date, false)}</span>` : ""}${hm(r.created_at)} น.${r.photo && !inBill(r) ? ` · <a href="#" data-ph="${esc(r.photo)}">ดูใบเสร็จ</a>` : ""}${dep.has(r.id) ? ` · <a href="deposit.html">จากหน้าฝากเงิน</a>` : ""}</small></span><span class="amt">${baht(r.amount)}</span>${can(r) ? `<button type="button" class="del" data-del="${r.id}" aria-label="ลบ ${esc(r.name)}">✕</button>` : ""}</div>`;
+    const can = (r) => !dep.has(r.id) && (OWN ? !(r.qty != null && (r.arrive_date ? r.received_day : r.date) === bday && sent) : r.created_by === me.userId && !sent); // server re-checks (a stock row of any sent day is refused)
+    const row = (r) => `<div class="it" data-id="${r.id}">${ci(r.category)}<span class="grow"><b>${esc(r.name)}${r.qty != null ? ` ${+r.qty}` : ""}</b><small><span class="pill"${r.paid_by === "cash" ? ' data-tone="ok"' : ""}>${PAY_S[r.paid_by]}</span>${!r.arrive_date ? "" : r.received_day ? `<span class="pill" data-tone="${+r.received_qty < +r.qty ? "wait" : "ok"}">${+r.received_qty < +r.qty ? `รับ ${+r.received_qty} จาก ${+r.qty}` : "รับแล้ว"}</span>` : `<span class="pill" data-tone="wait">${r.arrive_date < bday ? "ยังไม่ได้รับ" : "ของถึง"} ${dTh(r.arrive_date, false)}</span>`}${hm(r.created_at)} น.${r.photo && !inBill(r) ? ` · <a href="#" data-ph="${esc(r.photo)}">ดูใบเสร็จ</a>` : ""}${dep.has(r.id) ? ` · <a href="deposit.html">จากหน้าฝากเงิน</a>` : ""}</small></span><span class="amt">${baht(r.amount)}</span>${can(r) ? `<button type="button" class="del" data-del="${r.id}" aria-label="ลบ ${esc(r.name)}">✕</button>` : ""}</div>`;
     // a bill = 2+ lines saved together: one tinted block, the slip and the bill total once at its foot
     const nb = {}; rows.forEach((r) => { if (r.bill_id) nb[r.bill_id] = (nb[r.bill_id] || 0) + 1; });
     function inBill(r) { return r.bill_id && nb[r.bill_id] > 1; }

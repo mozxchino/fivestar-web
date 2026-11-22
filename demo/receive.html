@@ -3,13 +3,14 @@
 <link rel="icon" type="image/png" href="img/logo-96.png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="lib/ui.css?v=r1101"><link rel="stylesheet" href="lib/ux-staff.css"><link rel="stylesheet" href="lib/ux-data.css">
+<link rel="stylesheet" href="lib/ui.css?v=r1101"><link rel="stylesheet" href="lib/ux-staff.css?v=1122"><link rel="stylesheet" href="lib/ux-data.css">
 
 
 <script src="lib/skeleton.js"></script><script src="lib/photo.js?v=r1101b"></script><script src="lib/ux-staff.js"></script><script src="lib/ux-data.js?v=1105k"></script><script src="lib/ux-motion.js?v=1106m"></script>
 </head><body ontouchstart="">
 <header class="topbar"><a class="back" href="index.html" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><img class="logo" src="img/logo-96.png" alt="" width="44" height="44"><div><h1>รับของ</h1><div class="sub">สาขาอ่อนนุช 44 จุด 3<span id="d"></span></div></div></header>
 <div class="sk"><span class="vh">กำลังเปิด…</span><p></p><div class="sheet"><div class="it meta sheet-head"><i class="sk-b" style="--w:34%;--h:13px;margin:0"></i><i class="sk-b" style="--w:28px;--h:13px;margin:0 auto"></i><i class="sk-b" style="--w:64px;--h:13px;margin:0 auto"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div><div class="it"><div><i class="sk-b" style="--w:72%;--h:17px"></i><i class="sk-b" style="--w:40%;--h:12px;--gap:6px"></i></div><i class="sk-b" style="--w:26px;--h:18px;margin:0 auto"></i><i class="sk-b" style="--w:100%;--h:52px;--r:10px;margin:0"></i></div></div><div class="sticky"><i class="sk-b" style="--w:100%;--h:52px;--r:14px"></i></div></div>
+<section id="self" class="rc-self" hidden aria-live="polite"></section>
 <div id="yday" class="card" hidden><p id="ydayT" class="err"></p><a id="ydayA" class="btn sm" href="#">รับของใบนั้น</a></div>
 <section id="done" class="done ld" hidden aria-live="polite"><span class="mascot ok-badge"><img src="img/mascot-240.png" alt="" width="80" height="80"></span><h2 id="doneT">รับของแล้ว</h2><p id="doneS"></p><p class="warm" id="doneW">ขอบคุณที่ช่วยนับของ</p><div class="acts"><div id="next"></div><a class="btn home" href="index.html">กลับหน้าหลัก</a></div></section>
 <div id="none" class="ld" hidden><div class="empty"><img class="mascot sm" src="img/mascot-240.png" alt="" width="56" height="56"><p>วันนี้ไม่มีของต้องรับ</p></div><button id="noneX" class="btn" type="button" hidden>บันทึกของที่ CPF มาส่ง</button><a class="btn" href="index.html">กลับหน้าหลัก</a></div>
@@ -73,6 +74,40 @@
   // part ค (Mos 3 พ.ย.): "ถ่ายใบส่งของใหม่" in the staff group card → photo only · the received counts stay, only the bill photos are replaced
   // (the staff guard lets staff change receipt_photos on today's order until the day is sent) · then the bill is read again (receive-notify retake)
   const rtId = new URLSearchParams(location.search).get("retake");
+  // 0105 (Mos 22 พ.ย.): goods the owner bought that come today (ข้าวเหนียวดิบ from Makro) · their own card above the CPF order, received one by one with
+  // the qty that really came → today's รับเข้า · no bill photo (the owner's slip is on the expense) · not received = stays here tomorrow too
+  if (!rtId && !new URLSearchParams(location.search).get("d")) {
+    const box = document.getElementById("self"), esc = UXS.esc, un = (x) => UXM.unit(x.unit), n2 = (v) => +(+v).toFixed(2);
+    const hm = (t) => new Date(t).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" });
+    let L = []; const edit = new Set();
+    const sync = (inp) => { const c = inp.closest(".card"), x = L.find((y) => y.id === c.dataset.id), v = +inp.value, d = n2(x.qty - v);
+      c.querySelector(".note").innerHTML = v > 0 && d > 0 ? `<span class="pill" data-tone="wait">ขาด ${d} ${un(x)}</span><small>ระบบจะบอกเจ้าของให้</small>`
+        : v > 0 && d < 0 ? `<span class="pill" data-tone="wait">เกิน ${-d} ${un(x)}</span>` : "<small>ได้ไม่ครบ แก้ตัวเลขก่อนกด<br>ยังไม่มาส่ง ไม่ต้องกด</small>";
+      c.querySelector("[data-go]").textContent = `รับ${x.name}${v > 0 ? " " + n2(v) : ""} ${un(x)}`; };
+    const draw = () => { box.hidden = !L.length; if (!L.length) return;
+      box.innerHTML = `<h2 class="sh">ของที่เจ้าของสั่ง มาวันนี้<span class="n">${L.length} รายการ</span></h2>` + L.map((x) => { const got = x.received_at && !edit.has(x.id);
+        return `<div class="card" data-id="${x.id}"><div class="hd"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></span>`
+          + `<span class="nm"><b>${esc(x.name)}</b><small>เจ้าของสั่ง ${n2(x.qty)} ${un(x)}${!x.received_at && x.arrive_date < today ? ` ควรมา ${fmt(x.arrive_date)}` : ""}</small></span>`
+          + (got ? `<span class="pill" data-tone="${+x.received_qty < +x.qty ? "wait" : "ok"}">รับแล้ว ${n2(x.received_qty)} ${un(x)}</span></div><p class="note"><small>รับเมื่อ ${hm(x.received_at)} น. เข้าสต็อกวันนี้แล้ว</small></p><button type="button" class="btn sm" data-edit>แก้จำนวน</button>`
+            : `<div class="in"><input type="number" inputmode="decimal" value="${n2(x.received_qty ?? x.qty)}" aria-label="จำนวน${esc(x.name)}ที่ได้รับ"><span class="sfx">${un(x)}</span></div></div><p class="note"></p><button type="button" class="btn primary" data-go></button>`) + "</div>"; }).join("");
+      box.querySelectorAll("input").forEach(sync); };
+    const load = async () => { const { data } = await supabase.rpc("bought_due"); L = Array.isArray(data) ? data : []; draw(); };
+    box.oninput = (e) => { if (e.target.matches("input")) sync(e.target); };
+    box.onclick = async (e) => { const c = e.target.closest(".card"); if (!c) return; const x = L.find((y) => y.id === c.dataset.id);
+      if (e.target.closest("[data-edit]")) { edit.add(x.id); return draw(); }
+      const go = e.target.closest("[data-go]"); if (!go) return;
+      const inp = c.querySelector("input"), v = +inp.value;
+      if (!(v > 0)) return UXM.shake(inp.closest(".in"));
+      go.disabled = true;
+      const { error } = await supabase.rpc("receive_bought", { eid: x.id, q: v });
+      if (error) { go.disabled = false; c.querySelector(".note").innerHTML = `<span class="err">${esc(App.errText(error))}</span>`; return; }
+      // short: the owner hears it by the same road as แจ้งปัญหา (a card in LINE) · staff only (issues RLS) · not again when the same number is saved twice
+      if (v < +x.qty && v !== +x.received_qty && me.role === "staff") {
+        const { data } = await supabase.from("issues").insert({ type: "other", text: `${x.name} มาไม่ครบ ได้ ${n2(v)} ${un(x)} เจ้าของสั่ง ${n2(x.qty)} ${un(x)} ขาด ${n2(x.qty - v)} ${un(x)}`, photos: [], created_by: me.userId }).select("id").single();
+        if (data) await App.fn("issue-notify", { issue_id: data.id }).catch(() => {}); }
+      edit.delete(x.id); UXM.toast(`รับ${x.name} ${n2(v)} ${un(x)} แล้ว ✓`); await load(); };
+    await load();
+  }
   if (rtId) {
     const bad = (t) => { none.hidden = false; const p = none.querySelector("p"); p.className = "err"; p.textContent = t; none.querySelector("a").hidden = true; };
     if (!/^[0-9a-f-]{36}$/i.test(rtId)) return bad("ลิงก์ไม่ถูกต้อง\nกดปุ่มในการ์ดอีกครั้ง");
