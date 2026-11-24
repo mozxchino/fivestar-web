@@ -261,6 +261,8 @@ td+td{font-weight:600}
     };
     const recv = ods.map((o) => (multi ? `<div class="ln"><b>${oLbl(o)}</b>${o.plan?.moved_from ? ` <span class="muted">เลื่อนมา${c.isToday ? "วันนี้" : "วันนั้น"}</span>` : ""}</div>` : "") + (o.order_items || []).map(recvLn).join("")).join("");
     const nShort = items.filter((i) => i.received_at != null && (+i.qty_received || 0) < (+(i.qty_final ?? i.qty_proposed) || 0)).length;
+    // Mos 24 Nov: rows not received yet are not "ครบ" (0 short of 0 received showed ครบ before CPF arrived)
+    const nWait = items.filter((i) => i.received_at == null).length;
     const nLow = cc.filter((x) => x.status === "low").length, nOut = cc.filter((x) => x.status === "out").length;
     // ข้อ 5: the day's folder + the day's own photo columns (an after-midnight close uploads into the next date's folder)
     const photos = [...new Set([...(c.pics || []), sd.open_photo, ...(sd.photos || []), sd.pos_photo].filter(Boolean))];
@@ -296,7 +298,7 @@ td+td{font-weight:600}
       + (sd.note ? `<div class="card"><div class="k muted">พนักงานฝากบอก</div>${esc(sd.note)}</div>` : "")
       + `<div class="card folds">`
       + bill
-      + fold("recv", items.length ? `<b>รับของ${multi ? ` ${ods.length} ใบ` : ""}</b>${fv(nShort ? "bad" : "ok", nShort ? `ขาด ${nShort} จาก ${items.length}` : `ครบ ${items.length} รายการ`)}` : `<b>ใบสั่ง</b>${fv("", "ไม่มี")}`, recv || `<p class="muted">ไม่มีใบสั่ง</p>`)
+      + fold("recv", items.length ? `<b>รับของ${multi ? ` ${ods.length} ใบ` : ""}</b>${nShort ? fv("bad", `ขาด ${nShort} จาก ${items.length}`) : nWait === items.length ? fv("wait", "ยังไม่รับของ") : nWait ? fv("wait", `ยังไม่รับ ${nWait} รายการ`) : fv("ok", `ครบ ${items.length} รายการ`)}` : `<b>ใบสั่ง</b>${fv("", "ไม่มี")}`, recv || `<p class="muted">ไม่มีใบสั่ง</p>`)
       + (waste.length || wDel ? fold("waste", `<b>ของเสีย</b>${fv("wait", waste.length ? `${waste.length} รายการ` : `ทิ้งแล้ว ${wl.length} ครั้ง`)}`, waste.map((l) => `<div class="ln">${esc(prods[l.product_id])} ${l.waste} ${esc(unit[l.product_id])}</div>`).join("") + wDel + (wKg ? `<div class="ln">หนักรวม ${Math.round(wKg * 100) / 100} กก.</div>` : "") + (wPics ? `<div>${wPics}</div>` : `<p class="muted">ไม่มีรูปของเสีย</p>`)) : "")
       + (mk.length ? fold("made", `<b>ห่อข้าวเหนียว</b>${fv("", `${mk.length} ครั้ง`)}`, mkBody) : "")
       + fold("cons", `<b>ของใช้ในร้าน</b>${!cc.length ? fv("ok", "มีครบ") : nOut && nLow ? fv("bad", `หมด/ใกล้หมด ${nOut + nLow} อย่าง`) : nOut ? fv("bad", `หมด ${nOut} อย่าง`) : fv("wait", `ใกล้หมด ${nLow} อย่าง`)}`,
